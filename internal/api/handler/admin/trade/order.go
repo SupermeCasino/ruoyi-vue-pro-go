@@ -4,20 +4,23 @@ import (
 	"backend-go/internal/api/req"
 	"backend-go/internal/api/resp"
 	"backend-go/internal/pkg/core"
+	"backend-go/internal/service/member"
 	"backend-go/internal/service/trade"
 
 	"github.com/gin-gonic/gin"
 )
 
 type TradeOrderHandler struct {
-	svc      *trade.TradeOrderUpdateService
-	querySvc *trade.TradeOrderQueryService
+	svc       *trade.TradeOrderUpdateService
+	querySvc  *trade.TradeOrderQueryService
+	memberSvc *member.MemberUserService
 }
 
-func NewTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.TradeOrderQueryService) *TradeOrderHandler {
+func NewTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.TradeOrderQueryService, memberSvc *member.MemberUserService) *TradeOrderHandler {
 	return &TradeOrderHandler{
-		svc:      svc,
-		querySvc: querySvc,
+		svc:       svc,
+		querySvc:  querySvc,
+		memberSvc: memberSvc,
 	}
 }
 
@@ -39,9 +42,18 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 	var resultList []resp.TradeOrderPageItemResp
 	if len(pageResult.List) > 0 {
 		orderIds := make([]int64, len(pageResult.List))
+		userIds := make([]int64, 0, len(pageResult.List))
+		brokerageUserIds := make([]int64, 0, len(pageResult.List))
+
 		for i, o := range pageResult.List {
 			orderIds[i] = o.ID
+			userIds = append(userIds, o.UserID)
+			if o.BrokerageUserID != nil {
+				brokerageUserIds = append(brokerageUserIds, *o.BrokerageUserID)
+			}
 		}
+
+		// Query Items
 		items, err := h.querySvc.GetOrderItemListByOrderIds(c, orderIds)
 		if err != nil {
 			core.WriteError(c, 500, err.Error())
@@ -49,7 +61,6 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 		}
 		itemMap := make(map[int64][]resp.TradeOrderItemBase)
 		for _, item := range items {
-			// Map Item
 			itemResp := resp.TradeOrderItemBase{
 				ID:       item.ID,
 				UserID:   item.UserID,
@@ -65,12 +76,36 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 			itemMap[item.OrderID] = append(itemMap[item.OrderID], itemResp)
 		}
 
+		// Query Users
+		userMap, err := h.memberSvc.GetUserRespMap(c, userIds)
+		if err != nil {
+			// Log error but continue? Or fail? Java fails if user query fails usually.
+			core.WriteError(c, 500, err.Error())
+			return
+		}
+
+		// Query Brokerage Users
+		var brokerageUserMap map[int64]*resp.MemberUserResp
+		if len(brokerageUserIds) > 0 {
+			brokerageUserMap, err = h.memberSvc.GetUserRespMap(c, brokerageUserIds)
+			if err != nil {
+				core.WriteError(c, 500, err.Error())
+				return
+			}
+		}
+
 		resultList = make([]resp.TradeOrderPageItemResp, len(pageResult.List))
 		for i, o := range pageResult.List {
 			var payOrderID int64
 			if o.PayOrderID != nil {
 				payOrderID = *o.PayOrderID
 			}
+
+			var brokerageUser *resp.MemberUserResp
+			if o.BrokerageUserID != nil {
+				brokerageUser = brokerageUserMap[*o.BrokerageUserID]
+			}
+
 			resultList[i] = resp.TradeOrderPageItemResp{
 				TradeOrderBase: resp.TradeOrderBase{
 					ID:                    o.ID,
@@ -109,7 +144,10 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 					CouponID:              o.CouponID,
 					CouponPrice:           o.CouponPrice,
 				},
-				Items: itemMap[o.ID],
+				Items:            itemMap[o.ID],
+				User:             userMap[o.UserID],
+				BrokerageUser:    brokerageUser,
+				ReceiverAreaName: "", // TODO: Implement Area Service to get name
 			}
 		}
 	} else {
