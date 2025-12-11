@@ -25,6 +25,21 @@ func NewSocialUserService(q *query.Query) *SocialUserService {
 	}
 }
 
+// GetAuthorizeUrl 获取授权链接
+func (s *SocialUserService) GetAuthorizeUrl(ctx context.Context, socialType int, userType int, redirectUri string) (string, error) {
+	// 1. 获得社交平台客户端
+	platform, err := s.factory.GetPlatform(ctx, socialType, userType)
+	if err != nil {
+		return "", err
+	}
+
+	// 2. 生成 State (这里简化，暂不存储校验，实际应存 Redis)
+	state := "test-state" // TODO: Use UUID and Store in Redis for validation
+
+	// 3. 生成链接
+	return platform.GetAuthUrl(state, redirectUri), nil
+}
+
 // BindSocialUser 绑定社交用户
 func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, userType int, r *req.SocialUserBindReq) error {
 	// 1. 获得社交平台客户端

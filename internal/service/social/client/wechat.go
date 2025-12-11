@@ -136,3 +136,14 @@ func toJson(v interface{}) string {
 	b, _ := json.Marshal(v)
 	return string(b)
 }
+
+func (c *WeChatClient) GetAuthUrl(state string, redirectUri string) string {
+	if c.Client.SocialType == 31 {
+		return "" // 小程序不支持跳转登录
+	}
+	// 公众号
+	// scope: snsapi_userinfo (需关注?) or snsapi_base (静默).
+	// RuoYi explicitly uses snsapi_userinfo usually for full info.
+	return fmt.Sprintf("https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&scope=snsapi_userinfo&state=%s#wechat_redirect",
+		c.Client.ClientId, redirectUri, state)
+}

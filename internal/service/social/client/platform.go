@@ -18,6 +18,8 @@ type AuthUser struct {
 type SocialPlatform interface {
 	// GetAuthUser 使用 code 换取用户信息
 	GetAuthUser(ctx context.Context, code string, state string) (*AuthUser, error)
+	// GetAuthUrl 获得授权 URL
+	GetAuthUrl(state string, redirectUri string) string
 }
 
 // SocialPlatformFactory 社交平台工厂接口

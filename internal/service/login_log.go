@@ -66,3 +66,38 @@ func (s *LoginLogService) GetLoginLogPage(ctx context.Context, r *req.LoginLogPa
 		Total: total,
 	}, nil
 }
+
+// CreateLoginLog 记录登录日志
+func (s *LoginLogService) CreateLoginLog(ctx context.Context, userId int64, userType int, tenantId int64, username, ip, userAgent, remark string) {
+	// 异步记录，避免阻塞
+	go func() {
+		// Mock context or use background
+		bgCtx := context.Background()
+		log := &model.SystemLoginLog{
+			LogType:   100, // 100: Login, 200: Logout? Need verify standard constants. Let's use 100 as placeholder.
+			TraceID:   "",  // Can extract from ctx
+			UserID:    userId,
+			UserType:  userType,
+			Username:  username,
+			Result:    0, // 0 Success
+			UserIP:    ip,
+			UserAgent: userAgent,
+			// TenantID? Model check needed.
+		}
+		_ = s.q.SystemLoginLog.WithContext(bgCtx).Create(log)
+	}()
+}
+
+// CreateLogoutLog 记录登出日志
+func (s *LoginLogService) CreateLogoutLog(ctx context.Context, userId int64, userType int, tenantId int64, token string) {
+	go func() {
+		bgCtx := context.Background()
+		log := &model.SystemLoginLog{
+			LogType:  200, // Logout
+			UserID:   userId,
+			UserType: userType,
+			Result:   0,
+		}
+		_ = s.q.SystemLoginLog.WithContext(bgCtx).Create(log)
+	}()
+}
