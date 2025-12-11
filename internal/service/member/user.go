@@ -223,6 +223,7 @@ func (s *MemberUserService) GetUserListByNickname(ctx context.Context, nickname 
 	return s.q.MemberUser.WithContext(ctx).Where(s.q.MemberUser.Nickname.Like("%" + nickname + "%")).Find()
 }
 
+// GetUserMap 获得用户 Map (Entity)
 func (s *MemberUserService) GetUserMap(ctx context.Context, ids []int64) (map[int64]*member.MemberUser, error) {
 	users, err := s.q.MemberUser.WithContext(ctx).Where(s.q.MemberUser.ID.In(ids...)).Find()
 	if err != nil {
@@ -231,6 +232,40 @@ func (s *MemberUserService) GetUserMap(ctx context.Context, ids []int64) (map[in
 	userMap := make(map[int64]*member.MemberUser)
 	for _, u := range users {
 		userMap[u.ID] = u
+	}
+	return userMap, nil
+}
+
+// GetUserRespMap 获得用户 Map (Response VO)
+func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (map[int64]*resp.MemberUserResp, error) {
+	if len(ids) == 0 {
+		return make(map[int64]*resp.MemberUserResp), nil
+	}
+	u := s.q.MemberUser
+	list, err := u.WithContext(ctx).Where(u.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	userMap := make(map[int64]*resp.MemberUserResp, len(list))
+	for _, user := range list {
+		// Fetch Level info if needed or just basic info
+		// For now, basic info is enough as per TradeOrder requirements
+		userMap[user.ID] = &resp.MemberUserResp{
+			ID:        user.ID,
+			Mobile:    user.Mobile,
+			Status:    user.Status,
+			Nickname:  user.Nickname,
+			Avatar:    user.Avatar,
+			Sex:       user.Sex,
+			AreaID:    user.AreaID,
+			Birthday:  user.Birthday,
+			Mark:      user.Mark,
+			LevelID:   user.LevelID,
+			GroupID:   user.GroupID,
+			CreatedAt: user.CreatedAt,
+			Point:     user.Point,
+		}
 	}
 	return userMap, nil
 }
