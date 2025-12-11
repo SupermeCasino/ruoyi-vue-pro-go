@@ -9,10 +9,20 @@ import (
 	"fmt"
 	"time"
 
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/auth/verifiers"
+	"github.com/wechatpay-apiv3/wechatpay-go/core/notify"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/option"
+	"github.com/wechatpay-apiv3/wechatpay-go/services/payments"
+	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/app"
+	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/h5"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/native"
+	"github.com/wechatpay-apiv3/wechatpay-go/services/refunddomestic"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/transferbatch"
 	"github.com/wechatpay-apiv3/wechatpay-go/utils"
 )
@@ -35,6 +45,7 @@ type WxPayClient struct {
 	config     *WxPayClientConfig
 	coreClient *core.Client
 	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
 }
 
 func NewWxPayClient(channelID int64, channelCode string, config string) (*WxPayClient, error) {
@@ -75,6 +86,7 @@ func (c *WxPayClient) initV3Client() error {
 	if err != nil {
 		return fmt.Errorf("加载微信支付公钥失败: %w", err)
 	}
+	c.publicKey = publicKey
 
 	// 使用微信支付公钥模式创建客户端
 	opts := []core.ClientOption{
@@ -105,6 +117,10 @@ func (c *WxPayClient) UnifiedOrder(ctx context.Context, req *client.UnifiedOrder
 		return c.nativeOrder(ctx, req)
 	case "wx_pub", "wx_lite":
 		return c.jsapiOrder(ctx, req)
+	case "wx_h5":
+		return c.h5Order(ctx, req)
+	case "wx_app":
+		return c.appOrder(ctx, req)
 	default:
 		return nil, fmt.Errorf("暂不支持的微信支付渠道: %s", c.ChannelCode)
 	}
@@ -192,10 +208,132 @@ func (c *WxPayClient) jsapiOrder(ctx context.Context, req *client.UnifiedOrderRe
 	}, nil
 }
 
+// h5Order H5 支付
+func (c *WxPayClient) h5Order(ctx context.Context, req *client.UnifiedOrderReq) (*client.OrderResp, error) {
+	svc := h5.H5ApiService{Client: c.coreClient}
+
+	// 构造 H5 场景信息
+	sceneInfo := &h5.SceneInfo{
+		PayerClientIp: core.String(req.UserIP),
+		H5Info: &h5.H5Info{
+			Type: core.String("Wap"),
+		},
+	}
+	// 如果 channelExtras 中有 info，可以解析覆盖默认值
+	if req.ChannelExtras != nil {
+		if appName, ok := req.ChannelExtras["app_name"]; ok {
+			sceneInfo.H5Info.AppName = core.String(appName)
+		}
+		if bundleId, ok := req.ChannelExtras["bundle_id"]; ok {
+			sceneInfo.H5Info.BundleId = core.String(bundleId)
+		}
+	}
+
+	resp, result, err := svc.Prepay(ctx, h5.PrepayRequest{
+		Appid:       core.String(c.config.AppID),
+		Mchid:       core.String(c.config.MchID),
+		Description: core.String(req.Subject),
+		OutTradeNo:  core.String(req.OutTradeNo),
+		NotifyUrl:   core.String(req.NotifyURL),
+		Amount: &h5.Amount{
+			Total:    core.Int64(int64(req.Price)),
+			Currency: core.String("CNY"),
+		},
+		SceneInfo: sceneInfo,
+	})
+
+	if err != nil {
+		return &client.OrderResp{
+			Status:           20, // CLOSED
+			OutTradeNo:       req.OutTradeNo,
+			ChannelErrorCode: "H5_PREPAY_ERROR",
+			ChannelErrorMsg:  err.Error(),
+		}, nil
+	}
+	_ = result
+
+	return &client.OrderResp{
+		Status:         0, // WAITING
+		OutTradeNo:     req.OutTradeNo,
+		DisplayMode:    "url",
+		DisplayContent: *resp.H5Url,
+	}, nil
+}
+
+// appOrder APP 支付
+func (c *WxPayClient) appOrder(ctx context.Context, req *client.UnifiedOrderReq) (*client.OrderResp, error) {
+	svc := app.AppApiService{Client: c.coreClient}
+
+	resp, result, err := svc.Prepay(ctx, app.PrepayRequest{
+		Appid:       core.String(c.config.AppID),
+		Mchid:       core.String(c.config.MchID),
+		Description: core.String(req.Subject),
+		OutTradeNo:  core.String(req.OutTradeNo),
+		NotifyUrl:   core.String(req.NotifyURL),
+		Amount: &app.Amount{
+			Total:    core.Int64(int64(req.Price)),
+			Currency: core.String("CNY"),
+		},
+	})
+
+	if err != nil {
+		return &client.OrderResp{
+			Status:           20, // CLOSED
+			OutTradeNo:       req.OutTradeNo,
+			ChannelErrorCode: "APP_PREPAY_ERROR",
+			ChannelErrorMsg:  err.Error(),
+		}, nil
+	}
+	_ = result
+
+	return &client.OrderResp{
+		Status:         0, // WAITING
+		OutTradeNo:     req.OutTradeNo,
+		DisplayMode:    "app",
+		DisplayContent: *resp.PrepayId,
+	}, nil
+}
+
 // UnifiedRefund 统一退款
 func (c *WxPayClient) UnifiedRefund(ctx context.Context, req *client.UnifiedRefundReq) (*client.RefundResp, error) {
-	// TODO: 实现退款逻辑
-	return nil, errors.New("退款功能暂未实现")
+	svc := refunddomestic.RefundsApiService{Client: c.coreClient}
+
+	resp, _, err := svc.Create(ctx, refunddomestic.CreateRequest{
+		OutTradeNo:  core.String(req.OutTradeNo),
+		OutRefundNo: core.String(req.OutRefundNo),
+		Reason:      core.String(req.Reason),
+		NotifyUrl:   core.String(req.NotifyURL),
+		Amount: &refunddomestic.AmountReq{
+			Currency: core.String("CNY"),
+			Refund:   core.Int64(int64(req.RefundPrice)),
+			Total:    core.Int64(int64(req.PayPrice)),
+		},
+	})
+
+	if err != nil {
+		return &client.RefundResp{
+			Status:           20, // FALLBACK/FAILURE (Need better mapping)
+			OutTradeNo:       req.OutTradeNo,
+			OutRefundNo:      req.OutRefundNo,
+			ChannelErrorCode: "REFUND_ERROR",
+			ChannelErrorMsg:  err.Error(),
+		}, nil
+	}
+
+	status := 0 // WAITING
+	if *resp.Status == refunddomestic.STATUS_SUCCESS {
+		status = 10 // SUCCESS
+	} else if *resp.Status == refunddomestic.STATUS_CLOSED || *resp.Status == refunddomestic.STATUS_ABNORMAL {
+		status = 20 // FAILURE
+	}
+
+	return &client.RefundResp{
+		Status:          status,
+		OutTradeNo:      req.OutTradeNo,
+		OutRefundNo:     req.OutRefundNo,
+		ChannelRefundNo: *resp.RefundId,
+		SuccessTime:     time.Now(), // TODO: Parse SuccessTime if available
+	}, nil
 }
 
 // GetOrder 查询订单
@@ -236,13 +374,94 @@ func (c *WxPayClient) GetRefund(ctx context.Context, outTradeNo, outRefundNo str
 
 // ParseOrderNotify 解析支付回调
 func (c *WxPayClient) ParseOrderNotify(req *client.NotifyData) (*client.OrderResp, error) {
-	// TODO: 使用 SDK 解密并验签
-	return nil, errors.New("回调解析功能暂未实现")
+	// 1. 构造 http.Request
+	httpReq := &http.Request{
+		Header: http.Header{},
+		Body:   io.NopCloser(strings.NewReader(req.Body)),
+	}
+	for k, v := range req.Headers {
+		httpReq.Header.Set(k, v)
+	}
+
+	// 2. 初始化 NotifyHandler
+	verifier := verifiers.NewSHA256WithRSAPubkeyVerifier(c.config.PublicKeyID, *c.publicKey)
+	handler := notify.NewNotifyHandler(c.config.APIV3Key, verifier)
+
+	// 3. 解析并验证签名
+	transaction := new(payments.Transaction)
+	notifyReq, err := handler.ParseNotifyRequest(context.Background(), httpReq, transaction)
+	if err != nil {
+		return nil, fmt.Errorf("解析支付回调失败: %w", err)
+	}
+
+	_ = notifyReq
+
+	// 4. 转换结果
+	status := 0
+	if *transaction.TradeState == "SUCCESS" {
+		status = 10
+	} else if *transaction.TradeState == "CLOSED" || *transaction.TradeState == "PAYERROR" {
+		status = 20
+	}
+
+	var successTime time.Time
+	if transaction.SuccessTime != nil {
+		successTime, _ = time.Parse(time.RFC3339, *transaction.SuccessTime)
+	}
+
+	return &client.OrderResp{
+		Status:         status,
+		OutTradeNo:     *transaction.OutTradeNo,
+		ChannelOrderNo: *transaction.TransactionId,
+		ChannelUserID:  *transaction.Payer.Openid,
+		SuccessTime:    successTime,
+		RawData:        req.Body,
+	}, nil
 }
 
 // ParseRefundNotify 解析退款回调
 func (c *WxPayClient) ParseRefundNotify(req *client.NotifyData) (*client.RefundResp, error) {
-	return nil, errors.New("退款回调解析功能暂未实现")
+	// 1. 构造 http.Request
+	httpReq := &http.Request{
+		Header: http.Header{},
+		Body:   io.NopCloser(strings.NewReader(req.Body)),
+	}
+	for k, v := range req.Headers {
+		httpReq.Header.Set(k, v)
+	}
+
+	// 2. 初始化 NotifyHandler
+	verifier := verifiers.NewSHA256WithRSAPubkeyVerifier(c.config.PublicKeyID, *c.publicKey)
+	handler := notify.NewNotifyHandler(c.config.APIV3Key, verifier)
+
+	// 3. 解析并验证签名
+	refundNotify := new(refunddomestic.Refund)
+	_, err := handler.ParseNotifyRequest(context.Background(), httpReq, refundNotify)
+	if err != nil {
+		return nil, fmt.Errorf("解析退款回调失败: %w", err)
+	}
+
+	// 4. 转换结果
+	status := 0
+	if *refundNotify.Status == refunddomestic.STATUS_SUCCESS {
+		status = 10
+	} else {
+		status = 20
+	}
+
+	var successTime time.Time
+	if refundNotify.SuccessTime != nil {
+		successTime = *refundNotify.SuccessTime
+	}
+
+	return &client.RefundResp{
+		Status:          status,
+		OutTradeNo:      *refundNotify.OutTradeNo,
+		OutRefundNo:     *refundNotify.OutRefundNo,
+		ChannelRefundNo: *refundNotify.RefundId,
+		SuccessTime:     successTime,
+		RawData:         req.Body,
+	}, nil
 }
 
 // UnifiedTransfer 统一转账
