@@ -75,15 +75,15 @@ func RegisterTradeRoutes(engine *gin.Engine,
 			pickUpStoreGroup.GET("/page", deliveryPickUpStoreHandler.GetDeliveryPickUpStorePage)
 		}
 
-		// Freight Template
-		freightTemplateGroup := deliveryGroup.Group("/freight-template")
+		// Express Template (运费模板) - 对齐 Java 路径
+		expressTemplateGroup := deliveryGroup.Group("/express-template")
 		{
-			freightTemplateGroup.POST("/create", deliveryFreightTemplateHandler.CreateDeliveryFreightTemplate)
-			freightTemplateGroup.PUT("/update", deliveryFreightTemplateHandler.UpdateDeliveryFreightTemplate)
-			freightTemplateGroup.DELETE("/delete", deliveryFreightTemplateHandler.DeleteDeliveryFreightTemplate)
-			freightTemplateGroup.GET("/get", deliveryFreightTemplateHandler.GetDeliveryFreightTemplate)
-			freightTemplateGroup.GET("/page", deliveryFreightTemplateHandler.GetDeliveryFreightTemplatePage)
-			freightTemplateGroup.GET("/list-all-simple", deliveryFreightTemplateHandler.GetSimpleDeliveryFreightTemplateList)
+			expressTemplateGroup.POST("/create", deliveryFreightTemplateHandler.CreateDeliveryFreightTemplate)
+			expressTemplateGroup.PUT("/update", deliveryFreightTemplateHandler.UpdateDeliveryFreightTemplate)
+			expressTemplateGroup.DELETE("/delete", deliveryFreightTemplateHandler.DeleteDeliveryFreightTemplate)
+			expressTemplateGroup.GET("/get", deliveryFreightTemplateHandler.GetDeliveryFreightTemplate)
+			expressTemplateGroup.GET("/page", deliveryFreightTemplateHandler.GetDeliveryFreightTemplatePage)
+			expressTemplateGroup.GET("/list-all-simple", deliveryFreightTemplateHandler.GetSimpleDeliveryFreightTemplateList)
 		}
 	}
 
