@@ -1,0 +1,37 @@
+package promotion
+
+import (
+	"backend-go/internal/api/req"
+	"backend-go/internal/pkg/core"
+	"backend-go/internal/service/promotion"
+
+	"github.com/gin-gonic/gin"
+)
+
+type AppBannerHandler struct {
+	svc *promotion.PromotionBannerService
+}
+
+func NewAppBannerHandler(svc *promotion.PromotionBannerService) *AppBannerHandler {
+	return &AppBannerHandler{svc: svc}
+}
+
+// GetBannerList 获得首页 Banner 列表
+// @Summary 获得首页 Banner 列表
+// @Tags 用户 APP - 营销 Banner
+// @Produce json
+// @Param position query int true "位置"
+// @Router /app-api/promotion/banner/list [get]
+func (h *AppBannerHandler) GetBannerList(c *gin.Context) {
+	var r req.AppBannerListReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		c.JSON(200, core.ErrParam)
+		return
+	}
+	res, err := h.svc.GetAppBannerList(c, r.Position)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, core.Success(res))
+}

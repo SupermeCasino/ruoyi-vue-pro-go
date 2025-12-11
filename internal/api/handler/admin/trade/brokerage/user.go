@@ -1,0 +1,176 @@
+package brokerage
+
+import (
+	"backend-go/internal/api/req"
+	"backend-go/internal/api/resp"
+	"backend-go/internal/pkg/core"
+	"backend-go/internal/service/member"
+	"backend-go/internal/service/trade/brokerage"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
+
+type BrokerageUserHandler struct {
+	svc       *brokerage.BrokerageUserService
+	memberSvc *member.MemberUserService
+	// recordSvc    *brokerage.BrokerageRecordService
+	// withdrawSvc  *brokerage.BrokerageWithdrawService
+	logger *zap.Logger
+}
+
+func NewBrokerageUserHandler(svc *brokerage.BrokerageUserService, memberSvc *member.MemberUserService, logger *zap.Logger) *BrokerageUserHandler {
+	return &BrokerageUserHandler{
+		svc:       svc,
+		memberSvc: memberSvc,
+		logger:    logger,
+	}
+}
+
+// CreateBrokerageUser 创建分销用户
+// @Router /admin-api/trade/brokerage-user/create [post]
+func (h *BrokerageUserHandler) CreateBrokerageUser(c *gin.Context) {
+	var r req.BrokerageUserCreateReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+
+	id, err := h.svc.CreateBrokerageUser(c.Request.Context(), &r)
+	if err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+	core.WriteSuccess(c, id)
+}
+
+// UpdateBindUser 修改推广员
+// @Router /admin-api/trade/brokerage-user/update-bind-user [put]
+func (h *BrokerageUserHandler) UpdateBindUser(c *gin.Context) {
+	var r req.BrokerageUserUpdateBindUserReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+	if err := h.svc.UpdateBrokerageUserId(c.Request.Context(), r.ID, r.BindUserID); err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+	core.WriteSuccess(c, true)
+}
+
+// ClearBindUser 清除推广员
+// @Router /admin-api/trade/brokerage-user/clear-bind-user [put]
+func (h *BrokerageUserHandler) ClearBindUser(c *gin.Context) {
+	var r req.BrokerageUserClearBindUserReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+	if err := h.svc.UpdateBrokerageUserId(c.Request.Context(), r.ID, 0); err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+	core.WriteSuccess(c, true)
+}
+
+// UpdateBrokerageEnabled 修改推广资格
+// @Router /admin-api/trade/brokerage-user/update-brokerage-enable [put]
+func (h *BrokerageUserHandler) UpdateBrokerageEnabled(c *gin.Context) {
+	var r req.BrokerageUserUpdateBrokerageEnabledReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+	if err := h.svc.UpdateBrokerageUserEnabled(c.Request.Context(), r.ID, r.Enabled); err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+	core.WriteSuccess(c, true)
+}
+
+// GetBrokerageUser 获得分销用户
+// @Router /admin-api/trade/brokerage-user/get [get]
+func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
+	id := core.ParseInt64(c.Query("id"))
+	if id == 0 {
+		core.WriteError(c, 400, "id is required")
+		return
+	}
+	user, err := h.svc.GetBrokerageUser(c.Request.Context(), id)
+	if err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+
+	res := resp.BrokerageUserResp{
+		ID:               user.ID,
+		BindUserID:       user.BindUserID,
+		BindUserTime:     user.BindUserTime,
+		BrokerageEnabled: user.BrokerageEnabled,
+		BrokerageTime:    user.BrokerageTime,
+		Price:            user.BrokeragePrice,
+		FrozenPrice:      user.FrozenPrice,
+		CreateTime:       user.CreatedAt,
+	}
+
+	// Fill Member Info
+	memberUser, err := h.memberSvc.GetUser(c.Request.Context(), id)
+	if err == nil && memberUser != nil {
+		res.Avatar = memberUser.Avatar
+		res.Nickname = memberUser.Nickname
+	}
+
+	core.WriteSuccess(c, res)
+}
+
+// GetBrokerageUserPage 获得分销用户分页
+// @Router /admin-api/trade/brokerage-user/page [get]
+func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
+	var r req.BrokerageUserPageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+
+	pageResult, err := h.svc.GetBrokerageUserPage(c.Request.Context(), &r)
+	if err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+
+	// Aggregate Data
+	userIds := make([]int64, len(pageResult.List))
+	for i, u := range pageResult.List {
+		userIds[i] = u.ID
+	}
+
+	userMap, _ := h.memberSvc.GetUserMap(c.Request.Context(), userIds)
+
+	list := make([]resp.BrokerageUserResp, len(pageResult.List))
+	for i, u := range pageResult.List {
+		res := resp.BrokerageUserResp{
+			ID:               u.ID,
+			BindUserID:       u.BindUserID,
+			BindUserTime:     u.BindUserTime,
+			BrokerageEnabled: u.BrokerageEnabled,
+			BrokerageTime:    u.BrokerageTime,
+			Price:            u.BrokeragePrice,
+			FrozenPrice:      u.FrozenPrice,
+			CreateTime:       u.CreatedAt,
+		}
+		if mu, ok := userMap[u.ID]; ok {
+			res.Avatar = mu.Avatar
+			res.Nickname = mu.Nickname
+		}
+
+		// TODO: Aggregate BrokerageRecord and Withdraw data
+
+		list[i] = res
+	}
+
+	core.WriteSuccess(c, core.PageResult[resp.BrokerageUserResp]{
+		List:  list,
+		Total: pageResult.Total,
+	})
+}

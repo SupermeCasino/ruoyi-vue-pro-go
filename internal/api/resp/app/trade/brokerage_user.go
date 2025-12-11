@@ -1,0 +1,46 @@
+package trade
+
+import "time"
+
+// AppBrokerageUserRespVO 分销用户信息 Response
+type AppBrokerageUserRespVO struct {
+	BrokerageEnabled bool `json:"brokerageEnabled"` // 是否成为分销员
+	BrokeragePrice   int  `json:"brokeragePrice"`   // 佣金金额
+	FrozenPrice      int  `json:"frozenPrice"`      // 冻结金额
+}
+
+// AppBrokerageUserMySummaryRespVO 个人分销统计 Response
+type AppBrokerageUserMySummaryRespVO struct {
+	YesterdayPrice           int `json:"yesterdayPrice"`           // 昨日佣金
+	WithdrawPrice            int `json:"withdrawPrice"`            // 提现佣金
+	FirstBrokerageUserCount  int `json:"firstBrokerageUserCount"`  // 一级分销用户数量
+	SecondBrokerageUserCount int `json:"secondBrokerageUserCount"` // 二级分销用户数量
+	BrokeragePrice           int `json:"brokeragePrice"`           // 可用佣金
+	FrozenPrice              int `json:"frozenPrice"`              // 冻结佣金
+}
+
+// AppBrokerageUserChildSummaryRespVO 下级分销统计 Response
+type AppBrokerageUserChildSummaryRespVO struct {
+	ID                 int64     `json:"id"`
+	Nickname           string    `json:"nickname"`           // 用户昵称
+	Avatar             string    `json:"avatar"`             // 用户头像
+	BrokerageTime      time.Time `json:"brokerageTime"`      // 成为分销员时间
+	BrokerageUserCount int       `json:"brokerageUserCount"` // 下级累计推广人数
+	BrokeragePrice     int       `json:"brokeragePrice"`     // 累计推广佣金
+}
+
+// AppBrokerageUserRankByUserCountRespVO 分销用户排行（基于用户量） Response
+type AppBrokerageUserRankByUserCountRespVO struct {
+	ID                 int64  `json:"id"`
+	Nickname           string `json:"nickname"`           // 用户昵称
+	Avatar             string `json:"avatar"`             // 用户头像
+	BrokerageUserCount int    `json:"brokerageUserCount"` // 推广用户数量
+}
+
+// AppBrokerageUserRankByPriceRespVO 分销用户排行（基于佣金） Response
+type AppBrokerageUserRankByPriceRespVO struct {
+	ID             int64  `json:"id"`
+	Nickname       string `json:"nickname"`       // 用户昵称
+	Avatar         string `json:"avatar"`         // 用户头像
+	BrokeragePrice int    `json:"brokeragePrice"` // 佣金金额
+}

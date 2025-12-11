@@ -1,0 +1,30 @@
+package model
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+// InfraJobLog 定时任务日志
+type InfraJobLog struct {
+	ID           int64          `gorm:"primaryKey;autoIncrement;comment:日志编号" json:"id"`
+	JobID        int64          `gorm:"column:job_id;type:bigint;not null;comment:任务编号" json:"jobId"`
+	HandlerName  string         `gorm:"column:handler_name;type:varchar(64);not null;comment:处理器的名字" json:"handlerName"`
+	HandlerParam string         `gorm:"column:handler_param;type:varchar(255);comment:处理器的参数" json:"handlerParam"`
+	ExecuteIndex int            `gorm:"column:execute_index;type:tinyint;not null;default:1;comment:第几次执行" json:"executeIndex"`
+	BeginTime    time.Time      `gorm:"column:begin_time;not null;comment:开始执行时间" json:"beginTime"`
+	EndTime      *time.Time     `gorm:"column:end_time;comment:结束执行时间" json:"endTime"`
+	Duration     *int           `gorm:"column:duration;type:int;comment:执行时长，单位：毫秒" json:"duration"`
+	Status       int            `gorm:"column:status;type:tinyint;not null;comment:任务状态" json:"status"`
+	Result       string         `gorm:"column:result;type:varchar(4000);comment:结果数据" json:"result"`
+	Creator      string         `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
+	Updater      string         `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
+	CreatedAt    time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdatedAt    time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	DeletedAt    gorm.DeletedAt `gorm:"column:deleted;index;comment:是否删除" json:"-"`
+}
+
+func (InfraJobLog) TableName() string {
+	return "infra_job_log"
+}

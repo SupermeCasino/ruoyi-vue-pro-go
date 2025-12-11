@@ -1,0 +1,42 @@
+package req
+
+// AppAuthLoginReq 手机+密码登录
+type AppAuthLoginReq struct {
+	Mobile   string `json:"mobile" binding:"required,len=11"` // 简单校验
+	Password string `json:"password" binding:"required,min=4,max=16"`
+	// Social
+	SocialType  int    `json:"socialType"`
+	SocialCode  string `json:"socialCode"`
+	SocialState string `json:"socialState"`
+}
+
+// AppAuthSmsLoginReq 手机+验证码登录
+type AppAuthSmsLoginReq struct {
+	Mobile string `json:"mobile" binding:"required,len=11"`
+	Code   string `json:"code" binding:"required"`
+	Scene  int    `json:"scene" binding:"required"`
+	// Social
+	SocialType  int    `json:"socialType"`
+	SocialCode  string `json:"socialCode"`
+	SocialState string `json:"socialState"`
+}
+
+// AppAuthSmsSendReq 发送手机验证码
+type AppAuthSmsSendReq struct {
+	Mobile string `json:"mobile" binding:"required,len=11"`
+	Scene  int    `json:"scene" binding:"required"` // 对应 SmsSceneEnum
+}
+
+// AppAuthSmsValidateReq 校验手机验证码
+type AppAuthSmsValidateReq struct {
+	Mobile string `json:"mobile" binding:"required,len=11"`
+	Code   string `json:"code" binding:"required"`
+	Scene  int    `json:"scene" binding:"required"`
+}
+
+// AppAuthSocialLoginReq 社交登录
+type AppAuthSocialLoginReq struct {
+	Type  int32  `json:"type" binding:"required"`
+	Code  string `json:"code" binding:"required"`
+	State string `json:"state" binding:"required"`
+}

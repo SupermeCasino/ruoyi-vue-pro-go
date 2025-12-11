@@ -1,0 +1,145 @@
+package brokerage
+
+import (
+	"backend-go/internal/api/req"
+	tradeReq "backend-go/internal/api/req/app/trade"
+	tradeResp "backend-go/internal/api/resp/app/trade"
+	"backend-go/internal/model/trade/brokerage"
+	"backend-go/internal/pkg/core"
+	"backend-go/internal/service/pay"
+	brokerageSvc "backend-go/internal/service/trade/brokerage"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
+)
+
+type AppBrokerageWithdrawHandler struct {
+	withdrawSvc    *brokerageSvc.BrokerageWithdrawService
+	payTransferSvc *pay.PayTransferService // Needed? Java Controller uses PayTransferApi.
+}
+
+func NewAppBrokerageWithdrawHandler(withdrawSvc *brokerageSvc.BrokerageWithdrawService, payTransferSvc *pay.PayTransferService) *AppBrokerageWithdrawHandler {
+	return &AppBrokerageWithdrawHandler{
+		withdrawSvc:    withdrawSvc,
+		payTransferSvc: payTransferSvc,
+	}
+}
+
+// GetBrokerageWithdrawPage 获得分销提现分页
+func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
+	var reqVO tradeReq.AppBrokerageWithdrawPageReqVO
+	if err := c.ShouldBindQuery(&reqVO); err != nil {
+		core.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	// userId := core.GetLoginUserId(c)
+	userId := core.GetLoginUserID(c)
+	pageReq := &req.BrokerageWithdrawPageReq{
+		PageParam: reqVO.PageParam,
+		UserID:    userId,
+		Type:      reqVO.Type,
+		Status:    reqVO.Status,
+	}
+
+	pageResult, err := h.withdrawSvc.GetBrokerageWithdrawPage(c, pageReq)
+	if err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+
+	writeResp := core.PageResult[*tradeResp.AppBrokerageWithdrawRespVO]{
+		Total: pageResult.Total,
+		List: lo.Map(pageResult.List, func(item *brokerage.BrokerageWithdraw, _ int) *tradeResp.AppBrokerageWithdrawRespVO {
+			return &tradeResp.AppBrokerageWithdrawRespVO{
+				ID:          item.ID,
+				UserID:      item.UserID,
+				Price:       item.Price,
+				FeePrice:    item.FeePrice,
+				TotalPrice:  item.TotalPrice,
+				Type:        item.Type,
+				Name:        item.UserName,    // Map UserName -> Name
+				Account:     item.UserAccount, // Map UserAccount -> Account
+				BankName:    item.BankName,
+				Status:      item.Status,
+				AuditReason: item.AuditReason,
+				AuditTime:   item.AuditTime,
+				Remark:      item.Remark,
+				CreatedAt:   item.CreatedAt,
+				// TypeName, StatusName -> Dict lookup (Frontend can handle or backend add logic)
+			}
+		}),
+	}
+	core.WriteSuccess(c, writeResp)
+}
+
+// GetBrokerageWithdraw 获得佣金提现详情
+func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		core.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	userId := core.GetLoginUserID(c)
+	withdraw, err := h.withdrawSvc.GetBrokerageWithdraw(c, id)
+	if err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+	if withdraw == nil || withdraw.UserID != userId {
+		core.WriteSuccess(c, nil)
+		return
+	}
+
+	// VO Conversion
+	respVO := &tradeResp.AppBrokerageWithdrawRespVO{
+		Status:      withdraw.Status,
+		AuditReason: withdraw.AuditReason,
+		AuditTime:   withdraw.AuditTime,
+		Remark:      withdraw.Remark,
+		CreatedAt:   withdraw.CreatedAt,
+	}
+
+	// Wechat Transfer Info Logic
+	// Status: AUDIT_SUCCESS(10), Type: WECHAT(3)
+	// We check against constants.
+	if withdraw.Status == 10 && withdraw.Type == 3 && withdraw.PayTransferID > 0 {
+		transfer, err := h.payTransferSvc.GetTransfer(c.Request.Context(), int64(withdraw.PayTransferID))
+		if err != nil {
+			core.WriteError(c, 500, err.Error())
+			return
+		}
+		if transfer != nil {
+			if transfer.ChannelExtras != nil {
+				if val, ok := transfer.ChannelExtras["package_info"]; ok {
+					respVO.TransferChannelPackageInfo = val
+				}
+				if val, ok := transfer.ChannelExtras["mch_id"]; ok {
+					respVO.TransferChannelMchId = val
+				}
+			}
+		}
+	}
+
+	core.WriteSuccess(c, respVO)
+}
+
+// CreateBrokerageWithdraw 创建分销提现
+func (h *AppBrokerageWithdrawHandler) CreateBrokerageWithdraw(c *gin.Context) {
+	var reqVO tradeReq.AppBrokerageWithdrawCreateReqVO
+	if err := c.ShouldBindJSON(&reqVO); err != nil {
+		core.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	userId := core.GetLoginUserID(c)
+	id, err := h.withdrawSvc.CreateBrokerageWithdraw(c, userId, &reqVO)
+	if err != nil {
+		core.WriteError(c, 500, err.Error())
+		return
+	}
+	core.WriteSuccess(c, id)
+}
