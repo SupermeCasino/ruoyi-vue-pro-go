@@ -16,6 +16,7 @@ type Config struct {
 	MySQL MySQLConfig `mapstructure:"mysql"`
 	Redis RedisConfig `mapstructure:"redis"`
 	Trade TradeConfig `mapstructure:"trade"`
+	Pay   PayConfig   `mapstructure:"pay"`
 }
 
 type AppConfig struct {
@@ -62,6 +63,12 @@ type ExpressConfig struct {
 type Kd100Config struct {
 	Customer string `mapstructure:"customer"`
 	Key      string `mapstructure:"key"`
+}
+
+type PayConfig struct {
+	OrderNotifyURL  string `mapstructure:"order_notify_url"`
+	RefundNotifyURL string `mapstructure:"refund_notify_url"`
+	OrderNoPrefix   string `mapstructure:"order_no_prefix"`
 }
 
 func Load() error {
