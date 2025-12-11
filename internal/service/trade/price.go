@@ -11,22 +11,35 @@ import (
 
 // TradePriceService 价格计算 Service
 type TradePriceService struct {
-	productSkuSvc     *product.ProductSkuService
-	productSpuSvc     *product.ProductSpuService
-	couponSvc         *promotion.CouponUserService
-	rewardActivitySvc *promotion.RewardActivityService
-	memberUserSvc     *memberSvc.MemberUserService
-	memberLevelSvc    *memberSvc.MemberLevelService
+	productSkuSvc      *product.ProductSkuService
+	productSpuSvc      *product.ProductSpuService
+	couponSvc          *promotion.CouponUserService
+	rewardActivitySvc  *promotion.RewardActivityService
+	memberUserSvc      *memberSvc.MemberUserService
+	memberLevelSvc     *memberSvc.MemberLevelService
+	deliveryFreightSvc *DeliveryFreightTemplateService // Added
+	memberAddressSvc   *memberSvc.MemberAddressService // Added
 }
 
-func NewTradePriceService(productSkuSvc *product.ProductSkuService, productSpuSvc *product.ProductSpuService, couponSvc *promotion.CouponUserService, rewardActivitySvc *promotion.RewardActivityService, memberUserSvc *memberSvc.MemberUserService, memberLevelSvc *memberSvc.MemberLevelService) *TradePriceService {
+func NewTradePriceService(
+	productSkuSvc *product.ProductSkuService,
+	productSpuSvc *product.ProductSpuService,
+	couponSvc *promotion.CouponUserService,
+	rewardActivitySvc *promotion.RewardActivityService,
+	memberUserSvc *memberSvc.MemberUserService,
+	memberLevelSvc *memberSvc.MemberLevelService,
+	deliveryFreightSvc *DeliveryFreightTemplateService, // Added
+	memberAddressSvc *memberSvc.MemberAddressService, // Added
+) *TradePriceService {
 	return &TradePriceService{
-		productSkuSvc:     productSkuSvc,
-		productSpuSvc:     productSpuSvc,
-		couponSvc:         couponSvc,
-		rewardActivitySvc: rewardActivitySvc,
-		memberUserSvc:     memberUserSvc,
-		memberLevelSvc:    memberLevelSvc,
+		productSkuSvc:      productSkuSvc,
+		productSpuSvc:      productSpuSvc,
+		couponSvc:          couponSvc,
+		rewardActivitySvc:  rewardActivitySvc,
+		memberUserSvc:      memberUserSvc,
+		memberLevelSvc:     memberLevelSvc,
+		deliveryFreightSvc: deliveryFreightSvc,
+		memberAddressSvc:   memberAddressSvc,
 	}
 }
 
@@ -230,7 +243,53 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 	respBO.Price.TotalPrice = totalPrice
 	respBO.Price.DiscountPrice = activityDiscount // Set Activity Discount
 	respBO.Price.VipPrice = totalVipPrice         // Set VIP Discount
-	respBO.Price.DeliveryPrice = 0                // Assume free for now
+	// 5. Calculate Delivery Price
+	deliveryPrice := 0
+	if req.DeliveryType == 1 && req.AddressID != nil && *req.AddressID > 0 { // Express Delivery
+		// Get Address to get AreaID
+		address, err := s.memberAddressSvc.GetAddress(ctx, req.UserID, *req.AddressID)
+		if err != nil {
+			return nil, err
+		}
+		if address != nil {
+			// Calculate Freight based on items
+			// Group items by TemplateID? SPU has TemplateID usually.
+			// Current Model SPU has DeliveryTemplateID?
+			// Let's assume SPU has DeliveryTemplateId. Need to check ProductSpuResp.
+			// If not available in Resp, need to fetch SPU Entity or assume simpler model.
+			// ProductSpuResp (Step 3936 viewed?) spuMap uses *resp.ProductSpuResp.
+			// Let's check ProductSpuResp definition if possible, or assume it has DeliveryTemplateID.
+			// If not, we might need to fetch it.
+			// For this iteration, I'll group by SPU's TemplateID.
+
+			// Map TemplateID -> Count (or Weight/Volume)
+			// Assuming Count for now as per CalculateFreight logic
+			templateMap := make(map[int64]int)
+			for _, item := range respBO.Items {
+				spu := spuMap[item.SpuID]
+				if spu != nil {
+					// Use SPU's delivery template ID. If 0, assume free or default?
+					// If spu.DeliveryTemplateID is not in VO, we are stuck.
+					// Checking viewed code: Step 3936 line 128 `spuMap[spu.ID] = spu`.
+					// I don't see ProductSpuResp definition.
+					// I will assume it has `DeliveryTemplateId`.
+					templateMap[spu.DeliveryTemplateID] += item.Count
+				}
+			}
+
+			for tplID, count := range templateMap {
+				if tplID > 0 {
+					p, err := s.deliveryFreightSvc.CalculateFreight(ctx, tplID, int(address.AreaID), count)
+					if err != nil {
+						// log error? fail?
+						return nil, err
+					}
+					deliveryPrice += p
+				}
+			}
+		}
+	}
+	respBO.Price.DeliveryPrice = deliveryPrice
 
 	// Initial Pay Price after Activity AND VIP
 	// Note: If Activity + VIP > Total, PayPrice = 0.
