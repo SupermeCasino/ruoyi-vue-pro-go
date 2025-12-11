@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -21,12 +22,14 @@ var NotifyFrequency = []int{15, 15, 30, 180, 1800, 1800, 1800, 3600}
 type PayNotifyService struct {
 	q      *query.Query
 	logger *zap.Logger
+	lock   *PayNotifyLock
 }
 
-func NewPayNotifyService(q *query.Query, logger *zap.Logger) *PayNotifyService {
+func NewPayNotifyService(q *query.Query, logger *zap.Logger, rdb *redis.Client) *PayNotifyService {
 	return &PayNotifyService{
 		q:      q,
 		logger: logger,
+		lock:   NewPayNotifyLock(rdb),
 	}
 }
 
@@ -87,13 +90,42 @@ func (s *PayNotifyService) ExecuteNotify(ctx context.Context) (int, error) {
 
 	count := 0
 	for _, task := range tasks {
-		if err := s.executeNotifyTask(ctx, task); err != nil {
-			s.logger.Error("executeNotifyTask failed", zap.Int64("taskId", task.ID), zap.Error(err))
-		} else {
-			count++
-		}
+		// 异步执行每个任务
+		go func(t *pay.PayNotifyTask) {
+			if err := s.executeNotifyTaskWithLock(ctx, t); err != nil {
+				s.logger.Error("executeNotifyTask failed", zap.Int64("taskId", t.ID), zap.Error(err))
+			}
+		}(task)
+		count++
 	}
 	return count, nil
+}
+
+// executeNotifyTaskWithLock 使用分布式锁执行通知任务
+// 对齐 Java: PayNotifyServiceImpl.executeNotify (with lock)
+func (s *PayNotifyService) executeNotifyTaskWithLock(ctx context.Context, task *pay.PayNotifyTask) error {
+	// 使用分布式锁,避免并发问题
+	return s.lock.Lock(ctx, task.ID, func() error {
+		// 校验任务是否已被通知过 (双重检查)
+		dbTask, err := s.q.PayNotifyTask.WithContext(ctx).
+			Where(s.q.PayNotifyTask.ID.Eq(task.ID)).
+			First()
+		if err != nil {
+			return err
+		}
+
+		// 通过 notifyTimes 判断是否已被其他进程处理
+		if dbTask.NotifyTimes != task.NotifyTimes {
+			s.logger.Warn("task ignored due to concurrent execution",
+				zap.Int64("taskId", task.ID),
+				zap.Int("expectedTimes", task.NotifyTimes),
+				zap.Int("actualTimes", dbTask.NotifyTimes))
+			return nil
+		}
+
+		// 执行实际的通知逻辑
+		return s.executeNotifyTask(ctx, dbTask)
+	})
 }
 
 func (s *PayNotifyService) executeNotifyTask(ctx context.Context, task *pay.PayNotifyTask) error {
