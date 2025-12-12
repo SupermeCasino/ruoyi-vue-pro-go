@@ -1,0 +1,65 @@
+package wallet
+
+import (
+	"backend-go/internal/api/req"
+	"backend-go/internal/api/resp"
+	"backend-go/internal/model/pay"
+	"backend-go/internal/pkg/core"
+	payData "backend-go/internal/service/pay/wallet"
+
+	"github.com/gin-gonic/gin"
+)
+
+type PayWalletRechargeHandler struct {
+	svc *payData.PayWalletRechargeService
+}
+
+func NewPayWalletRechargeHandler(svc *payData.PayWalletRechargeService) *PayWalletRechargeHandler {
+	return &PayWalletRechargeHandler{svc: svc}
+}
+
+// GetWalletRechargePage 获得会员钱包充值分页
+func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
+	var r req.PayWalletRechargePageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		c.JSON(200, core.ErrParam)
+		return
+	}
+	res, err := h.svc.GetWalletRechargePage(c, &r)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	// Convert list
+	newRes := core.NewPageResult(make([]*resp.PayWalletRechargeResp, 0, len(res.List)), res.Total)
+	for _, item := range res.List {
+		newRes.List = append(newRes.List, convertRechargeResp(item))
+	}
+	c.JSON(200, core.Success(newRes))
+}
+
+func convertRechargeResp(item *pay.PayWalletRecharge) *resp.PayWalletRechargeResp {
+	if item == nil {
+		return nil
+	}
+	return &resp.PayWalletRechargeResp{
+		ID:               item.ID,
+		WalletID:         item.WalletID,
+		TotalPrice:       item.TotalPrice,
+		PayPrice:         item.PayPrice,
+		BonusPrice:       item.BonusPrice,
+		PackageID:        item.PackageID,
+		PayStatus:        item.PayStatus,
+		PayOrderID:       item.PayOrderID,
+		PayChannelCode:   item.PayChannelCode,
+		PayTime:          item.PayTime,
+		RefundStatus:     item.RefundStatus,
+		PayRefundID:      item.PayRefundID,
+		RefundTotalPrice: item.RefundTotalPrice,
+		RefundPayPrice:   item.RefundPayPrice,
+		RefundBonusPrice: item.RefundBonusPrice,
+		RefundTime:       item.RefundTime,
+		CreateTime:       item.CreatedAt,
+	}
+}
