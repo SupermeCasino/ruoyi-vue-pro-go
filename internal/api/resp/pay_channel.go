@@ -1,14 +1,17 @@
 package resp
 
-import "time"
+import (
+	"backend-go/internal/model/pay"
+	"time"
+)
 
 type PayChannelResp struct {
-	ID         int64     `json:"id"`
-	Code       string    `json:"code"`
-	Status     int       `json:"status"`
-	FeeRate    float64   `json:"feeRate"`
-	Remark     string    `json:"remark"`
-	AppID      int64     `json:"appId"`
-	Config     string    `json:"config"` // JSON String
-	CreateTime time.Time `json:"createTime"`
+	ID         int64                `json:"id"`
+	Code       string               `json:"code"`
+	Status     int                  `json:"status"`
+	FeeRate    float64              `json:"feeRate"`
+	Remark     string               `json:"remark"`
+	AppID      int64                `json:"appId"`
+	Config     *pay.PayClientConfig `json:"config"` // 支付渠道配置
+	CreateTime time.Time            `json:"createTime"`
 }

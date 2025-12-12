@@ -1,14 +1,17 @@
 package req
 
-import "backend-go/internal/pkg/core"
+import (
+	"backend-go/internal/model/pay"
+	"backend-go/internal/pkg/core"
+)
 
 type PayChannelCreateReq struct {
-	Code    string  `json:"code" binding:"required"`
-	Status  int     `json:"status" binding:"required"`
-	FeeRate float64 `json:"feeRate" binding:"required"`
-	Remark  string  `json:"remark"`
-	AppID   int64   `json:"appId" binding:"required"`
-	Config  string  `json:"config" binding:"required"` // JSON String
+	Code    string               `json:"code" binding:"required"`
+	Status  int                  `json:"status" binding:"required"`
+	FeeRate float64              `json:"feeRate" binding:"required"`
+	Remark  string               `json:"remark"`
+	AppID   int64                `json:"appId" binding:"required"`
+	Config  *pay.PayClientConfig `json:"config" binding:"required"` // 支付渠道配置
 }
 
 type PayChannelUpdateReq struct {

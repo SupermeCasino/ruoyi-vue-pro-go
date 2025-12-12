@@ -148,7 +148,7 @@ func (s *PayOrderService) SubmitOrder(ctx context.Context, reqVO *req.PayOrderSu
 	if payClient == nil {
 		// Lazy create if not exists
 		var err error
-		payClient, err = s.clientFac.CreateOrUpdatePayClient(channel.ID, channel.Code, channel.Config)
+		payClient, err = s.clientFac.CreateOrUpdatePayClient(channel.ID, channel.Code, channel.Config.ToJSON())
 		if err != nil {
 			return nil, err
 		}
