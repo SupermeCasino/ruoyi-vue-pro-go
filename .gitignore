@@ -21,3 +21,4 @@ tmp/
 # Ignore local configuration files
 config/*.local.yaml
 /.spec-workflow/
+/internal/repo/query/
