@@ -142,6 +142,10 @@ func main() {
 		pay.PayRefund{},
 		pay.PayNotifyTask{},
 		pay.PayNotifyLog{},
+		pay.PayWallet{},
+		pay.PayWalletRecharge{},
+		pay.PayWalletTransaction{},
+		pay.PayWalletRechargePackage{},
 	)
 
 	// 4. 执行生成
