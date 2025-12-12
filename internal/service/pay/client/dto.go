@@ -4,6 +4,14 @@ import (
 	"time"
 )
 
+// ============ Constants ============
+const (
+	DisplayModeUrl    = "url"
+	DisplayModeQrCode = "qr_code"
+	DisplayModeApp    = "app"
+	DisplayModeForm   = "form"
+)
+
 // ============ Order DTOs ============
 
 // UnifiedOrderReq 统一下单 Request DTO

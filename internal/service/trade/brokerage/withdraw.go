@@ -23,18 +23,16 @@ type BrokerageWithdrawService struct {
 	q              *query.Query
 	logger         *zap.Logger
 	recordSvc      *BrokerageRecordService
-	payWalletSvc   *pay.PayWalletService
 	payTransferSvc *pay.PayTransferService
 	tradeConfigSvc *trade.TradeConfigService
 	memberSvc      *member.MemberUserService
 }
 
-func NewBrokerageWithdrawService(q *query.Query, logger *zap.Logger, recordSvc *BrokerageRecordService, payWalletSvc *pay.PayWalletService, payTransferSvc *pay.PayTransferService, tradeConfigSvc *trade.TradeConfigService, memberSvc *member.MemberUserService) *BrokerageWithdrawService {
+func NewBrokerageWithdrawService(q *query.Query, logger *zap.Logger, recordSvc *BrokerageRecordService, payTransferSvc *pay.PayTransferService, tradeConfigSvc *trade.TradeConfigService, memberSvc *member.MemberUserService) *BrokerageWithdrawService {
 	return &BrokerageWithdrawService{
 		q:              q,
 		logger:         logger,
 		recordSvc:      recordSvc,
-		payWalletSvc:   payWalletSvc,
 		payTransferSvc: payTransferSvc,
 		tradeConfigSvc: tradeConfigSvc,
 		memberSvc:      memberSvc,
