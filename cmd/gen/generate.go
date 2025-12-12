@@ -83,10 +83,9 @@ func main() {
 		// DeliverySale{},
 		trade.TradeDeliveryExpress{},
 		trade.TradeDeliveryPickUpStore{},
-		trade.TradeDeliveryFreightTemplate{},
-		trade.TradeDeliveryFreightTemplateCharge{},
-		trade.TradeDeliveryFreightTemplateCharge{},
-		trade.TradeDeliveryFreightTemplateFree{},
+		trade.TradeDeliveryExpressTemplate{},
+		trade.TradeDeliveryExpressTemplateCharge{},
+		trade.TradeDeliveryExpressTemplateFree{},
 		// Brokerage
 		brokerage.BrokerageUser{},
 		brokerage.BrokerageRecord{},
@@ -123,6 +122,8 @@ func main() {
 		promotion.PromotionArticleCategory{},     // Added Article
 		promotion.PromotionBanner{},
 		promotion.PromotionRewardActivity{},
+		promotion.PromotionPointActivity{},
+		promotion.PromotionPointProduct{},
 		member.MemberLevel{},
 		member.MemberGroup{},
 		member.MemberTag{},

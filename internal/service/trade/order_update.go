@@ -158,7 +158,6 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 			PayStatus:      false,
 			TotalPrice:     priceResp.Price.TotalPrice,
 			DiscountPrice:  priceResp.Price.DiscountPrice,
-			DeliveryPrice:  priceResp.Price.DeliveryPrice,
 			PayPrice:       priceResp.Price.PayPrice,
 			CouponID:       priceResp.CouponID,
 			CouponPrice:    priceResp.Price.CouponPrice,

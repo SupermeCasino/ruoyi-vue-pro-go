@@ -14,7 +14,7 @@ func RegisterTradeRoutes(engine *gin.Engine,
 	tradeAfterSaleHandler *tradeAdmin.TradeAfterSaleHandler,
 	deliveryExpressHandler *tradeAdmin.DeliveryExpressHandler,
 	deliveryPickUpStoreHandler *tradeAdmin.DeliveryPickUpStoreHandler,
-	deliveryFreightTemplateHandler *tradeAdmin.DeliveryFreightTemplateHandler,
+	deliveryExpressTemplateHandler *tradeAdmin.DeliveryExpressTemplateHandler,
 	tradeConfigHandler *tradeAdmin.TradeConfigHandler,
 	brokerageUserHandler *tradeBrokerage.BrokerageUserHandler,
 	brokerageRecordHandler *tradeBrokerage.BrokerageRecordHandler,
@@ -73,17 +73,18 @@ func RegisterTradeRoutes(engine *gin.Engine,
 			pickUpStoreGroup.DELETE("/delete", deliveryPickUpStoreHandler.DeleteDeliveryPickUpStore)
 			pickUpStoreGroup.GET("/get", deliveryPickUpStoreHandler.GetDeliveryPickUpStore)
 			pickUpStoreGroup.GET("/page", deliveryPickUpStoreHandler.GetDeliveryPickUpStorePage)
+			pickUpStoreGroup.GET("/simple-list", deliveryPickUpStoreHandler.GetSimpleDeliveryPickUpStoreList)
 		}
 
 		// Express Template (运费模板) - 对齐 Java 路径
 		expressTemplateGroup := deliveryGroup.Group("/express-template")
 		{
-			expressTemplateGroup.POST("/create", deliveryFreightTemplateHandler.CreateDeliveryFreightTemplate)
-			expressTemplateGroup.PUT("/update", deliveryFreightTemplateHandler.UpdateDeliveryFreightTemplate)
-			expressTemplateGroup.DELETE("/delete", deliveryFreightTemplateHandler.DeleteDeliveryFreightTemplate)
-			expressTemplateGroup.GET("/get", deliveryFreightTemplateHandler.GetDeliveryFreightTemplate)
-			expressTemplateGroup.GET("/page", deliveryFreightTemplateHandler.GetDeliveryFreightTemplatePage)
-			expressTemplateGroup.GET("/list-all-simple", deliveryFreightTemplateHandler.GetSimpleDeliveryFreightTemplateList)
+			expressTemplateGroup.POST("/create", deliveryExpressTemplateHandler.CreateDeliveryExpressTemplate)
+			expressTemplateGroup.PUT("/update", deliveryExpressTemplateHandler.UpdateDeliveryExpressTemplate)
+			expressTemplateGroup.DELETE("/delete", deliveryExpressTemplateHandler.DeleteDeliveryExpressTemplate)
+			expressTemplateGroup.GET("/get", deliveryExpressTemplateHandler.GetDeliveryExpressTemplate)
+			expressTemplateGroup.GET("/page", deliveryExpressTemplateHandler.GetDeliveryExpressTemplatePage)
+			expressTemplateGroup.GET("/list-all-simple", deliveryExpressTemplateHandler.GetSimpleDeliveryExpressTemplateList)
 		}
 	}
 

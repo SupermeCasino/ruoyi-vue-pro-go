@@ -262,7 +262,7 @@ func (s *PointActivityService) GetPointActivity(ctx context.Context, id int64) (
 func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *req.PointActivityPageReq) (*core.PageResult[promotion.PromotionPointActivity], error) {
 	q := s.q.PromotionPointActivity.WithContext(ctx)
 	if req.Status != nil {
-		q = q.Where(s.q.PromotionPointActivity.Status.Eq(int32(*req.Status)))
+		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*req.Status))
 	}
 	// TODO: 支持其他搜索条件 (Java只支持Status)
 
@@ -391,14 +391,14 @@ func (s *PointActivityService) UpdatePointStockDecr(ctx context.Context, id int6
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 4.1 扣减活动商品库存
 		if _, err := tx.PromotionPointProduct.WithContext(ctx).
-			Where(tx.PromotionPointProduct.ID.Eq(product.ID), tx.PromotionPointProduct.Stock.Gte(int32(count))).
-			Update(tx.PromotionPointProduct.Stock, tx.PromotionPointProduct.Stock.Sub(int32(count))); err != nil {
+			Where(tx.PromotionPointProduct.ID.Eq(product.ID), tx.PromotionPointProduct.Stock.Gte(count)).
+			Update(tx.PromotionPointProduct.Stock, tx.PromotionPointProduct.Stock.Sub(count)); err != nil {
 			return err
 		}
 		// 4.2 扣减活动总库存
 		if _, err := tx.PromotionPointActivity.WithContext(ctx).
-			Where(tx.PromotionPointActivity.ID.Eq(activity.ID), tx.PromotionPointActivity.Stock.Gte(int32(count))).
-			Update(tx.PromotionPointActivity.Stock, tx.PromotionPointActivity.Stock.Sub(int32(count))); err != nil {
+			Where(tx.PromotionPointActivity.ID.Eq(activity.ID), tx.PromotionPointActivity.Stock.Gte(count)).
+			Update(tx.PromotionPointActivity.Stock, tx.PromotionPointActivity.Stock.Sub(count)); err != nil {
 			return err
 		}
 		return nil
@@ -430,13 +430,13 @@ func (s *PointActivityService) UpdatePointStockIncr(ctx context.Context, id int6
 		// 3.1 增加活动商品库存
 		if _, err := tx.PromotionPointProduct.WithContext(ctx).
 			Where(tx.PromotionPointProduct.ID.Eq(product.ID)).
-			Update(tx.PromotionPointProduct.Stock, tx.PromotionPointProduct.Stock.Add(int32(count))); err != nil {
+			Update(tx.PromotionPointProduct.Stock, tx.PromotionPointProduct.Stock.Add(count)); err != nil {
 			return err
 		}
 		// 3.2 增加活动总库存
 		if _, err := tx.PromotionPointActivity.WithContext(ctx).
 			Where(tx.PromotionPointActivity.ID.Eq(activity.ID)).
-			Update(tx.PromotionPointActivity.Stock, tx.PromotionPointActivity.Stock.Add(int32(count))); err != nil {
+			Update(tx.PromotionPointActivity.Stock, tx.PromotionPointActivity.Stock.Add(count)); err != nil {
 			return err
 		}
 		return nil

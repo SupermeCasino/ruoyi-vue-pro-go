@@ -6,11 +6,8 @@ import "time"
 type DeliveryFreightTemplateResp struct {
 	ID         int64                               `json:"id"`
 	Name       string                              `json:"name"`
-	Type       int                                 `json:"type"`
 	ChargeMode int                                 `json:"chargeMode"`
 	Sort       int                                 `json:"sort"`
-	Status     int                                 `json:"status"`
-	Remark     string                              `json:"remark"`
 	CreateTime time.Time                           `json:"createTime"`
 	Charges    []DeliveryFreightTemplateChargeResp `json:"charges"`
 	Frees      []DeliveryFreightTemplateFreeResp   `json:"frees"`
@@ -25,9 +22,9 @@ type DeliveryFreightTemplateChargeResp struct {
 }
 
 type DeliveryFreightTemplateFreeResp struct {
-	AreaIDs   []int   `json:"areaIds"`
-	FreePrice int     `json:"freePrice"`
-	FreeCount float64 `json:"freeCount"`
+	AreaIDs   []int `json:"areaIds"`
+	FreePrice int   `json:"freePrice"`
+	FreeCount int   `json:"freeCount"`
 }
 
 // SimpleDeliveryFreightTemplateResp 运费模板精简 Response

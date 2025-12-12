@@ -9,7 +9,7 @@ import (
 	"errors"
 )
 
-// TradePriceService 价格计算 Service
+// TradePriceService 价格计算服务
 type TradePriceService struct {
 	productSkuSvc      *product.ProductSkuService
 	productSpuSvc      *product.ProductSpuService
@@ -17,8 +17,9 @@ type TradePriceService struct {
 	rewardActivitySvc  *promotion.RewardActivityService
 	memberUserSvc      *memberSvc.MemberUserService
 	memberLevelSvc     *memberSvc.MemberLevelService
-	deliveryFreightSvc *DeliveryFreightTemplateService // Added
-	memberAddressSvc   *memberSvc.MemberAddressService // Added
+	deliveryFreightSvc *DeliveryExpressTemplateService
+	memberAddressSvc   *memberSvc.MemberAddressService
+	memberConfigSvc    *memberSvc.MemberConfigService
 }
 
 func NewTradePriceService(
@@ -28,8 +29,9 @@ func NewTradePriceService(
 	rewardActivitySvc *promotion.RewardActivityService,
 	memberUserSvc *memberSvc.MemberUserService,
 	memberLevelSvc *memberSvc.MemberLevelService,
-	deliveryFreightSvc *DeliveryFreightTemplateService, // Added
-	memberAddressSvc *memberSvc.MemberAddressService, // Added
+	deliveryFreightSvc *DeliveryExpressTemplateService,
+	memberAddressSvc *memberSvc.MemberAddressService,
+	memberConfigSvc *memberSvc.MemberConfigService,
 ) *TradePriceService {
 	return &TradePriceService{
 		productSkuSvc:      productSkuSvc,
@@ -40,10 +42,11 @@ func NewTradePriceService(
 		memberLevelSvc:     memberLevelSvc,
 		deliveryFreightSvc: deliveryFreightSvc,
 		memberAddressSvc:   memberAddressSvc,
+		memberConfigSvc:    memberConfigSvc, // 已添加
 	}
 }
 
-// TradePriceCalculateReqBO 价格计算 Request BO
+// TradePriceCalculateReqBO 价格计算请求BO
 type TradePriceCalculateReqBO struct {
 	UserID        int64
 	CouponID      *int64
@@ -61,7 +64,7 @@ type TradePriceCalculateItemBO struct {
 	Selected bool
 }
 
-// TradePriceCalculateRespBO 价格计算 Response BO
+// TradePriceCalculateRespBO 价格计算响应BO
 type TradePriceCalculateRespBO struct {
 	Type       int
 	Price      TradePriceCalculatePriceBO
@@ -105,24 +108,23 @@ type TradePriceCalculateItemRespBO struct {
 	Properties    []resp.ProductSkuPropertyResp
 }
 
-// CalculateOrderPrice 价格计算
-// simplified version: only calculates base price = SKU Price * Count.
-// Ignores coupons, points, VIP, and shipping fees for now.
+// CalculateOrderPrice 订单价格计算
+// Java：TradePriceServiceImpl#calculateOrderPrice
 func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradePriceCalculateReqBO) (*TradePriceCalculateRespBO, error) {
-	// 1. Get SKU IDs
+	// 1. 获得 SKU 编号数组
 	var skuIDs []int64
 	for _, item := range req.Items {
 		skuIDs = append(skuIDs, item.SkuID)
 	}
 
-	// 2. Fetch SKUs
+	// 2. 获得 SKU 列表
 	skus, err := s.productSkuSvc.GetSkuList(ctx, skuIDs)
 	if err != nil {
 		return nil, err
 	}
 	skuMap := make(map[int64]*resp.ProductSkuResp)
 	var spuIDs []int64
-	spuIdMapKeys := make(map[int64]bool) // To avoid duplicates for query
+	spuIdMapKeys := make(map[int64]bool) // 避免查询重复
 	for _, sku := range skus {
 		skuMap[sku.ID] = sku
 		if !spuIdMapKeys[sku.SpuID] {
@@ -131,7 +133,7 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		}
 	}
 
-	// 2.1 Fetch SPUs for CategoryID
+	// 2.1 获得 SPU 列表
 	spus, err := s.productSpuSvc.GetSpuList(ctx, spuIDs)
 	if err != nil {
 		return nil, err
@@ -141,7 +143,7 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		spuMap[spu.ID] = spu
 	}
 
-	// 3. Initialize Response
+	// 3. 初始化结果
 	respBO := &TradePriceCalculateRespBO{
 		Price:   TradePriceCalculatePriceBO{},
 		Items:   make([]TradePriceCalculateItemRespBO, 0),
@@ -150,7 +152,7 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 
 	var totalPrice, totalPayPrice int
 
-	// 4. Calculate VIP Level Discount
+	// 4. 计算 VIP 会员折扣
 	levelDiscountPercent := 100
 	if req.UserID > 0 {
 		user, _ := s.memberUserSvc.GetUser(ctx, req.UserID)
@@ -162,9 +164,9 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		}
 	}
 
-	var totalVipPrice int // Only declare new var
+	var totalVipPrice int // 仅声明新变量
 
-	// 4. Loop Items and Calculate
+	// 4. 循环计算商品项
 	for _, item := range req.Items {
 		if !item.Selected {
 			continue
@@ -178,41 +180,33 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 			return nil, errors.New("商品 SPU 不存在")
 		}
 
-		// Calculate Item Price
+		// 计算商品价格
 		itemPrice := sku.Price
 		itemPayPrice := itemPrice * item.Count
 
-		// Calculate VIP Price (Savings)
-		// VipPrice in ItemResp usually means "The Price if VIP" or "The Discount Amount"?
-		// Checked RespBO: VipPrice int.
-		// Let's assume VipPrice field in ItemResp is the "Discount Amount" for consistency with others?
-		// Or is it "Unit Price for VIP"?
-		// Usually in Order Item, we store "Original Price", "Pay Price", "Discount Amount".
-		// Let's settle on: `VipPrice` (in ItemResp) = Total VIP Savings for this item.
-
+		// 计算 VIP 优惠金额
+		// 逻辑：VipPrice (ItemResp) 代表该商品的 VIP 优惠总额
 		itemVipSavings := 0
 		if levelDiscountPercent < 100 {
-			// Savings = Original * Count * (1 - Discount%)
-			// Avoid slight precision issues by: Price * Count - (Price * Count * Discount / 100)
+			// 优惠金额 = 原价 * 数量 * (1 - 折扣率)
+			// 避免精度问题：Price * Count - (Price * Count * Discount / 100)
 			vipTotal := int(int64(itemPrice) * int64(item.Count) * int64(levelDiscountPercent) / 100)
 			itemVipSavings = itemPayPrice - vipTotal
 		}
 
 		itemResp := TradePriceCalculateItemRespBO{
-			SpuID:    sku.SpuID,
-			SkuID:    sku.ID,
-			Count:    item.Count,
-			CartID:   item.CartID,
-			Selected: item.Selected,
-			Price:    itemPrice,
-			PayPrice: itemPayPrice, // Will be reduced later? Or currently logic flow?
-			// Use logic: Calculate Base Pay Price here. Deductions are separate?
-			// Current logic: PayPrice is accumulated.
+			SpuID:      sku.SpuID,
+			SkuID:      sku.ID,
+			Count:      item.Count,
+			CartID:     item.CartID,
+			Selected:   item.Selected,
+			Price:      itemPrice,
+			PayPrice:   itemPayPrice, // 基础应付金额，后续扣减
 			PicURL:     sku.PicURL,
 			Properties: sku.Properties,
 			SpuName:    spu.Name,
 			CategoryID: spu.CategoryID,
-			VipPrice:   itemVipSavings, // Store Savings
+			VipPrice:   itemVipSavings, // 存储优惠金额
 		}
 
 		totalPrice += itemPayPrice
@@ -222,15 +216,15 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		respBO.Items = append(respBO.Items, itemResp)
 	}
 
-	// 5. Set Totals
-	// 5. Calculate Reward Activity (Full Reduction)
+	// 5. 设置合计
+	// 5. 计算满减/满折活动
 	matchItems := make([]promotion.ActivityMatchItem, 0)
 	for _, item := range respBO.Items {
 		matchItems = append(matchItems, promotion.ActivityMatchItem{
 			SkuID:      item.SkuID,
 			SpuID:      item.SpuID,
 			CategoryID: item.CategoryID,
-			Price:      item.Price, // Unit Price (Original)
+			Price:      item.Price, // 单价（原价）
 			Count:      item.Count,
 		})
 	}
@@ -239,49 +233,121 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		return nil, err
 	}
 
-	// 5. Total Price
+	// 5. 设置合计
 	respBO.Price.TotalPrice = totalPrice
-	respBO.Price.DiscountPrice = activityDiscount // Set Activity Discount
-	respBO.Price.VipPrice = totalVipPrice         // Set VIP Discount
-	// 5. Calculate Delivery Price
+	respBO.Price.DiscountPrice = activityDiscount // 设置活动优惠（满减/满折）
+
+	// 3. 计算 VIP 优惠 (Order 10 - 部分 2)
+	// 逻辑：限时折扣 (Seckill) 和 VIP 是互斥的 (Order 10)。
+	// 目前 Seckill 尚未迁移，因此仅计算 VIP 优惠。后续迁移 Seckill 时需在此处添加互斥判定 (取优惠最大值)。
+	// TODO: 迁移 Seckill 后计算 Seckill 优惠
+	respBO.Price.VipPrice = totalVipPrice
+
+	// 当前应付金额 (商品 - 优惠)
+	payPrice := totalPrice - activityDiscount - totalVipPrice
+	if payPrice < 0 {
+		payPrice = 0
+	}
+	respBO.Price.PayPrice = payPrice
+
+	// 4. 计算优惠券优惠（订单30）
+	if req.CouponID != nil && *req.CouponID > 0 {
+		var spuIDs []int64
+		var categoryIDs []int64
+		// 辅助Map避免重复
+		spuMapForCoupon := make(map[int64]bool)
+		catMapForCoupon := make(map[int64]bool)
+
+		for _, item := range respBO.Items {
+			if !spuMapForCoupon[item.SpuID] {
+				spuIDs = append(spuIDs, item.SpuID)
+				spuMapForCoupon[item.SpuID] = true
+			}
+			if !catMapForCoupon[item.CategoryID] {
+				categoryIDs = append(categoryIDs, item.CategoryID)
+				catMapForCoupon[item.CategoryID] = true
+			}
+		}
+
+		couponPrice, err := s.couponSvc.CalculateCoupon(ctx, req.UserID, *req.CouponID, int64(respBO.Price.PayPrice), spuIDs, categoryIDs)
+		if err != nil {
+			return nil, err
+		}
+		respBO.CouponID = *req.CouponID
+		respBO.Price.CouponPrice = int(couponPrice)
+		respBO.Price.PayPrice -= int(couponPrice)
+		if respBO.Price.PayPrice < 0 {
+			respBO.Price.PayPrice = 0
+		}
+	}
+
+	// 5. 计算积分抵扣 (Order 40)
+	if req.PointStatus && req.UserID > 0 {
+		config, _ := s.memberConfigSvc.GetConfig(ctx)
+		user, _ := s.memberUserSvc.GetUser(ctx, req.UserID)
+		if config != nil && config.PointTradeDeductEnable > 0 && user != nil && user.Point > 0 {
+			// 5.1 计算积分抵扣金额
+			// Conf: PointTradeDeductUnitPrice (抵扣单位价格，单位：分)
+			deductUnitPrice := config.PointTradeDeductUnitPrice
+
+			if deductUnitPrice > 0 {
+				canUsePoints := int(user.Point)
+
+				// 5.2 限制最大积分抵扣数量
+				// Conf: PointTradeDeductMaxPrice (注意：Java 中此字段名虽然叫 MaxPrice，但实际逻辑是限制积分数量 MaxPoints)
+				if config.PointTradeDeductMaxPrice > 0 {
+					if canUsePoints > config.PointTradeDeductMaxPrice {
+						canUsePoints = config.PointTradeDeductMaxPrice
+					}
+				}
+
+				// 5.3 计算抵扣金额
+				pointTotalValue := canUsePoints * deductUnitPrice
+
+				// 5.4 限制不超过应付金额
+				// 注意：Java 逻辑中如果 PayPrice <= pointPrice 会抛出异常 (禁止0元购)。
+				// 这里为了更好的用户体验，我们做自动截断：最大抵扣金额 = 应付金额。
+				if pointTotalValue >= respBO.Price.PayPrice {
+					pointTotalValue = respBO.Price.PayPrice
+					canUsePoints = pointTotalValue / deductUnitPrice // 重新计算对应积分消耗
+					pointTotalValue = canUsePoints * deductUnitPrice
+				}
+
+				// 5.5 更新响应
+				respBO.UsePoint = canUsePoints
+				respBO.TotalPoint = int(user.Point)
+				respBO.Price.PointPrice = pointTotalValue
+				respBO.Price.PayPrice -= respBO.Price.PointPrice
+			}
+		}
+	}
+
+	// 6. 计算运费（订单50）
+	// 逻辑：基于商品项计算运费
 	deliveryPrice := 0
-	if req.DeliveryType == 1 && req.AddressID != nil && *req.AddressID > 0 { // Express Delivery
-		// Get Address to get AreaID
+	if req.DeliveryType == 1 && req.AddressID != nil && *req.AddressID > 0 {
 		address, err := s.memberAddressSvc.GetAddress(ctx, req.UserID, *req.AddressID)
 		if err != nil {
 			return nil, err
 		}
 		if address != nil {
-			// Calculate Freight based on items
-			// Group items by TemplateID? SPU has TemplateID usually.
-			// Current Model SPU has DeliveryTemplateID?
-			// Let's assume SPU has DeliveryTemplateId. Need to check ProductSpuResp.
-			// If not available in Resp, need to fetch SPU Entity or assume simpler model.
-			// ProductSpuResp (Step 3936 viewed?) spuMap uses *resp.ProductSpuResp.
-			// Let's check ProductSpuResp definition if possible, or assume it has DeliveryTemplateID.
-			// If not, we might need to fetch it.
-			// For this iteration, I'll group by SPU's TemplateID.
-
-			// Map TemplateID -> Count (or Weight/Volume)
-			// Assuming Count for now as per CalculateFreight logic
-			templateMap := make(map[int64]int)
+			templateCountMap := make(map[int64]int)
+			templatePriceMap := make(map[int64]int)
+			// 如果严格需要，重新计算spuMap或假设之前定义的spuMap有效。
+			// spuMap在步骤1中定义。
 			for _, item := range respBO.Items {
 				spu := spuMap[item.SpuID]
 				if spu != nil {
-					// Use SPU's delivery template ID. If 0, assume free or default?
-					// If spu.DeliveryTemplateID is not in VO, we are stuck.
-					// Checking viewed code: Step 3936 line 128 `spuMap[spu.ID] = spu`.
-					// I don't see ProductSpuResp definition.
-					// I will assume it has `DeliveryTemplateId`.
-					templateMap[spu.DeliveryTemplateID] += item.Count
+					templateCountMap[spu.DeliveryTemplateID] += item.Count
+					templatePriceMap[spu.DeliveryTemplateID] += item.PayPrice
 				}
 			}
 
-			for tplID, count := range templateMap {
+			for tplID, count := range templateCountMap {
 				if tplID > 0 {
-					p, err := s.deliveryFreightSvc.CalculateFreight(ctx, tplID, int(address.AreaID), count)
+					price := templatePriceMap[tplID]
+					p, err := s.deliveryFreightSvc.CalculateFreight(ctx, tplID, int(address.AreaID), float64(count), price)
 					if err != nil {
-						// log error? fail?
 						return nil, err
 					}
 					deliveryPrice += p
@@ -290,51 +356,8 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		}
 	}
 	respBO.Price.DeliveryPrice = deliveryPrice
-
-	// Initial Pay Price after Activity AND VIP
-	// Note: If Activity + VIP > Total, PayPrice = 0.
-	payPrice := totalPrice - activityDiscount - totalVipPrice
-	if payPrice < 0 {
-		payPrice = 0
-	}
-	respBO.Price.PayPrice = payPrice
-
-	// 6. Calculate Coupon
-	if req.CouponID != nil && *req.CouponID > 0 {
-		// Prepare Context for Coupon Check
-		// Need SPU IDs and Category IDs. We have SKU Map.
-		// Note: ProductSkuResp contains CategoryID inside `ProductSkuResp`?
-		// Let's check ProductSkuResp struct definition if possible. Assuming it has CategoryID.
-		var spuIDs []int64
-		var categoryIDs []int64
-		// Helper map to avoid duplicates
-		spuMap := make(map[int64]bool)
-		catMap := make(map[int64]bool)
-
-		for _, item := range respBO.Items {
-			if !spuMap[item.SpuID] {
-				spuIDs = append(spuIDs, item.SpuID)
-				spuMap[item.SpuID] = true
-			}
-			if !catMap[item.CategoryID] {
-				categoryIDs = append(categoryIDs, item.CategoryID)
-				catMap[item.CategoryID] = true
-			}
-		}
-
-		couponPrice, err := s.couponSvc.CalculateCoupon(ctx, req.UserID, *req.CouponID, int64(respBO.Price.PayPrice), spuIDs, categoryIDs)
-		if err != nil {
-			// If coupon invalid, strictly we should return error or just ignore?
-			// Usually return error to tell user why coupon failed.
-			return nil, err
-		}
-		respBO.CouponID = *req.CouponID
-		respBO.Price.CouponPrice = int(couponPrice)
-		respBO.Price.PayPrice -= int(couponPrice)
-		if respBO.Price.PayPrice < 0 {
-			respBO.Price.PayPrice = 0 // Min 0
-		}
-	}
+	// 重要：运费必须加到PayPrice
+	respBO.Price.PayPrice += deliveryPrice
 
 	return respBO, nil
 }

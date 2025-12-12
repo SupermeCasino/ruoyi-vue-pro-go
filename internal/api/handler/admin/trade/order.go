@@ -11,16 +11,18 @@ import (
 )
 
 type TradeOrderHandler struct {
-	svc       *trade.TradeOrderUpdateService
-	querySvc  *trade.TradeOrderQueryService
-	memberSvc *member.MemberUserService
+	svc                        *trade.TradeOrderUpdateService
+	querySvc                   *trade.TradeOrderQueryService
+	memberSvc                  *member.MemberUserService
+	deliveryFreightTemplateSvc *trade.DeliveryExpressTemplateService
 }
 
-func NewTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.TradeOrderQueryService, memberSvc *member.MemberUserService) *TradeOrderHandler {
+func NewTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.TradeOrderQueryService, memberSvc *member.MemberUserService, deliveryFreightTemplateSvc *trade.DeliveryExpressTemplateService) *TradeOrderHandler {
 	return &TradeOrderHandler{
-		svc:       svc,
-		querySvc:  querySvc,
-		memberSvc: memberSvc,
+		svc:                        svc,
+		querySvc:                   querySvc,
+		memberSvc:                  memberSvc,
+		deliveryFreightTemplateSvc: deliveryFreightTemplateSvc,
 	}
 }
 

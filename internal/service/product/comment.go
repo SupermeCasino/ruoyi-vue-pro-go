@@ -48,7 +48,7 @@ func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *req.Pro
 		q = q.Where(u.Scores.Eq(req.Scores))
 	}
 	if req.ReplyStatus != nil {
-		q = q.Where(u.ReplyStatus.Is(*req.ReplyStatus))
+		q = q.Where(u.ReplyStatus.Eq(model.BitBool(*req.ReplyStatus)))
 	}
 	// CreateTime range handled if needed
 
@@ -132,7 +132,7 @@ func (s *ProductCommentService) CreateComment(ctx context.Context, req *req.Prod
 // GetAppCommentPage 获得商品评价分页 (App)
 func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.AppProductCommentPageReq) (*core.PageResult[*resp.AppProductCommentResp], error) {
 	u := s.q.ProductComment
-	q := u.WithContext(ctx).Where(u.SpuID.Eq(r.SpuID), u.Visible.Is(true))
+	q := u.WithContext(ctx).Where(u.SpuID.Eq(r.SpuID), u.Visible.Eq(model.BitBool(true)))
 
 	// Type filter: 0=全部, 1=好评(4-5), 2=中评(3), 3=差评(1-2), 4=有图
 	switch r.Type {

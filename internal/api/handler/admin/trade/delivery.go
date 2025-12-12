@@ -309,3 +309,147 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 		Total: page.Total,
 	})
 }
+
+// GetSimpleDeliveryPickUpStoreList 获取自提门店精简列表
+func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Context) {
+	list, err := h.svc.GetSimpleDeliveryPickUpStoreList(c.Request.Context())
+	if err != nil {
+		h.logger.Error("获取自提门店列表失败", zap.Error(err))
+		core.WriteError(c, 500, "获取失败")
+		return
+	}
+
+	res := make([]resp.DeliveryPickUpStoreResp, len(list))
+	for i, item := range list {
+		res[i] = resp.DeliveryPickUpStoreResp{
+			ID:            item.ID,
+			Name:          item.Name,
+			Introduction:  item.Introduction,
+			Phone:         item.Phone,
+			AreaID:        item.AreaID,
+			DetailAddress: item.DetailAddress,
+			Logo:          item.Logo,
+			Latitude:      item.Latitude,
+			Longitude:     item.Longitude,
+			Status:        item.Status,
+			Sort:          item.Sort,
+			CreateTime:    item.CreatedAt,
+		}
+	}
+	core.WriteSuccess(c, res)
+}
+
+type DeliveryExpressTemplateHandler struct {
+	svc    *trade.DeliveryExpressTemplateService
+	logger *zap.Logger
+}
+
+func NewDeliveryExpressTemplateHandler(svc *trade.DeliveryExpressTemplateService, logger *zap.Logger) *DeliveryExpressTemplateHandler {
+	return &DeliveryExpressTemplateHandler{
+		svc:    svc,
+		logger: logger,
+	}
+}
+
+// CreateDeliveryExpressTemplate 创建运费模板
+func (h *DeliveryExpressTemplateHandler) CreateDeliveryExpressTemplate(c *gin.Context) {
+	var r req.DeliveryFreightTemplateSaveReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+
+	id, err := h.svc.CreateDeliveryExpressTemplate(c.Request.Context(), &r)
+	if err != nil {
+		h.logger.Error("创建运费模板失败", zap.Error(err))
+		core.WriteError(c, 500, "创建失败")
+		return
+	}
+
+	core.WriteSuccess(c, id)
+}
+
+// UpdateDeliveryExpressTemplate 更新运费模板
+func (h *DeliveryExpressTemplateHandler) UpdateDeliveryExpressTemplate(c *gin.Context) {
+	var r req.DeliveryFreightTemplateSaveReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+
+	if err := h.svc.UpdateDeliveryExpressTemplate(c.Request.Context(), &r); err != nil {
+		h.logger.Error("更新运费模板失败", zap.Error(err))
+		core.WriteError(c, 500, "更新失败")
+		return
+	}
+
+	core.WriteSuccess(c, true)
+}
+
+// DeleteDeliveryExpressTemplate 删除运费模板
+func (h *DeliveryExpressTemplateHandler) DeleteDeliveryExpressTemplate(c *gin.Context) {
+	id := core.ParseInt64(c.Query("id"))
+	if err := h.svc.DeleteDeliveryExpressTemplate(c.Request.Context(), id); err != nil {
+		h.logger.Error("删除运费模板失败", zap.Error(err))
+		core.WriteError(c, 500, "删除失败")
+		return
+	}
+
+	core.WriteSuccess(c, true)
+}
+
+// GetDeliveryExpressTemplate 获取运费模板详情
+func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplate(c *gin.Context) {
+	id := core.ParseInt64(c.Query("id"))
+	template, err := h.svc.GetDeliveryExpressTemplate(c.Request.Context(), id)
+	if err != nil {
+		h.logger.Error("获取运费模板失败", zap.Error(err))
+		core.WriteError(c, 500, "获取失败")
+		return
+	}
+
+	core.WriteSuccess(c, template)
+}
+
+// GetDeliveryExpressTemplatePage 获取运费模板分页
+func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.Context) {
+	var r req.DeliveryFreightTemplatePageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		core.WriteError(c, 400, err.Error())
+		return
+	}
+
+	page, err := h.svc.GetDeliveryExpressTemplatePage(c.Request.Context(), &r)
+	if err != nil {
+		h.logger.Error("获取运费模板分页失败", zap.Error(err))
+		core.WriteError(c, 500, "获取失败")
+		return
+	}
+
+	list := make([]resp.DeliveryFreightTemplateResp, len(page.List))
+	for i, item := range page.List {
+		list[i] = resp.DeliveryFreightTemplateResp{
+			ID:         item.ID,
+			Name:       item.Name,
+			ChargeMode: item.ChargeMode,
+			Sort:       item.Sort,
+			CreateTime: item.CreatedAt,
+		}
+	}
+
+	core.WriteSuccess(c, core.PageResult[resp.DeliveryFreightTemplateResp]{
+		List:  list,
+		Total: page.Total,
+	})
+}
+
+// GetSimpleDeliveryExpressTemplateList 获取所有运费模板精简列表
+func (h *DeliveryExpressTemplateHandler) GetSimpleDeliveryExpressTemplateList(c *gin.Context) {
+	list, err := h.svc.GetSimpleDeliveryExpressTemplateList(c.Request.Context())
+	if err != nil {
+		h.logger.Error("获取运费模板列表失败", zap.Error(err))
+		core.WriteError(c, 500, "获取失败")
+		return
+	}
+	core.WriteSuccess(c, list)
+}

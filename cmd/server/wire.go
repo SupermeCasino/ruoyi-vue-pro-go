@@ -174,10 +174,10 @@ func InitApp() (*gin.Engine, error) {
 		// Delivery
 		tradeSvc.NewDeliveryExpressService,
 		tradeSvc.NewDeliveryPickUpStoreService,
-		tradeSvc.NewDeliveryFreightTemplateService,
+		tradeSvc.NewDeliveryExpressTemplateService,
 		tradeAdmin.NewDeliveryExpressHandler,
 		tradeAdmin.NewDeliveryPickUpStoreHandler,
-		tradeAdmin.NewDeliveryFreightTemplateHandler,
+		tradeAdmin.NewDeliveryExpressTemplateHandler,
 		tradeBrokerageSvc.NewBrokerageUserService,
 		// Brokerage
 		tradeBrokerageSvc.NewBrokerageRecordService,
