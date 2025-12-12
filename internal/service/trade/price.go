@@ -2,6 +2,7 @@ package trade
 
 import (
 	"backend-go/internal/api/resp"
+	"backend-go/internal/pkg/core"
 	memberSvc "backend-go/internal/service/member"
 	"backend-go/internal/service/product"
 	"backend-go/internal/service/promotion"
@@ -15,6 +16,7 @@ type TradePriceService struct {
 	productSpuSvc      *product.ProductSpuService
 	couponSvc          *promotion.CouponUserService
 	rewardActivitySvc  *promotion.RewardActivityService
+	seckillActivitySvc *promotion.SeckillActivityService // 已添加
 	memberUserSvc      *memberSvc.MemberUserService
 	memberLevelSvc     *memberSvc.MemberLevelService
 	deliveryFreightSvc *DeliveryExpressTemplateService
@@ -27,6 +29,7 @@ func NewTradePriceService(
 	productSpuSvc *product.ProductSpuService,
 	couponSvc *promotion.CouponUserService,
 	rewardActivitySvc *promotion.RewardActivityService,
+	seckillActivitySvc *promotion.SeckillActivityService, // 已添加
 	memberUserSvc *memberSvc.MemberUserService,
 	memberLevelSvc *memberSvc.MemberLevelService,
 	deliveryFreightSvc *DeliveryExpressTemplateService,
@@ -38,23 +41,25 @@ func NewTradePriceService(
 		productSpuSvc:      productSpuSvc,
 		couponSvc:          couponSvc,
 		rewardActivitySvc:  rewardActivitySvc,
+		seckillActivitySvc: seckillActivitySvc, // 已添加
 		memberUserSvc:      memberUserSvc,
 		memberLevelSvc:     memberLevelSvc,
 		deliveryFreightSvc: deliveryFreightSvc,
 		memberAddressSvc:   memberAddressSvc,
-		memberConfigSvc:    memberConfigSvc, // 已添加
+		memberConfigSvc:    memberConfigSvc,
 	}
 }
 
 // TradePriceCalculateReqBO 价格计算请求BO
 type TradePriceCalculateReqBO struct {
-	UserID        int64
-	CouponID      *int64
-	PointStatus   bool
-	DeliveryType  int
-	AddressID     *int64
-	PickUpStoreID *int64
-	Items         []TradePriceCalculateItemBO
+	UserID            int64
+	CouponID          *int64
+	PointStatus       bool
+	DeliveryType      int
+	AddressID         *int64
+	PickUpStoreID     *int64
+	SeckillActivityId int64 // 已添加
+	Items             []TradePriceCalculateItemBO
 }
 
 type TradePriceCalculateItemBO struct {
@@ -108,6 +113,59 @@ type TradePriceCalculateItemRespBO struct {
 	Properties    []resp.ProductSkuPropertyResp
 }
 
+// dividePrice 按支付金额比例分摊折扣金额
+// 对应 Java：TradePriceCalculatorHelper#dividePrice
+func dividePrice(items []TradePriceCalculateItemRespBO, totalDiscount int) []int {
+	if len(items) == 0 {
+		return []int{}
+	}
+
+	// 计算所有【已选中】项的总支付金额
+	// Java: Integer total = calculateTotalPayPrice(orderItems); // 只计算 selected=true 的
+	totalPayPrice := 0
+	for _, item := range items {
+		if item.Selected {
+			totalPayPrice += item.PayPrice
+		}
+	}
+
+	if totalPayPrice == 0 {
+		return make([]int, len(items))
+	}
+
+	// 按比例分摊
+	dividedPrices := make([]int, len(items))
+	remainPrice := totalDiscount
+	lastSelectedIndex := -1
+
+	// 找到最后一个选中项的索引
+	for i := len(items) - 1; i >= 0; i-- {
+		if items[i].Selected {
+			lastSelectedIndex = i
+			break
+		}
+	}
+
+	for i := 0; i < len(items); i++ {
+		// 1. 如果是未选中，则分摊为 0
+		if !items[i].Selected {
+			dividedPrices[i] = 0
+			continue
+		}
+		// 2. 如果选中，则按照百分比进行分摊
+		if i < lastSelectedIndex {
+			// 前 n-1 项按比例计算
+			dividedPrices[i] = int(int64(totalDiscount) * int64(items[i].PayPrice) / int64(totalPayPrice))
+			remainPrice -= dividedPrices[i]
+		} else {
+			// 最后一项用剩余金额（避免舍入误差）
+			dividedPrices[i] = remainPrice
+		}
+	}
+
+	return dividedPrices
+}
+
 // CalculateOrderPrice 订单价格计算
 // Java：TradePriceServiceImpl#calculateOrderPrice
 func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradePriceCalculateReqBO) (*TradePriceCalculateRespBO, error) {
@@ -152,6 +210,23 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 
 	var totalPrice, totalPayPrice int
 
+	// 4. 计算秒杀优惠（订单8）
+	// 让我们使用 `respBO.Type` 作为标志。
+	if req.SeckillActivityId > 0 {
+		respBO.Type = 1 // 秒杀
+		if len(req.Items) != 1 {
+			return nil, errors.New("秒杀时，只允许选择一个商品")
+		}
+		item := req.Items[0]
+		// 验证秒杀参与
+		_, _, err := s.seckillActivitySvc.ValidateJoinSeckill(ctx, req.SeckillActivityId, item.SkuID, item.Count)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		respBO.Type = 0 // 正常
+	}
+
 	// 4. 计算 VIP 会员折扣
 	levelDiscountPercent := 100
 	if req.UserID > 0 {
@@ -164,7 +239,7 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		}
 	}
 
-	var totalVipPrice int // 仅声明新变量
+	var totalVipPrice int
 
 	// 4. 循环计算商品项
 	for _, item := range req.Items {
@@ -184,74 +259,114 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		itemPrice := sku.Price
 		itemPayPrice := itemPrice * item.Count
 
-		// 计算 VIP 优惠金额
-		// 逻辑：VipPrice (ItemResp) 代表该商品的 VIP 优惠总额
 		itemVipSavings := 0
-		if levelDiscountPercent < 100 {
-			// 优惠金额 = 原价 * 数量 * (1 - 折扣率)
-			// 避免精度问题：Price * Count - (Price * Count * Discount / 100)
-			vipTotal := int(int64(itemPrice) * int64(item.Count) * int64(levelDiscountPercent) / 100)
-			itemVipSavings = itemPayPrice - vipTotal
+		seckillDiscount := 0
+
+		// 秒杀逻辑（订单8）
+		if respBO.Type == 1 { // 秒杀
+			_, seckillProd, err := s.seckillActivitySvc.ValidateJoinSeckill(ctx, req.SeckillActivityId, sku.ID, item.Count)
+			if err != nil {
+				return nil, err
+			}
+			seckillTotal := seckillProd.SeckillPrice * item.Count
+			seckillDiscount = itemPayPrice - seckillTotal
+			itemPayPrice = seckillTotal
+		} else {
+			// 正常订单逻辑（VIP）（订单10）
+			// 严格对齐 Java：TradeDiscountActivityPriceCalculator.calculateVipPrice
+			// Java: Integer newPrice = calculateRatePrice(orderItem.getPayPrice(), level.getDiscountPercent())
+			// Java: return orderItem.getPayPrice() - newPrice;
+			if levelDiscountPercent < 100 {
+				// 基于 PayPrice 计算，不是基于 Price！
+				vipTotal := int(int64(itemPayPrice) * int64(levelDiscountPercent) / 100)
+				itemVipSavings = itemPayPrice - vipTotal
+				itemPayPrice = vipTotal
+			}
 		}
 
 		itemResp := TradePriceCalculateItemRespBO{
-			SpuID:      sku.SpuID,
-			SkuID:      sku.ID,
-			Count:      item.Count,
-			CartID:     item.CartID,
-			Selected:   item.Selected,
-			Price:      itemPrice,
-			PayPrice:   itemPayPrice, // 基础应付金额，后续扣减
-			PicURL:     sku.PicURL,
-			Properties: sku.Properties,
-			SpuName:    spu.Name,
-			CategoryID: spu.CategoryID,
-			VipPrice:   itemVipSavings, // 存储优惠金额
+			SpuID:         sku.SpuID,
+			SkuID:         sku.ID,
+			Count:         item.Count,
+			CartID:        item.CartID,
+			Selected:      item.Selected,
+			Price:         itemPrice,
+			PayPrice:      itemPayPrice,
+			PicURL:        sku.PicURL,
+			Properties:    sku.Properties,
+			SpuName:       spu.Name,
+			CategoryID:    spu.CategoryID,
+			DiscountPrice: seckillDiscount,
+			VipPrice:      itemVipSavings,
 		}
 
-		totalPrice += itemPayPrice
+		totalPrice += itemPrice * item.Count
 		totalPayPrice += itemPayPrice
 		totalVipPrice += itemVipSavings
 
 		respBO.Items = append(respBO.Items, itemResp)
 	}
 
-	// 5. 设置合计
-	// 5. 计算满减/满折活动
-	matchItems := make([]promotion.ActivityMatchItem, 0)
-	for _, item := range respBO.Items {
-		matchItems = append(matchItems, promotion.ActivityMatchItem{
-			SkuID:      item.SkuID,
-			SpuID:      item.SpuID,
-			CategoryID: item.CategoryID,
-			Price:      item.Price, // 单价（原价）
-			Count:      item.Count,
-		})
-	}
-	activityDiscount, _, err := s.rewardActivitySvc.CalculateRewardActivity(ctx, matchItems)
-	if err != nil {
-		return nil, err
+	// 5. 计算满减/满折活动（订单20）
+	// 仅适用于正常订单
+	// Java TradeRewardActivityPriceCalculator 检查：
+	// if (!TradeOrderTypeEnum.isNormal(result.getType())) { return; }
+
+	activityDiscount := 0
+	if respBO.Type == 0 { // 仅正常订单
+		matchItems := make([]promotion.ActivityMatchItem, 0)
+		for _, item := range respBO.Items {
+			matchItems = append(matchItems, promotion.ActivityMatchItem{
+				SkuID:      item.SkuID,
+				SpuID:      item.SpuID,
+				CategoryID: item.CategoryID,
+				Price:      item.Price,
+				Count:      item.Count,
+			})
+		}
+		var err error
+		activityDiscount, _, err = s.rewardActivitySvc.CalculateRewardActivity(ctx, matchItems)
+		if err != nil {
+			return nil, err
+		}
+
+		// 分摊满减折扣到各项
+		if activityDiscount > 0 {
+			divideActivityDiscounts := dividePrice(respBO.Items, activityDiscount)
+			for i := range respBO.Items {
+				respBO.Items[i].DiscountPrice += divideActivityDiscounts[i]
+				// Java: TradePriceCalculatorHelper.recountPayPrice(orderItem)
+				item := &respBO.Items[i]
+				item.PayPrice = item.Price*item.Count - item.DiscountPrice + item.DeliveryPrice - item.CouponPrice - item.PointPrice - item.VipPrice
+				if item.PayPrice < 0 {
+					item.PayPrice = 0
+				}
+			}
+		}
 	}
 
-	// 5. 设置合计
+	// 汇总所有折扣
+	var totalDiscountPrice int
+	for _, it := range respBO.Items {
+		totalDiscountPrice += it.DiscountPrice
+	}
+
+	// 设置订单总价
 	respBO.Price.TotalPrice = totalPrice
-	respBO.Price.DiscountPrice = activityDiscount // 设置活动优惠（满减/满折）
-
-	// 3. 计算 VIP 优惠 (Order 10 - 部分 2)
-	// 逻辑：限时折扣 (Seckill) 和 VIP 是互斥的 (Order 10)。
-	// 目前 Seckill 尚未迁移，因此仅计算 VIP 优惠。后续迁移 Seckill 时需在此处添加互斥判定 (取优惠最大值)。
-	// TODO: 迁移 Seckill 后计算 Seckill 优惠
+	respBO.Price.DiscountPrice = totalDiscountPrice
 	respBO.Price.VipPrice = totalVipPrice
 
-	// 当前应付金额 (商品 - 优惠)
-	payPrice := totalPrice - activityDiscount - totalVipPrice
+	// 计算最终支付金额
+	// PayPrice = TotalPrice - DiscountPrice - VipPrice
+	payPrice := respBO.Price.TotalPrice - respBO.Price.DiscountPrice - respBO.Price.VipPrice
 	if payPrice < 0 {
 		payPrice = 0
 	}
 	respBO.Price.PayPrice = payPrice
 
-	// 4. 计算优惠券优惠（订单30）
-	if req.CouponID != nil && *req.CouponID > 0 {
+	// 6. 计算优惠券优惠（订单30）
+	// Java: TradeCouponPriceCalculator: 只有【普通】订单，才允许使用优惠劵
+	if respBO.Type == 0 && req.CouponID != nil && *req.CouponID > 0 {
 		var spuIDs []int64
 		var categoryIDs []int64
 		// 辅助Map避免重复
@@ -273,47 +388,73 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		if err != nil {
 			return nil, err
 		}
+
+		couponPriceInt := int(couponPrice)
+		if couponPriceInt > 0 {
+			// 分摊优惠券折扣到各项
+			divideCouponPrices := dividePrice(respBO.Items, couponPriceInt)
+			for i := range respBO.Items {
+				respBO.Items[i].CouponPrice += divideCouponPrices[i]
+				// Java: TradePriceCalculatorHelper.recountPayPrice(orderItem)
+				item := &respBO.Items[i]
+				item.PayPrice = item.Price*item.Count - item.DiscountPrice + item.DeliveryPrice - item.CouponPrice - item.PointPrice - item.VipPrice
+				if item.PayPrice < 0 {
+					item.PayPrice = 0
+				}
+			}
+		}
+
 		respBO.CouponID = *req.CouponID
-		respBO.Price.CouponPrice = int(couponPrice)
-		respBO.Price.PayPrice -= int(couponPrice)
+		respBO.Price.CouponPrice = couponPriceInt
+		respBO.Price.PayPrice -= couponPriceInt
 		if respBO.Price.PayPrice < 0 {
 			respBO.Price.PayPrice = 0
 		}
 	}
 
-	// 5. 计算积分抵扣 (Order 40)
+	// 7. 计算积分抵扣（订单40）
 	if req.PointStatus && req.UserID > 0 {
 		config, _ := s.memberConfigSvc.GetConfig(ctx)
 		user, _ := s.memberUserSvc.GetUser(ctx, req.UserID)
 		if config != nil && config.PointTradeDeductEnable > 0 && user != nil && user.Point > 0 {
-			// 5.1 计算积分抵扣金额
-			// Conf: PointTradeDeductUnitPrice (抵扣单位价格，单位：分)
+			// 7.1 计算积分抵扣金额
+			// 配置：PointTradeDeductUnitPrice（抵扣单位价格，单位：分）
 			deductUnitPrice := config.PointTradeDeductUnitPrice
 
 			if deductUnitPrice > 0 {
 				canUsePoints := int(user.Point)
 
-				// 5.2 限制最大积分抵扣数量
-				// Conf: PointTradeDeductMaxPrice (注意：Java 中此字段名虽然叫 MaxPrice，但实际逻辑是限制积分数量 MaxPoints)
+				// 7.2 限制最大积分抵扣数量
+				// 配置：PointTradeDeductMaxPrice（注意：Java 中此字段名虽然叫 MaxPrice，但实际逻辑是限制积分数量 MaxPoints）
 				if config.PointTradeDeductMaxPrice > 0 {
 					if canUsePoints > config.PointTradeDeductMaxPrice {
 						canUsePoints = config.PointTradeDeductMaxPrice
 					}
 				}
 
-				// 5.3 计算抵扣金额
+				// 7.3 计算抵扣金额
 				pointTotalValue := canUsePoints * deductUnitPrice
 
-				// 5.4 限制不超过应付金额
-				// 注意：Java 逻辑中如果 PayPrice <= pointPrice 会抛出异常 (禁止0元购)。
-				// 这里为了更好的用户体验，我们做自动截断：最大抵扣金额 = 应付金额。
+				// 7.4 限制不超过应付金额
+				// Java 逻辑：TradePointUsePriceCalculator -> if (payPrice <= pointPrice) throw exception
+				// 严格对齐：禁止 0 元购
 				if pointTotalValue >= respBO.Price.PayPrice {
-					pointTotalValue = respBO.Price.PayPrice
-					canUsePoints = pointTotalValue / deductUnitPrice // 重新计算对应积分消耗
-					pointTotalValue = canUsePoints * deductUnitPrice
+					return nil, core.NewBizError(1004003005, "支付金额不能小于等于 0") // PRICE_CALCULATE_PAY_PRICE_ILLEGAL
 				}
 
-				// 5.5 更新响应
+				// 7.5 分摊积分抵扣到各项
+				dividePointPrices := dividePrice(respBO.Items, pointTotalValue)
+				for i := range respBO.Items {
+					respBO.Items[i].PointPrice += dividePointPrices[i]
+					// Java: TradePriceCalculatorHelper.recountPayPrice(orderItem)
+					item := &respBO.Items[i]
+					item.PayPrice = item.Price*item.Count - item.DiscountPrice + item.DeliveryPrice - item.CouponPrice - item.PointPrice - item.VipPrice
+					if item.PayPrice < 0 {
+						item.PayPrice = 0
+					}
+				}
+
+				// 7.6 更新响应
 				respBO.UsePoint = canUsePoints
 				respBO.TotalPoint = int(user.Point)
 				respBO.Price.PointPrice = pointTotalValue
@@ -322,7 +463,18 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		}
 	}
 
-	// 6. 计算运费（订单50）
+	// 8. 重新计算每个订单项的 PayPrice
+	// 对齐 Java：TradePriceCalculatorHelper#recountPayPrice
+	// PayPrice = Price * Count - DiscountPrice + DeliveryPrice - CouponPrice - PointPrice - VipPrice
+	for i := range respBO.Items {
+		item := &respBO.Items[i]
+		item.PayPrice = item.Price*item.Count - item.DiscountPrice + item.DeliveryPrice - item.CouponPrice - item.PointPrice - item.VipPrice
+		if item.PayPrice < 0 {
+			item.PayPrice = 0
+		}
+	}
+
+	// 9. 计算运费（订单50）
 	// 逻辑：基于商品项计算运费
 	deliveryPrice := 0
 	if req.DeliveryType == 1 && req.AddressID != nil && *req.AddressID > 0 {
@@ -333,8 +485,6 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		if address != nil {
 			templateCountMap := make(map[int64]int)
 			templatePriceMap := make(map[int64]int)
-			// 如果严格需要，重新计算spuMap或假设之前定义的spuMap有效。
-			// spuMap在步骤1中定义。
 			for _, item := range respBO.Items {
 				spu := spuMap[item.SpuID]
 				if spu != nil {
@@ -356,7 +506,6 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		}
 	}
 	respBO.Price.DeliveryPrice = deliveryPrice
-	// 重要：运费必须加到PayPrice
 	respBO.Price.PayPrice += deliveryPrice
 
 	return respBO, nil

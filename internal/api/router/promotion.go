@@ -65,6 +65,7 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 		{
 			rewardGroup.POST("/create", rewardActivityHandler.CreateRewardActivity)
 			rewardGroup.PUT("/update", rewardActivityHandler.UpdateRewardActivity)
+			rewardGroup.PUT("/close", rewardActivityHandler.CloseRewardActivity)
 			rewardGroup.DELETE("/delete", rewardActivityHandler.DeleteRewardActivity)
 			rewardGroup.GET("/get", rewardActivityHandler.GetRewardActivity)
 			rewardGroup.GET("/page", rewardActivityHandler.GetRewardActivityPage)
@@ -112,6 +113,7 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 			combinationActivityGroup.PUT("/update", combinationActivityHandler.UpdateCombinationActivity)
 			combinationActivityGroup.DELETE("/delete", combinationActivityHandler.DeleteCombinationActivity)
 			combinationActivityGroup.GET("/get", combinationActivityHandler.GetCombinationActivity)
+			combinationActivityGroup.GET("/list-by-ids", combinationActivityHandler.GetCombinationActivityListByIds)
 			combinationActivityGroup.GET("/page", combinationActivityHandler.GetCombinationActivityPage)
 		}
 
@@ -152,10 +154,12 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 		{
 			diyTemplateGroup.POST("/create", diyTemplateHandler.CreateDiyTemplate)
 			diyTemplateGroup.PUT("/update", diyTemplateHandler.UpdateDiyTemplate)
+			diyTemplateGroup.PUT("/use", diyTemplateHandler.UseDiyTemplate)
 			diyTemplateGroup.DELETE("/delete", diyTemplateHandler.DeleteDiyTemplate)
 			diyTemplateGroup.GET("/get", diyTemplateHandler.GetDiyTemplate)
 			diyTemplateGroup.GET("/page", diyTemplateHandler.GetDiyTemplatePage)
 			diyTemplateGroup.GET("/get-property", diyTemplateHandler.GetDiyTemplateProperty)
+			diyTemplateGroup.PUT("/update-property", diyTemplateHandler.UpdateDiyTemplateProperty)
 		}
 
 		// DIY Page
@@ -165,8 +169,10 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 			diyPageGroup.PUT("/update", diyPageHandler.UpdateDiyPage)
 			diyPageGroup.DELETE("/delete", diyPageHandler.DeleteDiyPage)
 			diyPageGroup.GET("/get", diyPageHandler.GetDiyPage)
+			diyPageGroup.GET("/list", diyPageHandler.GetDiyPageList)
 			diyPageGroup.GET("/page", diyPageHandler.GetDiyPagePage)
 			diyPageGroup.GET("/get-property", diyPageHandler.GetDiyPageProperty)
+			diyPageGroup.PUT("/update-property", diyPageHandler.UpdateDiyPageProperty)
 		}
 
 		// Kefu Conversation (Admin)

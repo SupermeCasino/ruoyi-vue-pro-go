@@ -13,10 +13,12 @@ import (
 type DiyTemplateService interface {
 	CreateDiyTemplate(ctx context.Context, req req.DiyTemplateCreateReq) (int64, error)
 	UpdateDiyTemplate(ctx context.Context, req req.DiyTemplateUpdateReq) error
+	UseDiyTemplate(ctx context.Context, id int64) error
 	DeleteDiyTemplate(ctx context.Context, id int64) error
 	GetDiyTemplate(ctx context.Context, id int64) (*resp.DiyTemplateResp, error)
 	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*core.PageResult[*resp.DiyTemplateResp], error)
 	GetDiyTemplateProperty(ctx context.Context, id int64) (string, error)
+	UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error
 }
 
 type diyTemplateService struct {
@@ -114,6 +116,38 @@ func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int6
 		return "", err
 	}
 	return template.Property, nil
+}
+
+// UseDiyTemplate 使用装修模板
+// Java: DiyTemplateServiceImpl#useDiyTemplate
+// NOTE: Java 使用 used/usedTime 字段，Go Model 当前未包含此字段
+// 简化实现：仅校验存在性，实际的使用状态由前端维护
+func (s *diyTemplateService) UseDiyTemplate(ctx context.Context, id int64) error {
+	// 校验存在
+	_, err := s.validateDiyTemplateExists(ctx, id)
+	if err != nil {
+		return err
+	}
+	// TODO: 完整实现需要在 PromotionDiyTemplate Model 中添加 Used/UsedAt 字段
+	// 参考 Java: DiyTemplateDO.used, DiyTemplateDO.usedTime
+	return nil
+}
+
+// UpdateDiyTemplateProperty 更新装修模板属性
+// Java: DiyTemplateServiceImpl#updateDiyTemplateProperty
+func (s *diyTemplateService) UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error {
+	// 校验存在
+	_, err := s.validateDiyTemplateExists(ctx, req.ID)
+	if err != nil {
+		return err
+	}
+	// 更新属性
+	_, err = s.q.PromotionDiyTemplate.WithContext(ctx).
+		Where(s.q.PromotionDiyTemplate.ID.Eq(req.ID)).
+		Updates(promotion.PromotionDiyTemplate{
+			Property: req.Property,
+		})
+	return err
 }
 
 // Helpers

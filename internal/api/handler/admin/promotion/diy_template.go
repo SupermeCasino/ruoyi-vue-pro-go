@@ -102,3 +102,35 @@ func (h *DiyTemplateHandler) GetDiyTemplateProperty(c *gin.Context) {
 	}
 	core.WriteSuccess(c, res)
 }
+
+// UseDiyTemplate 使用装修模板
+// Java: DiyTemplateController#useDiyTemplate
+func (h *DiyTemplateHandler) UseDiyTemplate(c *gin.Context) {
+	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
+	if id == 0 {
+		core.WriteBizError(c, core.ErrParam)
+		return
+	}
+	err := h.svc.UseDiyTemplate(c, id)
+	if err != nil {
+		core.WriteBizError(c, err)
+		return
+	}
+	core.WriteSuccess(c, true)
+}
+
+// UpdateDiyTemplateProperty 更新装修模板属性
+// Java: DiyTemplateController#updateDiyTemplateProperty
+func (h *DiyTemplateHandler) UpdateDiyTemplateProperty(c *gin.Context) {
+	var r req.DiyTemplatePropertyUpdateReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteBizError(c, core.ErrParam)
+		return
+	}
+	err := h.svc.UpdateDiyTemplateProperty(c, r)
+	if err != nil {
+		core.WriteBizError(c, err)
+		return
+	}
+	core.WriteSuccess(c, true)
+}

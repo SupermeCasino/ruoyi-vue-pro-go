@@ -20,6 +20,7 @@ type CombinationActivityService interface {
 	GetCombinationActivity(ctx context.Context, id int64) (*resp.CombinationActivityRespVO, error)
 	GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*core.PageResult[*resp.CombinationActivityRespVO], error)
 	GetCombinationActivityMap(ctx context.Context, ids []int64) (map[int64]*promotion.PromotionCombinationActivity, error)
+	GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*resp.CombinationActivityRespVO, error)
 
 	// App
 	GetCombinationActivityList(ctx context.Context, count int) ([]*resp.AppCombinationActivityRespVO, error)
@@ -272,6 +273,92 @@ func (s *combinationActivityService) GetCombinationActivityMap(ctx context.Conte
 	for _, item := range list {
 		result[item.ID] = item
 	}
+	return result, nil
+}
+
+// GetCombinationActivityListByIds 获得拼团活动列表，基于活动编号数组
+// Java: CombinationActivityController#getCombinationActivityListByIds
+func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*resp.CombinationActivityRespVO, error) {
+	if len(ids) == 0 {
+		return []*resp.CombinationActivityRespVO{}, nil
+	}
+
+	// 1. 获得开启的活动列表
+	list, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 过滤 disabled 状态 (Status == 0)
+	enabledList := make([]*promotion.PromotionCombinationActivity, 0)
+	for _, activity := range list {
+		if activity.Status != 0 { // 0 = Disable
+			enabledList = append(enabledList, activity)
+		}
+	}
+
+	if len(enabledList) == 0 {
+		return []*resp.CombinationActivityRespVO{}, nil
+	}
+
+	// 2. 获取 Product 列表
+	activityIds := make([]int64, len(enabledList))
+	for i, activity := range enabledList {
+		activityIds[i] = activity.ID
+	}
+	productList, err := s.q.PromotionCombinationProduct.WithContext(ctx).
+		Where(s.q.PromotionCombinationProduct.ActivityID.In(activityIds...)).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 获取 SPU 列表
+	spuIds := make([]int64, len(enabledList))
+	for i, activity := range enabledList {
+		spuIds[i] = activity.SpuID
+	}
+	spuList, err := s.spuSvc.GetSpuList(ctx, spuIds)
+	if err != nil {
+		return nil, err
+	}
+	spuMap := make(map[int64]*resp.ProductSpuResp)
+	for _, spu := range spuList {
+		spuMap[spu.ID] = spu
+	}
+
+	// 4. 组合返回数据
+	productMap := make(map[int64][]resp.CombinationProductRespVO)
+	for _, prod := range productList {
+		productMap[prod.ActivityID] = append(productMap[prod.ActivityID], resp.CombinationProductRespVO{
+			SpuID:             prod.SpuID,
+			SkuID:             prod.SkuID,
+			CombinationPrice:  prod.CombinationPrice,
+			ActivityStatus:    prod.ActivityStatus,
+			ActivityStartTime: prod.ActivityStartTime,
+			ActivityEndTime:   prod.ActivityEndTime,
+		})
+	}
+
+	result := make([]*resp.CombinationActivityRespVO, len(enabledList))
+	for i, activity := range enabledList {
+		result[i] = &resp.CombinationActivityRespVO{
+			ID:               activity.ID,
+			Name:             activity.Name,
+			SpuID:            activity.SpuID,
+			TotalLimitCount:  activity.TotalLimitCount,
+			SingleLimitCount: activity.SingleLimitCount,
+			StartTime:        activity.StartTime,
+			EndTime:          activity.EndTime,
+			UserSize:         activity.UserSize,
+			VirtualGroup:     activity.VirtualGroup,
+			LimitDuration:    activity.LimitDuration,
+			Status:           activity.Status,
+			CreateTime:       activity.CreatedAt,
+			Products:         productMap[activity.ID],
+		}
+	}
+
 	return result, nil
 }
 

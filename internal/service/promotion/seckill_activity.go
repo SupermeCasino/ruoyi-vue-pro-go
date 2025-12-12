@@ -207,6 +207,15 @@ func (s *SeckillActivityService) GetSeckillProductListByActivityID(ctx context.C
 	return q.WithContext(ctx).Where(q.ActivityID.Eq(activityID)).Find()
 }
 
+// GetSeckillProductListByActivityIds 批量获得秒杀商品列表
+func (s *SeckillActivityService) GetSeckillProductListByActivityIds(ctx context.Context, activityIds []int64) ([]*promotion.PromotionSeckillProduct, error) {
+	if len(activityIds) == 0 {
+		return []*promotion.PromotionSeckillProduct{}, nil
+	}
+	q := s.q.PromotionSeckillProduct
+	return q.WithContext(ctx).Where(q.ActivityID.In(activityIds...)).Find()
+}
+
 // GetSeckillActivityPage 分页获得秒杀活动
 func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *req.SeckillActivityPageReq) (*core.PageResult[*promotion.PromotionSeckillActivity], error) {
 	q := s.q.PromotionSeckillActivity
@@ -223,6 +232,15 @@ func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *
 		return nil, err
 	}
 	return &core.PageResult[*promotion.PromotionSeckillActivity]{List: list, Total: count}, nil
+}
+
+// GetSeckillActivityListByIds 获得秒杀活动列表
+func (s *SeckillActivityService) GetSeckillActivityListByIds(ctx context.Context, ids []int64) ([]*promotion.PromotionSeckillActivity, error) {
+	if len(ids) == 0 {
+		return []*promotion.PromotionSeckillActivity{}, nil
+	}
+	q := s.q.PromotionSeckillActivity
+	return q.WithContext(ctx).Where(q.ID.In(ids...)).Find()
 }
 
 // validateProductConflict 校验商品冲突
@@ -311,4 +329,39 @@ func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, 
 		List:  filtered[start:end],
 		Total: total,
 	}, nil
+}
+
+// ValidateJoinSeckill 校验是否参与秒杀
+func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activityId, skuId int64, count int) (*promotion.PromotionSeckillActivity, *promotion.PromotionSeckillProduct, error) {
+	// 1. Get Activity
+	act, err := s.GetSeckillActivity(ctx, activityId)
+	if err != nil || act == nil {
+		return nil, nil, core.NewBizError(1001002000, "秒杀活动不存在")
+	}
+	if act.Status != 1 {
+		return nil, nil, core.NewBizError(1001002003, "秒杀活动已关闭")
+	}
+	now := time.Now()
+	if now.Before(act.StartTime) || now.After(act.EndTime) {
+		return nil, nil, core.NewBizError(1001002005, "秒杀活动时间不符")
+	}
+
+	// 2. Get Product
+	q := s.q.PromotionSeckillProduct
+	prod, err := q.WithContext(ctx).Where(q.ActivityID.Eq(activityId), q.SkuID.Eq(skuId)).First()
+	if err != nil {
+		return nil, nil, core.NewBizError(1001002006, "秒杀商品不存在")
+	}
+
+	// 3. Check Stock
+	if prod.Stock < count {
+		return nil, nil, core.NewBizError(1001002007, "秒杀库存不足")
+	}
+
+	// 4. Check Single Limit
+	if act.SingleLimitCount > 0 && count > act.SingleLimitCount {
+		return nil, nil, core.NewBizError(1001002008, "超出单次限购数量")
+	}
+
+	return act, prod, nil
 }

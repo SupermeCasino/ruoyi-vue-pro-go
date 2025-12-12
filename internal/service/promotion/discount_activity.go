@@ -111,36 +111,140 @@ func (s *discountActivityService) UpdateDiscountActivity(ctx context.Context, re
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
+		// 1. 更新活动信息
 		if _, err := tx.PromotionDiscountActivity.WithContext(ctx).Where(tx.PromotionDiscountActivity.ID.Eq(req.ID)).Updates(newActivity); err != nil {
 			return err
 		}
 
-		// Delete Old
-		if _, err := tx.PromotionDiscountProduct.WithContext(ctx).Where(tx.PromotionDiscountProduct.ActivityID.Eq(req.ID)).Delete(); err != nil {
+		// 2. 使用 Diff 算法更新商品（严格对齐 Java）
+		// Java: updateDiscountProduct
+		if err := s.updateDiscountProductWithDiff(ctx, tx, activity, req); err != nil {
 			return err
 		}
 
-		// Insert New
-		products := make([]*promotion.PromotionDiscountProduct, len(req.Products))
-		for i, p := range req.Products {
-			products[i] = &promotion.PromotionDiscountProduct{
-				ActivityID:        activity.ID,
-				SpuID:             p.SpuID,
-				SkuID:             p.SkuID,
-				DiscountType:      p.DiscountType,
-				DiscountPercent:   p.DiscountPercent,
-				DiscountPrice:     p.DiscountPrice,
-				ActivityName:      req.Name,
-				ActivityStatus:    activity.Status, // Keep OLD status or NEW? Java keeps old status unless closed.
-				ActivityStartTime: req.StartTime,
-				ActivityEndTime:   req.EndTime,
-			}
-		}
-		if err := tx.PromotionDiscountProduct.WithContext(ctx).Create(products...); err != nil {
-			return err
-		}
 		return nil
 	})
+}
+
+// updateDiscountProductWithDiff 使用 Diff 算法更新折扣商品
+// 严格对齐 Java: DiscountActivityServiceImpl#updateDiscountProduct
+func (s *discountActivityService) updateDiscountProductWithDiff(
+	ctx context.Context,
+	tx *query.Query,
+	activity *promotion.PromotionDiscountActivity,
+	req req.DiscountActivityUpdateReq,
+) error {
+	// 第一步：获取新旧列表
+	// 构建新列表
+	newList := make([]*promotion.PromotionDiscountProduct, len(req.Products))
+	for i, p := range req.Products {
+		newList[i] = &promotion.PromotionDiscountProduct{
+			ActivityID:        req.ID,
+			SpuID:             p.SpuID,
+			SkuID:             p.SkuID,
+			DiscountType:      p.DiscountType,
+			DiscountPercent:   p.DiscountPercent,
+			DiscountPrice:     p.DiscountPrice,
+			ActivityName:      req.Name,
+			ActivityStatus:    activity.Status, // Keep old status
+			ActivityStartTime: req.StartTime,
+			ActivityEndTime:   req.EndTime,
+		}
+	}
+
+	// 获取旧列表
+	oldList, err := tx.PromotionDiscountProduct.WithContext(ctx).
+		Where(tx.PromotionDiscountProduct.ActivityID.Eq(req.ID)).
+		Find()
+	if err != nil {
+		return err
+	}
+
+	// 第二步：计算 Diff（通过 SkuID 匹配）
+	// Java: CollectionUtils.diffList(oldList, newList, (oldVal, newVal) -> ObjectUtil.equal(oldVal.getSkuId(), newVal.getSkuId()))
+	// 返回: [toAdd, toUpdate, toDelete]
+	toAdd, toUpdate, toDelete := s.diffDiscountProducts(oldList, newList)
+
+	// 第三步：批量执行操作
+	// Add
+	if len(toAdd) > 0 {
+		if err := tx.PromotionDiscountProduct.WithContext(ctx).Create(toAdd...); err != nil {
+			return err
+		}
+	}
+
+	// Update
+	if len(toUpdate) > 0 {
+		for _, prod := range toUpdate {
+			if _, err := tx.PromotionDiscountProduct.WithContext(ctx).
+				Where(tx.PromotionDiscountProduct.ID.Eq(prod.ID)).
+				Updates(prod); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Delete
+	if len(toDelete) > 0 {
+		deleteIDs := make([]int64, len(toDelete))
+		for i, prod := range toDelete {
+			deleteIDs[i] = prod.ID
+		}
+		if _, err := tx.PromotionDiscountProduct.WithContext(ctx).
+			Where(tx.PromotionDiscountProduct.ID.In(deleteIDs...)).
+			Delete(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// diffDiscountProducts 计算新旧商品列表的差异
+// 严格对齐 Java: CollectionUtils.diffList
+// 返回: (toAdd, toUpdate, toDelete)
+func (s *discountActivityService) diffDiscountProducts(
+	oldList []*promotion.PromotionDiscountProduct,
+	newList []*promotion.PromotionDiscountProduct,
+) ([]*promotion.PromotionDiscountProduct, []*promotion.PromotionDiscountProduct, []*promotion.PromotionDiscountProduct) {
+	// 创建 SkuID -> OldProduct 映射
+	oldMap := make(map[int64]*promotion.PromotionDiscountProduct)
+	for _, old := range oldList {
+		oldMap[old.SkuID] = old
+	}
+
+	// 创建 SkuID -> NewProduct 映射
+	newMap := make(map[int64]*promotion.PromotionDiscountProduct)
+	for _, new := range newList {
+		newMap[new.SkuID] = new
+	}
+
+	var toAdd []*promotion.PromotionDiscountProduct
+	var toUpdate []*promotion.PromotionDiscountProduct
+	var toDelete []*promotion.PromotionDiscountProduct
+
+	// 遍历新列表：找到 Add 和 Update
+	for _, newProd := range newList {
+		if oldProd, exists := oldMap[newProd.SkuID]; exists {
+			// 存在于旧列表：Update
+			// Java: newVal.setId(oldVal.getId())
+			newProd.ID = oldProd.ID
+			toUpdate = append(toUpdate, newProd)
+		} else {
+			// 不存在于旧列表：Add
+			toAdd = append(toAdd, newProd)
+		}
+	}
+
+	// 遍历旧列表：找到 Delete
+	for _, oldProd := range oldList {
+		if _, exists := newMap[oldProd.SkuID]; !exists {
+			// 不存在于新列表：Delete
+			toDelete = append(toDelete, oldProd)
+		}
+	}
+
+	return toAdd, toUpdate, toDelete
 }
 
 func (s *discountActivityService) CloseDiscountActivity(ctx context.Context, id int64) error {

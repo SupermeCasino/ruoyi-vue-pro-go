@@ -67,6 +67,24 @@ func (h *RewardActivityHandler) DeleteRewardActivity(c *gin.Context) {
 	c.JSON(200, core.Success(true))
 }
 
+// CloseRewardActivity 关闭活动
+// @Summary 关闭活动
+// @Router /admin-api/promotion/reward-activity/close [put]
+// Java: RewardActivityController#closeRewardActivity
+func (h *RewardActivityHandler) CloseRewardActivity(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(200, core.ErrParam)
+		return
+	}
+	if err := h.svc.CloseRewardActivity(c, id); err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, core.Success(true))
+}
+
 // GetRewardActivity 获得活动
 // @Summary 获得活动
 // @Router /admin-api/promotion/reward-activity/get [get]

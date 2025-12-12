@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"backend-go/internal/api/req"
+	"backend-go/internal/model"
 	"backend-go/internal/pkg/core"
 	"backend-go/internal/service/promotion"
 
@@ -80,6 +81,31 @@ func (h *CombinationActivityHandler) GetCombinationActivity(c *gin.Context) {
 		return
 	}
 	core.WriteSuccess(c, activity)
+}
+
+// GetCombinationActivityListByIds 获得拼团活动列表，基于活动编号数组
+// Java: CombinationActivityController#getCombinationActivityListByIds
+func (h *CombinationActivityHandler) GetCombinationActivityListByIds(c *gin.Context) {
+	var req struct {
+		Ids model.IntListFromCSV `form:"ids" binding:"required"`
+	}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		core.WriteBizError(c, core.NewBizError(400, "Invalid IDs"))
+		return
+	}
+
+	// 将 []int 转换为 []int64
+	ids := make([]int64, len(req.Ids))
+	for i, id := range req.Ids {
+		ids[i] = int64(id)
+	}
+
+	list, err := h.svc.GetCombinationActivityListByIds(c.Request.Context(), ids)
+	if err != nil {
+		core.WriteBizError(c, err)
+		return
+	}
+	core.WriteSuccess(c, list)
 }
 
 // GetCombinationActivityPage 获得拼团活动分页

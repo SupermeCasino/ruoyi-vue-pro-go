@@ -15,8 +15,10 @@ type DiyPageService interface {
 	UpdateDiyPage(ctx context.Context, req req.DiyPageUpdateReq) error
 	DeleteDiyPage(ctx context.Context, id int64) error
 	GetDiyPage(ctx context.Context, id int64) (*resp.DiyPageResp, error)
+	GetDiyPageList(ctx context.Context, ids []int64) ([]*resp.DiyPageResp, error)
 	GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*core.PageResult[*resp.DiyPageResp], error)
 	GetDiyPageProperty(ctx context.Context, id int64) (string, error)
+	UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error
 }
 
 type diyPageService struct {
@@ -104,12 +106,40 @@ func (s *diyPageService) GetDiyPagePage(ctx context.Context, req req.DiyPagePage
 	return &core.PageResult[*resp.DiyPageResp]{List: result, Total: total}, nil
 }
 
+func (s *diyPageService) GetDiyPageList(ctx context.Context, ids []int64) ([]*resp.DiyPageResp, error) {
+	if len(ids) == 0 {
+		return []*resp.DiyPageResp{}, nil
+	}
+	list, err := s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*resp.DiyPageResp, len(list))
+	for i, item := range list {
+		result[i] = s.convertDiyPageToResp(item)
+	}
+	return result, nil
+}
+
 func (s *diyPageService) GetDiyPageProperty(ctx context.Context, id int64) (string, error) {
 	page, err := s.validateDiyPageExists(ctx, id)
 	if err != nil {
 		return "", err
 	}
 	return page.Property, nil
+}
+
+func (s *diyPageService) UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error {
+	// 校验存在
+	_, err := s.validateDiyPageExists(ctx, req.ID)
+	if err != nil {
+		return err
+	}
+	// 更新
+	_, err = s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.ID.Eq(req.ID)).Updates(promotion.PromotionDiyPage{
+		Property: req.Property,
+	})
+	return err
 }
 
 // Helpers

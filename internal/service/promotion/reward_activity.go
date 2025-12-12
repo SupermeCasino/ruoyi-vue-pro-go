@@ -72,6 +72,27 @@ func (s *RewardActivityService) DeleteRewardActivity(ctx context.Context, id int
 	return err
 }
 
+// CloseRewardActivity 关闭活动
+// Java: RewardActivityServiceImpl#closeRewardActivity
+func (s *RewardActivityService) CloseRewardActivity(ctx context.Context, id int64) error {
+	// 1. 校验存在
+	activity, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(id)).First()
+	if err != nil {
+		return core.NewBizError(1004002000, "活动不存在")
+	}
+
+	// 2. 检查状态：已关闭的活动不能再关闭
+	if activity.Status == 0 { // 0 = DISABLE
+		return core.NewBizError(1004002003, "活动已关闭，不能重复关闭")
+	}
+
+	// 3. 更新状态为关闭
+	_, err = s.q.PromotionRewardActivity.WithContext(ctx).
+		Where(s.q.PromotionRewardActivity.ID.Eq(id)).
+		Update(s.q.PromotionRewardActivity.Status, 0) // 0 = DISABLE
+	return err
+}
+
 // GetRewardActivity 获得活动详情
 func (s *RewardActivityService) GetRewardActivity(ctx context.Context, id int64) (*resp.PromotionRewardActivityResp, error) {
 	item, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(id)).First()

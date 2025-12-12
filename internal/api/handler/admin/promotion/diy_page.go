@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"backend-go/internal/api/req"
+	"backend-go/internal/model"
 	"backend-go/internal/pkg/core"
 	"backend-go/internal/service/promotion"
 
@@ -101,4 +102,47 @@ func (h *DiyPageHandler) GetDiyPageProperty(c *gin.Context) {
 		return
 	}
 	core.WriteSuccess(c, res)
+}
+
+// GetDiyPageList 获得装修页面列表
+// Java: DiyPageController#getDiyPageList
+func (h *DiyPageHandler) GetDiyPageList(c *gin.Context) {
+	idsStr := c.Query("ids")
+	if idsStr == "" {
+		core.WriteSuccess(c, []interface{}{})
+		return
+	}
+	// 使用 model.IntListFromCSV 解析 ID 列表
+	var ids model.IntListFromCSV
+	if err := ids.Scan(idsStr); err != nil {
+		core.WriteBizError(c, core.ErrParam)
+		return
+	}
+	// 转换为 []int64
+	ids64 := make([]int64, len(ids))
+	for i, id := range ids {
+		ids64[i] = int64(id)
+	}
+	res, err := h.svc.GetDiyPageList(c, ids64)
+	if err != nil {
+		core.WriteBizError(c, err)
+		return
+	}
+	core.WriteSuccess(c, res)
+}
+
+// UpdateDiyPageProperty 更新装修页面属性
+// Java: DiyPageController#updateDiyPageProperty
+func (h *DiyPageHandler) UpdateDiyPageProperty(c *gin.Context) {
+	var r req.DiyPagePropertyUpdateReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		core.WriteBizError(c, core.ErrParam)
+		return
+	}
+	err := h.svc.UpdateDiyPageProperty(c, r)
+	if err != nil {
+		core.WriteBizError(c, err)
+		return
+	}
+	core.WriteSuccess(c, true)
 }

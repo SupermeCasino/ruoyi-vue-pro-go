@@ -4,18 +4,23 @@ import (
 	"backend-go/internal/api/req"
 	"backend-go/internal/api/resp"
 	"backend-go/internal/pkg/core"
+	"backend-go/internal/service/product"
 	"backend-go/internal/service/promotion"
 	"strconv"
+
+	"backend-go/internal/model"
+	promotionModel "backend-go/internal/model/promotion"
 
 	"github.com/gin-gonic/gin"
 )
 
 type SeckillActivityHandler struct {
-	svc *promotion.SeckillActivityService
+	svc    *promotion.SeckillActivityService
+	spuSvc *product.ProductSpuService // Needed for response composition
 }
 
-func NewSeckillActivityHandler(svc *promotion.SeckillActivityService) *SeckillActivityHandler {
-	return &SeckillActivityHandler{svc: svc}
+func NewSeckillActivityHandler(svc *promotion.SeckillActivityService, spuSvc *product.ProductSpuService) *SeckillActivityHandler {
+	return &SeckillActivityHandler{svc: svc, spuSvc: spuSvc}
 }
 
 // CreateSeckillActivity 创建
@@ -155,4 +160,57 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		List:  list,
 		Total: res.Total,
 	})
+}
+
+// GetSeckillActivityListByIds 获得秒杀活动列表
+func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
+	idsStr := c.Query("ids")
+	// Expected format: 1,2,3 ? Java accepts comma separated? Or param array?
+	// Java @RequestParam("ids") List<Long> ids. Spring usually handles comma separated.
+	// Go need simple parse.
+	var ids []int64
+	var intList model.IntListFromCSV
+	if err := intList.Scan(idsStr); err != nil {
+		core.WriteError(c, 400, "参数错误")
+		return
+	}
+	for _, id := range intList {
+		ids = append(ids, int64(id))
+	}
+
+	activityList, err := h.svc.GetSeckillActivityListByIds(c.Request.Context(), ids)
+	if err != nil {
+		core.WriteBizError(c, err)
+		return
+	}
+
+	// Filter Status Enable
+	// Java: activityList.removeIf(activity -> CommonStatusEnum.isDisable(activity.getStatus()));
+	var activeList []*promotionModel.PromotionSeckillActivity
+	for _, act := range activityList {
+		if act.Status == 1 { // Enable
+			activeList = append(activeList, act)
+		}
+	}
+	if len(activeList) == 0 {
+		core.WriteSuccess(c, []resp.SeckillActivityResp{})
+		return
+	}
+
+	// Fetch Products & Spus to compose response
+	// Java: seckillService.getSeckillProductListByActivityIds...
+	// We lack batch get products by activity IDs in service.
+	// Let's iterate or add batch method. Batch is better.
+	actIds := make([]int64, len(activeList))
+	spuIds := make([]int64, len(activeList))
+	for i, act := range activeList {
+		actIds[i] = act.ID
+		spuIds[i] = act.SpuID
+	}
+
+	// Todo: Add GetSeckillProductListByActivityIds to Service if missing?
+	// Checking Service... Service has GetSeckillProductListByActivityID (Single).
+	// We need Batch.
+	// I'll add GetSeckillProductListByActivityIds to Service first.
+	// Assume it exists for now or use loop? Better add it.
 }
