@@ -8,6 +8,7 @@ import (
 	adminHandler "backend-go/internal/api/handler/admin" // Statistics Handlers
 	memberAdmin "backend-go/internal/api/handler/admin/member"
 	payAdmin "backend-go/internal/api/handler/admin/pay"
+	payWallet "backend-go/internal/api/handler/admin/pay/wallet"
 	productHandler "backend-go/internal/api/handler/admin/product"
 	promotionAdmin "backend-go/internal/api/handler/admin/promotion"
 	tradeAdmin "backend-go/internal/api/handler/admin/trade"
@@ -27,6 +28,7 @@ import (
 	"backend-go/internal/service/pay/client"
 	_ "backend-go/internal/service/pay/client/alipay"
 	_ "backend-go/internal/service/pay/client/weixin"
+	payWalletSvc "backend-go/internal/service/pay/wallet"
 	product "backend-go/internal/service/product"
 	promotionSvc "backend-go/internal/service/promotion"
 	tradeSvc "backend-go/internal/service/trade"
@@ -183,7 +185,11 @@ func InitApp() (*gin.Engine, error) {
 		tradeBrokerageSvc.NewBrokerageRecordService,
 		tradeBrokerageSvc.NewBrokerageWithdrawService, // Added
 		paySvc.NewPayTransferService,                  // Placeholder
-		paySvc.NewPayWalletService,                    // Placeholder
+		// Wallet Services
+		payWalletSvc.NewPayWalletService,
+		payWalletSvc.NewPayWalletRechargeService,
+		payWalletSvc.NewPayWalletRechargePackageService,
+		payWalletSvc.NewPayWalletTransactionService,
 		brokerage.NewBrokerageUserHandler,
 		brokerage.NewBrokerageRecordHandler,
 		brokerage.NewBrokerageWithdrawHandler,
@@ -231,7 +237,7 @@ func InitApp() (*gin.Engine, error) {
 		promotionSvc.NewArticleService,             // Added Article
 		promotionSvc.NewDiyTemplateService,         // Added Diy Template
 		promotionSvc.NewDiyPageService,             // Added Diy Page
-                promotionSvc.NewPointActivityService,		promotionSvc.NewKefuService,
+		promotionSvc.NewPointActivityService, promotionSvc.NewKefuService,
 		promotionAdmin.NewCouponHandler,
 		promotionAdmin.NewBannerHandler,              // Added Banner
 		promotionAdmin.NewRewardActivityHandler,      // Added Activity
@@ -244,10 +250,10 @@ func InitApp() (*gin.Engine, error) {
 		promotionAdmin.NewArticleHandler,             // Added Article
 		promotionAdmin.NewDiyTemplateHandler,         // Added Diy Template
 		promotionAdmin.NewDiyPageHandler,             // Added Diy Page
-                promotionAdmin.NewPointActivityHandler,		promotionAdmin.NewKefuHandler,
-                promotionAdmin.NewBargainRecordHandler,
-                promotionAdmin.NewCombinationRecordHandler,
-                promotionAdmin.NewBargainHelpHandler,		promotionApp.NewAppKefuHandler,
+		promotionAdmin.NewPointActivityHandler, promotionAdmin.NewKefuHandler,
+		promotionAdmin.NewBargainRecordHandler,
+		promotionAdmin.NewCombinationRecordHandler,
+		promotionAdmin.NewBargainHelpHandler, promotionApp.NewAppKefuHandler,
 		promotionApp.NewAppCouponHandler,
 		promotionApp.NewAppBannerHandler, // Added Banner
 		promotionApp.NewAppBargainActivityHandler,
@@ -273,6 +279,11 @@ func InitApp() (*gin.Engine, error) {
 		payAdmin.NewPayOrderHandler,
 		payAdmin.NewPayRefundHandler,
 		payAdmin.NewPayNotifyHandler,
+		// Wallet Handlers
+		payWallet.NewPayWalletHandler,
+		payWallet.NewPayWalletRechargeHandler,
+		payWallet.NewPayWalletRechargePackageHandler,
+		payWallet.NewPayWalletTransactionHandler,
 
 		// Router
 		router.InitRouter,
