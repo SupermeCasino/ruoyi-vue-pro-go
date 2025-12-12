@@ -380,3 +380,16 @@ func RegisterSystemRoutes(engine *gin.Engine,
 		}
 	}
 }
+
+// RegisterAreaRoutes 注册地区路由 (独立函数，无需依赖注入)
+func RegisterAreaRoutes(engine *gin.Engine, areaHandler *handler.AreaHandler) {
+	api := engine.Group("/admin-api")
+	{
+		// Area 地区
+		areaGroup := api.Group("/system/area")
+		{
+			areaGroup.GET("/tree", areaHandler.GetAreaTree)
+			areaGroup.GET("/get-by-ip", areaHandler.GetAreaByIP)
+		}
+	}
+}
