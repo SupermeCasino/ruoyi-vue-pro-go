@@ -35,6 +35,7 @@ type ProductComment struct {
 	CreatedAt time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
 	Deleted   model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
+	TenantID         int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }
 
 func (ProductComment) TableName() string {

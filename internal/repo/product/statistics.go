@@ -48,7 +48,7 @@ func (r *ProductStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, be
 			ps.AfterSaleRefundPrice.Sum().As("after_sale_refund"),
 		).
 		Where(ps.Time.Between(beginTime, endTime)).
-		Where(ps.Deleted.Is(false)).
+		// Where(ps.Deleted.Eq(false)). // Soft delete handled by GORM
 		Group(ps.SpuID).
 		Scan(&results)
 	if err != nil {

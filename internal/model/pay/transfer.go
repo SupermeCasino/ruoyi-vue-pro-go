@@ -11,7 +11,6 @@ type PayTransfer struct {
 	Creator            string            `gorm:"column:creator;default:''" json:"creator"`
 	Updater            string            `gorm:"column:updater;default:''" json:"updater"`
 	CreatedAt          time.Time         `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	UpdatedAt          time.Time         `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
 	Deleted            model.BitBool     `gorm:"column:deleted;softDelete:flag" json:"-"`
 	TenantID           int64             `gorm:"column:tenant_id;default:0" json:"tenantId"`
 	ID                 int64             `gorm:"primaryKey;autoIncrement;comment:编号"`
