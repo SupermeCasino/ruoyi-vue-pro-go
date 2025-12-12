@@ -5,6 +5,7 @@ import (
 	adminHandler "backend-go/internal/api/handler/admin" // Statistics Handlers
 	memberAdmin "backend-go/internal/api/handler/admin/member"
 	payAdmin "backend-go/internal/api/handler/admin/pay"
+	payWallet "backend-go/internal/api/handler/admin/pay/wallet"
 	productHandler "backend-go/internal/api/handler/admin/product"
 	promotionAdmin "backend-go/internal/api/handler/admin/promotion"
 	tradeAdmin "backend-go/internal/api/handler/admin/trade"
@@ -90,6 +91,11 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	payOrderHandler *payAdmin.PayOrderHandler,
 	payRefundHandler *payAdmin.PayRefundHandler,
 	payNotifyHandler *payAdmin.PayNotifyHandler,
+	// Wallet
+	payWalletHandler *payWallet.PayWalletHandler,
+	payWalletRechargeHandler *payWallet.PayWalletRechargeHandler,
+	payWalletRechargePackageHandler *payWallet.PayWalletRechargePackageHandler,
+	payWalletTransactionHandler *payWallet.PayWalletTransactionHandler,
 	loginLogHandler *handler.LoginLogHandler,
 	operateLogHandler *handler.OperateLogHandler,
 	jobHandler *handler.JobHandler,
@@ -204,6 +210,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	// Pay 模块
 	RegisterPayRoutes(r,
 		payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler,
+		payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler,
 	)
 
 	// App 模块 (移动端)

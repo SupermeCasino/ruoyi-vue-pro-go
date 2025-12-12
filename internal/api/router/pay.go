@@ -2,6 +2,7 @@ package router
 
 import (
 	payAdmin "backend-go/internal/api/handler/admin/pay"
+	payWallet "backend-go/internal/api/handler/admin/pay/wallet"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,11 @@ func RegisterPayRoutes(engine *gin.Engine,
 	payOrderHandler *payAdmin.PayOrderHandler,
 	payRefundHandler *payAdmin.PayRefundHandler,
 	payNotifyHandler *payAdmin.PayNotifyHandler,
+	// Wallet
+	payWalletHandler *payWallet.PayWalletHandler,
+	payWalletRechargeHandler *payWallet.PayWalletRechargeHandler,
+	payWalletRechargePackageHandler *payWallet.PayWalletRechargePackageHandler,
+	payWalletTransactionHandler *payWallet.PayWalletTransactionHandler,
 ) {
 	api := engine.Group("/admin-api")
 	payGroup := api.Group("/pay")
@@ -60,6 +66,35 @@ func RegisterPayRoutes(engine *gin.Engine,
 		{
 			payNotify.GET("/get-detail", payNotifyHandler.GetNotifyTaskDetail)
 			payNotify.GET("/page", payNotifyHandler.GetNotifyTaskPage)
+		}
+
+		// Pay Wallet
+		payWallet := payGroup.Group("/wallet")
+		{
+			payWallet.GET("/get", payWalletHandler.GetWallet)
+			payWallet.GET("/page", payWalletHandler.GetWalletPage)
+		}
+
+		// Pay Wallet Recharge
+		payWalletRecharge := payGroup.Group("/wallet-recharge")
+		{
+			payWalletRecharge.GET("/page", payWalletRechargeHandler.GetWalletRechargePage)
+		}
+
+		// Pay Wallet Transaction
+		payWalletTransaction := payGroup.Group("/wallet-transaction")
+		{
+			payWalletTransaction.GET("/page", payWalletTransactionHandler.GetWalletTransactionPage)
+		}
+
+		// Pay Wallet Recharge Package
+		payWalletPackage := payGroup.Group("/wallet-recharge-package")
+		{
+			payWalletPackage.POST("/create", payWalletRechargePackageHandler.CreateWalletRechargePackage)
+			payWalletPackage.PUT("/update", payWalletRechargePackageHandler.UpdateWalletRechargePackage)
+			payWalletPackage.DELETE("/delete", payWalletRechargePackageHandler.DeleteWalletRechargePackage)
+			payWalletPackage.GET("/get", payWalletRechargePackageHandler.GetWalletRechargePackage)
+			payWalletPackage.GET("/page", payWalletRechargePackageHandler.GetWalletRechargePackagePage)
 		}
 	}
 }
