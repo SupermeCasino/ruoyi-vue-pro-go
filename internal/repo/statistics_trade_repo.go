@@ -53,7 +53,8 @@ func (r *TradeStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, begi
 			ts.RechargeRefundPrice.Sum().As("recharge_refund_price"),
 		).
 		Where(ts.Time.Between(beginTime, endTime)).
-		Where(ts.Deleted.Is(false)).
+		Where(ts.Time.Between(beginTime, endTime)).
+		// Where(ts.Deleted.Is(false)). // Removed explicit check
 		Scan(&result)
 	if err != nil {
 		return nil, err
@@ -86,7 +87,8 @@ func (r *TradeStatisticsRepositoryImpl) GetListByDateRange(ctx context.Context, 
 
 	list, err := ts.WithContext(ctx).
 		Where(ts.Time.Between(beginTime, endTime)).
-		Where(ts.Deleted.Is(false)).
+		Where(ts.Time.Between(beginTime, endTime)).
+		// Where(ts.Deleted.Is(false)). // Removed explicit check
 		Order(ts.Time).
 		Find()
 	if err != nil {
@@ -151,7 +153,7 @@ func NewTradeOrderStatisticsRepository(q *query.Query) service.TradeOrderStatist
 func (r *TradeOrderStatisticsRepositoryImpl) GetCountByCreateTime(ctx context.Context, beginTime, endTime time.Time) (int64, error) {
 	t := r.q.TradeOrder
 	return t.WithContext(ctx).
-		Where(t.Deleted.Is(false)).
+		// Where(t.Deleted.Is(false)).
 		Where(t.CreatedAt.Between(beginTime, endTime)).
 		Count()
 }
@@ -165,7 +167,7 @@ func (r *TradeOrderStatisticsRepositoryImpl) GetPayPriceSummary(ctx context.Cont
 	}
 	err := t.WithContext(ctx).
 		Select(t.PayPrice.Sum().As("total_pay_price")).
-		Where(t.Deleted.Is(false)).
+		// Where(t.Deleted.Is(false)).
 		Where(t.PayTime.Between(beginTime, endTime)).
 		Scan(&result)
 	if err != nil {
@@ -178,7 +180,7 @@ func (r *TradeOrderStatisticsRepositoryImpl) GetPayPriceSummary(ctx context.Cont
 func (r *TradeOrderStatisticsRepositoryImpl) GetUserCountByCreateTime(ctx context.Context, beginTime, endTime time.Time) (int64, error) {
 	t := r.q.TradeOrder
 	return t.WithContext(ctx).
-		Where(t.Deleted.Is(false)).
+		// Where(t.Deleted.Is(false)).
 		Where(t.CreatedAt.Between(beginTime, endTime)).
 		Distinct(t.UserID).
 		Count()
@@ -187,7 +189,7 @@ func (r *TradeOrderStatisticsRepositoryImpl) GetUserCountByCreateTime(ctx contex
 // GetCountByStatusAndDeliveryType 获取指定状态和配送类型的订单数量
 func (r *TradeOrderStatisticsRepositoryImpl) GetCountByStatusAndDeliveryType(ctx context.Context, status, deliveryType int) (int64, error) {
 	t := r.q.TradeOrder
-	q := t.WithContext(ctx).Where(t.Deleted.Is(false))
+	q := t.WithContext(ctx) // .Where(t.Deleted.Is(false))
 	if status >= 0 {
 		q = q.Where(t.Status.Eq(status))
 	}
@@ -201,7 +203,7 @@ func (r *TradeOrderStatisticsRepositoryImpl) GetCountByStatusAndDeliveryType(ctx
 func (r *TradeOrderStatisticsRepositoryImpl) GetPayUserCount(ctx context.Context, beginTime, endTime time.Time) (int64, error) {
 	t := r.q.TradeOrder
 	return t.WithContext(ctx).
-		Where(t.Deleted.Is(false)).
+		// Where(t.Deleted.Is(false)).
 		Where(t.PayTime.Between(beginTime, endTime)).
 		Distinct(t.UserID).
 		Count()
@@ -238,7 +240,7 @@ func (r *AfterSaleStatisticsRepositoryImpl) GetRefundPriceSummary(ctx context.Co
 	}
 	err := a.WithContext(ctx).
 		Select(a.RefundPrice.Sum().As("total_refund_price")).
-		Where(a.Deleted.Is(false)).
+		// Where(a.Deleted.Is(false)).
 		Where(a.RefundTime.Between(beginTime, endTime)).
 		Scan(&result)
 	if err != nil {
@@ -251,7 +253,7 @@ func (r *AfterSaleStatisticsRepositoryImpl) GetRefundPriceSummary(ctx context.Co
 func (r *AfterSaleStatisticsRepositoryImpl) GetCountByStatus(ctx context.Context, status int) (int64, error) {
 	a := r.q.AfterSale
 	return a.WithContext(ctx).
-		Where(a.Deleted.Is(false)).
+		// Where(a.Deleted.Is(false)).
 		Where(a.Status.Eq(status)).
 		Count()
 }
@@ -280,7 +282,7 @@ func (r *BrokerageStatisticsRepositoryImpl) GetSettlementPriceSummary(ctx contex
 	err := ts.WithContext(ctx).
 		Select(ts.BrokerageSettlementPrice.Sum().As("total")).
 		Where(ts.Time.Between(beginTime, endTime)).
-		Where(ts.Deleted.Is(false)).
+		// Where(ts.Deleted.Is(false)).
 		Scan(&result)
 	if err != nil {
 		return 0, err

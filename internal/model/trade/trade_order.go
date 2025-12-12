@@ -66,7 +66,6 @@ type TradeOrder struct {
 	CreatedAt                time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt                time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
 	DeletedAt                gorm.DeletedAt `gorm:"column:deleted;index;comment:删除时间"`
-	Deleted                  bool           `gorm:"column:deleted;type:tinyint(1);not null;default:0;comment:是否删除"`
 }
 
 func (TradeOrder) TableName() string {
@@ -103,7 +102,6 @@ type TradeOrderItem struct {
 	CreatedAt       time.Time                `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt       time.Time                `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
 	DeletedAt       gorm.DeletedAt           `gorm:"column:deleted;index;comment:删除时间"`
-	Deleted         bool                     `gorm:"column:deleted;type:tinyint(1);not null;default:0;comment:是否删除"`
 }
 
 func (TradeOrderItem) TableName() string {
@@ -132,7 +130,6 @@ type TradeOrderLog struct {
 	CreatedAt    time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt    time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
 	DeletedAt    gorm.DeletedAt `gorm:"column:deleted;index;comment:删除时间"`
-	Deleted      bool           `gorm:"column:deleted;type:tinyint(1);not null;default:0;comment:是否删除"`
 }
 
 func (TradeOrderLog) TableName() string {
