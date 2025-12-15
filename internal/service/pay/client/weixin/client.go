@@ -505,3 +505,65 @@ func (c *WxPayClient) UnifiedTransfer(ctx context.Context, req *client.UnifiedTr
 		ChannelTransferNo: *resp.BatchId,
 	}, nil
 }
+
+// ParseTransferNotify 解析转账回调
+// 对齐 Java: AbstractWxPayClient.parseTransferNotifyV3
+// 注意: 仅支持 V3 版本，V2 不支持转账回调
+func (c *WxPayClient) ParseTransferNotify(req *client.NotifyData) (*client.TransferResp, error) {
+	// 1. 构造 http.Request
+	httpReq := &http.Request{
+		Header: http.Header{},
+		Body:   io.NopCloser(strings.NewReader(req.Body)),
+	}
+	for k, v := range req.Headers {
+		httpReq.Header.Set(k, v)
+	}
+
+	// 2. 初始化 NotifyHandler
+	verifier := verifiers.NewSHA256WithRSAPubkeyVerifier(c.config.PublicKeyID, *c.publicKey)
+	handler, err := notify.NewRSANotifyHandler(c.config.APIV3Key, verifier)
+	if err != nil {
+		return nil, fmt.Errorf("创建回调处理器失败: %v", err)
+	}
+
+	// 3. 解析并验证签名 (使用 map 接收通用回调数据)
+	content := make(map[string]interface{})
+	_, err = handler.ParseNotifyRequest(context.Background(), httpReq, &content)
+	if err != nil {
+		return nil, fmt.Errorf("解析转账回调失败: %w", err)
+	}
+
+	// 4. 提取字段
+	state, _ := content["state"].(string)
+	outBizNo, _ := content["out_bill_no"].(string)
+	transferBillNo, _ := content["transfer_bill_no"].(string)
+	updateTimeStr, _ := content["update_time"].(string)
+	failReason, _ := content["fail_reason"].(string)
+
+	// 5. 解析时间
+	var successTime time.Time
+	if updateTimeStr != "" {
+		successTime, _ = time.Parse(time.RFC3339, updateTimeStr)
+	}
+
+	// 6. 根据状态转换 (对齐 Java 的状态判断逻辑)
+	var transferStatus int
+	// ACCEPTED, PROCESSING, WAIT_USER_CONFIRM, TRANSFERING -> 处理中 (5)
+	if state == "ACCEPTED" || state == "PROCESSING" || state == "WAIT_USER_CONFIRM" || state == "TRANSFERING" {
+		transferStatus = 5 // PayTransferStatusProcessing
+	} else if state == "SUCCESS" {
+		transferStatus = 10 // PayTransferStatusSuccess
+	} else {
+		// 其他状态视为关闭 (20)
+		transferStatus = 20 // PayTransferStatusClosed
+	}
+
+	return &client.TransferResp{
+		Status:            transferStatus,
+		OutTradeNo:        outBizNo,
+		ChannelTransferNo: transferBillNo,
+		SuccessTime:       successTime,
+		ChannelErrorMsg:   failReason,
+		RawData:           req.Body,
+	}, nil
+}

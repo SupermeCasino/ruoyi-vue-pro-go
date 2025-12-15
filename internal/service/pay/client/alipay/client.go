@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/smartwalle/alipay/v3"
@@ -424,5 +423,75 @@ func (c *AlipayPayClient) UnifiedTransfer(ctx context.Context, req *client.Unifi
 
 // formatAmount 分转元 string
 func formatAmount(price int) string {
-	return strconv.FormatFloat(float64(price)/100.0, 'f', 2, 64)
+	return fmt.Sprintf("%.2f", float64(price)/100)
+}
+
+// ParseTransferNotify 解析转账回调
+// 对齐 Java: AbstractAlipayPayClient.doParseTransferNotify
+// 注意: 支付宝转账回调触发较少，此实现基于 Java 代码
+func (c *AlipayPayClient) ParseTransferNotify(req *client.NotifyData) (*client.TransferResp, error) {
+	// 1. 解析参数
+	values, err := url.ParseQuery(req.Body)
+	if err != nil {
+		return nil, fmt.Errorf("解析 Body 失败: %w", err)
+	}
+
+	// 2. 验签
+	err = c.client.VerifySign(values)
+	if err != nil {
+		return nil, fmt.Errorf("验签出错: %w", err)
+	}
+
+	// 3. 解析转账状态
+	status := values.Get("status")
+	outBizNo := values.Get("out_biz_no")
+	orderId := values.Get("order_id")
+	payDate := values.Get("pay_date")
+
+	// 4. 根据状态返回对应的结果
+	var successTime time.Time
+	if payDate != "" {
+		successTime, _ = time.Parse("2006-01-02 15:04:05", payDate)
+	}
+
+	// SUCCESS: 转账成功 (status = 10)
+	if status == "SUCCESS" {
+		return &client.TransferResp{
+			Status:            10, // PayTransferStatusSuccess
+			OutTradeNo:        outBizNo,
+			ChannelTransferNo: orderId,
+			SuccessTime:       successTime,
+			RawData:           req.Body,
+		}, nil
+	}
+
+	// DEALING: 转账处理中 (status = 5)
+	if status == "DEALING" {
+		return &client.TransferResp{
+			Status:            5, // PayTransferStatusProcessing
+			OutTradeNo:        outBizNo,
+			ChannelTransferNo: orderId,
+			RawData:           req.Body,
+		}, nil
+	}
+
+	// REFUND/FAIL: 转账关闭 (status = 20)
+	if status == "REFUND" || status == "FAIL" {
+		return &client.TransferResp{
+			Status:            20, // PayTransferStatusClosed
+			OutTradeNo:        outBizNo,
+			ChannelTransferNo: orderId,
+			ChannelErrorCode:  values.Get("sub_code"),
+			ChannelErrorMsg:   values.Get("sub_msg"),
+			RawData:           req.Body,
+		}, nil
+	}
+
+	// 其他状态: 等待中 (status = 0)
+	return &client.TransferResp{
+		Status:            0, // PayTransferStatusWaiting
+		OutTradeNo:        outBizNo,
+		ChannelTransferNo: orderId,
+		RawData:           req.Body,
+	}, nil
 }

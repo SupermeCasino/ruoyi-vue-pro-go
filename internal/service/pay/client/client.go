@@ -28,6 +28,9 @@ type PayClient interface {
 	// ParseRefundNotify 解析 refund 回调数据
 	ParseRefundNotify(req *NotifyData) (*RefundResp, error)
 
+	// ParseTransferNotify 解析 transfer 回调数据
+	ParseTransferNotify(req *NotifyData) (*TransferResp, error)
+
 	// UnifiedTransfer 调用支付渠道，进行转账
 	UnifiedTransfer(ctx context.Context, req *UnifiedTransferReq) (*TransferResp, error)
 }
