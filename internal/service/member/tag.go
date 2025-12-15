@@ -31,7 +31,6 @@ func (s *MemberTagService) CreateTag(ctx context.Context, r *req.MemberTagCreate
 	tag := &member.MemberTag{
 		Name:   r.Name,
 		Remark: r.Remark,
-		Status: 0, // Default Enable
 	}
 	err := s.q.MemberTag.WithContext(ctx).Create(tag)
 	if err != nil {
@@ -112,7 +111,7 @@ func (s *MemberTagService) GetTagPage(ctx context.Context, r *req.MemberTagPageR
 
 // GetTagList 获得开启的用户标签列表
 func (s *MemberTagService) GetTagList(ctx context.Context) ([]*member.MemberTag, error) {
-	return s.q.MemberTag.WithContext(ctx).Where(s.q.MemberTag.Status.Eq(0)).Find()
+	return s.q.MemberTag.WithContext(ctx).Find()
 }
 
 func (s *MemberTagService) validateNameUnique(ctx context.Context, id int64, name string) error {
