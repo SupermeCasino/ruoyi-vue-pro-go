@@ -17,6 +17,7 @@ import (
 	appBrokerage "backend-go/internal/api/handler/app/trade/brokerage"
 
 	"backend-go/internal/middleware"
+	"backend-go/internal/pkg/datascope"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ import (
 )
 
 func InitRouter(db *gorm.DB, rdb *redis.Client,
+	_ *datascope.PluginRegistered, // 确保Plugin在Router初始化前已注册
 	authHandler *handler.AuthHandler,
 	userHandler *handler.UserHandler,
 	tenantHandler *handler.TenantHandler,
@@ -143,6 +145,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appBrokerageRecordHandler *appBrokerage.AppBrokerageRecordHandler,
 	appBrokerageWithdrawHandler *appBrokerage.AppBrokerageWithdrawHandler,
 	webSocketHandler *handler.WebSocketHandler,
+	casbinMiddleware *middleware.CasbinMiddleware,
 ) *gin.Engine {
 	// Debug log to confirm router init
 	fmt.Println("Initializing Router...")
@@ -150,6 +153,8 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	r.Use(middleware.Recovery())
 	r.Use(middleware.ErrorHandler())
 	r.Use(gin.Logger())
+	// 注入 gin.Context 到 request context，供 GORM Hook 使用
+	r.Use(middleware.InjectContext())
 
 	// 基础路由
 	r.GET("/ping", func(c *gin.Context) {
@@ -162,6 +167,9 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 
 	// System 模块 (Auth, Tenant, Dict, Dept, Post, User, Role, Permission, Logs, SMS, File, Infra)
 	// System 模块 (Auth, Tenant, Dict, Dept, Post, User, Role, Permission, Logs, SMS, File, Infra)
+	// WebSocket (Register at root /infra/ws to match Java path)
+	r.GET("/infra/ws", webSocketHandler.Handle)
+
 	RegisterSystemRoutes(r,
 		authHandler, userHandler, tenantHandler, dictHandler, deptHandler,
 		postHandler, roleHandler, menuHandler, permissionHandler, noticeHandler,
@@ -170,6 +178,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		fileConfigHandler, fileHandler,
 		jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler,
 		socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oauth2ClientHandler, webSocketHandler,
+		casbinMiddleware,
 	)
 
 	// Product 模块
@@ -177,6 +186,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		productCategoryHandler, productBrandHandler, productPropertyHandler,
 		productSpuHandler, productCommentHandler, productFavoriteHandler,
 		productBrowseHistoryHandler,
+		casbinMiddleware,
 	)
 
 	// Promotion 模块
@@ -188,6 +198,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		diyTemplateHandler, diyPageHandler, kefuHandler,
 		pointActivityHandler,
 		bargainRecordHandler, combinationRecordHandler, bargainHelpHandler,
+		casbinMiddleware,
 	)
 
 	// Trade 模块
@@ -198,6 +209,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		brokerageUserHandler,
 		brokerageRecordHandler,
 		brokerageWithdrawHandler,
+		casbinMiddleware,
 	)
 
 	// Member 模块 (Admin)
@@ -206,12 +218,14 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		memberPointRecordHandler,
 		memberConfigHandler, memberGroupHandler, memberLevelHandler, memberTagHandler,
 		memberUserHandler,
+		casbinMiddleware,
 	)
 
 	// Pay 模块
 	RegisterPayRoutes(r,
 		payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler,
 		payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler,
+		casbinMiddleware,
 	)
 
 	// App 模块 (移动端)
@@ -237,6 +251,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	RegisterStatisticsRoutes(r,
 		tradeStatisticsHandler, productStatisticsHandler,
 		memberStatisticsHandler, payStatisticsHandler,
+		casbinMiddleware,
 	)
 
 	return r

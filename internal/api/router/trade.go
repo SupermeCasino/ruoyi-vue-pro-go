@@ -19,6 +19,7 @@ func RegisterTradeRoutes(engine *gin.Engine,
 	brokerageUserHandler *tradeBrokerage.BrokerageUserHandler,
 	brokerageRecordHandler *tradeBrokerage.BrokerageRecordHandler,
 	brokerageWithdrawHandler *tradeBrokerage.BrokerageWithdrawHandler,
+	casbinMiddleware *middleware.CasbinMiddleware,
 ) {
 	// Trade Order
 	tradeGroup := engine.Group("/admin-api/trade/order")

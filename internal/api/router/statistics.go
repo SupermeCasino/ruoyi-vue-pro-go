@@ -13,6 +13,7 @@ func RegisterStatisticsRoutes(engine *gin.Engine,
 	productStatisticsHandler *admin.ProductStatisticsHandler,
 	memberStatisticsHandler *admin.MemberStatisticsHandler,
 	payStatisticsHandler *admin.PayStatisticsHandler,
+	casbinMiddleware *middleware.CasbinMiddleware,
 ) {
 	// 后台统计路由组 - 与 Java 保持一致使用 /admin-api/statistics
 	adminGroup := engine.Group("/admin-api/statistics")

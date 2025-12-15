@@ -38,12 +38,14 @@ func RegisterSystemRoutes(engine *gin.Engine,
 	notifyHandler *handler.NotifyHandler,
 	oauth2ClientHandler *handler.OAuth2ClientHandler,
 	webSocketHandler *handler.WebSocketHandler,
+	casbinMiddleware *middleware.CasbinMiddleware,
 ) {
 	api := engine.Group("/admin-api")
 	{
 		systemGroup := api.Group("/system")
 		{
-			// Auth
+			// ====== Public Routes (No Auth Required) ======
+			// Auth Public Routes
 			authGroup := systemGroup.Group("/auth")
 			{
 				authGroup.POST("/login", authHandler.Login)
@@ -55,144 +57,190 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				authGroup.POST("/reset-password", authHandler.ResetPassword)
 				authGroup.GET("/social-auth-redirect", authHandler.SocialAuthRedirect)
 				authGroup.POST("/social-login", authHandler.SocialLogin)
-				// 需要认证的接口
-				authGroup.Use(middleware.Auth())
-				authGroup.GET("/get-permission-info", authHandler.GetPermissionInfo)
 			}
 
-			// Tenant
-			tenantGroup := systemGroup.Group("/tenant")
+			// Tenant Public Routes
+			tenantPublicGroup := systemGroup.Group("/tenant")
 			{
-				tenantGroup.GET("/simple-list", tenantHandler.GetTenantSimpleList)
-				tenantGroup.GET("/get-by-website", tenantHandler.GetTenantByWebsite)
-				tenantGroup.GET("/get-id-by-name", tenantHandler.GetTenantIdByName)
-				tenantGroup.POST("/create", tenantHandler.CreateTenant)
-				tenantGroup.PUT("/update", tenantHandler.UpdateTenant)
-				tenantGroup.DELETE("/delete", tenantHandler.DeleteTenant)
-				tenantGroup.GET("/get", tenantHandler.GetTenant)
-				tenantGroup.GET("/page", tenantHandler.GetTenantPage)
-				tenantGroup.GET("/export-excel", tenantHandler.ExportTenantExcel)
+				tenantPublicGroup.GET("/simple-list", tenantHandler.GetTenantSimpleList)
+				tenantPublicGroup.GET("/get-by-website", tenantHandler.GetTenantByWebsite)
+				tenantPublicGroup.GET("/get-id-by-name", tenantHandler.GetTenantIdByName)
 			}
 
-			// Dict Type
-			dictTypeGroup := systemGroup.Group("/dict-type")
+			// Dict Public Routes
+			dictTypePublicGroup := systemGroup.Group("/dict-type")
 			{
-				dictTypeGroup.GET("/simple-list", dictHandler.GetSimpleDictTypeList)
-				dictTypeGroup.GET("/page", dictHandler.GetDictTypePage)
-				dictTypeGroup.GET("/get", dictHandler.GetDictType)
-				dictTypeGroup.POST("/create", dictHandler.CreateDictType)
-				dictTypeGroup.PUT("/update", dictHandler.UpdateDictType)
-				dictTypeGroup.DELETE("/delete", dictHandler.DeleteDictType)
-				dictTypeGroup.GET("/export-excel", dictHandler.ExportDictTypeExcel)
+				dictTypePublicGroup.GET("/simple-list", dictHandler.GetSimpleDictTypeList)
 			}
 
-			// Dict Data
-			dictDataGroup := systemGroup.Group("/dict-data")
+			dictDataPublicGroup := systemGroup.Group("/dict-data")
 			{
-				dictDataGroup.GET("/simple-list", dictHandler.GetSimpleDictDataList)
-				dictDataGroup.GET("/list-all-simple", dictHandler.GetSimpleDictDataList)
-				dictDataGroup.GET("/page", dictHandler.GetDictDataPage)
-				dictDataGroup.GET("/get", dictHandler.GetDictData)
-				dictDataGroup.POST("/create", dictHandler.CreateDictData)
-				dictDataGroup.PUT("/update", dictHandler.UpdateDictData)
-				dictDataGroup.DELETE("/delete", dictHandler.DeleteDictData)
+				dictDataPublicGroup.GET("/simple-list", dictHandler.GetSimpleDictDataList)
+				dictDataPublicGroup.GET("/list-all-simple", dictHandler.GetSimpleDictDataList)
 			}
 
-			// Dept
-			deptGroup := systemGroup.Group("/dept")
+			// Dept Public Routes
+			deptPublicGroup := systemGroup.Group("/dept")
 			{
-				deptGroup.GET("/list", deptHandler.GetDeptList)
-				deptGroup.GET("/list-all-simple", deptHandler.GetSimpleDeptList)
-				deptGroup.GET("/simple-list", deptHandler.GetSimpleDeptList)
-				deptGroup.GET("/get", deptHandler.GetDept)
-				deptGroup.POST("/create", deptHandler.CreateDept)
-				deptGroup.PUT("/update", deptHandler.UpdateDept)
-				deptGroup.DELETE("/delete", deptHandler.DeleteDept)
+				deptPublicGroup.GET("/list", deptHandler.GetDeptList)
+				deptPublicGroup.GET("/list-all-simple", deptHandler.GetSimpleDeptList)
+				deptPublicGroup.GET("/simple-list", deptHandler.GetSimpleDeptList)
 			}
 
-			// Post
-			postGroup := systemGroup.Group("/post")
+			// Post Public Routes
+			postPublicGroup := systemGroup.Group("/post")
 			{
-				postGroup.GET("/page", postHandler.GetPostPage)
-				postGroup.GET("/simple-list", postHandler.GetSimplePostList)
-				postGroup.GET("/get", postHandler.GetPost)
-				postGroup.POST("/create", postHandler.CreatePost)
-				postGroup.PUT("/update", postHandler.UpdatePost)
-				postGroup.DELETE("/delete", postHandler.DeletePost)
+				postPublicGroup.GET("/simple-list", postHandler.GetSimplePostList)
 			}
 
-			// User
-			userGroup := systemGroup.Group("/user")
+			// User Public Routes
+			userPublicGroup := systemGroup.Group("/user")
 			{
-				userGroup.GET("/page", userHandler.GetUserPage)
-				userGroup.GET("/list-all-simple", userHandler.GetSimpleUserList)
-				userGroup.GET("/simple-list", userHandler.GetSimpleUserList)
-				userGroup.GET("/get", userHandler.GetUser)
-				userGroup.POST("/create", userHandler.CreateUser)
-				userGroup.PUT("/update", userHandler.UpdateUser)
-				userGroup.DELETE("/delete", userHandler.DeleteUser)
-				userGroup.PUT("/update-status", userHandler.UpdateUserStatus)
-				userGroup.PUT("/update-password", userHandler.UpdateUserPassword)
-				userGroup.GET("/export", userHandler.ExportUser)
-				userGroup.GET("/get-import-template", userHandler.GetImportTemplate)
-				userGroup.POST("/import", userHandler.ImportUser)
+				userPublicGroup.GET("/list-all-simple", userHandler.GetSimpleUserList)
+				userPublicGroup.GET("/simple-list", userHandler.GetSimpleUserList)
 			}
 
-			// Role
-			roleGroup := systemGroup.Group("/role")
+			// Role Public Routes
+			rolePublicGroup := systemGroup.Group("/role")
 			{
-				roleGroup.GET("/page", roleHandler.GetRolePage)
-				roleGroup.GET("/list-all-simple", roleHandler.GetSimpleRoleList)
-				roleGroup.GET("/simple-list", roleHandler.GetSimpleRoleList)
-				roleGroup.GET("/get", roleHandler.GetRole)
-				roleGroup.POST("/create", roleHandler.CreateRole)
-				roleGroup.PUT("/update", roleHandler.UpdateRole)
-				roleGroup.PUT("/update-status", roleHandler.UpdateRoleStatus)
-				roleGroup.DELETE("/delete", roleHandler.DeleteRole)
+				rolePublicGroup.GET("/list-all-simple", roleHandler.GetSimpleRoleList)
+				rolePublicGroup.GET("/simple-list", roleHandler.GetSimpleRoleList)
 			}
 
-			// Permission
-			permGroup := systemGroup.Group("/permission")
+			// Menu Public Routes
+			menuPublicGroup := systemGroup.Group("/menu")
 			{
-				permGroup.GET("/list-role-menus", permissionHandler.GetRoleMenuList)
-				permGroup.POST("/assign-role-menu", permissionHandler.AssignRoleMenu)
-				permGroup.POST("/assign-role-data-scope", permissionHandler.AssignRoleDataScope)
-				permGroup.GET("/list-user-roles", permissionHandler.GetUserRoleList)
-				permGroup.POST("/assign-user-role", permissionHandler.AssignUserRole)
+				menuPublicGroup.GET("/simple-list", menuHandler.GetSimpleMenuList)
 			}
 
-			// Menu
-			menuGroup := systemGroup.Group("/menu")
+			// ====== Protected Routes (Auth Required) ======
+			// Apply Auth Middleware to all subsequent system routes
+			systemGroup.Use(middleware.Auth())
+
+			// Auth Protected Routes
+			authProtectedGroup := systemGroup.Group("/auth")
 			{
-				menuGroup.POST("/create", menuHandler.CreateMenu)
-				menuGroup.PUT("/update", menuHandler.UpdateMenu)
-				menuGroup.DELETE("/delete", menuHandler.DeleteMenu)
-				menuGroup.GET("/list", menuHandler.GetMenuList)
-				menuGroup.GET("/get", menuHandler.GetMenu)
-				menuGroup.GET("/simple-list", menuHandler.GetSimpleMenuList)
+				authProtectedGroup.GET("/get-permission-info", authHandler.GetPermissionInfo)
+			}
+
+			// Tenant Protected Routes
+			tenantProtectedGroup := systemGroup.Group("/tenant")
+			{
+				tenantProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:tenant:create"), tenantHandler.CreateTenant)
+				tenantProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:tenant:update"), tenantHandler.UpdateTenant)
+				tenantProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:tenant:delete"), tenantHandler.DeleteTenant)
+				tenantProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:tenant:query"), tenantHandler.GetTenant)
+				tenantProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:tenant:query"), tenantHandler.GetTenantPage)
+				tenantProtectedGroup.GET("/export-excel", casbinMiddleware.RequirePermission("system:tenant:export"), tenantHandler.ExportTenantExcel)
+			}
+
+			// Dict Type Protected Routes
+			dictTypeProtectedGroup := systemGroup.Group("/dict-type")
+			{
+				dictTypeProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:dict:query"), dictHandler.GetDictTypePage)
+				dictTypeProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:dict:query"), dictHandler.GetDictType)
+				dictTypeProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:dict:create"), dictHandler.CreateDictType)
+				dictTypeProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:dict:update"), dictHandler.UpdateDictType)
+				dictTypeProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:dict:delete"), dictHandler.DeleteDictType)
+				dictTypeProtectedGroup.GET("/export-excel", casbinMiddleware.RequirePermission("system:dict:export"), dictHandler.ExportDictTypeExcel)
+			}
+
+			// Dict Data Protected Routes
+			dictDataProtectedGroup := systemGroup.Group("/dict-data")
+			{
+				dictDataProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:dict:query"), dictHandler.GetDictDataPage)
+				dictDataProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:dict:query"), dictHandler.GetDictData)
+				dictDataProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:dict:create"), dictHandler.CreateDictData)
+				dictDataProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:dict:update"), dictHandler.UpdateDictData)
+				dictDataProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:dict:delete"), dictHandler.DeleteDictData)
+			}
+
+			// Dept Protected Routes
+			deptProtectedGroup := systemGroup.Group("/dept")
+			{
+				deptProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:dept:query"), deptHandler.GetDept)
+				deptProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:dept:create"), deptHandler.CreateDept)
+				deptProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:dept:update"), deptHandler.UpdateDept)
+				deptProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:dept:delete"), deptHandler.DeleteDept)
+			}
+
+			// Post Protected Routes
+			postProtectedGroup := systemGroup.Group("/post")
+			{
+				postProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:post:query"), postHandler.GetPostPage)
+				postProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:post:query"), postHandler.GetPost)
+				postProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:post:create"), postHandler.CreatePost)
+				postProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:post:update"), postHandler.UpdatePost)
+				postProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:post:delete"), postHandler.DeletePost)
+			}
+
+			// User Protected Routes
+			userProtectedGroup := systemGroup.Group("/user")
+			{
+				userProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:user:query"), userHandler.GetUserPage)
+				userProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:user:query"), userHandler.GetUser)
+				userProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:user:create"), userHandler.CreateUser)
+				userProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:user:update"), userHandler.UpdateUser)
+				userProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:user:delete"), userHandler.DeleteUser)
+				userProtectedGroup.PUT("/update-status", casbinMiddleware.RequirePermission("system:user:update"), userHandler.UpdateUserStatus)
+				userProtectedGroup.PUT("/update-password", casbinMiddleware.RequirePermission("system:user:update-password"), userHandler.UpdateUserPassword)
+				userProtectedGroup.GET("/export", casbinMiddleware.RequirePermission("system:user:export"), userHandler.ExportUser)
+				userProtectedGroup.GET("/get-import-template", casbinMiddleware.RequirePermission("system:user:import"), userHandler.GetImportTemplate)
+				userProtectedGroup.POST("/import", casbinMiddleware.RequirePermission("system:user:import"), userHandler.ImportUser)
+			}
+
+			// Role Protected Routes
+			roleProtectedGroup := systemGroup.Group("/role")
+			{
+				roleProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:role:query"), roleHandler.GetRolePage)
+				roleProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:role:query"), roleHandler.GetRole)
+				roleProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:role:create"), roleHandler.CreateRole)
+				roleProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:role:update"), roleHandler.UpdateRole)
+				roleProtectedGroup.PUT("/update-status", casbinMiddleware.RequirePermission("system:role:update"), roleHandler.UpdateRoleStatus)
+				roleProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:role:delete"), roleHandler.DeleteRole)
+			}
+
+			// Permission Protected Routes
+			permProtectedGroup := systemGroup.Group("/permission")
+			{
+				permProtectedGroup.GET("/list-role-menus", casbinMiddleware.RequirePermission("system:permission:assign-role-menu"), permissionHandler.GetRoleMenuList)
+				permProtectedGroup.POST("/assign-role-menu", casbinMiddleware.RequirePermission("system:permission:assign-role-menu"), permissionHandler.AssignRoleMenu)
+				permProtectedGroup.POST("/assign-role-data-scope", casbinMiddleware.RequirePermission("system:permission:assign-role-data-scope"), permissionHandler.AssignRoleDataScope)
+				permProtectedGroup.GET("/list-user-roles", casbinMiddleware.RequirePermission("system:permission:assign-user-role"), permissionHandler.GetUserRoleList)
+				permProtectedGroup.POST("/assign-user-role", casbinMiddleware.RequirePermission("system:permission:assign-user-role"), permissionHandler.AssignUserRole)
+			}
+
+			// Menu Protected Routes
+			menuProtectedGroup := systemGroup.Group("/menu")
+			{
+				menuProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:menu:create"), menuHandler.CreateMenu)
+				menuProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:menu:update"), menuHandler.UpdateMenu)
+				menuProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:menu:delete"), menuHandler.DeleteMenu)
+				menuProtectedGroup.GET("/list", casbinMiddleware.RequirePermission("system:menu:query"), menuHandler.GetMenuList)
+				menuProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:menu:query"), menuHandler.GetMenu)
 			}
 
 			// Notice
 			noticeGroup := systemGroup.Group("/notice")
 			{
-				noticeGroup.GET("/page", noticeHandler.GetNoticePage)
-				noticeGroup.GET("/get", noticeHandler.GetNotice)
-				noticeGroup.POST("/create", noticeHandler.CreateNotice)
-				noticeGroup.PUT("/update", noticeHandler.UpdateNotice)
-				noticeGroup.DELETE("/delete", noticeHandler.DeleteNotice)
-				noticeGroup.POST("/push", noticeHandler.Push)
+				noticeGroup.GET("/page", casbinMiddleware.RequirePermission("system:notice:query"), noticeHandler.GetNoticePage)
+				noticeGroup.GET("/get", casbinMiddleware.RequirePermission("system:notice:query"), noticeHandler.GetNotice)
+				noticeGroup.POST("/create", casbinMiddleware.RequirePermission("system:notice:create"), noticeHandler.CreateNotice)
+				noticeGroup.PUT("/update", casbinMiddleware.RequirePermission("system:notice:update"), noticeHandler.UpdateNotice)
+				noticeGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:notice:delete"), noticeHandler.DeleteNotice)
+				noticeGroup.POST("/push", casbinMiddleware.RequirePermission("system:notice:create"), noticeHandler.Push)
 			}
 
 			// Login Log
 			loginLogGroup := systemGroup.Group("/login-log")
 			{
-				loginLogGroup.GET("/page", loginLogHandler.GetLoginLogPage)
+				loginLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:login-log:query"), loginLogHandler.GetLoginLogPage)
 			}
 
 			// Operate Log
 			operateLogGroup := systemGroup.Group("/operate-log")
 			{
-				operateLogGroup.GET("/page", operateLogHandler.GetOperateLogPage)
+				operateLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:operate-log:query"), operateLogHandler.GetOperateLogPage)
 			}
 
 			// Sensitive Word
@@ -210,40 +258,40 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			// Mail Account
 			mailAccountGroup := systemGroup.Group("/mail/account")
 			{
-				mailAccountGroup.POST("/create", mailHandler.CreateMailAccount)
-				mailAccountGroup.PUT("/update", mailHandler.UpdateMailAccount)
-				mailAccountGroup.DELETE("/delete", mailHandler.DeleteMailAccount)
-				mailAccountGroup.GET("/get", mailHandler.GetMailAccount)
-				mailAccountGroup.GET("/page", mailHandler.GetMailAccountPage)
+				mailAccountGroup.POST("/create", casbinMiddleware.RequirePermission("system:mail-account:create"), mailHandler.CreateMailAccount)
+				mailAccountGroup.PUT("/update", casbinMiddleware.RequirePermission("system:mail-account:update"), mailHandler.UpdateMailAccount)
+				mailAccountGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:mail-account:delete"), mailHandler.DeleteMailAccount)
+				mailAccountGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-account:query"), mailHandler.GetMailAccount)
+				mailAccountGroup.GET("/page", casbinMiddleware.RequirePermission("system:mail-account:query"), mailHandler.GetMailAccountPage)
 				mailAccountGroup.GET("/list-all-simple", mailHandler.GetSimpleMailAccountList)
 			}
 
 			// Mail Template
 			mailTemplateGroup := systemGroup.Group("/mail/template")
 			{
-				mailTemplateGroup.POST("/create", mailHandler.CreateMailTemplate)
-				mailTemplateGroup.PUT("/update", mailHandler.UpdateMailTemplate)
-				mailTemplateGroup.DELETE("/delete", mailHandler.DeleteMailTemplate)
-				mailTemplateGroup.GET("/get", mailHandler.GetMailTemplate)
-				mailTemplateGroup.GET("/page", mailHandler.GetMailTemplatePage)
-				mailTemplateGroup.POST("/send-mail", mailHandler.SendMail) // Logic for testing send
+				mailTemplateGroup.POST("/create", casbinMiddleware.RequirePermission("system:mail-template:create"), mailHandler.CreateMailTemplate)
+				mailTemplateGroup.PUT("/update", casbinMiddleware.RequirePermission("system:mail-template:update"), mailHandler.UpdateMailTemplate)
+				mailTemplateGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:mail-template:delete"), mailHandler.DeleteMailTemplate)
+				mailTemplateGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-template:query"), mailHandler.GetMailTemplate)
+				mailTemplateGroup.GET("/page", casbinMiddleware.RequirePermission("system:mail-template:query"), mailHandler.GetMailTemplatePage)
+				mailTemplateGroup.POST("/send-mail", casbinMiddleware.RequirePermission("system:mail-template:send-mail"), mailHandler.SendMail)
 			}
 
 			// Mail Log
 			mailLogGroup := systemGroup.Group("/mail/log")
 			{
-				mailLogGroup.GET("/page", mailHandler.GetMailLogPage)
+				mailLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:mail-log:query"), mailHandler.GetMailLogPage)
 			}
 
 			// Notify Template
 			notifyTemplateGroup := systemGroup.Group("/notify-template")
 			{
-				notifyTemplateGroup.POST("/create", notifyHandler.CreateNotifyTemplate)
-				notifyTemplateGroup.PUT("/update", notifyHandler.UpdateNotifyTemplate)
-				notifyTemplateGroup.DELETE("/delete", notifyHandler.DeleteNotifyTemplate)
-				notifyTemplateGroup.GET("/get", notifyHandler.GetNotifyTemplate)
-				notifyTemplateGroup.GET("/page", notifyHandler.GetNotifyTemplatePage)
-				notifyTemplateGroup.POST("/send-notify", notifyHandler.SendNotify)
+				notifyTemplateGroup.POST("/create", casbinMiddleware.RequirePermission("system:notify-template:create"), notifyHandler.CreateNotifyTemplate)
+				notifyTemplateGroup.PUT("/update", casbinMiddleware.RequirePermission("system:notify-template:update"), notifyHandler.UpdateNotifyTemplate)
+				notifyTemplateGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:notify-template:delete"), notifyHandler.DeleteNotifyTemplate)
+				notifyTemplateGroup.GET("/get", casbinMiddleware.RequirePermission("system:notify-template:query"), notifyHandler.GetNotifyTemplate)
+				notifyTemplateGroup.GET("/page", casbinMiddleware.RequirePermission("system:notify-template:query"), notifyHandler.GetNotifyTemplatePage)
+				notifyTemplateGroup.POST("/send-notify", casbinMiddleware.RequirePermission("system:notify-template:send-notify"), notifyHandler.SendNotify)
 			}
 
 			// Notify Message
@@ -251,7 +299,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			{
 				notifyMessageGroup.GET("/get-unread-count", notifyHandler.GetUnreadNotifyMessageCount)
 				notifyMessageGroup.GET("/my-page", notifyHandler.GetMyNotifyMessagePage)
-				notifyMessageGroup.GET("/page", notifyHandler.GetNotifyMessagePage)
+				notifyMessageGroup.GET("/page", casbinMiddleware.RequirePermission("system:notify-message:query"), notifyHandler.GetNotifyMessagePage)
 				notifyMessageGroup.PUT("/update-read", notifyHandler.UpdateNotifyMessageRead)
 				notifyMessageGroup.PUT("/update-all-read", notifyHandler.UpdateAllNotifyMessageRead)
 			}
@@ -265,48 +313,71 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				oauth2ClientGroup.GET("/get", oauth2ClientHandler.GetOAuth2Client)
 				oauth2ClientGroup.GET("/page", oauth2ClientHandler.GetOAuth2ClientPage)
 			}
+
+			// Social Client
+			socialClientProtectedGroup := systemGroup.Group("/social-client")
+			{
+				socialClientProtectedGroup.POST("/create", casbinMiddleware.RequirePermission("system:social-client:create"), socialClientHandler.CreateSocialClient)
+				socialClientProtectedGroup.PUT("/update", casbinMiddleware.RequirePermission("system:social-client:update"), socialClientHandler.UpdateSocialClient)
+				socialClientProtectedGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:social-client:delete"), socialClientHandler.DeleteSocialClient)
+				socialClientProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:social-client:query"), socialClientHandler.GetSocialClient)
+				socialClientProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:social-client:query"), socialClientHandler.GetSocialClientPage)
+			}
+
+			// Social User
+			socialUserProtectedGroup := systemGroup.Group("/social-user")
+			{
+				socialUserProtectedGroup.POST("/bind", socialUserHandler.BindSocialUser)
+				socialUserProtectedGroup.DELETE("/unbind", socialUserHandler.UnbindSocialUser)
+				socialUserProtectedGroup.GET("/get-bind-list", socialUserHandler.GetSocialUserList)
+				socialUserProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:social-user:query"), socialUserHandler.GetSocialUser)
+				socialUserProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:social-user:query"), socialUserHandler.GetSocialUserPage)
+			}
 		}
 
-		// Sms Channel
-		smsChannelGroup := api.Group("/system/sms-channel")
+		// ====== SMS Routes (Protected) ======
+		// SMS simple-list is public
+		smsChannelPublicGroup := api.Group("/system/sms-channel")
 		{
-			smsChannelGroup.POST("/create", smsChannelHandler.CreateSmsChannel)
-			smsChannelGroup.PUT("/update", smsChannelHandler.UpdateSmsChannel)
-			smsChannelGroup.DELETE("/delete", smsChannelHandler.DeleteSmsChannel)
-			smsChannelGroup.GET("/get", smsChannelHandler.GetSmsChannel)
-			smsChannelGroup.GET("/page", smsChannelHandler.GetSmsChannelPage)
-			smsChannelGroup.GET("/simple-list", smsChannelHandler.GetSimpleSmsChannelList)
+			smsChannelPublicGroup.GET("/simple-list", smsChannelHandler.GetSimpleSmsChannelList)
 		}
 
-		// Sms Template
-		smsTemplateGroup := api.Group("/system/sms-template")
+		// SMS Protected Routes
+		smsChannelGroup := api.Group("/system/sms-channel", middleware.Auth())
 		{
-			smsTemplateGroup.POST("/create", smsTemplateHandler.CreateSmsTemplate)
-			smsTemplateGroup.PUT("/update", smsTemplateHandler.UpdateSmsTemplate)
-			smsTemplateGroup.DELETE("/delete", smsTemplateHandler.DeleteSmsTemplate)
-			smsTemplateGroup.GET("/get", smsTemplateHandler.GetSmsTemplate)
-			smsTemplateGroup.GET("/page", smsTemplateHandler.GetSmsTemplatePage)
+			smsChannelGroup.POST("/create", casbinMiddleware.RequirePermission("system:sms-channel:create"), smsChannelHandler.CreateSmsChannel)
+			smsChannelGroup.PUT("/update", casbinMiddleware.RequirePermission("system:sms-channel:update"), smsChannelHandler.UpdateSmsChannel)
+			smsChannelGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:sms-channel:delete"), smsChannelHandler.DeleteSmsChannel)
+			smsChannelGroup.GET("/get", casbinMiddleware.RequirePermission("system:sms-channel:query"), smsChannelHandler.GetSmsChannel)
+			smsChannelGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-channel:query"), smsChannelHandler.GetSmsChannelPage)
 		}
 
-		// Sms Log
-		smsLogGroup := api.Group("/system/sms-log")
+		smsTemplateGroup := api.Group("/system/sms-template", middleware.Auth())
 		{
-			smsLogGroup.GET("/page", smsLogHandler.GetSmsLogPage)
+			smsTemplateGroup.POST("/create", casbinMiddleware.RequirePermission("system:sms-template:create"), smsTemplateHandler.CreateSmsTemplate)
+			smsTemplateGroup.PUT("/update", casbinMiddleware.RequirePermission("system:sms-template:update"), smsTemplateHandler.UpdateSmsTemplate)
+			smsTemplateGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:sms-template:delete"), smsTemplateHandler.DeleteSmsTemplate)
+			smsTemplateGroup.GET("/get", casbinMiddleware.RequirePermission("system:sms-template:query"), smsTemplateHandler.GetSmsTemplate)
+			smsTemplateGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-template:query"), smsTemplateHandler.GetSmsTemplatePage)
 		}
 
-		// Config
-		configGroup := api.Group("/infra/config")
+		smsLogGroup := api.Group("/system/sms-log", middleware.Auth())
 		{
-			configGroup.GET("/page", configHandler.GetConfigPage)
-			configGroup.GET("/get", configHandler.GetConfig)
-			configGroup.GET("/get-value-by-key", configHandler.GetConfigKey)
-			configGroup.POST("/create", configHandler.CreateConfig)
-			configGroup.PUT("/update", configHandler.UpdateConfig)
-			configGroup.DELETE("/delete", configHandler.DeleteConfig)
+			smsLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-log:query"), smsLogHandler.GetSmsLogPage)
 		}
 
-		// Infra
-		infraGroup := api.Group("/infra")
+		// ====== Infra Routes (Protected) ======
+		configGroup := api.Group("/infra/config", middleware.Auth())
+		{
+			configGroup.GET("/page", casbinMiddleware.RequirePermission("infra:config:query"), configHandler.GetConfigPage)
+			configGroup.GET("/get", casbinMiddleware.RequirePermission("infra:config:query"), configHandler.GetConfig)
+			configGroup.GET("/get-value-by-key", casbinMiddleware.RequirePermission("infra:config:query"), configHandler.GetConfigKey)
+			configGroup.POST("/create", casbinMiddleware.RequirePermission("infra:config:create"), configHandler.CreateConfig)
+			configGroup.PUT("/update", casbinMiddleware.RequirePermission("infra:config:update"), configHandler.UpdateConfig)
+			configGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:config:delete"), configHandler.DeleteConfig)
+		}
+
+		infraGroup := api.Group("/infra", middleware.Auth())
 		{
 			// WebSocket (对齐 Java /infra/ws)
 			infraGroup.GET("/ws", webSocketHandler.Handle)
@@ -314,32 +385,32 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			// File Config
 			fileConfigGroup := infraGroup.Group("/file-config")
 			{
-				fileConfigGroup.POST("/create", fileConfigHandler.CreateFileConfig)
-				fileConfigGroup.PUT("/update", fileConfigHandler.UpdateFileConfig)
-				fileConfigGroup.PUT("/update-master", fileConfigHandler.UpdateFileConfigMaster)
-				fileConfigGroup.DELETE("/delete", fileConfigHandler.DeleteFileConfig)
-				fileConfigGroup.GET("/page", fileConfigHandler.GetFileConfigPage)
-				fileConfigGroup.GET("/get", fileConfigHandler.GetFileConfig)
+				fileConfigGroup.POST("/create", casbinMiddleware.RequirePermission("infra:file-config:create"), fileConfigHandler.CreateFileConfig)
+				fileConfigGroup.PUT("/update", casbinMiddleware.RequirePermission("infra:file-config:update"), fileConfigHandler.UpdateFileConfig)
+				fileConfigGroup.PUT("/update-master", casbinMiddleware.RequirePermission("infra:file-config:update"), fileConfigHandler.UpdateFileConfigMaster)
+				fileConfigGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:file-config:delete"), fileConfigHandler.DeleteFileConfig)
+				fileConfigGroup.GET("/page", casbinMiddleware.RequirePermission("infra:file-config:query"), fileConfigHandler.GetFileConfigPage)
+				fileConfigGroup.GET("/get", casbinMiddleware.RequirePermission("infra:file-config:query"), fileConfigHandler.GetFileConfig)
 			}
 
 			// File
 			fileGroup := infraGroup.Group("/file")
 			{
 				fileGroup.POST("/upload", fileHandler.UploadFile)
-				fileGroup.DELETE("/delete", fileHandler.DeleteFile)
-				fileGroup.GET("/page", fileHandler.GetFilePage)
+				fileGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:file:delete"), fileHandler.DeleteFile)
+				fileGroup.GET("/page", casbinMiddleware.RequirePermission("infra:file:query"), fileHandler.GetFilePage)
 			}
 
 			// Job
 			jobGroup := infraGroup.Group("/job")
 			{
-				jobGroup.POST("/create", jobHandler.CreateJob)
-				jobGroup.PUT("/update", jobHandler.UpdateJob)
-				jobGroup.PUT("/update-status", jobHandler.UpdateJobStatus)
-				jobGroup.DELETE("/delete", jobHandler.DeleteJob)
-				jobGroup.GET("/get", jobHandler.GetJob)
-				jobGroup.GET("/page", jobHandler.GetJobPage)
-				jobGroup.PUT("/trigger", jobHandler.TriggerJob)
+				jobGroup.POST("/create", casbinMiddleware.RequirePermission("infra:job:create"), jobHandler.CreateJob)
+				jobGroup.PUT("/update", casbinMiddleware.RequirePermission("infra:job:update"), jobHandler.UpdateJob)
+				jobGroup.PUT("/update-status", casbinMiddleware.RequirePermission("infra:job:update"), jobHandler.UpdateJobStatus)
+				jobGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:job:delete"), jobHandler.DeleteJob)
+				jobGroup.GET("/get", casbinMiddleware.RequirePermission("infra:job:query"), jobHandler.GetJob)
+				jobGroup.GET("/page", casbinMiddleware.RequirePermission("infra:job:query"), jobHandler.GetJobPage)
+				jobGroup.PUT("/trigger", casbinMiddleware.RequirePermission("infra:job:trigger"), jobHandler.TriggerJob)
 			}
 
 			// Job Log
@@ -352,44 +423,24 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			// API Access Log
 			apiAccessLogGroup := infraGroup.Group("/api-access-log")
 			{
-				apiAccessLogGroup.GET("/page", apiAccessLogHandler.GetApiAccessLogPage)
+				apiAccessLogGroup.GET("/page", casbinMiddleware.RequirePermission("infra:api-access-log:query"), apiAccessLogHandler.GetApiAccessLogPage)
 			}
 
 			// API Error Log
 			apiErrorLogGroup := infraGroup.Group("/api-error-log")
 			{
-				apiErrorLogGroup.GET("/page", apiErrorLogHandler.GetApiErrorLogPage)
-				apiErrorLogGroup.PUT("/update-status", apiErrorLogHandler.UpdateApiErrorLogProcess)
-			}
-
-			// Social Client (在 systemGroup 下, 对齐 Java /system/social-client)
-			socialClientGroup := systemGroup.Group("/social-client")
-			{
-				socialClientGroup.POST("/create", socialClientHandler.CreateSocialClient)
-				socialClientGroup.PUT("/update", socialClientHandler.UpdateSocialClient)
-				socialClientGroup.DELETE("/delete", socialClientHandler.DeleteSocialClient)
-				socialClientGroup.GET("/get", socialClientHandler.GetSocialClient)
-				socialClientGroup.GET("/page", socialClientHandler.GetSocialClientPage)
-			}
-
-			// Social User (在 systemGroup 下, 对齐 Java /system/social-user)
-			socialUserGroup := systemGroup.Group("/social-user")
-			{
-				socialUserGroup.POST("/bind", socialUserHandler.BindSocialUser)
-				socialUserGroup.DELETE("/unbind", socialUserHandler.UnbindSocialUser)      // Java: @DeleteMapping("/unbind")
-				socialUserGroup.GET("/get-bind-list", socialUserHandler.GetSocialUserList) // Java: @GetMapping("/get-bind-list")
-				socialUserGroup.GET("/get", socialUserHandler.GetSocialUser)
-				socialUserGroup.GET("/page", socialUserHandler.GetSocialUserPage)
+				apiErrorLogGroup.GET("/page", casbinMiddleware.RequirePermission("infra:api-error-log:query"), apiErrorLogHandler.GetApiErrorLogPage)
+				apiErrorLogGroup.PUT("/update-status", casbinMiddleware.RequirePermission("infra:api-error-log:update-status"), apiErrorLogHandler.UpdateApiErrorLogProcess)
 			}
 		}
 	}
 }
 
-// RegisterAreaRoutes 注册地区路由 (独立函数，无需依赖注入)
+// RegisterAreaRoutes 注册地区路由 (Public - 不需要认证)
 func RegisterAreaRoutes(engine *gin.Engine, areaHandler *handler.AreaHandler) {
 	api := engine.Group("/admin-api")
 	{
-		// Area 地区
+		// Area 地区 (Public Routes)
 		areaGroup := api.Group("/system/area")
 		{
 			areaGroup.GET("/tree", areaHandler.GetAreaTree)

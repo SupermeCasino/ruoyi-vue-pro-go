@@ -26,6 +26,7 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 	bargainRecordHandler *promotionAdmin.BargainRecordHandler,
 	combinationRecordHandler *promotionAdmin.CombinationRecordHandler,
 	bargainHelpHandler *promotionAdmin.BargainHelpHandler,
+	casbinMiddleware *middleware.CasbinMiddleware,
 ) {
 	promotionGroup := engine.Group("/admin-api/promotion")
 	promotionGroup.Use(middleware.Auth())
