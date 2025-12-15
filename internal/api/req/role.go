@@ -22,13 +22,13 @@ type RoleSaveReq struct {
 	Name   string `json:"name" binding:"required"`
 	Code   string `json:"code" binding:"required"`
 	Sort   int32  `json:"sort"`
-	Status int    `json:"status" binding:"required"`
+	Status *int   `json:"status" binding:"required"`
 	Remark string `json:"remark"`
 }
 
 type RoleUpdateStatusReq struct {
 	ID     int64 `json:"id" binding:"required"`
-	Status int   `json:"status" binding:"required"`
+	Status *int  `json:"status" binding:"required"`
 }
 
 // --- Permission ---

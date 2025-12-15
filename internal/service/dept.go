@@ -163,3 +163,29 @@ func (s *DeptService) GetSimpleDeptList(ctx context.Context) ([]*resp.DeptSimple
 	}
 	return res, nil
 }
+
+// GetDeptIdListByParentId 递归获取某个部门的所有子部门ID列表（用于数据权限）
+func (s *DeptService) GetDeptIdListByParentId(ctx context.Context, parentId int64) ([]int64, error) {
+	d := s.q.SystemDept
+
+	// 获取直接子部门
+	children, err := d.WithContext(ctx).Where(d.ParentID.Eq(parentId)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	var result []int64
+	for _, child := range children {
+		// 添加当前子部门ID
+		result = append(result, child.ID)
+
+		// 递归获取子部门的子部门
+		grandchildren, err := s.GetDeptIdListByParentId(ctx, child.ID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, grandchildren...)
+	}
+
+	return result, nil
+}

@@ -30,13 +30,14 @@ func (s *RoleService) CreateRole(ctx context.Context, req *req.RoleSaveReq) (int
 	}
 
 	role := &model.SystemRole{
-		Name:      req.Name,
-		Code:      req.Code,
-		Sort:      req.Sort,
-		Status:    int32(req.Status),
-		Remark:    req.Remark,
-		Type:      2, // Default Custom
-		DataScope: 1, // Default All
+		Name:             req.Name,
+		Code:             req.Code,
+		Sort:             req.Sort,
+		Status:           int32(*req.Status),
+		Remark:           req.Remark,
+		Type:             2,         // Default Custom
+		DataScope:        1,         // Default All
+		DataScopeDeptIds: []int64{}, // Initialize to avoid NULL error
 	}
 
 	err := s.q.SystemRole.WithContext(ctx).Create(role)
@@ -63,7 +64,7 @@ func (s *RoleService) UpdateRole(ctx context.Context, req *req.RoleSaveReq) erro
 		Name:   req.Name,
 		Code:   req.Code,
 		Sort:   req.Sort,
-		Status: int32(req.Status),
+		Status: int32(*req.Status),
 		Remark: req.Remark,
 	})
 	return err
@@ -79,7 +80,7 @@ func (s *RoleService) UpdateRoleStatus(ctx context.Context, req *req.RoleUpdateS
 	if role.Type == 1 {
 		return errors.New("内置角色不能修改状态")
 	}
-	_, err = r.WithContext(ctx).Where(r.ID.Eq(req.ID)).Update(r.Status, req.Status)
+	_, err = r.WithContext(ctx).Where(r.ID.Eq(req.ID)).Update(r.Status, *req.Status)
 	return err
 }
 

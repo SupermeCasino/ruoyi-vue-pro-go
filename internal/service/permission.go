@@ -133,3 +133,29 @@ func (s *PermissionService) AssignUserRole(ctx context.Context, userId int64, ro
 		return nil
 	})
 }
+
+// IsSuperAdmin 检查用户是否为超级管理员
+func (s *PermissionService) IsSuperAdmin(ctx context.Context, userId int64) (bool, error) {
+	roleIds, err := s.GetUserRoleIdListByUserId(ctx, userId)
+	if err != nil {
+		return false, err
+	}
+	if len(roleIds) == 0 {
+		return false, nil
+	}
+	return s.roleSvc.HasAnySuperAdmin(ctx, roleIds)
+}
+
+// GetRoleById 根据角色ID获取角色信息
+func (s *PermissionService) GetRoleById(ctx context.Context, roleId int64) (*model.SystemRole, error) {
+	r := s.q.SystemRole
+	return r.WithContext(ctx).Where(r.ID.Eq(roleId)).First()
+}
+
+// GetRoleDeptIdListByRoleId 获取角色的自定义部门ID列表
+// TODO: system_role_dept表尚未在当前schema中,待后续添加该表后实现
+func (s *PermissionService) GetRoleDeptIdListByRoleId(ctx context.Context, roleId int64) ([]int64, error) {
+	// 临时返回空列表
+	// 完整实现需要system_role_dept表存储角色-部门关系
+	return []int64{}, nil
+}
