@@ -30,8 +30,8 @@ func (s *ConfigService) CreateConfig(ctx context.Context, req *req.ConfigSaveReq
 		Name:      req.Name,
 		ConfigKey: req.Key,
 		Value:     req.Value,
-		Type:      req.Type,
-		Visible:   model.BitBool(req.Visible),
+		Type:      1, // 默认值 1，Java Service 中不从请求设置
+		Visible:   model.BitBool(*req.Visible),
 		Remark:    req.Remark,
 	}
 	err := s.q.SystemConfig.WithContext(ctx).Create(config)
@@ -51,9 +51,9 @@ func (s *ConfigService) UpdateConfig(ctx context.Context, req *req.ConfigSaveReq
 		Name:      req.Name,
 		ConfigKey: req.Key,
 		Value:     req.Value,
-		Type:      req.Type,
-		Visible:   model.BitBool(req.Visible),
-		Remark:    req.Remark,
+		// Type 不从请求更新，保持原值
+		Visible: model.BitBool(*req.Visible),
+		Remark:  req.Remark,
 	})
 	return err
 }

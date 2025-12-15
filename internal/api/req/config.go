@@ -8,8 +8,7 @@ type ConfigSaveReq struct {
 	Name     string `json:"name" binding:"required,max=100"`
 	Key      string `json:"key" binding:"required,max=100"`
 	Value    string `json:"value" binding:"required,max=500"`
-	Type     int32  `json:"type" binding:"required"`
-	Visible  bool   `json:"visible"`
+	Visible  *bool  `json:"visible" binding:"required"` // Java: @NotNull
 	Remark   string `json:"remark"`
 }
 
