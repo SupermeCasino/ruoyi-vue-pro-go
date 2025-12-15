@@ -19,7 +19,10 @@ import (
 	tradeApp "backend-go/internal/api/handler/app/trade"
 	appBrokerage "backend-go/internal/api/handler/app/trade/brokerage"
 	"backend-go/internal/api/router"
+	"backend-go/internal/middleware"
 	"backend-go/internal/pkg/core"
+	"backend-go/internal/pkg/datascope"
+	"backend-go/internal/pkg/permission"
 	ws "backend-go/internal/pkg/websocket"
 	"backend-go/internal/repo"
 	productRepo "backend-go/internal/repo/product" // Product Statistics Repo
@@ -49,6 +52,8 @@ func InitApp() (*gin.Engine, error) {
 		logger.NewLogger,
 		// Repo (GORM Gen)
 		repo.NewQuery,
+		// Data Scope Plugin (需要在Services之后注册)
+		datascope.RegisterPlugin,
 		// Service
 		service.NewOAuth2TokenService,
 		service.NewAuthService,
@@ -267,6 +272,10 @@ func InitApp() (*gin.Engine, error) {
 		// WebSocket
 		ws.ProviderSet,
 		handler.NewWebSocketHandler,
+
+		// Casbin
+		permission.InitEnforcer,
+		middleware.NewCasbinMiddleware,
 
 		// Pay
 		paySvc.NewPayAppService,
