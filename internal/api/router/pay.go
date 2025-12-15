@@ -64,6 +64,12 @@ func RegisterPayRoutes(engine *gin.Engine,
 		// Pay Notify
 		payNotify := payGroup.Group("/notify")
 		{
+			// 回调接口 - 无需认证 (对齐 Java @PermitAll @TenantIgnore)
+			payNotify.POST("/order/:channelId", payNotifyHandler.NotifyOrder)
+			payNotify.POST("/refund/:channelId", payNotifyHandler.NotifyRefund)
+			payNotify.POST("/transfer/:channelId", payNotifyHandler.NotifyTransfer)
+
+			// 管理接口 - 需要认证
 			payNotify.GET("/get-detail", payNotifyHandler.GetNotifyTaskDetail)
 			payNotify.GET("/page", payNotifyHandler.GetNotifyTaskPage)
 		}

@@ -20,6 +20,7 @@ import (
 	appBrokerage "backend-go/internal/api/handler/app/trade/brokerage"
 	"backend-go/internal/api/router"
 	"backend-go/internal/pkg/core"
+	ws "backend-go/internal/pkg/websocket"
 	"backend-go/internal/repo"
 	productRepo "backend-go/internal/repo/product" // Product Statistics Repo
 	"backend-go/internal/service"
@@ -263,6 +264,10 @@ func InitApp() (*gin.Engine, error) {
 		promotionApp.NewAppCombinationRecordHandler,   // Added Combination Record
 		promotionApp.NewAppArticleHandler,             // Added Article
 		promotionApp.NewAppDiyPageHandler,             // Added Diy Page
+		// WebSocket
+		ws.ProviderSet,
+		handler.NewWebSocketHandler,
+
 		// Pay
 		paySvc.NewPayAppService,
 		paySvc.NewPayChannelService,

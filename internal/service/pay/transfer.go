@@ -148,3 +148,147 @@ func (s *PayTransferService) convertRespDTO(t *pay.PayTransfer) *PayTransferResp
 func (s *PayTransferService) generateNo() string {
 	return fmt.Sprintf("T%d", time.Now().UnixNano())
 }
+
+// NotifyTransfer 通知并更新转账结果
+// 对齐 Java: PayTransferService.notifyTransfer(Long channelId, PayTransferRespDTO notify)
+func (s *PayTransferService) NotifyTransfer(ctx context.Context, channelID int64, notify *client.TransferResp) error {
+	// 校验渠道是否有效
+	channel, err := s.channelSvc.ValidPayChannel(ctx, channelID)
+	if err != nil {
+		return err
+	}
+
+	// 转账成功的回调
+	if notify.Status == PayTransferStatusSuccess {
+		return s.notifyTransferSuccess(ctx, channel, notify)
+	}
+
+	// 转账关闭的回调
+	if notify.Status == PayTransferStatusClosed {
+		return s.notifyTransferClosed(ctx, channel, notify)
+	}
+
+	// 转账处理中的回调
+	if notify.Status == PayTransferStatusProcessing {
+		return s.notifyTransferProcessing(ctx, channel, notify)
+	}
+
+	// WAITING 状态无需处理
+	return nil
+}
+
+// notifyTransferProcessing 处理转账进行中
+func (s *PayTransferService) notifyTransferProcessing(ctx context.Context, channel *pay.PayChannel, notify *client.TransferResp) error {
+	// 1. 查询转账单
+	var transfer pay.PayTransfer
+	if err := s.db.WithContext(ctx).
+		Where("app_id = ? AND no = ?", channel.AppID, notify.OutTradeNo).
+		First(&transfer).Error; err != nil {
+		return fmt.Errorf("转账单不存在")
+	}
+
+	// 如果已经是转账中，直接返回
+	if transfer.Status == PayTransferStatusProcessing {
+		return nil
+	}
+
+	// 校验状态，必须是等待状态
+	if transfer.Status != PayTransferStatusWaiting {
+		return fmt.Errorf("转账单状态不是待转账")
+	}
+
+	// 2. 更新状态 (使用乐观锁)
+	result := s.db.WithContext(ctx).
+		Model(&pay.PayTransfer{}).
+		Where("id = ? AND status = ?", transfer.ID, PayTransferStatusWaiting).
+		Updates(map[string]interface{}{
+			"status": PayTransferStatusProcessing,
+		})
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return fmt.Errorf("转账单状态不是待转账")
+	}
+
+	return nil
+}
+
+// notifyTransferSuccess 处理转账成功
+func (s *PayTransferService) notifyTransferSuccess(ctx context.Context, channel *pay.PayChannel, notify *client.TransferResp) error {
+	// 1. 查询转账单
+	var transfer pay.PayTransfer
+	if err := s.db.WithContext(ctx).
+		Where("app_id = ? AND no = ?", channel.AppID, notify.OutTradeNo).
+		First(&transfer).Error; err != nil {
+		return fmt.Errorf("转账单不存在")
+	}
+
+	// 如果已经是成功，直接返回
+	if transfer.Status == PayTransferStatusSuccess {
+		return nil
+	}
+
+	// 校验状态，必须是等待或进行中状态
+	if transfer.Status != PayTransferStatusWaiting && transfer.Status != PayTransferStatusProcessing {
+		return fmt.Errorf("转账单状态不是待转账或转账中")
+	}
+
+	// 2. 更新状态 (使用乐观锁)
+	result := s.db.WithContext(ctx).
+		Model(&pay.PayTransfer{}).
+		Where("id = ? AND status IN (?, ?)", transfer.ID, PayTransferStatusWaiting, PayTransferStatusProcessing).
+		Updates(map[string]interface{}{
+			"status":              PayTransferStatusSuccess,
+			"success_time":        notify.SuccessTime,
+			"channel_transfer_no": notify.ChannelTransferNo,
+		})
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return fmt.Errorf("转账单状态不是待转账或转账中")
+	}
+
+	// 3. 插入转账通知记录
+	s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeTransfer, transfer.ID)
+
+	return nil
+}
+
+// notifyTransferClosed 处理转账关闭
+func (s *PayTransferService) notifyTransferClosed(ctx context.Context, channel *pay.PayChannel, notify *client.TransferResp) error {
+	// 1. 查询转账单
+	var transfer pay.PayTransfer
+	if err := s.db.WithContext(ctx).
+		Where("app_id = ? AND no = ?", channel.AppID, notify.OutTradeNo).
+		First(&transfer).Error; err != nil {
+		return fmt.Errorf("转账单不存在")
+	}
+
+	// 如果已经是关闭，直接返回
+	if transfer.Status == PayTransferStatusClosed {
+		return nil
+	}
+
+	// 校验状态，必须是等待或进行中状态
+	if transfer.Status != PayTransferStatusWaiting && transfer.Status != PayTransferStatusProcessing {
+		return fmt.Errorf("转账单状态不是待转账或转账中")
+	}
+
+	// 2. 更新状态 (使用乐观锁)
+	result := s.db.WithContext(ctx).
+		Model(&pay.PayTransfer{}).
+		Where("id = ? AND status IN (?, ?)", transfer.ID, PayTransferStatusWaiting, PayTransferStatusProcessing).
+		Updates(map[string]interface{}{
+			"status":              PayTransferStatusClosed,
+			"channel_transfer_no": notify.ChannelTransferNo,
+			"channel_error_code":  notify.ChannelErrorCode,
+			"channel_error_msg":   notify.ChannelErrorMsg,
+		})
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return fmt.Errorf("转账单状态不是待转账或转账中")
+	}
+
+	// 3. 插入转账通知记录
+	s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeTransfer, transfer.ID)
+
+	return nil
+}

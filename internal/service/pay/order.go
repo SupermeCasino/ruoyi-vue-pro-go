@@ -261,15 +261,15 @@ func (s *PayOrderService) syncOrder(ctx context.Context, orderExtension *pay.Pay
 	}
 
 	// 1.2 回调支付结果
-	s.notifyOrder(ctx, orderExtension.ChannelID, respDTO)
+	s.NotifyOrder(ctx, orderExtension.ChannelID, respDTO)
 
 	// 2. 如果是已支付,则返回 true
 	return respDTO.Status == PayOrderStatusSuccess
 }
 
-// notifyOrder 通知并更新订单的支付结果
-// 对齐 Java: PayOrderServiceImpl.notifyOrder(PayChannelDO, PayOrderRespDTO)
-func (s *PayOrderService) notifyOrder(ctx context.Context, channelID int64, notify *client.OrderResp) error {
+// NotifyOrder 通知并更新订单的支付结果
+// 对齐 Java: PayOrderService.notifyOrder(Long channelId, PayOrderRespDTO notify)
+func (s *PayOrderService) NotifyOrder(ctx context.Context, channelID int64, notify *client.OrderResp) error {
 	// 校验支付渠道是否有效
 	channel, err := s.channelSvc.GetChannel(ctx, channelID)
 	if err != nil {
@@ -438,6 +438,39 @@ func (s *PayOrderService) notifyOrderClosed(ctx context.Context, channel *pay.Pa
 
 	if err != nil || result.RowsAffected == 0 {
 		return fmt.Errorf("支付订单拓展状态不是待支付")
+	}
+
+	return nil
+}
+
+// UpdateOrderRefundPrice 更新订单退款金额
+// 对齐 Java: PayOrderService.updateOrderRefundPrice(Long id, Integer incrRefundPrice)
+func (s *PayOrderService) UpdateOrderRefundPrice(ctx context.Context, id int64, incrRefundPrice int) error {
+	order, err := s.q.PayOrder.WithContext(ctx).Where(s.q.PayOrder.ID.Eq(id)).First()
+	if err != nil {
+		return fmt.Errorf("支付订单不存在")
+	}
+
+	// 校验状态：必须是已支付或已退款
+	if order.Status != PayOrderStatusSuccess && order.Status != PayOrderStatusRefund {
+		return fmt.Errorf("支付订单状态不是已支付或已退款")
+	}
+
+	// 校验退款金额不能超过支付金额
+	if order.RefundPrice+incrRefundPrice > order.Price {
+		return fmt.Errorf("退款金额超过支付金额")
+	}
+
+	// 更新订单 (使用乐观锁)
+	result, err := s.q.PayOrder.WithContext(ctx).
+		Where(s.q.PayOrder.ID.Eq(id), s.q.PayOrder.Status.Eq(order.Status)).
+		Updates(map[string]interface{}{
+			"refund_price": order.RefundPrice + incrRefundPrice,
+			"status":       PayOrderStatusRefund,
+		})
+
+	if err != nil || result.RowsAffected == 0 {
+		return fmt.Errorf("支付订单状态不是已支付或已退款")
 	}
 
 	return nil

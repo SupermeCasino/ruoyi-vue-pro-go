@@ -23,6 +23,7 @@ import (
 	brokerage3 "backend-go/internal/api/handler/app/trade/brokerage"
 	"backend-go/internal/api/router"
 	"backend-go/internal/pkg/core"
+	"backend-go/internal/pkg/websocket"
 	"backend-go/internal/repo"
 	product4 "backend-go/internal/repo/product"
 	"backend-go/internal/service"
@@ -174,17 +175,18 @@ func InitApp() (*gin.Engine, error) {
 	memberSignInRecordHandler := member3.NewMemberSignInRecordHandler(memberSignInRecordService, memberUserService)
 	appMemberSignInRecordHandler := member2.NewAppMemberSignInRecordHandler(memberSignInRecordService)
 	memberUserHandler := member3.NewMemberUserHandler(memberUserService, memberLevelService, memberPointRecordService, memberGroupService, memberTagService)
-	payChannelService := pay.NewPayChannelService(query)
+	payClientFactory := client2.NewPayClientFactory()
+	payChannelService := pay.NewPayChannelService(query, payClientFactory)
 	payAppService := pay.NewPayAppService(query, payChannelService)
 	payAppHandler := pay2.NewPayAppHandler(payAppService)
 	payChannelHandler := pay2.NewPayChannelHandler(payChannelService)
-	payClientFactory := client2.NewPayClientFactory()
 	payNotifyService := pay.NewPayNotifyService(query, zapLogger, redisClient)
 	payOrderService := pay.NewPayOrderService(query, payAppService, payChannelService, payClientFactory, payNotifyService)
 	payOrderHandler := pay2.NewPayOrderHandler(payOrderService, payAppService)
-	payRefundService := pay.NewPayRefundService(query)
+	payRefundService := pay.NewPayRefundService(query, payChannelService, payOrderService, payNotifyService)
 	payRefundHandler := pay2.NewPayRefundHandler(payRefundService, payAppService)
-	payNotifyHandler := pay2.NewPayNotifyHandler(payNotifyService, payAppService)
+	payTransferService := pay.NewPayTransferService(db, zapLogger, payAppService, payChannelService, payNotifyService, payClientFactory, query)
+	payNotifyHandler := pay2.NewPayNotifyHandler(payNotifyService, payAppService, payChannelService, payOrderService, payRefundService, payTransferService, zapLogger)
 	payWalletService := wallet.NewPayWalletService(query)
 	payWalletHandler := wallet2.NewPayWalletHandler(payWalletService)
 	payWalletTransactionService := wallet.NewPayWalletTransactionService(query)
@@ -247,7 +249,6 @@ func InitApp() (*gin.Engine, error) {
 	brokerageUserHandler := brokerage2.NewBrokerageUserHandler(brokerageUserService, memberUserService, zapLogger)
 	brokerageRecordService := brokerage.NewBrokerageRecordService(query, zapLogger, tradeConfigService, productSpuService, productSkuService)
 	brokerageRecordHandler := brokerage2.NewBrokerageRecordHandler(zapLogger, brokerageRecordService, memberUserService)
-	payTransferService := pay.NewPayTransferService(db, zapLogger, payAppService, payChannelService, payNotifyService, payClientFactory, query)
 	brokerageWithdrawService := brokerage.NewBrokerageWithdrawService(query, zapLogger, brokerageRecordService, payTransferService, tradeConfigService, memberUserService)
 	brokerageWithdrawHandler := brokerage2.NewBrokerageWithdrawHandler(brokerageWithdrawService, memberUserService)
 	tradeStatisticsRepository := repo.NewTradeStatisticsRepository(query)
@@ -273,6 +274,8 @@ func InitApp() (*gin.Engine, error) {
 	appBrokerageUserHandler := brokerage3.NewAppBrokerageUserHandler(brokerageUserService, brokerageRecordService, brokerageWithdrawService)
 	appBrokerageRecordHandler := brokerage3.NewAppBrokerageRecordHandler(brokerageRecordService)
 	appBrokerageWithdrawHandler := brokerage3.NewAppBrokerageWithdrawHandler(brokerageWithdrawService, payTransferService)
-	engine := router.InitRouter(db, redisClient, authHandler, userHandler, tenantHandler, dictHandler, deptHandler, postHandler, roleHandler, menuHandler, permissionHandler, noticeHandler, configHandler, smsChannelHandler, smsTemplateHandler, smsLogHandler, fileConfigHandler, fileHandler, appAuthHandler, appMemberUserHandler, appMemberAddressHandler, productCategoryHandler, productPropertyHandler, productBrandHandler, productSpuHandler, productCommentHandler, productFavoriteHandler, productBrowseHistoryHandler, appProductFavoriteHandler, appProductBrowseHistoryHandler, appProductSpuHandler, appProductCommentHandler, appCartHandler, tradeOrderHandler, appTradeOrderHandler, tradeAfterSaleHandler, appTradeAfterSaleHandler, couponHandler, combinationActivityHandler, discountActivityHandler, appCombinationActivityHandler, appCombinationRecordHandler, appCouponHandler, deliveryExpressHandler, deliveryPickUpStoreHandler, deliveryExpressTemplateHandler, bannerHandler, rewardActivityHandler, seckillConfigHandler, seckillActivityHandler, bargainActivityHandler, appBannerHandler, memberLevelHandler, memberGroupHandler, memberTagHandler, memberConfigHandler, memberPointRecordHandler, appMemberPointRecordHandler, memberSignInConfigHandler, memberSignInRecordHandler, appMemberSignInRecordHandler, memberUserHandler, payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler, payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler, loginLogHandler, operateLogHandler, jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler, socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oAuth2ClientHandler, appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler, articleCategoryHandler, articleHandler, appArticleHandler, diyTemplateHandler, diyPageHandler, appDiyPageHandler, kefuHandler, appKefuHandler, pointActivityHandler, bargainRecordHandler, combinationRecordHandler, bargainHelpHandler, tradeConfigHandler, appTradeConfigHandler, brokerageUserHandler, brokerageRecordHandler, brokerageWithdrawHandler, tradeStatisticsHandler, productStatisticsHandler, memberStatisticsHandler, payStatisticsHandler, appBrokerageUserHandler, appBrokerageRecordHandler, appBrokerageWithdrawHandler)
+	manager := websocket.NewManager()
+	webSocketHandler := handler.NewWebSocketHandler(manager, zapLogger)
+	engine := router.InitRouter(db, redisClient, authHandler, userHandler, tenantHandler, dictHandler, deptHandler, postHandler, roleHandler, menuHandler, permissionHandler, noticeHandler, configHandler, smsChannelHandler, smsTemplateHandler, smsLogHandler, fileConfigHandler, fileHandler, appAuthHandler, appMemberUserHandler, appMemberAddressHandler, productCategoryHandler, productPropertyHandler, productBrandHandler, productSpuHandler, productCommentHandler, productFavoriteHandler, productBrowseHistoryHandler, appProductFavoriteHandler, appProductBrowseHistoryHandler, appProductSpuHandler, appProductCommentHandler, appCartHandler, tradeOrderHandler, appTradeOrderHandler, tradeAfterSaleHandler, appTradeAfterSaleHandler, couponHandler, combinationActivityHandler, discountActivityHandler, appCombinationActivityHandler, appCombinationRecordHandler, appCouponHandler, deliveryExpressHandler, deliveryPickUpStoreHandler, deliveryExpressTemplateHandler, bannerHandler, rewardActivityHandler, seckillConfigHandler, seckillActivityHandler, bargainActivityHandler, appBannerHandler, memberLevelHandler, memberGroupHandler, memberTagHandler, memberConfigHandler, memberPointRecordHandler, appMemberPointRecordHandler, memberSignInConfigHandler, memberSignInRecordHandler, appMemberSignInRecordHandler, memberUserHandler, payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler, payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler, loginLogHandler, operateLogHandler, jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler, socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oAuth2ClientHandler, appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler, articleCategoryHandler, articleHandler, appArticleHandler, diyTemplateHandler, diyPageHandler, appDiyPageHandler, kefuHandler, appKefuHandler, pointActivityHandler, bargainRecordHandler, combinationRecordHandler, bargainHelpHandler, tradeConfigHandler, appTradeConfigHandler, brokerageUserHandler, brokerageRecordHandler, brokerageWithdrawHandler, tradeStatisticsHandler, productStatisticsHandler, memberStatisticsHandler, payStatisticsHandler, appBrokerageUserHandler, appBrokerageRecordHandler, appBrokerageWithdrawHandler, webSocketHandler)
 	return engine, nil
 }

@@ -5,6 +5,7 @@ import (
 	"backend-go/internal/model/pay"
 	"backend-go/internal/pkg/core"
 	"backend-go/internal/repo/query"
+	"backend-go/internal/service/pay/client"
 	"context"
 	"errors"
 
@@ -12,11 +13,15 @@ import (
 )
 
 type PayChannelService struct {
-	q *query.Query
+	q             *query.Query
+	clientFactory *client.PayClientFactory
 }
 
-func NewPayChannelService(q *query.Query) *PayChannelService {
-	return &PayChannelService{q: q}
+func NewPayChannelService(q *query.Query, clientFactory *client.PayClientFactory) *PayChannelService {
+	return &PayChannelService{
+		q:             q,
+		clientFactory: clientFactory,
+	}
 }
 
 // CreateChannel 创建支付渠道
@@ -122,4 +127,10 @@ func (s *PayChannelService) ValidPayChannel(ctx context.Context, id int64) (*pay
 		return nil, core.NewBizError(1006002001, "支付渠道处于关闭状态") // PAY_CHANNEL_IS_DISABLE
 	}
 	return channel, nil
+}
+
+// GetPayClient 获得支付客户端
+// 对齐 Java: PayChannelService.getPayClient(Long id)
+func (s *PayChannelService) GetPayClient(channelID int64) client.PayClient {
+	return s.clientFactory.GetPayClient(channelID)
 }
