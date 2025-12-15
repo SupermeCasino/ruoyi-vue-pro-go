@@ -5,6 +5,7 @@ import (
 	"backend-go/internal/api/resp"
 	memberModel "backend-go/internal/model/member"
 	"backend-go/internal/pkg/core"
+	"backend-go/internal/pkg/utils"
 	memberSvc "backend-go/internal/service/member"
 
 	"github.com/gin-gonic/gin"
@@ -72,9 +73,19 @@ func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
 		core.WriteBizError(c, core.ErrParam)
 		return
 	}
-	// 直接更新用户积分
-	if !h.userSvc.UpdateUserPoint(c, r.ID, r.Point) {
-		core.WriteBizError(c, core.ErrParam)
+	// Java: memberPointRecordService.createPointRecord(updateReqVO.getId(), updateReqVO.getPoint(),
+	//       MemberPointBizTypeEnum.ADMIN, String.valueOf(getLoginUserId()));
+	// MemberPointBizTypeEnum: SIGN=1, ADMIN=2
+	bizType := 2 // ADMIN
+	bizId := utils.ToString(core.GetLoginUserID(c))
+	// 标题和描述在 Java 中由 MemberPointBizTypeEnum.ADMIN 的 name/description 字段提供
+	// ADMIN.name = "管理员修改", ADMIN.description = "管理员修改 {} 积分"
+	title := "管理员修改"
+	desc := "管理员修改积分"
+
+	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, bizType, bizId, title, desc)
+	if err != nil {
+		core.WriteBizError(c, err)
 		return
 	}
 	core.WriteSuccess(c, true)
