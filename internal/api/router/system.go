@@ -358,8 +358,8 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				apiErrorLogGroup.PUT("/update-status", apiErrorLogHandler.UpdateApiErrorLogProcess)
 			}
 
-			// Social Client
-			socialClientGroup := infraGroup.Group("/social-client")
+			// Social Client (在 systemGroup 下, 对齐 Java /system/social-client)
+			socialClientGroup := systemGroup.Group("/social-client")
 			{
 				socialClientGroup.POST("/create", socialClientHandler.CreateSocialClient)
 				socialClientGroup.PUT("/update", socialClientHandler.UpdateSocialClient)
@@ -368,12 +368,12 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				socialClientGroup.GET("/page", socialClientHandler.GetSocialClientPage)
 			}
 
-			// Social User
-			socialUserGroup := infraGroup.Group("/social-user")
+			// Social User (在 systemGroup 下, 对齐 Java /system/social-user)
+			socialUserGroup := systemGroup.Group("/social-user")
 			{
 				socialUserGroup.POST("/bind", socialUserHandler.BindSocialUser)
-				socialUserGroup.POST("/unbind", socialUserHandler.UnbindSocialUser)
-				socialUserGroup.GET("/list", socialUserHandler.GetSocialUserList)
+				socialUserGroup.DELETE("/unbind", socialUserHandler.UnbindSocialUser)      // Java: @DeleteMapping("/unbind")
+				socialUserGroup.GET("/get-bind-list", socialUserHandler.GetSocialUserList) // Java: @GetMapping("/get-bind-list")
 				socialUserGroup.GET("/get", socialUserHandler.GetSocialUser)
 				socialUserGroup.GET("/page", socialUserHandler.GetSocialUserPage)
 			}
