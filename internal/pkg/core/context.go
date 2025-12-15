@@ -1,10 +1,15 @@
 package core
 
-import "github.com/gin-gonic/gin"
+import (
+	"context"
+
+	"github.com/gin-gonic/gin"
+)
 
 const (
-	CtxUserIDKey    = "userID"
-	CtxLoginUserKey = "loginUser"
+	CtxUserIDKey     = "userID"
+	CtxLoginUserKey  = "loginUser"
+	CtxGinContextKey = "GinContext" // 用于在 context.Context 中传递 gin.Context
 )
 
 // LoginUser 登录用户信息，与 Java 的 LoginUser 对齐
@@ -12,6 +17,7 @@ type LoginUser struct {
 	UserID   int64  `json:"userId"`
 	UserType int    `json:"userType"` // 0: Member, 1: Admin
 	TenantID int64  `json:"tenantId"`
+	DeptID   *int64 `json:"deptId"` // 部门ID (用于数据权限)
 	Nickname string `json:"nickname"`
 }
 
@@ -57,4 +63,24 @@ func GetTenantId(c *gin.Context) int64 {
 		return 0
 	}
 	return user.TenantID
+}
+
+// GetLoginUserFromContext 从context.Context中获取登录用户
+// 用于非Gin场景(如GORM回调)
+func GetLoginUserFromContext(ctx context.Context) *LoginUser {
+	if ctx == nil {
+		return nil
+	}
+
+	// 尝试从context中获取gin.Context
+	if ginCtx, ok := ctx.Value(CtxGinContextKey).(*gin.Context); ok {
+		return GetLoginUser(ginCtx)
+	}
+
+	// 尝试直接从context中获取LoginUser
+	if user, ok := ctx.Value(CtxLoginUserKey).(*LoginUser); ok {
+		return user
+	}
+
+	return nil
 }
