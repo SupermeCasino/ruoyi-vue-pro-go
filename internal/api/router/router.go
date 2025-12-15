@@ -142,6 +142,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appBrokerageUserHandler *appBrokerage.AppBrokerageUserHandler,
 	appBrokerageRecordHandler *appBrokerage.AppBrokerageRecordHandler,
 	appBrokerageWithdrawHandler *appBrokerage.AppBrokerageWithdrawHandler,
+	webSocketHandler *handler.WebSocketHandler,
 ) *gin.Engine {
 	// Debug log to confirm router init
 	fmt.Println("Initializing Router...")
@@ -168,7 +169,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		smsChannelHandler, smsTemplateHandler, smsLogHandler,
 		fileConfigHandler, fileHandler,
 		jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler,
-		socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oauth2ClientHandler,
+		socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oauth2ClientHandler, webSocketHandler,
 	)
 
 	// Product 模块

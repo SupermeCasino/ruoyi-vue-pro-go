@@ -37,6 +37,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 	mailHandler *handler.MailHandler,
 	notifyHandler *handler.NotifyHandler,
 	oauth2ClientHandler *handler.OAuth2ClientHandler,
+	webSocketHandler *handler.WebSocketHandler,
 ) {
 	api := engine.Group("/admin-api")
 	{
@@ -307,6 +308,9 @@ func RegisterSystemRoutes(engine *gin.Engine,
 		// Infra
 		infraGroup := api.Group("/infra")
 		{
+			// WebSocket (对齐 Java /infra/ws)
+			infraGroup.GET("/ws", webSocketHandler.Handle)
+
 			// File Config
 			fileConfigGroup := infraGroup.Group("/file-config")
 			{
