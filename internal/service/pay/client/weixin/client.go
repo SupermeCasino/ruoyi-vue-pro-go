@@ -385,8 +385,10 @@ func (c *WxPayClient) ParseOrderNotify(req *client.NotifyData) (*client.OrderRes
 
 	// 2. 初始化 NotifyHandler
 	verifier := verifiers.NewSHA256WithRSAPubkeyVerifier(c.config.PublicKeyID, *c.publicKey)
-	handler := notify.NewNotifyHandler(c.config.APIV3Key, verifier)
-
+	handler, err := notify.NewRSANotifyHandler(c.config.APIV3Key, verifier)
+	if err != nil {
+		return nil, fmt.Errorf("创建回调处理器失败: %v", err)
+	}
 	// 3. 解析并验证签名
 	transaction := new(payments.Transaction)
 	notifyReq, err := handler.ParseNotifyRequest(context.Background(), httpReq, transaction)
