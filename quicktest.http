@@ -1,0 +1,4 @@
+## 删除测试
+DELETE http://localhost:48080/admin-api/system/dict-type/delete?id=123
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0NSwidXNlclR5cGUiOjIsInRlbmFudElkIjoxLCJuaWNrbmFtZSI6Iua1i-ivlWNhc2JpbiIsImlzcyI6Inl1ZGFvLWdvIiwiZXhwIjoxNzY4Mzk4NDQyLCJpYXQiOjE3NjU4MDY0NDJ9.rLh7700S4yi22MQG_D13mwhj7BA_2Y7fwVmTStn49q4
