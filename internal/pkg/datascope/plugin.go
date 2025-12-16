@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	pkgcontext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -56,7 +57,7 @@ func (p *Plugin) beforeQuery(db *gorm.DB) {
 	}
 
 	// 2. 获取当前登录用户
-	loginUser := core.GetLoginUserFromContext(ctx)
+	loginUser := pkgcontext.GetLoginUserFromContext(ctx)
 	if loginUser == nil {
 		// 没有登录用户,不应用数据权限(可能是公开API)
 		return
@@ -141,7 +142,7 @@ func (p *Plugin) calculateDataScope(ctx context.Context, roleIDs []int64) (DataS
 }
 
 // applyDataScope 应用数据范围SQL条件
-func (p *Plugin) applyDataScope(db *gorm.DB, scope DataScope, customDeptIDs []int64, user *core.LoginUser) {
+func (p *Plugin) applyDataScope(db *gorm.DB, scope DataScope, customDeptIDs []int64, user *pkgcontext.LoginUser) {
 	switch scope {
 	case DataScopeAll:
 		// 全部数据权限，不添加任何条件
