@@ -34,14 +34,12 @@ func (s *PermissionService) GetUserRoleIdListByUserId(ctx context.Context, userI
 }
 
 // GetRoleMenuListByRoleId 获取角色的菜单ID列表
-// 对应 Java: PermissionServiceImpl.getRoleMenuListByRoleId
 func (s *PermissionService) GetRoleMenuListByRoleId(ctx context.Context, roleIds []int64) ([]int64, error) {
 	if len(roleIds) == 0 {
 		return []int64{}, nil
 	}
 
 	// 如果是管理员的情况下，获取全部菜单编号
-	// 对应 Java: if (roleService.hasAnySuperAdmin(roleIds)) { return convertSet(menuService.getMenuList(), MenuDO::getId); }
 	isSuperAdmin, err := s.roleSvc.HasAnySuperAdmin(ctx, roleIds)
 	if err != nil {
 		return nil, err
@@ -77,15 +75,15 @@ func (s *PermissionService) getAllMenuIds(ctx context.Context) ([]int64, error) 
 
 // AssignRoleMenu 赋予角色菜单
 func (s *PermissionService) AssignRoleMenu(ctx context.Context, roleId int64, menuIds []int64) error {
-	// Transaction
+	// 使用事务
 	return s.q.Transaction(func(tx *query.Query) error {
-		// 1. Delete old
+		// 1. 删除旧的角色菜单关联
 		rm := tx.SystemRoleMenu
 		if _, err := rm.WithContext(ctx).Where(rm.RoleID.Eq(roleId)).Delete(); err != nil {
 			return err
 		}
 
-		// 2. Insert new
+		// 2. 插入新的角色菜单关联
 		if len(menuIds) > 0 {
 			var bat []*model.SystemRoleMenu
 			for _, mid := range menuIds {
@@ -94,7 +92,7 @@ func (s *PermissionService) AssignRoleMenu(ctx context.Context, roleId int64, me
 					MenuID: mid,
 				})
 			}
-			// Use batch create
+			// 批量创建
 			if err := rm.WithContext(ctx).Create(bat...); err != nil {
 				return err
 			}
@@ -112,12 +110,12 @@ func (s *PermissionService) AssignRoleDataScope(ctx context.Context, roleId int6
 func (s *PermissionService) AssignUserRole(ctx context.Context, userId int64, roleIds []int64) error {
 	return s.q.Transaction(func(tx *query.Query) error {
 		ur := tx.SystemUserRole
-		// 1. Delete old
+		// 1. 删除旧的用户角色关联
 		if _, err := ur.WithContext(ctx).Where(ur.UserID.Eq(userId)).Delete(); err != nil {
 			return err
 		}
 
-		// 2. Insert new
+		// 2. 插入新的用户角色关联
 		if len(roleIds) > 0 {
 			var bat []*model.SystemUserRole
 			for _, rid := range roleIds {
@@ -153,9 +151,15 @@ func (s *PermissionService) GetRoleById(ctx context.Context, roleId int64) (*mod
 }
 
 // GetRoleDeptIdListByRoleId 获取角色的自定义部门ID列表
-// TODO: system_role_dept表尚未在当前schema中,待后续添加该表后实现
+// 对应 Java: RoleDO.dataScopeDeptIds 字段（JSON 存储在角色表中）
 func (s *PermissionService) GetRoleDeptIdListByRoleId(ctx context.Context, roleId int64) ([]int64, error) {
-	// 临时返回空列表
-	// 完整实现需要system_role_dept表存储角色-部门关系
-	return []int64{}, nil
+	r := s.q.SystemRole
+	role, err := r.WithContext(ctx).Where(r.ID.Eq(roleId)).First()
+	if err != nil {
+		return []int64{}, nil // 角色不存在时返回空列表
+	}
+	if role.DataScopeDeptIds == nil {
+		return []int64{}, nil
+	}
+	return role.DataScopeDeptIds, nil
 }
