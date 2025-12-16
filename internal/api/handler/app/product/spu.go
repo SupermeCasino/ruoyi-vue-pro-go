@@ -1,9 +1,9 @@
 package product
 
 import (
-	"backend-go/internal/pkg/core"
-	memberSvc "backend-go/internal/service/member"
-	"backend-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

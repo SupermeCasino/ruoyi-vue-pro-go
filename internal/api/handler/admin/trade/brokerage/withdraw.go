@@ -3,12 +3,12 @@ package brokerage
 import (
 	"github.com/gin-gonic/gin"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	brokerageModel "backend-go/internal/model/trade/brokerage"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/member"
-	"backend-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	brokerageModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
 )
 
 type BrokerageWithdrawHandler struct {

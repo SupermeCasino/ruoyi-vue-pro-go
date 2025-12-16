@@ -1,15 +1,15 @@
 package promotion
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/product"
-	"backend-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"strconv"
 
-	"backend-go/internal/model"
-	promotionModel "backend-go/internal/model/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 
 	"github.com/gin-gonic/gin"
 )

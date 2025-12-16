@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"backend-go/internal/pkg/utils"
-	ws "backend-go/internal/pkg/websocket"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
+	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

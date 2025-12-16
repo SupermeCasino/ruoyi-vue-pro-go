@@ -1,13 +1,13 @@
 package brokerage
 
 import (
-	"backend-go/internal/api/req"
-	tradeReq "backend-go/internal/api/req/app/trade"
-	tradeResp "backend-go/internal/api/resp/app/trade"
-	"backend-go/internal/model/trade/brokerage"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/pay"
-	brokerageSvc "backend-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
+	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

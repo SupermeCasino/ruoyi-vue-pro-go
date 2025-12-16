@@ -3,12 +3,12 @@ package pay
 import (
 	"io"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model/pay"
-	"backend-go/internal/pkg/core"
-	paySvc "backend-go/internal/service/pay"
-	"backend-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"

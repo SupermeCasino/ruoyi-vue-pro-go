@@ -1,11 +1,11 @@
 package brokerage
 
 import (
-	tradeReq "backend-go/internal/api/req/app/trade"
-	tradeResp "backend-go/internal/api/resp/app/trade"
-	model "backend-go/internal/model/trade/brokerage"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/trade/brokerage"
+	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	model "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
 	"time"
 
 	"github.com/gin-gonic/gin"

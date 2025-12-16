@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"strings"
 
-	"backend-go/internal/api/resp"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 
 	"github.com/gin-gonic/gin"
 )

@@ -3,9 +3,9 @@ package handler
 import (
 	"strconv"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

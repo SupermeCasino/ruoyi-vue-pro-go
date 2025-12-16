@@ -1,8 +1,8 @@
 package trade
 
 import (
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 
 	"github.com/gin-gonic/gin"
 )

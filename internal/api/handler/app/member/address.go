@@ -1,9 +1,9 @@
 package member
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

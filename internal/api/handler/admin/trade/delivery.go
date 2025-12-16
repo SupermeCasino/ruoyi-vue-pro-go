@@ -1,11 +1,11 @@
 package trade
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/excel"
-	"backend-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/excel"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

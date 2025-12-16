@@ -3,9 +3,9 @@ package promotion
 import (
 	"github.com/gin-gonic/gin"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 )
 
 type AppKefuHandler struct {

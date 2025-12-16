@@ -1,11 +1,11 @@
 package wallet
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model/pay"
-	"backend-go/internal/pkg/core"
-	payData "backend-go/internal/service/pay/wallet"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 
 	"github.com/gin-gonic/gin"
 )

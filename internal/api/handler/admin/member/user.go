@@ -1,12 +1,12 @@
 package member
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	memberModel "backend-go/internal/model/member"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/utils"
-	memberSvc "backend-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
+	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"

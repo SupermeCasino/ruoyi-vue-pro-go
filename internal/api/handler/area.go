@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"backend-go/internal/api/resp"
-	"backend-go/internal/pkg/area"
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"strconv"
 	"sync"
 
