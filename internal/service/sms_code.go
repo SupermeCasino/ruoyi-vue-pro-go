@@ -19,16 +19,16 @@ const (
 )
 
 type SmsCodeService struct {
-	q       *query.Query
-	rdb     *redis.Client
-	factory *SmsClientFactory
+	q              *query.Query
+	rdb            *redis.Client
+	smsSendService *SmsSendService
 }
 
-func NewSmsCodeService(q *query.Query, rdb *redis.Client, factory *SmsClientFactory) *SmsCodeService {
+func NewSmsCodeService(q *query.Query, rdb *redis.Client, smsSendService *SmsSendService) *SmsCodeService {
 	return &SmsCodeService{
-		q:       q,
-		rdb:     rdb,
-		factory: factory,
+		q:              q,
+		rdb:            rdb,
+		smsSendService: smsSendService,
 	}
 }
 
@@ -58,36 +58,18 @@ func (s *SmsCodeService) SendSmsCode(ctx context.Context, mobile string, scene i
 	}
 
 	// 4. 发送短信
-	// 查询启用的渠道
-	channel, err := s.q.SystemSmsChannel.WithContext(ctx).Where(s.q.SystemSmsChannel.Status.Eq(0)).First()
+	params := map[string]interface{}{
+		"code": code,
+	}
+	// TODO: 根据 scene 获取 templateCode
+	// 暂时 hardcode 一个测试用 code, 实际应查表或配置
+	templateCode := "USER_SMS_LOGIN"
+
+	// 默认发送给 Member
+	_, err = s.smsSendService.SendSingleSmsToMember(ctx, mobile, 0, templateCode, params)
 	if err != nil {
-		zap.L().Error("No enabled SMS channel found", zap.Error(err))
-		// For development, allow fallback or just return error
-		// return err
-	}
-
-	// Get client from factory
-	client := s.factory.GetClient(channel.ID)
-	if client == nil {
-		zap.L().Info("SMS Client not found in factory, initializing...", zap.Int64("channelId", channel.ID))
-		s.factory.CreateOrUpdateClient(channel)
-		client = s.factory.GetClient(channel.ID)
-	}
-
-	if client != nil {
-		// Prepare template params (mock)
-		params := map[string]interface{}{
-			"code": code,
-		}
-		// TODO: Retrieve valid apiTemplateId from SystemSmsTemplate based on scene
-
-		_, err := client.SendSms(ctx, 0, mobile, "TEMPLATE_ID", params)
-		if err != nil {
-			zap.L().Error("Send SMS failed", zap.Error(err))
-			return err
-		}
-	} else {
-		zap.L().Warn("No SMS client available for channel", zap.String("code", channel.Code))
+		zap.L().Error("Send SMS code failed", zap.Error(err))
+		return err
 	}
 
 	return nil

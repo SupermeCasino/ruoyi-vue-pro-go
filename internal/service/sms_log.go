@@ -22,6 +22,18 @@ func NewSmsLogService(q *query.Query) *SmsLogService {
 	}
 }
 
+// CreateSmsLog 创建短信日志
+func (s *SmsLogService) CreateSmsLog(ctx context.Context, item *model.SystemSmsLog) (int64, error) {
+	err := s.q.SystemSmsLog.WithContext(ctx).Create(item)
+	return item.ID, err
+}
+
+// UpdateSmsLog 更新短信日志
+func (s *SmsLogService) UpdateSmsLog(ctx context.Context, item *model.SystemSmsLog) error {
+	_, err := s.q.SystemSmsLog.WithContext(ctx).Where(s.q.SystemSmsLog.ID.Eq(item.ID)).Updates(item)
+	return err
+}
+
 // GetSmsLogPage 获得短信日志分页
 func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *req.SmsLogPageReq) (*pagination.PageResult[*resp.SmsLogRespVO], error) {
 	l := s.q.SystemSmsLog

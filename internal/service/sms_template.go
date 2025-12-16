@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -163,6 +164,14 @@ func (s *SmsTemplateService) convertResp(item *model.SystemSmsTemplate) *resp.Sm
 		ChannelCode:   item.ChannelCode,
 		CreateTime:    item.CreatedAt,
 	}
+}
+
+// FormatSmsTemplateContent 格式化短信模板内容
+func (s *SmsTemplateService) FormatSmsTemplateContent(content string, params map[string]interface{}) string {
+	for k, v := range params {
+		content = regexp.MustCompile(fmt.Sprintf(`\{%s\}`, k)).ReplaceAllString(content, fmt.Sprintf("%v", v))
+	}
+	return content
 }
 
 // parseTemplateContentParams 解析模板内容参数
