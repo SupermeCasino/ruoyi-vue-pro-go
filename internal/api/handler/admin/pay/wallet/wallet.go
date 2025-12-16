@@ -74,7 +74,7 @@ func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
 		return
 	}
 	if wallet == nil {
-		c.JSON(200, errors.ErrRecordNotFound)
+		c.JSON(200, errors.ErrNotFound)
 		return
 	}
 
