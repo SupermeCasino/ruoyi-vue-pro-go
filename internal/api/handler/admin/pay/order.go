@@ -7,6 +7,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
+	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -15,12 +17,13 @@ import (
 )
 
 type PayOrderHandler struct {
-	svc    *paySvc.PayOrderService
-	appSvc *paySvc.PayAppService
+	svc       *paySvc.PayOrderService
+	appSvc    *paySvc.PayAppService
+	walletSvc *payWalletSvc.PayWalletService
 }
 
-func NewPayOrderHandler(svc *paySvc.PayOrderService, appSvc *paySvc.PayAppService) *PayOrderHandler {
-	return &PayOrderHandler{svc: svc, appSvc: appSvc}
+func NewPayOrderHandler(svc *paySvc.PayOrderService, appSvc *paySvc.PayAppService, walletSvc *payWalletSvc.PayWalletService) *PayOrderHandler {
+	return &PayOrderHandler{svc: svc, appSvc: appSvc, walletSvc: walletSvc}
 }
 
 // GetOrder 获得支付订单
@@ -32,7 +35,14 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 		return
 	}
 
-	// TODO: Handle sync param
+	// Handle sync param
+	syncStr := c.Query("sync")
+	if syncStr == "true" {
+		order, err := h.svc.GetOrder(c, id)
+		if err == nil && order.Status == paySvc.PayOrderStatusWaiting {
+			h.svc.SyncOrderQuietly(c, id)
+		}
+	}
 
 	order, err := h.svc.GetOrder(c, id)
 	if err != nil {
@@ -115,10 +125,24 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 		return
 	}
 
-	// 1. Wallet payment case? (Handled in Service or here?)
-	// Java logic handles Wallet extra param here.
-	// If channel is Wallet, set wallet_id in extras.
-	// We will skip Wallet specific logic for now or add TODO.
+	// 1. Wallet payment case
+	if r.ChannelCode == "wallet" { // Assuming "wallet" is the code
+		if r.ChannelExtras == nil {
+			r.ChannelExtras = make(map[string]string)
+		}
+		userID := context.GetLoginUserID(c)
+		user := context.GetLoginUser(c)
+		userType := 0
+		if user != nil {
+			userType = user.UserType
+		}
+		wallet, err := h.walletSvc.GetOrCreateWallet(c, userID, userType)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		r.ChannelExtras["wallet_id"] = strconv.FormatInt(wallet.ID, 10)
+	}
 
 	// 2. Submit Order
 	respVO, err := h.svc.SubmitOrder(c, &r, c.ClientIP())
