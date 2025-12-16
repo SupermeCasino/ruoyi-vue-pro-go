@@ -243,3 +243,32 @@ type TradeOrderSummaryResp struct {
 	AfterSaleCount int64 `json:"afterSaleCount"`
 	AfterSalePrice int64 `json:"afterSalePrice"`
 }
+
+// AppTradeProductSettlementResp 用户 App - 商品结算信息 Response VO
+type AppTradeProductSettlementResp struct {
+	SpuID          int64           `json:"spuId"`
+	Skus           []Sku           `json:"skus"`
+	RewardActivity *RewardActivity `json:"rewardActivity"`
+}
+
+type Sku struct {
+	ID               int64  `json:"id"`
+	PromotionPrice   int    `json:"promotionPrice"`
+	PromotionType    int    `json:"promotionType"` // 对应 PromotionTypeEnum 枚举
+	PromotionID      int64  `json:"promotionId"`
+	PromotionEndTime string `json:"promotionEndTime"`
+}
+
+type RewardActivity struct {
+	ID            int64                `json:"id"`
+	ConditionType int                  `json:"conditionType"`
+	Rules         []RewardActivityRule `json:"rules"`
+}
+
+type RewardActivityRule struct {
+	Limit                    int           `json:"limit"`
+	DiscountPrice            int           `json:"discountPrice"`
+	FreeDelivery             bool          `json:"freeDelivery"`
+	Point                    int           `json:"point"`
+	GiveCouponTemplateCounts map[int64]int `json:"giveCouponTemplateCounts"`
+}
