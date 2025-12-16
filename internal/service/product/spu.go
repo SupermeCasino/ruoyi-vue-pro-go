@@ -252,6 +252,44 @@ func (s *ProductSpuService) GetTabsCount(ctx context.Context) (map[int]int64, er
 	}, nil
 }
 
+// GetSpuPageForApp 获得商品 SPU 分页 (App)
+func (s *ProductSpuService) GetSpuPageForApp(ctx context.Context, req *req.AppProductSpuPageReq) (*pagination.PageResult[*product.ProductSpu], error) {
+	u := s.q.ProductSpu
+	q := u.WithContext(ctx).Where(u.Status.Eq(1)) // 上架状态 Status=1
+
+	if req.CategoryID != nil && *req.CategoryID > 0 {
+		q = q.Where(u.CategoryID.Eq(*req.CategoryID))
+	}
+	if req.Keyword != nil && *req.Keyword != "" {
+		q = q.Where(u.Name.Like("%" + *req.Keyword + "%"))
+	}
+	// Sort
+	if req.SortField != nil && *req.SortField == "sales_count" {
+		if req.SortAsc != nil && *req.SortAsc {
+			q = q.Order(u.SalesCount.Asc())
+		} else {
+			q = q.Order(u.SalesCount.Desc())
+		}
+	} else if req.SortField != nil && *req.SortField == "price" {
+		if req.SortAsc != nil && *req.SortAsc {
+			q = q.Order(u.Price.Asc())
+		} else {
+			q = q.Order(u.Price.Desc())
+		}
+	} else {
+		q = q.Order(u.Sort.Desc(), u.ID.Desc())
+	}
+
+	list, total, err := q.FindByPage((req.PageNo-1)*req.PageSize, req.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	return &pagination.PageResult[*product.ProductSpu]{
+		List:  list,
+		Total: total,
+	}, nil
+}
+
 // GetSpuList 获得 SPU 列表 (Simple)
 func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*resp.ProductSpuResp, error) {
 	if len(ids) == 0 {
@@ -266,7 +304,7 @@ func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*res
 	}), nil
 }
 
-// GetSpuListByStatus (Ref for Simple List)
+// GetSpuSimpleList 获得 SPU 精简列表
 func (s *ProductSpuService) GetSpuSimpleList(ctx context.Context) ([]*resp.ProductSpuSimpleResp, error) {
 	list, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.Status.Eq(0)).Order(s.q.ProductSpu.Sort.Desc()).Find()
 	if err != nil {
