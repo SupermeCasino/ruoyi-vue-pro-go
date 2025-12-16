@@ -1110,7 +1110,7 @@ router.Use(NewMiddleware())
 
 MIT License
 
-Copyright (c) 2025 Yudao Backend Go
+Copyright (c) 2025 wxlbd
 
 ## 💬 联系方式
 
@@ -1118,7 +1118,7 @@ Copyright (c) 2025 Yudao Backend Go
 
 - 提交 **[Issue](https://github.com/your-repo/issues)**
 - 发起 **[Pull Request](https://github.com/your-repo/pulls)**
-- 联系维护者：your-email@example.com
+- 联系维护者：297750182@qq.com
 
 ## 🙏 致谢
 
