@@ -143,7 +143,7 @@ func InitApp() (*gin.Engine, error) {
 	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
 	tradeOrderHandler := trade3.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
 	tradeAfterSaleService := trade.NewTradeAfterSaleService(query, tradeOrderUpdateService)
-	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService)
+	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService, tradePriceService)
 	tradeAfterSaleHandler := trade3.NewTradeAfterSaleHandler(tradeAfterSaleService)
 	appTradeAfterSaleHandler := trade2.NewAppTradeAfterSaleHandler(tradeAfterSaleService)
 	couponService := promotion.NewCouponService()

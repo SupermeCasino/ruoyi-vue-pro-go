@@ -179,8 +179,10 @@ func RegisterAppRoutes(engine *gin.Engine,
 			orderGroup := tradeGroup.Group("/order")
 			{
 				orderGroup.GET("/settlement", appTradeOrderHandler.SettlementOrder)
+				orderGroup.GET("/settlement-product", appTradeOrderHandler.SettlementProduct)
 				orderGroup.POST("/create", appTradeOrderHandler.CreateOrder)
 				orderGroup.GET("/get-detail", appTradeOrderHandler.GetOrderDetail)
+				orderGroup.GET("/item/get", appTradeOrderHandler.GetOrderItem)
 				orderGroup.GET("/page", appTradeOrderHandler.GetOrderPage)
 				orderGroup.GET("/get-count", appTradeOrderHandler.GetOrderCount)
 				orderGroup.PUT("/receive", appTradeOrderHandler.ReceiveOrder)
