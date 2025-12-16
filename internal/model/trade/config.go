@@ -21,6 +21,8 @@ type TradeConfig struct {
 	BrokerageFrozenDays         int           `gorm:"column:brokerage_frozen_days;default:0;comment:分销佣金冻结时间" json:"brokerageFrozenDays"`
 	BrokerageFirstPercent       int           `gorm:"column:brokerage_first_percent;default:0;comment:一级分销比例" json:"brokerageFirstPercent"`
 	BrokerageSecondPercent      int           `gorm:"column:brokerage_second_percent;default:0;comment:二级分销比例" json:"brokerageSecondPercent"`
+	BrokerageEnabledCondition   int           `gorm:"column:brokerage_enabled_condition;default:1;comment:分销资格启用条件 1:人人分销 2:仅指定用户" json:"brokerageEnabledCondition"`
+	BrokerageBindMode           int           `gorm:"column:brokerage_bind_mode;default:1;comment:分销关系绑定模式 1:首次绑定 2:注册绑定 3:覆盖绑定" json:"brokerageBindMode"`
 	BrokeragePosterUrls         string        `gorm:"column:brokerage_poster_urls;default:'';comment:分销海报图" json:"brokeragePosterUrls"`
 	Creator                     string        `gorm:"column:creator;size:64;default:'';comment:创建者"`
 	CreateTime                  time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
