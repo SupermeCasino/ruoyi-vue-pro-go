@@ -2,6 +2,7 @@ package promotion
 
 import (
 	"context"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
@@ -9,6 +10,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
 )
 
 type DiyPageService interface {
@@ -37,13 +39,16 @@ func (s *diyPageService) CreateDiyPage(ctx context.Context, req req.DiyPageCreat
 	if _, err := s.templateSvc.GetDiyTemplate(ctx, req.TemplateID); err != nil {
 		return 0, err
 	}
+	if err := s.validateNameUnique(ctx, 0, req.TemplateID, req.Name); err != nil {
+		return 0, err
+	}
 
 	page := &promotion.PromotionDiyPage{
-		TemplateID: req.TemplateID,
-		Name:       req.Name,
-		Remark:     req.Remark,
-		Status:     req.Status,
-		Property:   req.Property,
+		TemplateID:     req.TemplateID,
+		Name:           req.Name,
+		Remark:         req.Remark,
+		PreviewPicUrls: types.StringListFromCSV(req.PreviewPicUrls),
+		Property:       req.Property,
 	}
 	err := s.q.PromotionDiyPage.WithContext(ctx).Create(page)
 	return page.ID, err
@@ -58,13 +63,16 @@ func (s *diyPageService) UpdateDiyPage(ctx context.Context, req req.DiyPageUpdat
 	if _, err := s.templateSvc.GetDiyTemplate(ctx, req.TemplateID); err != nil {
 		return err
 	}
+	if err := s.validateNameUnique(ctx, req.ID, req.TemplateID, req.Name); err != nil {
+		return err
+	}
 
 	_, err = s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.ID.Eq(req.ID)).Updates(promotion.PromotionDiyPage{
-		TemplateID: req.TemplateID,
-		Name:       req.Name,
-		Remark:     req.Remark,
-		Status:     req.Status,
-		Property:   req.Property,
+		TemplateID:     req.TemplateID,
+		Name:           req.Name,
+		Remark:         req.Remark,
+		PreviewPicUrls: types.StringListFromCSV(req.PreviewPicUrls),
+		Property:       req.Property,
 	})
 	return err
 }
@@ -92,8 +100,10 @@ func (s *diyPageService) GetDiyPagePage(ctx context.Context, req req.DiyPagePage
 	if req.Name != "" {
 		do = do.Where(q.Name.Like("%" + req.Name + "%"))
 	}
-	if req.Status != nil {
-		do = do.Where(q.Status.Eq(*req.Status))
+	if len(req.CreateTime) == 2 {
+		startTime, _ := time.ParseInLocation("2006-01-02 15:04:05", req.CreateTime[0], time.Local)
+		endTime, _ := time.ParseInLocation("2006-01-02 15:04:05", req.CreateTime[1], time.Local)
+		do = do.Where(q.CreateTime.Between(startTime, endTime))
 	}
 
 	list, total, err := do.Order(q.ID.Desc()).FindByPage(req.GetOffset(), req.GetLimit())
@@ -150,6 +160,22 @@ func (s *diyPageService) GetDiyPageByTemplateId(ctx context.Context, templateId 
 
 // Helpers
 
+func (s *diyPageService) validateNameUnique(ctx context.Context, id int64, templateId int64, name string) error {
+	q := s.q.PromotionDiyPage
+	do := q.WithContext(ctx).Where(q.TemplateID.Eq(templateId), q.Name.Eq(name))
+	if id > 0 {
+		do = do.Where(q.ID.Neq(id))
+	}
+	count, err := do.Count()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.NewBizError(400, "页面名称已存在")
+	}
+	return nil
+}
+
 func (s *diyPageService) validateDiyPageExists(ctx context.Context, id int64) (*promotion.PromotionDiyPage, error) {
 	page, err := s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.ID.Eq(id)).First()
 	if err != nil {
@@ -160,12 +186,12 @@ func (s *diyPageService) validateDiyPageExists(ctx context.Context, id int64) (*
 
 func (s *diyPageService) convertDiyPageToResp(item *promotion.PromotionDiyPage) *resp.DiyPageResp {
 	return &resp.DiyPageResp{
-		ID:         item.ID,
-		TemplateID: item.TemplateID,
-		Name:       item.Name,
-		Remark:     item.Remark,
-		Status:     item.Status,
-		Property:   item.Property,
-		CreateTime: item.CreateTime,
+		ID:             item.ID,
+		TemplateID:     item.TemplateID,
+		Name:           item.Name,
+		Remark:         item.Remark,
+		PreviewPicUrls: []string(item.PreviewPicUrls),
+		Property:       item.Property,
+		CreateTime:     item.CreateTime,
 	}
 }
