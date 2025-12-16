@@ -21,6 +21,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -123,6 +124,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	diyTemplateHandler *promotionAdmin.DiyTemplateHandler,
 	diyPageHandler *promotionAdmin.DiyPageHandler,
 	appDiyPageHandler *promotionApp.AppDiyPageHandler,
+	appDiyTemplateHandler *promotionApp.AppDiyTemplateHandler,
 	// Kefu
 	kefuHandler *promotionAdmin.KefuHandler,
 	appKefuHandler *promotionApp.AppKefuHandler,
@@ -154,6 +156,11 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	r := gin.New()
 	r.Use(middleware.Recovery())
 	r.Use(middleware.ErrorHandler())
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"*"},
+		AllowHeaders:    []string{"*"},
+	}))
 	r.Use(gin.Logger())
 	// 注入 gin.Context 到 request context，供 GORM Hook 使用
 	r.Use(middleware.InjectContext())
@@ -232,6 +239,8 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 
 	// App 模块 (移动端)
 	RegisterAppRoutes(r,
+		// System
+		tenantHandler,
 		// Member
 		appAuthHandler, appMemberUserHandler, appMemberAddressHandler,
 		appMemberPointRecordHandler, appMemberSignInRecordHandler,
@@ -241,7 +250,11 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		// Trade
 		appCartHandler, appTradeOrderHandler, appTradeAfterSaleHandler, appTradeConfigHandler,
 		// Promotion
-		appCouponHandler, appBannerHandler, appArticleHandler, appDiyPageHandler, appKefuHandler,
+		appCouponHandler, appBannerHandler, appArticleHandler, // DIY
+		appDiyPageHandler,
+		appDiyTemplateHandler,
+		// Kefu
+		appKefuHandler,
 		appCombinationActivityHandler, appCombinationRecordHandler,
 		appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler,
 		appBrokerageUserHandler,

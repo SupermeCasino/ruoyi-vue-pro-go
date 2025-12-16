@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
 	memberApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
 	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
 	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
@@ -13,6 +14,8 @@ import (
 
 // RegisterAppRoutes 注册 App 端路由
 func RegisterAppRoutes(engine *gin.Engine,
+	// System
+	tenantHandler *handler.TenantHandler,
 	// Member
 	appAuthHandler *memberApp.AppAuthHandler,
 	appMemberUserHandler *memberApp.AppMemberUserHandler,
@@ -33,7 +36,10 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appCouponHandler *promotionApp.AppCouponHandler,
 	appBannerHandler *promotionApp.AppBannerHandler,
 	appArticleHandler *promotionApp.AppArticleHandler,
+	// DIY
 	appDiyPageHandler *promotionApp.AppDiyPageHandler,
+	appDiyTemplateHandler *promotionApp.AppDiyTemplateHandler,
+	// Kefu
 	appKefuHandler *promotionApp.AppKefuHandler,
 	appCombinationActivityHandler *promotionApp.AppCombinationActivityHandler,
 	appCombinationRecordHandler *promotionApp.AppCombinationRecordHandler,
@@ -47,6 +53,16 @@ func RegisterAppRoutes(engine *gin.Engine,
 ) {
 	appGroup := engine.Group("/app-api")
 	{
+		// ========== System ==========
+		systemGroup := appGroup.Group("/system")
+		{
+			// Tenant
+			tenantGroup := systemGroup.Group("/tenant")
+			{
+				tenantGroup.GET("/get-by-website", tenantHandler.GetTenantByWebsite)
+			}
+		}
+
 		// ========== Member ==========
 		memberGroup := appGroup.Group("/member")
 		{
@@ -241,7 +257,12 @@ func RegisterAppRoutes(engine *gin.Engine,
 				articleGroup.GET("/get", appArticleHandler.GetArticle)
 			}
 
-			// DIY Page (Public)
+			// DIY Page (Public)			// DIY
+			diyTemplateGroup := promotionGroup.Group("/diy-template")
+			{
+				diyTemplateGroup.GET("/used", appDiyTemplateHandler.GetUsedDiyTemplate)
+				diyTemplateGroup.GET("/get", appDiyTemplateHandler.GetDiyTemplate)
+			}
 			diyPageGroup := promotionGroup.Group("/diy-page")
 			{
 				diyPageGroup.GET("/get", appDiyPageHandler.GetDiyPage)
