@@ -164,6 +164,7 @@ func InitApp() (*gin.Engine, error) {
 		productHandler.NewProductBrowseHistoryHandler,
 
 		// App handlers
+		productApp.NewAppCategoryHandler,
 		productApp.NewAppProductFavoriteHandler,
 		productApp.NewAppProductBrowseHistoryHandler,
 		productApp.NewAppProductSpuHandler,

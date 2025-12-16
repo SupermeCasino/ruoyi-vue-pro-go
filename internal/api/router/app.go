@@ -23,6 +23,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appMemberPointRecordHandler *memberApp.AppMemberPointRecordHandler,
 	appMemberSignInRecordHandler *memberApp.AppMemberSignInRecordHandler,
 	// Product
+	appProductCategoryHandler *productApp.AppCategoryHandler,
 	appProductFavoriteHandler *productApp.AppProductFavoriteHandler,
 	appProductBrowseHistoryHandler *productApp.AppProductBrowseHistoryHandler,
 	appProductSpuHandler *productApp.AppProductSpuHandler,
@@ -125,6 +126,13 @@ func RegisterAppRoutes(engine *gin.Engine,
 		// ========== Product ==========
 		productGroup := appGroup.Group("/product")
 		{
+			// Category
+			categoryGroup := productGroup.Group("/category")
+			{
+				categoryGroup.GET("/list", appProductCategoryHandler.GetCategoryList)
+				categoryGroup.GET("/list-by-ids", appProductCategoryHandler.GetCategoryListByIds)
+			}
+
 			// Favorite (Auth Required)
 			favoriteGroup := productGroup.Group("/favorite")
 			favoriteGroup.Use(middleware.Auth())
@@ -149,6 +157,8 @@ func RegisterAppRoutes(engine *gin.Engine,
 			spuGroup := productGroup.Group("/spu")
 			{
 				spuGroup.GET("/get-detail", appProductSpuHandler.GetSpuDetail)
+				spuGroup.GET("/page", appProductSpuHandler.GetSpuPage)
+				spuGroup.GET("/list-by-ids", appProductSpuHandler.GetSpuList)
 			}
 
 			// Comment
