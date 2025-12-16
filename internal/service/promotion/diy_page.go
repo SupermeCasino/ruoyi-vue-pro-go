@@ -20,6 +20,7 @@ type DiyPageService interface {
 	GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*pagination.PageResult[*resp.DiyPageResp], error)
 	GetDiyPageProperty(ctx context.Context, id int64) (string, error)
 	UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error
+	GetDiyPageByTemplateId(ctx context.Context, templateId int64) ([]*promotion.PromotionDiyPage, error)
 }
 
 type diyPageService struct {
@@ -141,6 +142,10 @@ func (s *diyPageService) UpdateDiyPageProperty(ctx context.Context, req req.DiyP
 		Property: req.Property,
 	})
 	return err
+}
+
+func (s *diyPageService) GetDiyPageByTemplateId(ctx context.Context, templateId int64) ([]*promotion.PromotionDiyPage, error) {
+	return s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.TemplateID.Eq(templateId)).Find()
 }
 
 // Helpers

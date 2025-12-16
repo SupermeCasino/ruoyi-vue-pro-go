@@ -6,14 +6,15 @@ import (
 
 // PromotionDiyTemplate 装修模板表
 type PromotionDiyTemplate struct {
-	ID           int64  `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
-	Name         string `gorm:"column:name;type:varchar(64);not null;comment:模板名称" json:"name"`
-	CoverImage   string `gorm:"column:cover_image;type:varchar(255);comment:封面图片" json:"coverImage"`
-	PreviewImage string `gorm:"column:preview_image;type:varchar(255);comment:预览图片" json:"previewImage"`
-	Status       int    `gorm:"column:status;type:tinyint;not null;default:0;comment:状态" json:"status"` // 0-开启 1-关闭
-	Property     string `gorm:"column:property;type:longtext;comment:模板属性" json:"property"`             // JSON
-	Sort         int    `gorm:"column:sort;type:int;not null;default:0;comment:排序" json:"sort"`
-	Remark       string `gorm:"column:remark;type:varchar(255);comment:备注" json:"remark"`
+	ID           int64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
+	Name         string    `gorm:"column:name;type:varchar(64);not null;comment:模板名称" json:"name"`
+	CoverImage   string    `gorm:"column:cover_image;type:varchar(255);comment:封面图片" json:"coverImage"`
+	PreviewImage string    `gorm:"column:preview_image;type:varchar(255);comment:预览图片" json:"previewImage"`
+	Property     string    `gorm:"column:property;type:longtext;comment:模板属性" json:"property"` // JSON
+	Sort         int       `gorm:"column:sort;type:int;not null;default:0;comment:排序" json:"sort"`
+	Remark       string    `gorm:"column:remark;type:varchar(255);comment:备注" json:"remark"`
+	Used         bool      `gorm:"column:used;type:bit(1);not null;default:0;comment:是否使用" json:"used"`
+	UsedTime     time.Time `gorm:"column:used_time;comment:使用时间" json:"usedTime"`
 
 	Creator    string    `gorm:"column:creator" json:"creator"`
 	CreateTime time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
