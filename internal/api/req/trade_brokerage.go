@@ -1,6 +1,6 @@
 package req
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 // BrokerageUserCreateReq 创建分销用户 Request
 type BrokerageUserCreateReq struct {

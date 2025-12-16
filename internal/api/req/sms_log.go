@@ -1,7 +1,7 @@
 package req
 
 import (
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 // SmsLogPageReq 短信日志分页 Request

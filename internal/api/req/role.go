@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 // --- Role ---

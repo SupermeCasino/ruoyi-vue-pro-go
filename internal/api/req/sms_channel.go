@@ -1,6 +1,6 @@
 package req
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 // SmsChannelSaveReq 短信渠道创建/修改 Request
 type SmsChannelSaveReq struct {

@@ -1,6 +1,6 @@
 package req
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 // MemberSignInConfigCreateReq 签到规则创建请求
 type MemberSignInConfigCreateReq struct {

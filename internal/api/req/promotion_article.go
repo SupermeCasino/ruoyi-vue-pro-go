@@ -1,7 +1,7 @@
 package req
 
 import (
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 // ArticleCategoryCreateReq 文章分类创建请求

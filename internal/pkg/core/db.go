@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"backend-go/pkg/config"
-	"backend-go/pkg/logger"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
 
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"

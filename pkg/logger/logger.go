@@ -3,7 +3,7 @@ package logger
 import (
 	"os"
 
-	"backend-go/pkg/config"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

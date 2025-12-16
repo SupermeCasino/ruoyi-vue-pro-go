@@ -1,7 +1,7 @@
 package resp
 
 import (
-	"backend-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"time"
 )
 

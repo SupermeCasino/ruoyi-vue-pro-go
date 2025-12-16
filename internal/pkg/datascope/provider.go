@@ -1,7 +1,7 @@
 package datascope
 
 import (
-	"backend-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"

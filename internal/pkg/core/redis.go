@@ -3,8 +3,8 @@ package core
 import (
 	"context"
 
-	"backend-go/pkg/config"
-	"backend-go/pkg/logger"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"

@@ -1,10 +1,10 @@
 package datascope
 
 import (
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service"
 	"context"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"

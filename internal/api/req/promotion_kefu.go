@@ -1,7 +1,7 @@
 package req
 
 import (
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 // KefuMessageCreateReq 发送消息请求

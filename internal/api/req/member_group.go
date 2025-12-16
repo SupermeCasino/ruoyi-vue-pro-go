@@ -1,7 +1,7 @@
 package req
 
 import (
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 // MemberGroupCreateReq 创建用户分组 Request

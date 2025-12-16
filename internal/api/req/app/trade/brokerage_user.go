@@ -1,6 +1,6 @@
 package trade
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 // AppBrokerageUserBindReqVO 绑定推广员 Request
 type AppBrokerageUserBindReqVO struct {

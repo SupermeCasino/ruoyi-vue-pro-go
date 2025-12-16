@@ -1,6 +1,6 @@
 package req
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 type MemberLevelCreateReq struct {
 	Name            string `json:"name" binding:"required"`

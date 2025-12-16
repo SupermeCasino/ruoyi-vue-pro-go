@@ -1,6 +1,6 @@
 package req
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 // FileConfigSaveReq 文件配置创建/修改 Request
 type FileConfigSaveReq struct {

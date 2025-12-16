@@ -1,7 +1,7 @@
 package req
 
 import (
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 // SmsTemplateSaveReq 短信模板创建/修改 Request

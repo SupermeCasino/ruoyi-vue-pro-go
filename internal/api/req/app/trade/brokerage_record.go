@@ -1,6 +1,6 @@
 package trade
 
-import "backend-go/internal/pkg/core"
+import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 type AppBrokerageRecordPageReqVO struct {
 	core.PageParam
