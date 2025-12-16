@@ -12,11 +12,13 @@ import (
 
 type SmsTemplateHandler struct {
 	smsTemplateSvc *service.SmsTemplateService
+	smsSendSvc     *service.SmsSendService
 }
 
-func NewSmsTemplateHandler(smsTemplateSvc *service.SmsTemplateService) *SmsTemplateHandler {
+func NewSmsTemplateHandler(smsTemplateSvc *service.SmsTemplateService, smsSendSvc *service.SmsSendService) *SmsTemplateHandler {
 	return &SmsTemplateHandler{
 		smsTemplateSvc: smsTemplateSvc,
+		smsSendSvc:     smsSendSvc,
 	}
 }
 
@@ -93,4 +95,22 @@ func (h *SmsTemplateHandler) GetSmsTemplatePage(c *gin.Context) {
 		return
 	}
 	c.JSON(200, response.Success(res))
+}
+
+// SendSms 发送短信
+func (h *SmsTemplateHandler) SendSms(c *gin.Context) {
+	var req req.SmsTemplateSendReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, response.Error(400, err.Error()))
+		return
+	}
+	// userId 暂传 0，或从 context 获取当前 Admin 登录用户
+	userId := int64(0)
+	// TODO: 获取当前登录用户ID
+	logId, err := h.smsSendSvc.SendSingleSmsToAdmin(c, req.Mobile, userId, req.TemplateCode, req.TemplateParams)
+	if err != nil {
+		c.JSON(500, response.Error(500, err.Error()))
+		return
+	}
+	c.JSON(200, response.Success(logId))
 }

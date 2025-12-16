@@ -28,3 +28,10 @@ type SmsTemplatePageReq struct {
 	ChannelId     *int64   `form:"channelId"`
 	CreateTime    []string `form:"createTime[]"`
 }
+
+// SmsTemplateSendReq 短信模板发送 Request
+type SmsTemplateSendReq struct {
+	Mobile         string                 `json:"mobile" binding:"required"`
+	TemplateCode   string                 `json:"templateCode" binding:"required"`
+	TemplateParams map[string]interface{} `json:"templateParams"`
+}
