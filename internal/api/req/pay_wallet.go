@@ -59,3 +59,8 @@ type PayWalletPageReq struct {
 	UserID   int64 `form:"userId"`
 	UserType int   `form:"userType"`
 }
+
+type PayWalletUpdateBalanceReq struct {
+	UserID  int64 `json:"userId" binding:"required"`
+	Balance int   `json:"balance" binding:"required"` // Unit: fen, can be negative
+}

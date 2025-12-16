@@ -44,3 +44,12 @@ func IsPayTransferStatusWaitingOrProcessing(status int) bool {
 func IsPayTransferStatusSuccessOrClosed(status int) bool {
 	return IsPayTransferStatusSuccess(status) || IsPayTransferStatusClosed(status)
 }
+
+// PayWalletBizType 钱包业务类型 (对齐 Java: PayWalletBizTypeEnum)
+const (
+	PayWalletBizTypeRecharge       = 1 // 充值
+	PayWalletBizTypeRechargeRefund = 2 // 充值退款
+	PayWalletBizTypePayment        = 3 // 支付
+	PayWalletBizTypePaymentRefund  = 4 // 支付退款
+	PayWalletBizTypeUpdateBalance  = 5 // 更新余额 (Admin)
+)
