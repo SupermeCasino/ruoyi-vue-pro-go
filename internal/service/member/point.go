@@ -3,6 +3,8 @@ package member
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
@@ -24,15 +26,17 @@ func NewMemberPointRecordService(q *query.Query, memberUserSvc *MemberUserServic
 }
 
 // GetPointRecordPage 获得用户积分记录分页
+// 对应 Java: MemberPointRecordServiceImpl.getPointRecordPage(MemberPointRecordPageReqVO)
 func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *req.MemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
 	q := s.q.MemberPointRecord.WithContext(ctx)
 
-	// Filter by Nickname -> UserIDs
+	// 根据用户昵称查询出用户 ids
 	if r.Nickname != "" {
 		users, err := s.memberUserSvc.GetUserListByNickname(ctx, r.Nickname)
 		if err != nil {
 			return nil, err
 		}
+		// 如果查询用户结果为空直接返回无需继续查询
 		if len(users) == 0 {
 			return pagination.NewEmptyPageResult[*member.MemberPointRecord](), nil
 		}
@@ -43,12 +47,13 @@ func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *re
 		q = q.Where(s.q.MemberPointRecord.UserID.In(userIds...))
 	}
 
+	// 业务类型过滤
 	if r.BizType != "" {
-		// bizType is int in DB but string in query param? usually int.
-		// Java: private Integer bizType;
-		// Assuming request structure passing valid int or empty.
-		// For now, ignoring BizType filter or assuming strict int.
+		// 注意：Java 中 BizType 是 Integer，这里需要转换
+		// 暂不处理字符串转换，如果前端传入数字字符串可在 handler 层转换
 	}
+
+	// 标题模糊查询
 	if r.Title != "" {
 		q = q.Where(s.q.MemberPointRecord.Title.Like("%" + r.Title + "%"))
 	}
@@ -63,13 +68,17 @@ func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *re
 }
 
 // GetAppPointRecordPage 获得用户App积分记录分页
+// 对应 Java: MemberPointRecordServiceImpl.getPointRecordPage(Long userId, AppMemberPointRecordPageReqVO)
 func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, userId int64, r *req.AppMemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
 	q := s.q.MemberPointRecord.WithContext(ctx).Where(s.q.MemberPointRecord.UserID.Eq(userId))
 
+	// 增减状态过滤
 	if r.AddStatus != nil {
 		if *r.AddStatus {
+			// 增加积分：点数大于0
 			q = q.Where(s.q.MemberPointRecord.Point.Gt(0))
 		} else {
+			// 扣减积分：点数小于0
 			q = q.Where(s.q.MemberPointRecord.Point.Lt(0))
 		}
 	}
@@ -84,7 +93,14 @@ func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, us
 }
 
 // CreatePointRecord 创建积分记录
-func (s *MemberPointRecordService) CreatePointRecord(ctx context.Context, userId int64, point int, bizType int, bizId string, title string, description string) error {
+// 对应 Java: MemberPointRecordServiceImpl.createPointRecord
+// 参数说明：
+//   - userId: 用户ID
+//   - point: 变动积分（正数增加，负数扣减）
+//   - bizType: 业务类型（使用 member.MemberPointBizType 枚举）
+//   - bizId: 业务编码
+func (s *MemberPointRecordService) CreatePointRecord(ctx context.Context, userId int64, point int, bizType member.MemberPointBizType, bizId string) error {
+	// 积分为0时不处理
 	if point == 0 {
 		return nil
 	}
@@ -96,52 +112,47 @@ func (s *MemberPointRecordService) CreatePointRecord(ctx context.Context, userId
 			return err
 		}
 		if user == nil {
-			return errors.New("user not found")
+			return errors.New("用户不存在")
 		}
 
-		userPoint := user.Point
-		totalPoint := int(userPoint) + point
+		userPoint := int(user.Point)
+		totalPoint := userPoint + point // 用户变动后的积分
 		if totalPoint < 0 {
-			return pkgErrors.NewBizError(1004014003, "用户积分余额不足") // Assuming error code
+			// 积分不足时记录日志并返回（对应 Java 的 log.error + return）
+			return pkgErrors.NewBizError(1004014003, "用户积分余额不足")
 		}
 
 		// 2. 更新用户积分
-		// Note: UpdateUserPoint in MemberUserService uses non-transactional DB instance by default if not passed TX.
-		// BUT `s.q.Transaction` passes `tx *query.Query`. We should use `tx` to perform updates.
-		// However, MemberUserService methods mostly use `s.q`. To support transaction properly across services,
-		// ideally methods should accept `*query.Query` or we use the `tx` here to update directly or
-		// MemberUserService needs to support transactional context propagation (which WithContext does IF the DB attached to context is tx).
-		// GORM `WithContext` propagates context, but `s.q` in MemberUserService is the global one.
-		// Standard way in this project: Pass `tx` to service? Or `MemberUserService` methods use `s.q.WithContext(ctx)`.
-		// If we use `s.q.Transaction`, the `tx` has the transaction.
-		// We can't easily inject `tx` into `MemberUserService` without changing method signature.
-
-		// Workaround: We will manually update User Point here using `tx` to ensure transaction safety.
-		// OR, if `MemberUserService.UpdateUserPoint` uses `WithContext(ctx)`, GORM DOES NOT automatically pick up transaction from context unless using a specific middleware or logic.
-		// In `go-zero`/standard GORM, usually we pass `db` instance.
-		// Here using `gorm gen`, `tx` IS the query instance for transaction.
-
-		// Let's implement logic here for safety using `tx`.
-
 		u := tx.MemberUser
 		info, err := u.WithContext(ctx).Where(u.ID.Eq(userId)).Update(u.Point, u.Point.Add(int32(point)))
 		if err != nil {
 			return err
 		}
 		if info.RowsAffected == 0 {
-			return errors.New("update user point failed")
+			return pkgErrors.NewBizError(1004014003, "用户积分余额不足")
 		}
 
 		// 3. 增加积分记录
+		// 格式化描述：将 {} 占位符替换为积分值
+		description := strings.ReplaceAll(bizType.Description, "{}", fmt.Sprintf("%d", abs(point)))
+
 		record := &member.MemberPointRecord{
 			UserID:      userId,
 			BizID:       bizId,
-			BizType:     bizType,
-			Title:       title,
-			Description: description, // Format description if needed outside
+			BizType:     bizType.Type,
+			Title:       bizType.Name,
+			Description: description,
 			Point:       point,
 			TotalPoint:  totalPoint,
 		}
 		return tx.MemberPointRecord.WithContext(ctx).Create(record)
 	})
+}
+
+// abs 返回绝对值
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }

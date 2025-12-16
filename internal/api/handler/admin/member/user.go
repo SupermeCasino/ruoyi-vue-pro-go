@@ -75,17 +75,11 @@ func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	// Java: memberPointRecordService.createPointRecord(updateReqVO.getId(), updateReqVO.getPoint(),
-	//       MemberPointBizTypeEnum.ADMIN, String.valueOf(getLoginUserId()));
-	// MemberPointBizTypeEnum: SIGN=1, ADMIN=2
-	bizType := 2 // ADMIN
+	// 对应 Java: memberPointRecordService.createPointRecord(updateReqVO.getId(), updateReqVO.getPoint(),
+	//           MemberPointBizTypeEnum.ADMIN, String.valueOf(getLoginUserId()));
 	bizId := utils.ToString(context.GetLoginUserID(c))
-	// 标题和描述在 Java 中由 MemberPointBizTypeEnum.ADMIN 的 name/description 字段提供
-	// ADMIN.name = "管理员修改", ADMIN.description = "管理员修改 {} 积分"
-	title := "管理员修改"
-	desc := "管理员修改积分"
 
-	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, bizType, bizId, title, desc)
+	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, memberModel.MemberPointBizTypeAdmin, bizId)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

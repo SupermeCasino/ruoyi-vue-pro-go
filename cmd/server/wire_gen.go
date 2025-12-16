@@ -268,7 +268,7 @@ func InitApp() (*gin.Engine, error) {
 	brokerageStatisticsService := service.NewBrokerageStatisticsService(brokerageStatisticsRepository)
 	tradeStatisticsService := service.NewTradeStatisticsService(tradeStatisticsRepository, tradeOrderStatisticsService, afterSaleStatisticsService, brokerageStatisticsService)
 	tradeStatisticsHandler := admin.NewTradeStatisticsHandler(tradeStatisticsService, tradeOrderStatisticsService, afterSaleStatisticsService, brokerageStatisticsService)
-	productStatisticsRepository := product4.NewProductStatisticsRepository(query)
+	productStatisticsRepository := product4.NewProductStatisticsRepository(query, db)
 	productStatisticsService := service.NewProductStatisticsService(productStatisticsRepository)
 	productStatisticsHandler := admin.NewProductStatisticsHandler(productStatisticsService, productSpuService)
 	memberStatisticsRepository := repo.NewMemberStatisticsRepository(query, db)

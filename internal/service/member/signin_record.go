@@ -162,22 +162,20 @@ func (s *MemberSignInRecordService) CreateSignInRecord(ctx context.Context, user
 	}
 
 	err = s.q.Transaction(func(tx *query.Query) error {
-		// 1. Create Record
+		// 1. 创建签到记录
 		if err := tx.MemberSignInRecord.WithContext(ctx).Create(record); err != nil {
 			return err
 		}
 
-		// 2. Add Point
+		// 2. 增加积分
 		if rewardPoint > 0 {
-			// Using "1" as BizType for SIGN_IN as defined in MemberPointBizTypeEnum.SIGN
-			// Assuming Enum value 1 matches.
-			// BizId is record ID.
-			if err := s.pointRecordSvc.CreatePointRecord(ctx, userId, rewardPoint, 1, utils.ToString(record.ID), "签到", "签到奖励"); err != nil {
+			// 使用签到业务类型枚举
+			if err := s.pointRecordSvc.CreatePointRecord(ctx, userId, rewardPoint, member.MemberPointBizTypeSign, utils.ToString(record.ID)); err != nil {
 				return err
 			}
 		}
 
-		// 3. Add Experience
+		// 3. 增加经验值
 		if rewardExp > 0 {
 			// Using "1" as BizType for SIGN_IN as defined in MemberExperienceBizTypeEnum.SIGN_IN
 			if err := s.memberLevelSvc.AddExperience(ctx, userId, rewardExp, 1, utils.ToString(record.ID)); err != nil {
