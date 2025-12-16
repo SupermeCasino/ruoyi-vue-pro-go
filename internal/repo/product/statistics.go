@@ -1,10 +1,10 @@
 package product
 
 import (
-	"backend-go/internal/api/resp"
-	"backend-go/internal/repo/query"
-	"backend-go/internal/service"
 	"context"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"time"
 )
 

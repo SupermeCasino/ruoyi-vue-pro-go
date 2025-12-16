@@ -1,9 +1,9 @@
 package repo
 
 import (
-	"backend-go/internal/model/trade"
-	"backend-go/internal/repo/query"
 	"context"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
 
 type TradeOrderLogRepository struct {

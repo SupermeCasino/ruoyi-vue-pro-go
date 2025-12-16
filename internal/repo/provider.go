@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"backend-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 
 	"gorm.io/gorm"
 )

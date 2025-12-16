@@ -1,10 +1,10 @@
 package repo
 
 import (
-	"backend-go/internal/model/trade"
-	"backend-go/internal/repo/query"
-	"backend-go/internal/service"
 	"context"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"time"
 )
 
