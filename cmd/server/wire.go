@@ -23,7 +23,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
-	"github.com/wxlbd/ruoyi-mall-go/internal/repo"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo" // Pay Repo
+	payRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
+
 	productRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/product" // Product Statistics Repo
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -191,7 +193,7 @@ func InitApp() (*gin.Engine, error) {
 		// Brokerage
 		tradeBrokerageSvc.NewBrokerageRecordService,
 		tradeBrokerageSvc.NewBrokerageWithdrawService, // Added
-		paySvc.NewPayTransferService,                  // Placeholder
+
 		// Wallet Services
 		payWalletSvc.NewPayWalletService,
 		payWalletSvc.NewPayWalletRechargeService,
@@ -203,6 +205,10 @@ func InitApp() (*gin.Engine, error) {
 		appBrokerage.NewAppBrokerageUserHandler, // Added
 		appBrokerage.NewAppBrokerageRecordHandler,
 		appBrokerage.NewAppBrokerageWithdrawHandler,
+
+		// Pay Repositories
+		payRepo.NewPayTransferRepository,
+		payRepo.NewPayNoRedisDAO,
 
 		// Statistics
 		repo.NewTradeStatisticsRepository,
@@ -284,6 +290,7 @@ func InitApp() (*gin.Engine, error) {
 		paySvc.NewPayOrderService,
 		paySvc.NewPayRefundService,
 		paySvc.NewPayNotifyService,
+		paySvc.NewPayTransferService,
 		client.NewPayClientFactory,
 
 		deliveryClient.NewExpressClientFactory, // Added ExpressClientFactory
@@ -294,6 +301,7 @@ func InitApp() (*gin.Engine, error) {
 		payAdmin.NewPayOrderHandler,
 		payAdmin.NewPayRefundHandler,
 		payAdmin.NewPayNotifyHandler,
+		payAdmin.NewPayTransferHandler,
 		// Wallet Handlers
 		payWallet.NewPayWalletHandler,
 		payWallet.NewPayWalletRechargeHandler,
