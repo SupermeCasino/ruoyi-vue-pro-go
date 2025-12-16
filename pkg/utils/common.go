@@ -62,3 +62,32 @@ func ToString(v interface{}) string {
 		return ""
 	}
 }
+
+// SplitToInt64 split string to int64 slice
+func SplitToInt64(s string) []int64 {
+	if s == "" {
+		return []int64{}
+	}
+	// split by comma
+	arr := make([]int64, 0)
+	// manual split to avoid loop import if strings is needed
+	// But strings is standard lib.
+	// Re-implementing simplified split by comma.
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == ',' {
+			val := ParseInt64(s[start:i])
+			if val > 0 {
+				arr = append(arr, val)
+			}
+			start = i + 1
+		}
+	}
+	if start < len(s) {
+		val := ParseInt64(s[start:])
+		if val > 0 {
+			arr = append(arr, val)
+		}
+	}
+	return arr
+}
