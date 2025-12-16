@@ -18,13 +18,20 @@ type AppTradeOrderHandler struct {
 	svc          *trade.TradeOrderUpdateService
 	querySvc     *trade.TradeOrderQueryService
 	afterSaleSvc *trade.TradeAfterSaleService
+	priceSvc     *trade.TradePriceService
 }
 
-func NewAppTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.TradeOrderQueryService, afterSaleSvc *trade.TradeAfterSaleService) *AppTradeOrderHandler {
+func NewAppTradeOrderHandler(
+	svc *trade.TradeOrderUpdateService,
+	querySvc *trade.TradeOrderQueryService,
+	afterSaleSvc *trade.TradeAfterSaleService,
+	priceSvc *trade.TradePriceService,
+) *AppTradeOrderHandler {
 	return &AppTradeOrderHandler{
 		svc:          svc,
 		querySvc:     querySvc,
 		afterSaleSvc: afterSaleSvc,
+		priceSvc:     priceSvc,
 	}
 }
 
@@ -397,4 +404,71 @@ func (h *AppTradeOrderHandler) ReceiveOrder(c *gin.Context) {
 		return
 	}
 	response.WriteSuccess(c, true)
+}
+
+// SettlementProduct 获得商品结算信息
+func (h *AppTradeOrderHandler) SettlementProduct(c *gin.Context) {
+	// spuIds=1,2,3 or spuIds=1&spuIds=2
+	var req struct {
+		SpuIDs []int64 `form:"spuIds"`
+	}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.WriteBizError(c, errors.ErrParam) // FIXED: syntax error previously here? No, duplicate WriteSuccess logic in partial
+		return
+	}
+	if len(req.SpuIDs) == 0 {
+		// Try parsing from string "spuIds" if user sends "1,2,3"
+		str := c.Query("spuIds")
+		if str != "" {
+			req.SpuIDs = utils.SplitToInt64(str)
+		}
+	}
+
+	res, err := h.priceSvc.CalculateProductPrice(c, context.GetUserId(c), req.SpuIDs)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, res)
+}
+
+// GetOrderItem 获得交易订单项
+func (h *AppTradeOrderHandler) GetOrderItem(c *gin.Context) {
+	id := utils.ParseInt64(c.Query("id"))
+	if id == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	item, err := h.querySvc.GetOrderItem(c, context.GetUserId(c), id)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	properties := make([]resp.ProductSkuPropertyResp, len(item.Properties))
+	for j, p := range item.Properties {
+		properties[j] = resp.ProductSkuPropertyResp{
+			PropertyID:   p.PropertyID,
+			PropertyName: p.PropertyName,
+			ValueID:      p.ValueID,
+			ValueName:    p.ValueName,
+		}
+	}
+
+	res := resp.AppTradeOrderItemResp{
+		ID:              item.ID,
+		OrderID:         item.OrderID,
+		SpuID:           item.SpuID,
+		SpuName:         item.SpuName,
+		SkuID:           item.SkuID,
+		PicURL:          item.PicURL,
+		Count:           item.Count,
+		CommentStatus:   bool(item.CommentStatus),
+		Price:           item.Price,
+		PayPrice:        item.PayPrice,
+		AfterSaleID:     item.AfterSaleID,
+		AfterSaleStatus: item.AfterSaleStatus,
+		Properties:      properties,
+	}
+	response.WriteSuccess(c, res)
 }
