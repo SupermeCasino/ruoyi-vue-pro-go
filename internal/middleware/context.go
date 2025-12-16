@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +13,7 @@ import (
 func InjectContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 将 gin.Context 放入 request context
-		ctx := context.WithValue(c.Request.Context(), core.CtxGinContextKey, c)
+		ctx := context.WithValue(c.Request.Context(), pkgContext.CtxGinContextKey, c)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}

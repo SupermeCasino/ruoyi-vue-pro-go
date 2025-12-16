@@ -7,6 +7,7 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin"
 	member3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/member"
@@ -23,7 +24,6 @@ import (
 	brokerage3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
@@ -39,20 +39,20 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
-	"github.com/gin-gonic/gin"
-)
 
-import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
+
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
 // Injectors from wire.go:
 
 func InitApp() (*gin.Engine, error) {
-	db := core.InitDB()
-	redisClient := core.InitRedis()
+	db := database.InitDB()
+	redisClient := cache.InitRedis()
 	zapLogger := logger.NewLogger()
 	query := repo.NewQuery(db)
 	roleService := service.NewRoleService(query)

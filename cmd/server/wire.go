@@ -20,7 +20,6 @@ import (
 	appBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
@@ -39,6 +38,8 @@ import (
 	tradeBrokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
 	deliveryClient "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
 
+	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
@@ -47,8 +48,8 @@ import (
 
 func InitApp() (*gin.Engine, error) {
 	wire.Build(
-		core.InitDB,
-		core.InitRedis,
+		database.InitDB,
+		cache.InitRedis,
 		logger.NewLogger,
 		// Repo (GORM Gen)
 		repo.NewQuery,

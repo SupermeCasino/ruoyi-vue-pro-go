@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"bytes"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"io"
 	"log"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 
 	"github.com/gin-gonic/gin"
 )
@@ -57,7 +58,7 @@ func APIAccessLogMiddleware() gin.HandlerFunc {
 		duration := time.Since(startTime).Milliseconds()
 
 		// 获取登录用户信息
-		loginUser := core.GetLoginUser(c)
+		loginUser := context.GetLoginUser(c)
 		userID := int64(0)
 		if loginUser != nil {
 			userID = loginUser.UserID

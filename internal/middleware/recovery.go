@@ -7,8 +7,9 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -45,7 +46,7 @@ func Recovery() gin.HandlerFunc {
 				}
 
 				// 返回 500
-				c.JSON(http.StatusInternalServerError, core.Error(core.ServerErrCode, "系统异常，请联系管理员"))
+				c.JSON(http.StatusInternalServerError, response.Error(errors.ServerErrCode, "系统异常，请联系管理员"))
 				c.Abort()
 			}
 		}()
@@ -55,4 +56,4 @@ func Recovery() gin.HandlerFunc {
 
 // BizErrorHandle 业务错误处理中间件 (可选，如果想把 controller 的 return error 统一处理)
 // 但 Gin 的 handler 签名没有 error 返回值。这里我们通常采用 c.Error() 机制或者封装 HandlerFunc
-// 简单起见，我们推荐 Controller 显式调用 core.Error 或 core.Success
+// 简单起见，我们推荐 Controller 显式调用 response.Error 或 response.Success

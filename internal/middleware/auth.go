@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,30 +33,30 @@ func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := obtainAuthorization(c)
 		if token == "" {
-			c.AbortWithStatusJSON(401, core.Error(401, "未登录"))
+			c.AbortWithStatusJSON(401, response.Error(401, "未登录"))
 			return
 		}
 
 		// 1. 先验证 JWT 格式和签名
 		claims, err := utils.ParseToken(token)
 		if err != nil {
-			c.AbortWithStatusJSON(401, core.Error(401, "Token无效"))
+			c.AbortWithStatusJSON(401, response.Error(401, "Token无效"))
 			return
 		}
 
 		// 2. 再检查 Redis 白名单（如果 Redis 可用）
-		if core.RDB != nil {
+		if cache.RDB != nil {
 			redisKey := fmt.Sprintf(RedisKeyAccessToken, token)
-			exists, err := core.RDB.Exists(c.Request.Context(), redisKey).Result()
+			exists, err := cache.RDB.Exists(c.Request.Context(), redisKey).Result()
 			if err == nil && exists == 0 {
 				// Token 不在白名单中（已登出）
-				c.AbortWithStatusJSON(401, core.Error(401, "Token已失效，请重新登录"))
+				c.AbortWithStatusJSON(401, response.Error(401, "Token已失效，请重新登录"))
 				return
 			}
 		}
 
 		// 3. 从 JWT Claims 构建 LoginUser（JWT 中已包含完整信息）
-		loginUser := &core.LoginUser{
+		loginUser := &context.LoginUser{
 			UserID:   claims.UserID,
 			UserType: claims.UserType,
 			TenantID: claims.TenantID,
@@ -62,7 +64,7 @@ func Auth() gin.HandlerFunc {
 		}
 
 		// 4. Set LoginUser to Context
-		core.SetLoginUser(c, loginUser)
+		context.SetLoginUser(c, loginUser)
 		c.Next()
 	}
 }

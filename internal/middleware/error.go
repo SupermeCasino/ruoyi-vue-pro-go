@@ -3,8 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,8 +21,8 @@ func ErrorHandler() gin.HandlerFunc {
 			err := c.Errors.Last().Err
 
 			// 1. 如果是业务异常
-			if bizErr, ok := err.(*core.BizError); ok {
-				c.JSON(http.StatusOK, core.Result[any]{
+			if bizErr, ok := err.(*errors.BizError); ok {
+				c.JSON(http.StatusOK, response.Result[any]{
 					Code: bizErr.Code,
 					Msg:  bizErr.Msg,
 					Data: nil,
@@ -31,7 +32,7 @@ func ErrorHandler() gin.HandlerFunc {
 
 			// 2. 如果是其他未知错误
 			logger.Error("internal server error", zap.Error(err), zap.String("path", c.Request.URL.Path))
-			c.JSON(http.StatusInternalServerError, core.Error(core.ServerErrCode, "系统内部异常"))
+			c.JSON(http.StatusInternalServerError, response.Error(errors.ServerErrCode, "系统内部异常"))
 		}
 	}
 }

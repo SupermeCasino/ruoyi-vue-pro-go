@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
@@ -28,16 +29,16 @@ func NewCasbinMiddleware(enforcer *casbin.Enforcer, permSvc *service.PermissionS
 // permission: 权限字符串，如 system:user:query
 func (m *CasbinMiddleware) RequirePermission(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := core.GetLoginUser(c)
+		user := context.GetLoginUser(c)
 		if user == nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, core.Error(401, "未登录"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response.Error(401, "未登录"))
 			return
 		}
 
 		// 1. 超级管理员直接放行
 		isSuper, err := m.permSvc.IsSuperAdmin(c.Request.Context(), user.UserID)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, core.Error(500, "判断超级管理员失败"))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response.Error(500, "判断超级管理员失败"))
 			return
 		}
 		if isSuper {
@@ -55,12 +56,12 @@ func (m *CasbinMiddleware) RequirePermission(permission string) gin.HandlerFunc 
 		sub := fmt.Sprintf("user:%d", user.UserID)
 		ok, err := m.enforcer.Enforce(sub, permission, "access")
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, core.Error(500, "权限校验错误"))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response.Error(500, "权限校验错误"))
 			return
 		}
 
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusForbidden, core.Error(403, "权限不足"))
+			c.AbortWithStatusJSON(http.StatusForbidden, response.Error(403, "权限不足"))
 			return
 		}
 

@@ -1,7 +1,8 @@
 package middleware
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -35,9 +36,9 @@ func HandleValidationError(c *gin.Context, err error) {
 		for _, fieldError := range validationErrors {
 			errMsg += fieldError.Field() + " " + fieldError.Tag() + "; "
 		}
-		c.JSON(200, core.Error(core.ParamErrCode, errMsg))
+		c.JSON(200, response.Error(errors.ParamErrCode, errMsg))
 		return
 	}
 
-	c.JSON(200, core.Error(core.ParamErrCode, "参数错误"))
+	c.JSON(200, response.Error(errors.ParamErrCode, "参数错误"))
 }
