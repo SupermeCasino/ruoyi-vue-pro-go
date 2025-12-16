@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	productModel "github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
@@ -510,4 +511,60 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 	respBO.Price.PayPrice += deliveryPrice
 
 	return respBO, nil
+}
+
+// CalculateProductPrice 计算商品的价格
+// 对应 Java: TradePriceServiceImpl#calculateProductPrice
+func (s *TradePriceService) CalculateProductPrice(ctx context.Context, userId int64, spuIds []int64) ([]resp.AppTradeProductSettlementResp, error) {
+	// 1. 获得 SPU 列表
+	spus, err := s.productSpuSvc.GetSpuList(ctx, spuIds)
+	if err != nil {
+		return nil, err
+	}
+	if len(spus) == 0 {
+		return []resp.AppTradeProductSettlementResp{}, nil
+	}
+
+	// 2. 获得 SKU 列表
+	skus, err := s.productSkuSvc.GetSkuListBySpuIds(ctx, spuIds)
+	if err != nil {
+		return nil, err
+	}
+	skuMap := make(map[int64][]*productModel.ProductSku)
+	for _, sku := range skus {
+		skuMap[sku.SpuID] = append(skuMap[sku.SpuID], sku)
+	}
+
+	// 3. 获得满减送活动
+	// 暂时简化，Java 中会查询 RewardActivity
+	// activityMap, _ := s.rewardActivitySvc.GetRewardActivityMapBySpuIds(ctx, spuIds)
+
+	// 4. 拼装结果
+	var results []resp.AppTradeProductSettlementResp
+	for _, spu := range spus {
+		spuSkus := skuMap[spu.ID]
+		if len(spuSkus) == 0 {
+			continue
+		}
+
+		var skuResps []resp.Sku
+		for _, sku := range spuSkus {
+			// 默认原价
+			promotionPrice := sku.Price
+			// TODO: 查询限时折扣等营销活动
+
+			skuResps = append(skuResps, resp.Sku{
+				ID:             sku.ID,
+				PromotionPrice: promotionPrice,
+				PromotionType:  0, // 无
+			})
+		}
+
+		results = append(results, resp.AppTradeProductSettlementResp{
+			SpuID: spu.ID,
+			Skus:  skuResps,
+			// RewardActivity: activityMap[spu.ID],
+		})
+	}
+	return results, nil
 }
