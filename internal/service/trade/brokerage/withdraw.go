@@ -9,15 +9,22 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
+	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"go.uber.org/zap"
+)
+
+const (
+	userTypeMember = 1 // 会员用户类型
 )
 
 type BrokerageWithdrawService struct {
@@ -25,16 +32,26 @@ type BrokerageWithdrawService struct {
 	logger         *zap.Logger
 	recordSvc      *BrokerageRecordService
 	payTransferSvc *pay.PayTransferService
+	payWalletSvc   *wallet.PayWalletService
 	tradeConfigSvc *trade.TradeConfigService
 	memberSvc      *member.MemberUserService
 }
 
-func NewBrokerageWithdrawService(q *query.Query, logger *zap.Logger, recordSvc *BrokerageRecordService, payTransferSvc *pay.PayTransferService, tradeConfigSvc *trade.TradeConfigService, memberSvc *member.MemberUserService) *BrokerageWithdrawService {
+func NewBrokerageWithdrawService(
+	q *query.Query,
+	logger *zap.Logger,
+	recordSvc *BrokerageRecordService,
+	payTransferSvc *pay.PayTransferService,
+	payWalletSvc *wallet.PayWalletService,
+	tradeConfigSvc *trade.TradeConfigService,
+	memberSvc *member.MemberUserService,
+) *BrokerageWithdrawService {
 	return &BrokerageWithdrawService{
 		q:              q,
 		logger:         logger,
 		recordSvc:      recordSvc,
 		payTransferSvc: payTransferSvc,
+		payWalletSvc:   payWalletSvc,
 		tradeConfigSvc: tradeConfigSvc,
 		memberSvc:      memberSvc,
 	}
@@ -69,14 +86,19 @@ func (s *BrokerageWithdrawService) AuditBrokerageWithdraw(ctx context.Context, i
 		return errors.New("当前状态不可审核")
 	}
 
-	// 2. 更新状态
-	updateMap := map[string]interface{}{
-		"status":       status,
-		"audit_reason": auditReason,
-		"audit_time":   time.Now(),
-	}
-	if _, err := w.WithContext(ctx).Where(w.ID.Eq(id)).Updates(updateMap); err != nil {
+	// 2. 更新状态（使用乐观锁）
+	// 对齐 Java: updateByIdAndStatus
+	result, err := w.WithContext(ctx).Where(w.ID.Eq(id)).Where(w.Status.Eq(tradeModel.BrokerageWithdrawStatusAuditing)).
+		Updates(map[string]interface{}{
+			"status":       status,
+			"audit_reason": auditReason,
+			"audit_time":   time.Now(),
+		})
+	if err != nil {
 		return err
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("提现状态变更，请重试")
 	}
 
 	// 3. 处理审批结果
@@ -116,28 +138,42 @@ func (s *BrokerageWithdrawService) isApiWithdrawType(withdrawType int) bool {
 }
 
 // createPayTransfer 创建支付转账
+// 对齐 Java: BrokerageWithdrawServiceImpl.createPayTransfer
 func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdraw *brokerage.BrokerageWithdraw) error {
 	// 1.1 获取基础信息
 	userAccount := withdraw.UserAccount
 	userName := withdraw.UserName
 	channelCode := ""
 	var channelExtras map[string]string
+	transferType := 0
 
 	switch withdraw.Type {
 	case tradeModel.BrokerageWithdrawTypeAlipay:
 		channelCode = "alipay_pc"
+		transferType = modelPay.PayTransferTypeAlipayBalance
 	case tradeModel.BrokerageWithdrawTypeWechat:
 		channelCode = withdraw.TransferChannelCode
 		userAccount = withdraw.UserAccount
+		transferType = modelPay.PayTransferTypeWxBalance
 		// 特殊：微信需要有报备信息
+		// 对齐 Java: PayTransferCreateReqDTO.buildWeiXinChannelExtra1000()
 		channelExtras = map[string]string{
-			"scene":    "佣金提现",
-			"sceneId":  "1000",
-			"userName": userName,
+			"transfer_scene_id": "1000",
+			"user_name":         userName,
 		}
 	case tradeModel.BrokerageWithdrawTypeWallet:
-		// 钱包转账
+		// 钱包转账：需要获取钱包 ID 作为 userAccount
 		channelCode = "wallet"
+		transferType = modelPay.PayTransferTypeWallet
+		// 调用钱包 API 获取钱包 ID
+		walletInfo, err := s.payWalletSvc.GetOrCreateWallet(ctx, withdraw.UserID, userTypeMember)
+		if err != nil {
+			s.logger.Error("[createPayTransfer][获取钱包失败]",
+				zap.Int64("userId", withdraw.UserID),
+				zap.Error(err))
+			return err
+		}
+		userAccount = strconv.FormatInt(walletInfo.ID, 10)
 	}
 
 	// 1.2 获取交易配置
@@ -146,32 +182,46 @@ func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdr
 		return err
 	}
 
-	// 1.3 构建请求
-	createReq := &pay.PayTransferCreateReqDTO{
+	// 1.3 获取客户端 IP
+	userIP := getClientIP(ctx)
+
+	// 1.4 构建请求
+	createReq := &reqPay.PayTransferCreateReq{
 		AppID:              tradeConfig.AppID,
 		ChannelCode:        channelCode,
 		MerchantTransferID: strconv.FormatInt(withdraw.ID, 10),
 		Subject:            "佣金提现",
 		Price:              withdraw.Price,
+		Type:               transferType,
 		UserAccount:        userAccount,
 		UserName:           userName,
-		UserIP:             "127.0.0.1", // TODO: 暂用默认值，后续可通过 context 传递
+		AlipayLogonID:      withdraw.UserAccount, // 支付宝登录号
+		OpenID:             withdraw.UserAccount, // 微信 OpenID
+		UserIP:             userIP,
 		ChannelExtras:      channelExtras,
 	}
 
-	// 1.4 发起请求
+	// 1.5 发起请求
 	resp, err := s.payTransferSvc.CreateTransfer(ctx, createReq)
 	if err != nil {
 		return err
 	}
 
 	// 2. 更新提现记录
-	s.q.BrokerageWithdraw.WithContext(ctx).Where(s.q.BrokerageWithdraw.ID.Eq(withdraw.ID)).
+	_, err = s.q.BrokerageWithdraw.WithContext(ctx).Where(s.q.BrokerageWithdraw.ID.Eq(withdraw.ID)).
 		Updates(map[string]interface{}{
 			"pay_transfer_id":       resp.ID,
 			"transfer_channel_code": channelCode,
 		})
-	return nil
+	return err
+}
+
+// getClientIP 从 context 获取客户端 IP
+func getClientIP(ctx context.Context) string {
+	if ip, ok := ctx.Value("client_ip").(string); ok && ip != "" {
+		return ip
+	}
+	return "127.0.0.1"
 }
 
 // CreateBrokerageWithdraw 创建佣金提现
@@ -225,6 +275,7 @@ func (s *BrokerageWithdrawService) CreateBrokerageWithdraw(ctx context.Context, 
 }
 
 // UpdateBrokerageWithdrawTransferred 更新佣金提现的转账结果
+// 对齐 Java: BrokerageWithdrawServiceImpl.updateBrokerageWithdrawTransferred
 func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx context.Context, id int64, payTransferId int64) error {
 	w := s.q.BrokerageWithdraw
 
@@ -268,6 +319,24 @@ func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx contex
 		return errors.New("转账金额不匹配")
 	}
 
+	// 2.3 校验 merchantTransferId 匹配
+	if payTransfer.MerchantTransferID != strconv.FormatInt(withdraw.ID, 10) {
+		s.logger.Error("商户转账单号不匹配",
+			zap.Int64("id", id),
+			zap.String("merchantTransferId", payTransfer.MerchantTransferID),
+			zap.Int64("withdrawId", withdraw.ID))
+		return errors.New("商户转账单号不匹配")
+	}
+
+	// 2.4 校验 channelCode 匹配
+	if payTransfer.ChannelCode != withdraw.TransferChannelCode {
+		s.logger.Error("转账渠道不匹配",
+			zap.Int64("id", id),
+			zap.String("transferChannelCode", payTransfer.ChannelCode),
+			zap.String("withdrawChannelCode", withdraw.TransferChannelCode))
+		return errors.New("转账渠道不匹配")
+	}
+
 	// 3. 更新提现单状态
 	var newStatus int
 	if payTransfer.Status == tradeModel.PayTransferStatusSuccess {
@@ -276,12 +345,20 @@ func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx contex
 		newStatus = tradeModel.BrokerageWithdrawStatusWithdrawFail
 	}
 
-	_, err = w.WithContext(ctx).Where(w.ID.Eq(id)).Updates(map[string]interface{}{
-		"status":             newStatus,
-		"transfer_time":      payTransfer.SuccessTime,
-		"transfer_error_msg": payTransfer.ChannelErrorMsg,
-	})
-	return err
+	// 对齐 Java: updateByIdAndStatus
+	result, err := w.WithContext(ctx).Where(w.ID.Eq(id)).Where(w.Status.Eq(withdraw.Status)).
+		Updates(map[string]interface{}{
+			"status":             newStatus,
+			"transfer_time":      payTransfer.SuccessTime,
+			"transfer_error_msg": payTransfer.ChannelErrorMsg,
+		})
+	if err != nil {
+		return err
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("提现状态变更，请重试")
+	}
+	return nil
 }
 
 // GetBrokerageWithdraw 获得佣金提现
