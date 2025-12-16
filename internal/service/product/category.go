@@ -123,6 +123,21 @@ func (s *ProductCategoryService) GetCategoryList(ctx context.Context, req *req.P
 	}), nil
 }
 
+// GetEnableCategoryList 获得开启状态的商品分类列表
+func (s *ProductCategoryService) GetEnableCategoryList(ctx context.Context) ([]*product.ProductCategory, error) {
+	u := s.q.ProductCategory
+	return u.WithContext(ctx).Where(u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
+}
+
+// GetEnableCategoryListByIds 获得开启状态的商品分类列表，指定编号
+func (s *ProductCategoryService) GetEnableCategoryListByIds(ctx context.Context, ids []int64) ([]*product.ProductCategory, error) {
+	if len(ids) == 0 {
+		return []*product.ProductCategory{}, nil
+	}
+	u := s.q.ProductCategory
+	return u.WithContext(ctx).Where(u.ID.In(ids...), u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
+}
+
 func (s *ProductCategoryService) validateParentCategory(ctx context.Context, parentId int64) error {
 	if parentId == 0 {
 		return nil
