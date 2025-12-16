@@ -83,6 +83,7 @@ func RegisterPayRoutes(engine *gin.Engine,
 		{
 			payWallet.GET("/get", casbinMiddleware.RequirePermission("pay:wallet:query"), payWalletHandler.GetWallet)
 			payWallet.GET("/page", casbinMiddleware.RequirePermission("pay:wallet:query"), payWalletHandler.GetWalletPage)
+			payWallet.PUT("/update-balance", casbinMiddleware.RequirePermission("pay:wallet:update-balance"), payWalletHandler.UpdateWalletBalance)
 		}
 
 		// Pay Wallet Recharge

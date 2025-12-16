@@ -59,6 +59,35 @@ func (h *PayWalletHandler) GetWallet(c *gin.Context) {
 	c.JSON(200, response.Success(convertWalletResp(wallet)))
 }
 
+// UpdateWalletBalance 更新会员用户余额
+func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
+	var r req.PayWalletUpdateBalanceReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+
+	// 获得用户钱包
+	wallet, err := h.svc.GetOrCreateWallet(c, r.UserID, 1) // 1: Member
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if wallet == nil {
+		c.JSON(200, errors.ErrRecordNotFound)
+		return
+	}
+
+	// 更新钱包余额
+	// walletID, bizID, bizType, price
+	err = h.svc.AddWalletBalance(c, wallet.ID, strconv.FormatInt(r.UserID, 10), pay.PayWalletBizTypeUpdateBalance, r.Balance)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, response.Success(true))
+}
+
 func convertWalletResp(item *pay.PayWallet) *resp.PayWalletResp {
 	if item == nil {
 		return nil
