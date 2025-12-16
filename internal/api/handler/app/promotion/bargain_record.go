@@ -7,11 +7,14 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,7 +45,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordSummary(c *gin.Context) {
 	status := 1 // SUCCESS
 	count, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), 0, status)
 	if count == 0 {
-		core.WriteSuccess(c, resp.AppBargainRecordSummaryRespVO{SuccessUserCount: 0, SuccessList: []resp.AppBargainRecordSummaryRecordVO{}})
+		response.WriteSuccess(c, resp.AppBargainRecordSummaryRespVO{SuccessUserCount: 0, SuccessList: []resp.AppBargainRecordSummaryRecordVO{}})
 		return
 	}
 
@@ -89,7 +92,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordSummary(c *gin.Context) {
 		successList[i] = item
 	}
 
-	core.WriteSuccess(c, resp.AppBargainRecordSummaryRespVO{
+	response.WriteSuccess(c, resp.AppBargainRecordSummaryRespVO{
 		SuccessUserCount: int(count),
 		SuccessList:      successList,
 	})
@@ -98,12 +101,12 @@ func (h *AppBargainRecordHandler) GetBargainRecordSummary(c *gin.Context) {
 // GetBargainRecordDetail 获得砍价记录详情
 // Java: GET /get-detail
 func (h *AppBargainRecordHandler) GetBargainRecordDetail(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
-	activityId := core.ParseInt64(c.Query("activityId"))
-	userId := c.GetInt64(core.CtxUserIDKey)
+	id := utils.ParseInt64(c.Query("id"))
+	activityId := utils.ParseInt64(c.Query("activityId"))
+	userId := c.GetInt64(pkgContext.CtxUserIDKey)
 
 	if id == 0 && activityId == 0 {
-		core.WriteError(c, 1001004001, "砍价记录编号和活动编号不能同时为空")
+		response.WriteError(c, 1001004001, "砍价记录编号和活动编号不能同时为空")
 		return
 	}
 
@@ -150,7 +153,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordDetail(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 func (h *AppBargainRecordHandler) getHelpAction(ctx context.Context, userId int64, record *promotionModel.PromotionBargainRecord, activityId int64) int {
@@ -181,21 +184,21 @@ func (h *AppBargainRecordHandler) getHelpAction(ctx context.Context, userId int6
 // GetBargainRecordPage 获得砍价记录分页
 // Java: GET /page
 func (h *AppBargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
-	var p core.PageParam
+	var p pagination.PageParam
 	if err := c.ShouldBindQuery(&p); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败")
+		response.WriteError(c, 1001004001, "参数校验失败")
 		return
 	}
 
-	userId := c.GetInt64(core.CtxUserIDKey)
+	userId := c.GetInt64(pkgContext.CtxUserIDKey)
 	page, err := h.recordSvc.GetBargainRecordPage(c.Request.Context(), userId, &p)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	if page.Total == 0 {
-		core.WriteSuccess(c, core.PageResult[resp.AppBargainRecordRespVO]{List: []resp.AppBargainRecordRespVO{}, Total: 0})
+		response.WriteSuccess(c, pagination.PageResult[resp.AppBargainRecordRespVO]{List: []resp.AppBargainRecordRespVO{}, Total: 0})
 		return
 	}
 
@@ -242,7 +245,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 		result[i] = item
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.AppBargainRecordRespVO]{List: result, Total: page.Total})
+	response.WriteSuccess(c, pagination.PageResult[resp.AppBargainRecordRespVO]{List: result, Total: page.Total})
 }
 
 // CreateBargainRecord 创建砍价记录
@@ -250,13 +253,13 @@ func (h *AppBargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 func (h *AppBargainRecordHandler) CreateBargainRecord(c *gin.Context) {
 	var r req.AppBargainRecordCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败")
+		response.WriteError(c, 1001004001, "参数校验失败")
 		return
 	}
-	id, err := h.recordSvc.CreateBargainRecord(c.Request.Context(), c.GetInt64(core.CtxUserIDKey), &r)
+	id, err := h.recordSvc.CreateBargainRecord(c.Request.Context(), c.GetInt64(pkgContext.CtxUserIDKey), &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }

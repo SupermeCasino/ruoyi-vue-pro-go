@@ -4,8 +4,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,25 +23,25 @@ func NewMemberConfigHandler(svc *memberSvc.MemberConfigService) *MemberConfigHan
 func (h *MemberConfigHandler) SaveConfig(c *gin.Context) {
 	var r req.MemberConfigSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.SaveConfig(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetConfig 获得会员配置
 func (h *MemberConfigHandler) GetConfig(c *gin.Context) {
 	config, err := h.svc.GetConfig(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, h.convertResp(config))
+	response.WriteSuccess(c, h.convertResp(config))
 }
 
 func (h *MemberConfigHandler) convertResp(item *memberModel.MemberConfig) *resp.MemberConfigResp {

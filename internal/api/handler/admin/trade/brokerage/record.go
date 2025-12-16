@@ -3,9 +3,11 @@ package brokerage
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -27,19 +29,19 @@ func NewBrokerageRecordHandler(logger *zap.Logger, recordSvc *brokerage.Brokerag
 
 // GetBrokerageRecord 获得分销记录
 func (h *BrokerageRecordHandler) GetBrokerageRecord(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "参数错误") // TODO: Error code
+		response.WriteError(c, 400, "参数错误") // TODO: Error code
 		return
 	}
 
 	record, err := h.recordSvc.GetBrokerageRecord(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if record == nil {
-		core.WriteError(c, 404, "记录不存在")
+		response.WriteError(c, 404, "记录不存在")
 		return
 	}
 
@@ -59,20 +61,20 @@ func (h *BrokerageRecordHandler) GetBrokerageRecord(c *gin.Context) {
 		CreateTime: record.CreatedAt,
 	}
 
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetBrokerageRecordPage 获得分销记录分页
 func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 	var r req.BrokerageRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 
 	pageResult, err := h.recordSvc.GetBrokerageRecordPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -122,7 +124,7 @@ func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 		list[i] = res
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.BrokerageRecordResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.BrokerageRecordResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

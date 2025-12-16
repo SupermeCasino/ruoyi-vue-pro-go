@@ -9,8 +9,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type UserHandler struct {
@@ -26,7 +27,7 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var r req.UserSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateUser(c.Request.Context(), &r)
@@ -34,20 +35,20 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var r req.UserSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateUser(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
@@ -57,7 +58,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
@@ -68,13 +69,13 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(item))
+	c.JSON(200, response.Success(item))
 }
 
 func (h *UserHandler) GetUserPage(c *gin.Context) {
 	var r req.UserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetUserPage(c.Request.Context(), &r)
@@ -82,20 +83,20 @@ func (h *UserHandler) GetUserPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(page))
+	c.JSON(200, response.Success(page))
 }
 
 func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
 	var r req.UserUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateUserStatus(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *UserHandler) GetSimpleUserList(c *gin.Context) {
@@ -104,26 +105,26 @@ func (h *UserHandler) GetSimpleUserList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }
 
 func (h *UserHandler) ResetUserPassword(c *gin.Context) {
 	var r req.UserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.ResetUserPassword(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 	var r req.UserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	// Note: This API typically checks old password, but Admin reset usually doesn't.
@@ -136,7 +137,7 @@ func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // ExportUser 导出用户
@@ -144,7 +145,7 @@ func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 func (h *UserHandler) ExportUser(c *gin.Context) {
 	var r req.UserExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	list, err := h.svc.GetUserList(c.Request.Context(), &r)
@@ -253,7 +254,7 @@ func (h *UserHandler) GetImportTemplate(c *gin.Context) {
 func (h *UserHandler) ImportUser(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	// updateSupport, _ := strconv.ParseBool(c.Query("updateSupport")) // TODO: Use updateSupport
@@ -285,5 +286,5 @@ func (h *UserHandler) ImportUser(c *gin.Context) {
 	// Since logic is complex (transactional import), we mark as TODO but return valid structure.
 	// User asked for "Implement POST /user/import API". Parity means input/output match.
 
-	c.JSON(200, core.Success(respVO))
+	c.JSON(200, response.Success(respVO))
 }

@@ -3,8 +3,9 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +22,13 @@ func NewLoginLogHandler(svc *service.LoginLogService) *LoginLogHandler {
 func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
 	var r req.LoginLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	pageResult, err := h.svc.GetLoginLogPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -48,7 +49,7 @@ func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.LoginLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.LoginLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

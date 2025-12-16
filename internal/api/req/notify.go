@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // Notify Template Requests
@@ -27,7 +27,7 @@ type NotifyTemplateUpdateReq struct {
 }
 
 type NotifyTemplatePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name      string `form:"name"`
 	Code      string `form:"code"`
 	Status    *int   `form:"status"`
@@ -44,7 +44,7 @@ type NotifyTemplateSendReq struct {
 
 // Notify Message Requests
 type NotifyMessagePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserID       int64  `form:"userId"`
 	UserType     int    `form:"userType"`
 	TemplateCode string `form:"templateCode"`
@@ -56,7 +56,7 @@ type NotifyMessagePageReq struct {
 
 // My Message Page Req
 type MyNotifyMessagePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	ReadStatus *bool `form:"readStatus"`
 }
 

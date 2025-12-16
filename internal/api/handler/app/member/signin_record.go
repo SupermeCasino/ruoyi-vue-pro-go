@@ -4,8 +4,11 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -21,28 +24,28 @@ func NewAppMemberSignInRecordHandler(svc *memberSvc.MemberSignInRecordService) *
 
 // GetSignInRecordSummary 获得个人签到统计
 func (h *AppMemberSignInRecordHandler) GetSignInRecordSummary(c *gin.Context) {
-	userId := c.GetInt64(core.CtxUserIDKey)
+	userId := c.GetInt64(context.CtxUserIDKey)
 	summary, err := h.svc.GetSignInRecordSummary(c, userId)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, summary)
+	response.WriteSuccess(c, summary)
 }
 
 // CreateSignInRecord 创建签到记录
 func (h *AppMemberSignInRecordHandler) CreateSignInRecord(c *gin.Context) {
-	userId := c.GetInt64(core.CtxUserIDKey)
+	userId := c.GetInt64(context.CtxUserIDKey)
 	record, err := h.svc.CreateSignInRecord(c, userId)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// Convert record to resp (simplified, or just return record)
 	// Java doesn't return much? It returns the full record.
 	// We'll return simplified App resp.
-	core.WriteSuccess(c, resp.AppMemberSignInRecordResp{
+	response.WriteSuccess(c, resp.AppMemberSignInRecordResp{
 		ID:         record.ID,
 		Day:        record.Day,
 		Point:      record.Point,
@@ -55,14 +58,14 @@ func (h *AppMemberSignInRecordHandler) CreateSignInRecord(c *gin.Context) {
 func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 	var r req.AppMemberSignInRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	userId := c.GetInt64(core.CtxUserIDKey)
+	userId := c.GetInt64(context.CtxUserIDKey)
 
 	// Reuse service method but fill UserID
 	pageReq := req.MemberSignInRecordPageReq{
-		PageParam: core.PageParam{
+		PageParam: pagination.PageParam{
 			PageNo:   r.PageNo,
 			PageSize: r.PageSize,
 		},
@@ -71,7 +74,7 @@ func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 
 	pageResult, err := h.svc.GetSignInRecordPage(c, &pageReq)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -84,5 +87,5 @@ func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 			CreatedAt:  item.CreatedAt,
 		}
 	})
-	core.WriteSuccess(c, core.NewPageResult(respList, pageResult.Total))
+	response.WriteSuccess(c, pagination.NewPageResult(respList, pageResult.Total))
 }

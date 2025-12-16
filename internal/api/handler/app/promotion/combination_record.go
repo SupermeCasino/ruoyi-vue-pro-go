@@ -5,8 +5,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,10 +34,10 @@ func (h *AppCombinationRecordHandler) GetCombinationRecordSummary(c *gin.Context
 	// I'll call service with 0 or fix service later.
 	summary, err := h.svc.GetCombinationRecordSummary(c.Request.Context(), 0)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, summary)
+	response.WriteSuccess(c, summary)
 }
 
 // GetHeadCombinationRecordList 获得团长发起的拼团记录
@@ -50,7 +51,7 @@ func (h *AppCombinationRecordHandler) GetHeadCombinationRecordList(c *gin.Contex
 
 	list, err := h.svc.GetLatestCombinationRecordList(c.Request.Context(), activityID, count)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -73,7 +74,7 @@ func (h *AppCombinationRecordHandler) GetHeadCombinationRecordList(c *gin.Contex
 			CombinationPrice: item.CombinationPrice,
 		}
 	}
-	core.WriteSuccess(c, vos)
+	response.WriteSuccess(c, vos)
 }
 
 // GetCombinationRecordPage 获得我的拼团记录分页
@@ -88,17 +89,17 @@ func (h *AppCombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 
 	list, err := h.svc.GetCombinationRecordPage(c.Request.Context(), userId, req)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }
 
 // GetCombinationRecordDetail 获得拼团记录明细
 func (h *AppCombinationRecordHandler) GetCombinationRecordDetail(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Query("id"), 10, 64)
 	if err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid ID"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid ID"))
 		return
 	}
 
@@ -107,8 +108,8 @@ func (h *AppCombinationRecordHandler) GetCombinationRecordDetail(c *gin.Context)
 
 	detail, err := h.svc.GetCombinationRecordDetail(c.Request.Context(), userId, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, detail)
+	response.WriteSuccess(c, detail)
 }

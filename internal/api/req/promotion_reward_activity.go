@@ -1,8 +1,9 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // PromotionRewardActivityCreateReq 创建 Request
@@ -40,7 +41,7 @@ type PromotionRewardActivityUpdateReq struct {
 
 // PromotionRewardActivityPageReq 分页 Request
 type PromotionRewardActivityPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Status *int   `form:"status"` // 0: Open, 1: Close
 }

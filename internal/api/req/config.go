@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 type ConfigSaveReq struct {
 	ID       int64  `json:"id"`
@@ -13,7 +15,7 @@ type ConfigSaveReq struct {
 }
 
 type ConfigPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name       string   `form:"name"`
 	Key        string   `form:"key"`
 	Type       *int32   `form:"type"`

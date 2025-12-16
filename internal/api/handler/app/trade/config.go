@@ -1,8 +1,8 @@
 package trade
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,8 +20,8 @@ func NewAppTradeConfigHandler(svc *trade.TradeConfigService) *AppTradeConfigHand
 func (h *AppTradeConfigHandler) GetTradeConfig(c *gin.Context) {
 	res, err := h.svc.GetTradeConfig(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }

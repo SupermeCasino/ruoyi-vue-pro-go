@@ -2,8 +2,9 @@ package admin
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func NewPayStatisticsHandler(payWalletStatisticsService service.PayWalletStatist
 func (h *PayStatisticsHandler) GetWalletRechargePrice(c *gin.Context) {
 	rechargePrice, err := h.payWalletStatisticsService.GetRechargePriceSummary(c)
 	if err != nil {
-		core.WriteError(c, core.ServerErrCode, err.Error())
+		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return
 	}
 
@@ -33,5 +34,5 @@ func (h *PayStatisticsHandler) GetWalletRechargePrice(c *gin.Context) {
 		RechargePrice: rechargePrice,
 	}
 
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }

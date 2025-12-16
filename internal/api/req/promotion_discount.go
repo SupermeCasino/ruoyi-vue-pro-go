@@ -1,12 +1,13 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type DiscountActivityPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Status int    `form:"status"`
 }

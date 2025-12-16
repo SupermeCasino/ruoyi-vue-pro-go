@@ -2,8 +2,10 @@ package product
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,15 +27,15 @@ func NewAppProductBrowseHistoryHandler(svc *product.ProductBrowseHistoryService)
 func (h *AppProductBrowseHistoryHandler) DeleteBrowseHistory(c *gin.Context) {
 	var r req.AppProductBrowseHistoryDeleteReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
-	userId := core.GetLoginUserID(c)
+	userId := context.GetLoginUserID(c)
 	if err := h.svc.HideUserBrowseHistory(c, userId, r.SpuIds); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // CleanBrowseHistory 清空商品浏览记录
@@ -42,12 +44,12 @@ func (h *AppProductBrowseHistoryHandler) DeleteBrowseHistory(c *gin.Context) {
 // @Produce json
 // @Router /app-api/product/browse-history/clean [delete]
 func (h *AppProductBrowseHistoryHandler) CleanBrowseHistory(c *gin.Context) {
-	userId := core.GetLoginUserID(c)
+	userId := context.GetLoginUserID(c)
 	if err := h.svc.HideUserBrowseHistory(c, userId, nil); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetBrowseHistoryPage 获得商品浏览记录分页
@@ -56,19 +58,19 @@ func (h *AppProductBrowseHistoryHandler) CleanBrowseHistory(c *gin.Context) {
 // @Produce json
 // @Param pageNo query int true "页码"
 // @Param pageSize query int true "页数"
-// @Success 200 {object} core.PageResult[resp.AppProductBrowseHistoryResp]
+// @Success 200 {object} pagination.PageResult[resp.AppProductBrowseHistoryResp]
 // @Router /app-api/product/browse-history/page [get]
 func (h *AppProductBrowseHistoryHandler) GetBrowseHistoryPage(c *gin.Context) {
 	var r req.AppProductBrowseHistoryPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
-	userId := core.GetLoginUserID(c)
+	userId := context.GetLoginUserID(c)
 	res, err := h.svc.GetAppBrowseHistoryPage(c, userId, &r)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 type PayAppCreateReq struct {
 	AppKey            string `json:"appKey" binding:"required"`
@@ -23,7 +25,7 @@ type PayAppUpdateStatusReq struct {
 }
 
 type PayAppPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `json:"name" form:"name"`
 	Status *int   `json:"status" form:"status"`
 	Remark string `json:"remark" form:"remark"`

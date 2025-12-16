@@ -3,8 +3,10 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,17 +21,17 @@ func NewJobLogHandler(svc *service.JobLogService) *JobLogHandler {
 
 // GetJobLog 获取定时任务日志
 func (h *JobLogHandler) GetJobLog(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	log, err := h.svc.GetJobLog(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if log == nil {
-		core.WriteError(c, 404, "日志不存在")
+		response.WriteError(c, 404, "日志不存在")
 		return
 	}
-	core.WriteSuccess(c, resp.JobLogResp{
+	response.WriteSuccess(c, resp.JobLogResp{
 		ID:           log.ID,
 		JobID:        log.JobID,
 		HandlerName:  log.HandlerName,
@@ -48,12 +50,12 @@ func (h *JobLogHandler) GetJobLog(c *gin.Context) {
 func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 	var r req.JobLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	pageResult, err := h.svc.GetJobLogPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -74,7 +76,7 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.JobLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.JobLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

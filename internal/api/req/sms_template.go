@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // SmsTemplateSaveReq 短信模板创建/修改 Request
@@ -19,7 +19,7 @@ type SmsTemplateSaveReq struct {
 
 // SmsTemplatePageReq 短信模板分页 Request
 type SmsTemplatePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Type          *int32   `form:"type"`
 	Status        *int32   `form:"status"`
 	Code          string   `form:"code"`

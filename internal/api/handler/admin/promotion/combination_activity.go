@@ -5,8 +5,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,64 +24,64 @@ func NewCombinationActivityHandler(svc promotion.CombinationActivityService) *Co
 func (h *CombinationActivityHandler) CreateCombinationActivity(c *gin.Context) {
 	var r req.CombinationActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid Request"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid Request"))
 		return
 	}
 
 	id, err := h.svc.CreateCombinationActivity(c.Request.Context(), r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateCombinationActivity 更新拼团活动
 func (h *CombinationActivityHandler) UpdateCombinationActivity(c *gin.Context) {
 	var r req.CombinationActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid Request"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid Request"))
 		return
 	}
 
 	err := h.svc.UpdateCombinationActivity(c.Request.Context(), r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteCombinationActivity 删除拼团活动
 func (h *CombinationActivityHandler) DeleteCombinationActivity(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Query("id"), 10, 64)
 	if err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid ID"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid ID"))
 		return
 	}
 
 	err = h.svc.DeleteCombinationActivity(c.Request.Context(), id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetCombinationActivity 获得拼团活动
 func (h *CombinationActivityHandler) GetCombinationActivity(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Query("id"), 10, 64)
 	if err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid ID"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid ID"))
 		return
 	}
 
 	activity, err := h.svc.GetCombinationActivity(c.Request.Context(), id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, activity)
+	response.WriteSuccess(c, activity)
 }
 
 // GetCombinationActivityListByIds 获得拼团活动列表，基于活动编号数组
@@ -90,7 +91,7 @@ func (h *CombinationActivityHandler) GetCombinationActivityListByIds(c *gin.Cont
 		Ids model.IntListFromCSV `form:"ids" binding:"required"`
 	}
 	if err := c.ShouldBindQuery(&req); err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid IDs"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid IDs"))
 		return
 	}
 
@@ -102,10 +103,10 @@ func (h *CombinationActivityHandler) GetCombinationActivityListByIds(c *gin.Cont
 
 	list, err := h.svc.GetCombinationActivityListByIds(c.Request.Context(), ids)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }
 
 // GetCombinationActivityPage 获得拼团活动分页
@@ -126,8 +127,8 @@ func (h *CombinationActivityHandler) GetCombinationActivityPage(c *gin.Context) 
 
 	list, err := h.svc.GetCombinationActivityPage(c.Request.Context(), r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }

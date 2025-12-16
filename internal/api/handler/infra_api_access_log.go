@@ -3,8 +3,9 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +22,13 @@ func NewApiAccessLogHandler(svc *service.ApiAccessLogService) *ApiAccessLogHandl
 func (h *ApiAccessLogHandler) GetApiAccessLogPage(c *gin.Context) {
 	var r req.ApiAccessLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	pageResult, err := h.svc.GetApiAccessLogPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -57,7 +58,7 @@ func (h *ApiAccessLogHandler) GetApiAccessLogPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.ApiAccessLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.ApiAccessLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

@@ -2,8 +2,10 @@ package product
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,12 +24,12 @@ func NewProductCommentHandler(svc *product.ProductCommentService) *ProductCommen
 // @Produce json
 // @Param pageNo query int true "页码"
 // @Param pageSize query int true "页数"
-// @Success 200 {object} core.PageResult[resp.ProductCommentResp]
+// @Success 200 {object} pagination.PageResult[resp.ProductCommentResp]
 // @Router /admin-api/product/comment/page [get]
 func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
 	var req req.ProductCommentPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetCommentPage(c, &req)
@@ -35,7 +37,7 @@ func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // UpdateCommentVisible 更新商品评价可见性
@@ -47,14 +49,14 @@ func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
 func (h *ProductCommentHandler) UpdateCommentVisible(c *gin.Context) {
 	var req req.ProductCommentUpdateVisibleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateCommentVisible(c, &req); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // ReplyComment 回复商品评价
@@ -66,15 +68,15 @@ func (h *ProductCommentHandler) UpdateCommentVisible(c *gin.Context) {
 func (h *ProductCommentHandler) ReplyComment(c *gin.Context) {
 	var req req.ProductCommentReplyReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
-	userId := core.GetLoginUserID(c)
+	userId := context.GetLoginUserID(c)
 	if err := h.svc.ReplyComment(c, &req, userId); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // CreateComment 添加自评
@@ -86,12 +88,12 @@ func (h *ProductCommentHandler) ReplyComment(c *gin.Context) {
 func (h *ProductCommentHandler) CreateComment(c *gin.Context) {
 	var req req.ProductCommentCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.CreateComment(c, &req); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }

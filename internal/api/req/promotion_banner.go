@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // PromotionBannerCreateReq 创建 Request
 type PromotionBannerCreateReq struct {
@@ -27,7 +29,7 @@ type PromotionBannerUpdateReq struct {
 
 // PromotionBannerPageReq 分页 Request
 type PromotionBannerPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Title  string `form:"title"`
 	Status *int   `form:"status"`
 }

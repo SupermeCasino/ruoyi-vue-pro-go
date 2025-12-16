@@ -1,12 +1,14 @@
 package brokerage
 
 import (
+	"time"
+
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
 	model "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,7 +32,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 	userId := c.GetInt64("userId")
 	user, err := h.userSvc.GetOrCreateBrokerageUser(c, userId)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -39,23 +41,23 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 		BrokeragePrice:   user.BrokeragePrice,
 		FrozenPrice:      user.FrozenPrice,
 	}
-	core.WriteSuccess(c, respVO)
+	response.WriteSuccess(c, respVO)
 }
 
 // BindBrokerageUser 绑定推广员
 func (h *AppBrokerageUserHandler) BindBrokerageUser(c *gin.Context) {
 	var r tradeReq.AppBrokerageUserBindReqVO
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	userId := c.GetInt64("userId")
 	success, err := h.userSvc.BindBrokerageUser(c, userId, r.BindUserID)
 	if err != nil {
-		core.WriteError(c, 500, err.Error()) // Or 400
+		response.WriteError(c, 500, err.Error()) // Or 400
 		return
 	}
-	core.WriteSuccess(c, success)
+	response.WriteSuccess(c, success)
 }
 
 // GetBrokerageUserSummary 获得个人分销统计
@@ -63,7 +65,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 	userId := c.GetInt64("userId")
 	user, err := h.userSvc.GetBrokerageUser(c, userId)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if user == nil {
@@ -81,7 +83,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 	// BizType: ORDER=1 (Assume). Status: SETTLEMENT=1 (Assume).
 	yesterdayPrice, err := h.recordSvc.GetSummaryPriceByUserId(c, userId, 1, 1, beginOfDay, endOfDay)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -89,7 +91,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 	// Status: AUDIT_SUCCESS(10), WITHDRAW_SUCCESS(11)
 	summaries, err := h.withdrawSvc.GetWithdrawSummaryListByUserId(c, []int64{userId}, []int{10, 11})
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	withdrawPrice := 0
@@ -109,20 +111,20 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 		BrokeragePrice:           user.BrokeragePrice,
 		FrozenPrice:              user.FrozenPrice,
 	}
-	core.WriteSuccess(c, respVO)
+	response.WriteSuccess(c, respVO)
 }
 
 // GetBrokerageUserChildSummaryPage 获得下级分销统计分页
 func (h *AppBrokerageUserHandler) GetBrokerageUserChildSummaryPage(c *gin.Context) {
 	var r tradeReq.AppBrokerageUserChildSummaryPageReqVO
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	userId := c.GetInt64("userId")
 	pageResult, err := h.userSvc.GetBrokerageUserChildSummaryPage(c, &r, userId)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	// Convert to RESP VO (Fetch User Info)
@@ -136,7 +138,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserChildSummaryPage(c *gin.Contex
 		}
 	}
 
-	core.WriteSuccess(c, &core.PageResult[tradeResp.AppBrokerageUserChildSummaryRespVO]{
+	response.WriteSuccess(c, &pagination.PageResult[tradeResp.AppBrokerageUserChildSummaryRespVO]{
 		List:  list,
 		Total: pageResult.Total,
 	})

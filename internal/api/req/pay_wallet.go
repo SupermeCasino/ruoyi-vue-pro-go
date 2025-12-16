@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // PayWalletRechargePackageCreateReq
@@ -23,7 +23,7 @@ type PayWalletRechargePackageUpdateReq struct {
 
 // PayWalletRechargePackagePageReq
 type PayWalletRechargePackagePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Status *int   `form:"status"`
 }
@@ -39,13 +39,13 @@ type PayWalletRechargeCreateReq struct {
 
 // PayWalletRechargePageReq
 type PayWalletRechargePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	PayStatus *bool `form:"payStatus"`
 }
 
 // PayWalletTransactionPageReq
 type PayWalletTransactionPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	WalletID int64  `form:"walletId"`
 	BizType  int    `form:"bizType"`
 	BizID    string `form:"bizId"`
@@ -55,7 +55,7 @@ type PayWalletTransactionPageReq struct {
 
 // PayWalletPageReq
 type PayWalletPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserID   int64 `form:"userId"`
 	UserType int   `form:"userType"`
 }

@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type SensitiveWordCreateReq struct {
@@ -24,7 +24,7 @@ type SensitiveWordDeleteReq struct {
 }
 
 type SensitiveWordPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name      string `form:"name"`
 	Tag       string `form:"tag"`
 	Status    *int   `form:"status"`

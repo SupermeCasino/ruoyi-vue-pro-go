@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,59 +22,59 @@ func NewCouponHandler(svc *promotion.CouponService) *CouponHandler {
 func (h *CouponHandler) CreateCouponTemplate(c *gin.Context) {
 	var r req.CouponTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	id, err := h.svc.CreateCouponTemplate(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateCouponTemplate 更新模板
 func (h *CouponHandler) UpdateCouponTemplate(c *gin.Context) {
 	var r req.CouponTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateCouponTemplate(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetCouponTemplatePage 模板分页
 func (h *CouponHandler) GetCouponTemplatePage(c *gin.Context) {
 	var r req.CouponTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	list, err := h.svc.GetCouponTemplatePage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }
 
 // GetCouponPage 发放记录
 func (h *CouponHandler) GetCouponPage(c *gin.Context) {
 	var r req.CouponPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	list, err := h.svc.GetCouponPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }
 
 // UpdateCouponTemplateStatus 更新模板状态
@@ -82,14 +82,14 @@ func (h *CouponHandler) GetCouponPage(c *gin.Context) {
 func (h *CouponHandler) UpdateCouponTemplateStatus(c *gin.Context) {
 	var r req.CouponTemplateUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateCouponTemplateStatus(c, r.ID, r.Status); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteCouponTemplate 删除模板
@@ -98,14 +98,14 @@ func (h *CouponHandler) DeleteCouponTemplate(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	if err := h.svc.DeleteCouponTemplate(c, id); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetCouponTemplate 获取模板详情
@@ -114,15 +114,15 @@ func (h *CouponHandler) GetCouponTemplate(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	template, err := h.svc.GetCouponTemplate(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, template)
+	response.WriteSuccess(c, template)
 }
 
 // GetCouponTemplateList 获取模板列表
@@ -137,10 +137,10 @@ func (h *CouponHandler) GetCouponTemplateList(c *gin.Context) {
 	}
 	list, err := h.svc.GetCouponTemplateList(c, ids)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }
 
 // DeleteCoupon 删除/回收优惠券
@@ -149,14 +149,14 @@ func (h *CouponHandler) DeleteCoupon(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	if err := h.svc.DeleteCoupon(c, id); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // SendCoupon 发送优惠券
@@ -164,12 +164,12 @@ func (h *CouponHandler) DeleteCoupon(c *gin.Context) {
 func (h *CouponHandler) SendCoupon(c *gin.Context) {
 	var r req.CouponSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.TakeCouponByAdmin(c, r.TemplateID, r.UserIDs); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }

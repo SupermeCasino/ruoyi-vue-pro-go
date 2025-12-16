@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type PermissionHandler struct {
@@ -30,13 +31,13 @@ func (h *PermissionHandler) GetRoleMenuList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }
 
 func (h *PermissionHandler) AssignRoleMenu(c *gin.Context) {
 	var r req.PermissionAssignRoleMenuReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	// Filter menus by tenant
@@ -66,20 +67,20 @@ func (h *PermissionHandler) AssignRoleMenu(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *PermissionHandler) AssignRoleDataScope(c *gin.Context) {
 	var r req.PermissionAssignRoleDataScopeReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.AssignRoleDataScope(c.Request.Context(), r.RoleID, r.DataScope, r.DataScopeDeptIDs); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *PermissionHandler) GetUserRoleList(c *gin.Context) {
@@ -90,18 +91,18 @@ func (h *PermissionHandler) GetUserRoleList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }
 
 func (h *PermissionHandler) AssignUserRole(c *gin.Context) {
 	var r req.PermissionAssignUserRoleReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.AssignUserRole(c.Request.Context(), r.UserID, r.RoleIDs); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }

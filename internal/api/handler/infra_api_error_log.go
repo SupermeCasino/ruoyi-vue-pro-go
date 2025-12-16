@@ -3,8 +3,10 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +23,13 @@ func NewApiErrorLogHandler(svc *service.ApiErrorLogService) *ApiErrorLogHandler 
 func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
 	var r req.ApiErrorLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	pageResult, err := h.svc.GetApiErrorLogPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -60,7 +62,7 @@ func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.ApiErrorLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.ApiErrorLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -68,16 +70,16 @@ func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
 
 // UpdateApiErrorLogProcess 更新API错误日志处理状态
 func (h *ApiErrorLogHandler) UpdateApiErrorLogProcess(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
-	processStatus := int(core.ParseInt64(c.Query("processStatus")))
+	id := utils.ParseInt64(c.Query("id"))
+	processStatus := int(utils.ParseInt64(c.Query("processStatus")))
 
 	// TODO: Get login user ID from context
 	processUserID := int64(1)
 
 	if err := h.svc.UpdateApiErrorLogProcess(c, id, processStatus, processUserID); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }

@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // DiyTemplateCreateReq 装修模板创建请求
@@ -29,7 +29,7 @@ type DiyTemplateUpdateReq struct {
 
 // DiyTemplatePageReq 装修模板分页请求
 type DiyTemplatePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Status *int   `form:"status"`
 }
@@ -55,7 +55,7 @@ type DiyPageUpdateReq struct {
 
 // DiyPagePageReq 装修页面分页请求
 type DiyPagePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Status *int   `form:"status"`
 }

@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type ArticleHandler struct {
@@ -21,67 +22,67 @@ func NewArticleHandler(svc promotion.ArticleService) *ArticleHandler {
 func (h *ArticleHandler) CreateArticle(c *gin.Context) {
 	var r req.ArticleCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateArticle(c, r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 func (h *ArticleHandler) UpdateArticle(c *gin.Context) {
 	var r req.ArticleUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateArticle(c, r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *ArticleHandler) DeleteArticle(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteArticle(c, id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *ArticleHandler) GetArticle(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetArticle(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 func (h *ArticleHandler) GetArticlePage(c *gin.Context) {
 	var r req.ArticlePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetArticlePage(c, r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }

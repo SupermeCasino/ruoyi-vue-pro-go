@@ -1,11 +1,11 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type PayRefundPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	AppID            int64    `form:"appId"`
 	ChannelCode      string   `form:"channelCode"`
 	MerchantOrderId  string   `form:"merchantOrderId"`

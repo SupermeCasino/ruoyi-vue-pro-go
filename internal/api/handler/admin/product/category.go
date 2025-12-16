@@ -1,10 +1,12 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"strconv"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +24,7 @@ func NewProductCategoryHandler(svc *product.ProductCategoryService) *ProductCate
 func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 	var r req.ProductCategoryCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateCategory(c, &r)
@@ -30,7 +32,7 @@ func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateCategory 更新商品分类
@@ -38,14 +40,14 @@ func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 func (h *ProductCategoryHandler) UpdateCategory(c *gin.Context) {
 	var r req.ProductCategoryUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateCategory(c, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteCategory 删除商品分类
@@ -54,14 +56,14 @@ func (h *ProductCategoryHandler) DeleteCategory(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteCategory(c, id); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetCategory 获得商品分类
@@ -70,7 +72,7 @@ func (h *ProductCategoryHandler) GetCategory(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetCategory(c, id)
@@ -78,7 +80,7 @@ func (h *ProductCategoryHandler) GetCategory(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetCategoryList 获得商品分类列表
@@ -86,7 +88,7 @@ func (h *ProductCategoryHandler) GetCategory(c *gin.Context) {
 func (h *ProductCategoryHandler) GetCategoryList(c *gin.Context) {
 	var r req.ProductCategoryListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetCategoryList(c, &r)
@@ -94,5 +96,5 @@ func (h *ProductCategoryHandler) GetCategoryList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

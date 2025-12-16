@@ -1,11 +1,13 @@
 package pay
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +24,7 @@ func NewPayAppHandler(svc *paySvc.PayAppService) *PayAppHandler {
 func (h *PayAppHandler) CreateApp(c *gin.Context) {
 	var r req.PayAppCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateApp(c, &r)
@@ -30,14 +32,14 @@ func (h *PayAppHandler) CreateApp(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateApp 更新支付应用
 func (h *PayAppHandler) UpdateApp(c *gin.Context) {
 	var r req.PayAppUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateApp(c, &r)
@@ -45,14 +47,14 @@ func (h *PayAppHandler) UpdateApp(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // UpdateAppStatus 更新支付应用状态
 func (h *PayAppHandler) UpdateAppStatus(c *gin.Context) {
 	var r req.PayAppUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateAppStatus(c, &r)
@@ -60,7 +62,7 @@ func (h *PayAppHandler) UpdateAppStatus(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteApp 删除支付应用
@@ -68,7 +70,7 @@ func (h *PayAppHandler) DeleteApp(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	err = h.svc.DeleteApp(c, id)
@@ -76,7 +78,7 @@ func (h *PayAppHandler) DeleteApp(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetApp 获得支付应用
@@ -84,7 +86,7 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	app, err := h.svc.GetApp(c, id)
@@ -104,14 +106,14 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 		TransferNotifyURL: app.TransferNotifyURL,
 		CreateTime:        app.CreatedAt,
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetAppPage 获得支付应用分页
 func (h *PayAppHandler) GetAppPage(c *gin.Context) {
 	var r req.PayAppPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAppPage(c, &r)
@@ -119,7 +121,7 @@ func (h *PayAppHandler) GetAppPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetAppList 获得支付应用列表
@@ -145,5 +147,5 @@ func (h *PayAppHandler) GetAppList(c *gin.Context) {
 			CreateTime:        app.CreatedAt,
 		})
 	}
-	c.JSON(200, core.Success(resList))
+	c.JSON(200, response.Success(resList))
 }

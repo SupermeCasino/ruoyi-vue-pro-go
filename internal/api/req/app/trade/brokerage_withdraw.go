@@ -1,9 +1,11 @@
 package trade
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 type AppBrokerageWithdrawPageReqVO struct {
-	core.PageParam
+	pagination.PageParam
 	Type   int `form:"type"`
 	Status int `form:"status"`
 }

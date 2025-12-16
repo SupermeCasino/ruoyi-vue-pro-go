@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,26 +23,26 @@ func NewAppCombinationActivityHandler(svc promotion.CombinationActivityService) 
 
 // GetCombinationActivityPage 获得拼团活动分页
 func (h *AppCombinationActivityHandler) GetCombinationActivityPage(c *gin.Context) {
-	var pageParam core.PageParam
+	var pageParam pagination.PageParam
 	// No request body for GET page, query params usually mapped manually or via BindQuery
-	// core.PageParam usually binds PageNo, PageSize
+	// pagination.PageParam usually binds PageNo, PageSize
 	// Java method takes PageParam.
 	pageParam.PageNo, _ = strconv.Atoi(c.DefaultQuery("pageNo", "1"))
 	pageParam.PageSize, _ = strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 
 	list, err := h.svc.GetCombinationActivityPageForApp(c.Request.Context(), pageParam)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }
 
 // GetCombinationActivityListByIds 获得拼团活动列表
 func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.Context) {
 	idsStr := c.Query("ids")
 	if idsStr == "" {
-		core.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
+		response.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
 		return
 	}
 
@@ -64,21 +66,21 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.C
 	// "GetListByIds" is for cart/order confirmation maybe?
 
 	// I'll return empty for now to match interface if added later.
-	core.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
+	response.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
 }
 
 // GetCombinationActivityDetail 获得拼团活动明细
 func (h *AppCombinationActivityHandler) GetCombinationActivityDetail(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Query("id"), 10, 64)
 	if err != nil {
-		core.WriteBizError(c, core.NewBizError(400, "Invalid ID"))
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid ID"))
 		return
 	}
 
 	detail, err := h.svc.GetCombinationActivityDetail(c.Request.Context(), id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, detail)
+	response.WriteSuccess(c, detail)
 }

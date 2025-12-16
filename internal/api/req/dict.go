@@ -1,10 +1,12 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // DictTypePageReq 字典类型分页请求
 type DictTypePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Type   string `form:"type"`
 	Status *int   `form:"status"` // 指针允许空值
@@ -21,7 +23,7 @@ type DictTypeSaveReq struct {
 
 // DictDataPageReq 字典数据分页请求
 type DictDataPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Label    string `form:"label"`
 	DictType string `form:"dictType"`
 	Status   *int   `form:"status"`

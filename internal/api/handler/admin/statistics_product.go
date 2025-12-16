@@ -3,10 +3,12 @@ package admin
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	productService "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,17 +35,17 @@ func NewProductStatisticsHandler(
 func (h *ProductStatisticsHandler) GetProductStatisticsAnalyse(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		core.WriteError(c, core.ParamErrCode, err.Error())
+		response.WriteError(c, errors.ParamErrCode, err.Error())
 		return
 	}
 
 	result, err := h.productStatisticsService.GetProductStatisticsAnalyse(c, &reqVO)
 	if err != nil {
-		core.WriteError(c, core.ServerErrCode, err.Error())
+		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }
 
 // GetProductStatisticsList 获得商品统计明细
@@ -51,13 +53,13 @@ func (h *ProductStatisticsHandler) GetProductStatisticsAnalyse(c *gin.Context) {
 func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		core.WriteError(c, core.ParamErrCode, err.Error())
+		response.WriteError(c, errors.ParamErrCode, err.Error())
 		return
 	}
 
 	result, err := h.productStatisticsService.GetProductStatisticsList(c, &reqVO)
 	if err != nil {
-		core.WriteError(c, core.ServerErrCode, err.Error())
+		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return
 	}
 
@@ -69,7 +71,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 	if len(spuIds) > 0 {
 		spuList, err := h.productSpuService.GetSpuList(c, spuIds)
 		if err != nil {
-			core.WriteError(c, core.ServerErrCode, err.Error())
+			response.WriteError(c, errors.ServerErrCode, err.Error())
 			return
 		}
 		spuMap := make(map[int64]*resp.ProductSpuResp)
@@ -84,7 +86,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }
 
 // GetProductStatisticsRankPage 获得商品统计排行榜分页
@@ -92,20 +94,20 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		core.WriteError(c, core.ParamErrCode, err.Error())
+		response.WriteError(c, errors.ParamErrCode, err.Error())
 		return
 	}
 
-	var pageParam core.PageParam
+	var pageParam pagination.PageParam
 	if err := c.ShouldBindQuery(&pageParam); err != nil {
-		core.WriteError(c, core.ParamErrCode, err.Error())
+		response.WriteError(c, errors.ParamErrCode, err.Error())
 		return
 	}
 
 	// 1. 获取统计数据
 	pageResult, err := h.productStatisticsService.GetProductStatisticsRankPage(c, &reqVO, &pageParam)
 	if err != nil {
-		core.WriteError(c, core.ServerErrCode, err.Error())
+		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return
 	}
 
@@ -113,12 +115,12 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 	// List interface{} -> []*resp.ProductStatisticsRespVO
 	// Note: The service currently returns interface{}. We need to assert it.
 	// In Go, since we did manual pagination in service returning []interface{}, we need to cast back.
-	// Actually, modifying service to return *core.PageResult[*resp.ProductStatisticsRespVO] would be better,
+	// Actually, modifying service to return *pagination.PageResult[*resp.ProductStatisticsRespVO] would be better,
 	// but reusing interface{} PageResult is common in this codebase for loose coupling.
 	// Let's iterate and collect IDs.
 
 	// Wait, internal/core/PageResult is generic in newer Go versions or just struct?
-	// Looking at service code: return &core.PageResult[interface{}]...
+	// Looking at service code: return &pagination.PageResult[interface{}]...
 	// So it is generic.
 	// But `interface{}` is tricky.
 
@@ -138,7 +140,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 	if len(spuIds) > 0 {
 		spuList, err := h.productSpuService.GetSpuList(c, spuIds)
 		if err != nil {
-			core.WriteError(c, core.ServerErrCode, err.Error())
+			response.WriteError(c, errors.ServerErrCode, err.Error())
 			return
 		}
 		spuMap := make(map[int64]*resp.ProductSpuResp)
@@ -157,7 +159,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 	// Actually we modified the pointers in realList, which point to the same objects as pageResult.List[i].
 	// So pageResult.List is already updated? Yes.
 
-	core.WriteSuccess(c, pageResult)
+	response.WriteSuccess(c, pageResult)
 }
 
 // ExportProductStatisticsExcel 导出商品统计 Excel
@@ -165,14 +167,14 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		core.WriteError(c, core.ParamErrCode, err.Error())
+		response.WriteError(c, errors.ParamErrCode, err.Error())
 		return
 	}
 
 	// 1. 查询数据
 	list, err := h.productStatisticsService.GetProductStatisticsList(c, &reqVO)
 	if err != nil {
-		core.WriteError(c, core.ServerErrCode, err.Error())
+		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return
 	}
 
@@ -184,7 +186,7 @@ func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) 
 	if len(spuIds) > 0 {
 		spuList, err := h.productSpuService.GetSpuList(c, spuIds)
 		if err != nil {
-			core.WriteError(c, core.ServerErrCode, err.Error())
+			response.WriteError(c, errors.ServerErrCode, err.Error())
 			return
 		}
 		spuMap := make(map[int64]*resp.ProductSpuResp)
@@ -201,7 +203,7 @@ func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) 
 
 	// 3. 导出 Excel
 	if err = excel.WriteExcel(c, "商品分析.xlsx", "数据", list); err != nil {
-		core.WriteError(c, core.ServerErrCode, "导出 Excel 失败: "+err.Error())
+		response.WriteError(c, errors.ServerErrCode, "导出 Excel 失败: "+err.Error())
 		return
 	}
 }

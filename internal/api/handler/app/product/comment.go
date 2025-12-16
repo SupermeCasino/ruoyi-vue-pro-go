@@ -2,8 +2,10 @@ package product
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,12 +25,12 @@ func NewAppProductCommentHandler(svc *product.ProductCommentService) *AppProduct
 // @Param spuId query int false "商品SPU编号"
 // @Param pageNo query int true "页码"
 // @Param pageSize query int true "页数"
-// @Success 200 {object} core.PageResult[resp.AppProductCommentResp]
+// @Success 200 {object} pagination.PageResult[resp.AppProductCommentResp]
 // @Router /app-api/product/comment/page [get]
 func (h *AppProductCommentHandler) GetCommentPage(c *gin.Context) {
 	var r req.AppProductCommentPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAppCommentPage(c, &r)
@@ -36,20 +38,20 @@ func (h *AppProductCommentHandler) GetCommentPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // CreateComment 创建商品评价
 func (h *AppProductCommentHandler) CreateComment(c *gin.Context) {
 	var r req.AppProductCommentCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
-	res, err := h.svc.CreateAppComment(c, core.GetUserId(c), &r)
+	res, err := h.svc.CreateAppComment(c, context.GetUserId(c), &r)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res.ID))
+	c.JSON(200, response.Success(res.ID))
 }

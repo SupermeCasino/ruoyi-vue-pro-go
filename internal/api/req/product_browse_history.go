@@ -1,17 +1,19 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // ProductBrowseHistoryPageReq (Admin)
 type ProductBrowseHistoryPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserId int64 `form:"userId"` // 用户编号
 	SpuId  int64 `form:"spuId"`  // 商品 SPU 编号
 }
 
 // AppProductBrowseHistoryPageReq (App)
 type AppProductBrowseHistoryPageReq struct {
-	core.PageParam
+	pagination.PageParam
 }
 
 // AppProductBrowseHistoryDeleteReq (App)

@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // KefuMessageCreateReq 发送消息请求
@@ -13,12 +13,12 @@ type KefuMessageCreateReq struct {
 
 // KefuMessagePageReq 消息分页请求
 type KefuMessagePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	ConversationID int64 `form:"conversationId" binding:"required"` // 会话编号
 }
 
 // KefuConversationPageReq 会话列表请求
 type KefuConversationPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	// 可扩展查询条件，如用户昵称等
 }

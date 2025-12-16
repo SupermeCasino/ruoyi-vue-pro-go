@@ -1,12 +1,14 @@
 package promotion
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -27,29 +29,29 @@ func NewSeckillActivityHandler(svc *promotion.SeckillActivityService, spuSvc *pr
 func (h *SeckillActivityHandler) CreateSeckillActivity(c *gin.Context) {
 	var r req.SeckillActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	id, err := h.svc.CreateSeckillActivity(c.Request.Context(), &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateSeckillActivity 更新
 func (h *SeckillActivityHandler) UpdateSeckillActivity(c *gin.Context) {
 	var r req.SeckillActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateSeckillActivity(c.Request.Context(), &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteSeckillActivity 删除
@@ -57,10 +59,10 @@ func (h *SeckillActivityHandler) DeleteSeckillActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if err := h.svc.DeleteSeckillActivity(c.Request.Context(), id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // CloseSeckillActivity 关闭
@@ -68,10 +70,10 @@ func (h *SeckillActivityHandler) CloseSeckillActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if err := h.svc.CloseSeckillActivity(c.Request.Context(), id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetSeckillActivity 获得详情
@@ -80,16 +82,16 @@ func (h *SeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	act, err := h.svc.GetSeckillActivity(c.Request.Context(), id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	if act == nil {
-		core.WriteSuccess(c, nil)
+		response.WriteSuccess(c, nil)
 		return
 	}
 	products, err := h.svc.GetSeckillProductListByActivityID(c.Request.Context(), id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -120,19 +122,19 @@ func (h *SeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 			Stock:        p.Stock,
 		})
 	}
-	core.WriteSuccess(c, detail)
+	response.WriteSuccess(c, detail)
 }
 
 // GetSeckillActivityPage 分页
 func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 	var r req.SeckillActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	res, err := h.svc.GetSeckillActivityPage(c.Request.Context(), &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	// Convert to Resp
@@ -156,7 +158,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.SeckillActivityResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.SeckillActivityResp]{
 		List:  list,
 		Total: res.Total,
 	})
@@ -171,7 +173,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 	var ids []int64
 	var intList model.IntListFromCSV
 	if err := intList.Scan(idsStr); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	for _, id := range intList {
@@ -180,7 +182,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 
 	activityList, err := h.svc.GetSeckillActivityListByIds(c.Request.Context(), ids)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -193,7 +195,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 		}
 	}
 	if len(activeList) == 0 {
-		core.WriteSuccess(c, []resp.SeckillActivityResp{})
+		response.WriteSuccess(c, []resp.SeckillActivityResp{})
 		return
 	}
 

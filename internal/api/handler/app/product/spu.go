@@ -1,10 +1,13 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"strconv"
+
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +39,7 @@ func (h *AppProductSpuHandler) GetSpuDetail(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -46,15 +49,15 @@ func (h *AppProductSpuHandler) GetSpuDetail(c *gin.Context) {
 		return
 	}
 	if res == nil {
-		core.WriteBizError(c, core.NewBizError(1006000002, "商品不存在"))
+		response.WriteBizError(c, errors.NewBizError(1006000002, "商品不存在"))
 		return
 	}
 	if res.Status != 1 {
-		core.WriteBizError(c, core.NewBizError(1006000003, "商品已下架"))
+		response.WriteBizError(c, errors.NewBizError(1006000003, "商品已下架"))
 		return
 	}
 
-	userID := core.GetLoginUserID(c)
+	userID := context.GetLoginUserID(c)
 	if userID > 0 {
 		_ = h.historySvc.CreateBrowseHistory(c, userID, id)
 		_ = h.spuSvc.UpdateBrowseCount(c, id, 1)
@@ -81,5 +84,5 @@ func (h *AppProductSpuHandler) GetSpuDetail(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }

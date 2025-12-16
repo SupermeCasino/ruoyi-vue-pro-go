@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // FileConfigSaveReq 文件配置创建/修改 Request
 type FileConfigSaveReq struct {
@@ -13,7 +15,7 @@ type FileConfigSaveReq struct {
 
 // FileConfigPageReq 文件配置分页 Request
 type FileConfigPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name       string   `form:"name"`
 	Storage    *int32   `form:"storage"`
 	CreateTime []string `form:"createTime[]"`
@@ -21,7 +23,7 @@ type FileConfigPageReq struct {
 
 // FilePageReq 文件分页 Request
 type FilePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Path       string   `form:"path"`
 	Type       string   `form:"type"`
 	CreateTime []string `form:"createTime[]"`

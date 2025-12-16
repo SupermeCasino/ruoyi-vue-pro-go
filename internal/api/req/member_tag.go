@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 type MemberTagCreateReq struct {
 	Name   string `json:"name" binding:"required"`
@@ -14,6 +16,6 @@ type MemberTagUpdateReq struct {
 }
 
 type MemberTagPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name *string `form:"name"`
 }

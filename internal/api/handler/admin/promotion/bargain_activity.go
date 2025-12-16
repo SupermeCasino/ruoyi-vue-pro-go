@@ -3,9 +3,11 @@ package promotion
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,73 +32,73 @@ func NewBargainActivityHandler(activitySvc *promotion.BargainActivityService, re
 func (h *BargainActivityHandler) CreateBargainActivity(c *gin.Context) {
 	var r req.BargainActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
+		response.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
 		return
 	}
 	id, err := h.activitySvc.CreateBargainActivity(c.Request.Context(), &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateBargainActivity 更新砍价活动
 func (h *BargainActivityHandler) UpdateBargainActivity(c *gin.Context) {
 	var r req.BargainActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
+		response.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
 		return
 	}
 	if err := h.activitySvc.UpdateBargainActivity(c.Request.Context(), &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // CloseBargainActivity 关闭砍价活动
 func (h *BargainActivityHandler) CloseBargainActivity(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 1001004001, "活动ID不能为空")
+		response.WriteError(c, 1001004001, "活动ID不能为空")
 		return
 	}
 	if err := h.activitySvc.CloseBargainActivity(c.Request.Context(), id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteBargainActivity 删除砍价活动
 func (h *BargainActivityHandler) DeleteBargainActivity(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 1001004001, "活动ID不能为空")
+		response.WriteError(c, 1001004001, "活动ID不能为空")
 		return
 	}
 	if err := h.activitySvc.DeleteBargainActivity(c.Request.Context(), id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetBargainActivity 获得砍价活动
 func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 1001004001, "活动ID不能为空")
+		response.WriteError(c, 1001004001, "活动ID不能为空")
 		return
 	}
 	act, err := h.activitySvc.GetBargainActivity(c.Request.Context(), id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	if act == nil {
-		core.WriteSuccess(c, nil)
+		response.WriteSuccess(c, nil)
 		return
 	}
 
@@ -125,24 +127,24 @@ func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
 	// Checked DO: Seckill has Remark. My Bargain DO?
 	// I'll check Bargain DO content again.
 	// If Remark is missing, I'll ignore for now or add later.
-	core.WriteSuccess(c, respVO)
+	response.WriteSuccess(c, respVO)
 }
 
 // GetBargainActivityPage 获得砍价活动分页
 func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	var r req.BargainActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
+		response.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
 		return
 	}
 	pageResult, err := h.activitySvc.GetBargainActivityPage(c.Request.Context(), &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	if len(pageResult.List) == 0 {
-		core.WriteSuccess(c, core.PageResult[resp.BargainActivityPageItemResp]{
+		response.WriteSuccess(c, pagination.PageResult[resp.BargainActivityPageItemResp]{
 			List:  []resp.BargainActivityPageItemResp{},
 			Total: pageResult.Total,
 		})
@@ -218,7 +220,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.BargainActivityPageItemResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.BargainActivityPageItemResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

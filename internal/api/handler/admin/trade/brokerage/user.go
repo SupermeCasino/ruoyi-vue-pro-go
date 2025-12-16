@@ -3,9 +3,11 @@ package brokerage
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -32,16 +34,16 @@ func NewBrokerageUserHandler(svc *brokerage.BrokerageUserService, memberSvc *mem
 func (h *BrokerageUserHandler) CreateBrokerageUser(c *gin.Context) {
 	var r req.BrokerageUserCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	id, err := h.svc.CreateBrokerageUser(c.Request.Context(), &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateBindUser 修改推广员
@@ -49,14 +51,14 @@ func (h *BrokerageUserHandler) CreateBrokerageUser(c *gin.Context) {
 func (h *BrokerageUserHandler) UpdateBindUser(c *gin.Context) {
 	var r req.BrokerageUserUpdateBindUserReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateBrokerageUserId(c.Request.Context(), r.ID, r.BindUserID); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // ClearBindUser 清除推广员
@@ -64,14 +66,14 @@ func (h *BrokerageUserHandler) UpdateBindUser(c *gin.Context) {
 func (h *BrokerageUserHandler) ClearBindUser(c *gin.Context) {
 	var r req.BrokerageUserClearBindUserReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateBrokerageUserId(c.Request.Context(), r.ID, 0); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateBrokerageEnabled 修改推广资格
@@ -79,27 +81,27 @@ func (h *BrokerageUserHandler) ClearBindUser(c *gin.Context) {
 func (h *BrokerageUserHandler) UpdateBrokerageEnabled(c *gin.Context) {
 	var r req.BrokerageUserUpdateBrokerageEnabledReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateBrokerageUserEnabled(c.Request.Context(), r.ID, r.Enabled); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetBrokerageUser 获得分销用户
 // @Router /admin-api/trade/brokerage-user/get [get]
 func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "id is required")
+		response.WriteError(c, 400, "id is required")
 		return
 	}
 	user, err := h.svc.GetBrokerageUser(c.Request.Context(), id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -121,7 +123,7 @@ func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 		res.Nickname = memberUser.Nickname
 	}
 
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetBrokerageUserPage 获得分销用户分页
@@ -129,13 +131,13 @@ func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
 	var r req.BrokerageUserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	pageResult, err := h.svc.GetBrokerageUserPage(c.Request.Context(), &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -169,7 +171,7 @@ func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
 		list[i] = res
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.BrokerageUserResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.BrokerageUserResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

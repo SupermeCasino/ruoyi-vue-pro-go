@@ -4,8 +4,9 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,85 +24,85 @@ func NewNotifyHandler(svc *service.NotifyService) *NotifyHandler {
 func (h *NotifyHandler) CreateNotifyTemplate(c *gin.Context) {
 	var r req.NotifyTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateNotifyTemplate(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 func (h *NotifyHandler) UpdateNotifyTemplate(c *gin.Context) {
 	var r req.NotifyTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateNotifyTemplate(c, &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *NotifyHandler) DeleteNotifyTemplate(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteNotifyTemplate(c, id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *NotifyHandler) GetNotifyTemplate(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	t, err := h.svc.GetNotifyTemplate(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, t)
+	response.WriteSuccess(c, t)
 }
 
 func (h *NotifyHandler) GetNotifyTemplatePage(c *gin.Context) {
 	var r req.NotifyTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetNotifyTemplatePage(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, page)
+	response.WriteSuccess(c, page)
 }
 
 func (h *NotifyHandler) SendNotify(c *gin.Context) {
 	var r req.NotifyTemplateSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.SendNotify(c, r.UserID, r.UserType, r.TemplateCode, r.TemplateParams)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // ================= Message Handlers =================
@@ -109,22 +110,22 @@ func (h *NotifyHandler) SendNotify(c *gin.Context) {
 func (h *NotifyHandler) GetNotifyMessagePage(c *gin.Context) {
 	var r req.NotifyMessagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// Admin view
 	page, err := h.svc.GetNotifyMessagePage(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, page)
+	response.WriteSuccess(c, page)
 }
 
 func (h *NotifyHandler) GetMyNotifyMessagePage(c *gin.Context) {
 	var r req.MyNotifyMessagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// TODO: Get userId from context
@@ -138,35 +139,35 @@ func (h *NotifyHandler) GetMyNotifyMessagePage(c *gin.Context) {
 
 	page, err := h.svc.GetMyNotifyMessagePage(c, userId, userType, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, page)
+	response.WriteSuccess(c, page)
 }
 
 func (h *NotifyHandler) UpdateNotifyMessageRead(c *gin.Context) {
 	var r req.NotifyMessageUpdateReadReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	userId := int64(1)
 	userType := 1
 	if err := h.svc.UpdateNotifyMessageRead(c, userId, userType, r.IDs); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *NotifyHandler) UpdateAllNotifyMessageRead(c *gin.Context) {
 	userId := int64(1)
 	userType := 1
 	if err := h.svc.UpdateAllNotifyMessageRead(c, userId, userType); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *NotifyHandler) GetUnreadNotifyMessageCount(c *gin.Context) {
@@ -174,8 +175,8 @@ func (h *NotifyHandler) GetUnreadNotifyMessageCount(c *gin.Context) {
 	userType := 1
 	count, err := h.svc.GetUnreadNotifyMessageCount(c, userId, userType)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, count)
+	response.WriteSuccess(c, count)
 }

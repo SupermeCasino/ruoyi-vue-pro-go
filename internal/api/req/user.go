@@ -3,11 +3,11 @@ package req
 import (
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type UserPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Username     string     `form:"username"`
 	Mobile       string     `form:"mobile"`
 	Status       *int       `form:"status"`

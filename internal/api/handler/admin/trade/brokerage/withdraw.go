@@ -6,9 +6,11 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	brokerageModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type BrokerageWithdrawHandler struct {
@@ -25,36 +27,36 @@ func NewBrokerageWithdrawHandler(withdrawSvc *brokerage.BrokerageWithdrawService
 
 // ApproveBrokerageWithdraw 通过申请
 func (h *BrokerageWithdrawHandler) ApproveBrokerageWithdraw(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 
 	// 10: AUDIT_SUCCESS (See Enum in Java)
 	if err := h.withdrawSvc.AuditBrokerageWithdraw(c, id, 10, ""); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // RejectBrokerageWithdraw 驳回申请
 func (h *BrokerageWithdrawHandler) RejectBrokerageWithdraw(c *gin.Context) {
 	var r req.BrokerageWithdrawRejectReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 
 	// 20: AUDIT_FAIL
 	if err := h.withdrawSvc.AuditBrokerageWithdraw(c, r.ID, 20, r.AuditReason); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateBrokerageWithdrawTransferred 更新佣金提现的转账结果
@@ -65,51 +67,51 @@ func (h *BrokerageWithdrawHandler) UpdateBrokerageWithdrawTransferred(c *gin.Con
 		PayTransferID      int64  `json:"payTransferId"`
 	}
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 
-	id := core.ParseInt64(r.MerchantTransferID)
+	id := utils.ParseInt64(r.MerchantTransferID)
 	if err := h.withdrawSvc.UpdateBrokerageWithdrawTransferred(c, id, r.PayTransferID); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetBrokerageWithdraw 获得佣金提现
 func (h *BrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 
 	withdraw, err := h.withdrawSvc.GetBrokerageWithdraw(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if withdraw == nil {
-		core.WriteError(c, 404, "提现记录不存在")
+		response.WriteError(c, 404, "提现记录不存在")
 		return
 	}
 
 	res := h.convert(withdraw)
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetBrokerageWithdrawPage 获得佣金提现分页
 func (h *BrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 	var r req.BrokerageWithdrawPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 
 	pageResult, err := h.withdrawSvc.GetBrokerageWithdrawPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -130,7 +132,7 @@ func (h *BrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 		list[i] = res
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.BrokerageWithdrawResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.BrokerageWithdrawResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

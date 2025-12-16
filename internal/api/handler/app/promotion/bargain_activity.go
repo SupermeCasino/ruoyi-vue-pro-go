@@ -3,9 +3,11 @@ package promotion
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,19 +29,19 @@ func NewAppBargainActivityHandler(activitySvc *promotion.BargainActivityService,
 // GetBargainActivityList 获得砍价活动列表 (首页推荐)
 // Java: GET /list, @PermitAll
 func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
-	count := int(core.ParseInt64(c.DefaultQuery("count", "6")))
+	count := int(utils.ParseInt64(c.DefaultQuery("count", "6")))
 	if count <= 0 {
 		count = 6
 	}
 
 	list, err := h.activitySvc.GetBargainActivityListByCount(c.Request.Context(), count)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	if len(list) == 0 {
-		core.WriteSuccess(c, []resp.AppBargainActivityRespVO{})
+		response.WriteSuccess(c, []resp.AppBargainActivityRespVO{})
 		return
 	}
 
@@ -61,26 +63,26 @@ func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
 	for i, item := range list {
 		result[i] = h.convertActivityResp(item, spuMap[item.SpuID])
 	}
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }
 
 // GetBargainActivityPage 获得砍价活动分页
 // Java: GET /page, @PermitAll, 使用 PageParam
 func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
-	var p core.PageParam
+	var p pagination.PageParam
 	if err := c.ShouldBindQuery(&p); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败")
+		response.WriteError(c, 1001004001, "参数校验失败")
 		return
 	}
 
 	page, err := h.activitySvc.GetBargainActivityPageForApp(c.Request.Context(), &p)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	if page.Total == 0 {
-		core.WriteSuccess(c, core.PageResult[resp.AppBargainActivityRespVO]{List: []resp.AppBargainActivityRespVO{}, Total: 0})
+		response.WriteSuccess(c, pagination.PageResult[resp.AppBargainActivityRespVO]{List: []resp.AppBargainActivityRespVO{}, Total: 0})
 		return
 	}
 
@@ -102,21 +104,21 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	for i, item := range page.List {
 		result[i] = h.convertActivityResp(item, spuMap[item.SpuID])
 	}
-	core.WriteSuccess(c, core.PageResult[resp.AppBargainActivityRespVO]{List: result, Total: page.Total})
+	response.WriteSuccess(c, pagination.PageResult[resp.AppBargainActivityRespVO]{List: result, Total: page.Total})
 }
 
 // GetBargainActivityDetail 获得砍价活动详情
 // Java: GET /get-detail, @PermitAll
 func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 1001004001, "参数校验失败")
+		response.WriteError(c, 1001004001, "参数校验失败")
 		return
 	}
 
 	act, err := h.activitySvc.GetBargainActivity(c.Request.Context(), id)
 	if err != nil {
-		core.WriteSuccess(c, nil)
+		response.WriteSuccess(c, nil)
 		return
 	}
 
@@ -138,7 +140,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 		SuccessUserCount:         int(successCount),
 		Remark:                   act.Remark,
 	}
-	core.WriteSuccess(c, detail)
+	response.WriteSuccess(c, detail)
 }
 
 // convertActivityResp 转换活动响应 (匹配 Java BargainActivityConvert)

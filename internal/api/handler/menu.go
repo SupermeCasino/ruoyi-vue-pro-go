@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type MenuHandler struct {
@@ -25,7 +26,7 @@ func NewMenuHandler(svc *service.MenuService) *MenuHandler {
 func (h *MenuHandler) CreateMenu(c *gin.Context) {
 	var r req.MenuCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateMenu(c.Request.Context(), &r)
@@ -33,7 +34,7 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateMenu 更新菜单
@@ -41,14 +42,14 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	var r req.MenuUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateMenu(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteMenu 删除菜单
@@ -60,7 +61,7 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetMenuList 获取菜单列表
@@ -68,7 +69,7 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 func (h *MenuHandler) GetMenuList(c *gin.Context) {
 	var r req.MenuListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	list, err := h.svc.GetMenuList(c.Request.Context(), &r)
@@ -76,7 +77,7 @@ func (h *MenuHandler) GetMenuList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }
 
 // GetMenu 获取菜单详情
@@ -89,7 +90,7 @@ func (h *MenuHandler) GetMenu(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(item))
+	c.JSON(200, response.Success(item))
 }
 
 // GetSimpleMenuList 获取精简菜单列表
@@ -100,5 +101,5 @@ func (h *MenuHandler) GetSimpleMenuList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }

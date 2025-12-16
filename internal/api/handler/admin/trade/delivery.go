@@ -3,9 +3,11 @@ package trade
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -27,60 +29,60 @@ func NewDeliveryExpressHandler(svc *trade.DeliveryExpressService, logger *zap.Lo
 func (h *DeliveryExpressHandler) CreateDeliveryExpress(c *gin.Context) {
 	var r req.DeliveryExpressSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	id, err := h.svc.CreateDeliveryExpress(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("创建物流公司失败", zap.Error(err))
-		core.WriteError(c, 500, "创建失败")
+		response.WriteError(c, 500, "创建失败")
 		return
 	}
 
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateDeliveryExpress 更新物流公司
 func (h *DeliveryExpressHandler) UpdateDeliveryExpress(c *gin.Context) {
 	var r req.DeliveryExpressSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	if err := h.svc.UpdateDeliveryExpress(c.Request.Context(), &r); err != nil {
 		h.logger.Error("更新物流公司失败", zap.Error(err))
-		core.WriteError(c, 500, "更新失败")
+		response.WriteError(c, 500, "更新失败")
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteDeliveryExpress 删除物流公司
 func (h *DeliveryExpressHandler) DeleteDeliveryExpress(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.DeleteDeliveryExpress(c.Request.Context(), id); err != nil {
 		h.logger.Error("删除物流公司失败", zap.Error(err))
-		core.WriteError(c, 500, "删除失败")
+		response.WriteError(c, 500, "删除失败")
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetDeliveryExpress 获取物流公司
 func (h *DeliveryExpressHandler) GetDeliveryExpress(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	express, err := h.svc.GetDeliveryExpress(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("获取物流公司失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
-	core.WriteSuccess(c, resp.DeliveryExpressResp{
+	response.WriteSuccess(c, resp.DeliveryExpressResp{
 		ID:         express.ID,
 		Code:       express.Code,
 		Name:       express.Name,
@@ -95,14 +97,14 @@ func (h *DeliveryExpressHandler) GetDeliveryExpress(c *gin.Context) {
 func (h *DeliveryExpressHandler) GetDeliveryExpressPage(c *gin.Context) {
 	var r req.DeliveryExpressPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	page, err := h.svc.GetDeliveryExpressPage(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("获取物流公司分页失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
@@ -119,7 +121,7 @@ func (h *DeliveryExpressHandler) GetDeliveryExpressPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.DeliveryExpressResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.DeliveryExpressResp]{
 		List:  list,
 		Total: page.Total,
 	})
@@ -130,7 +132,7 @@ func (h *DeliveryExpressHandler) GetSimpleDeliveryExpressList(c *gin.Context) {
 	list, err := h.svc.GetSimpleDeliveryExpressList(c.Request.Context())
 	if err != nil {
 		h.logger.Error("获取物流公司列表失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
@@ -146,7 +148,7 @@ func (h *DeliveryExpressHandler) GetSimpleDeliveryExpressList(c *gin.Context) {
 			CreateTime: item.CreatedAt,
 		}
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // ExportDeliveryExpress 导出物流公司列表
@@ -154,7 +156,7 @@ func (h *DeliveryExpressHandler) GetSimpleDeliveryExpressList(c *gin.Context) {
 func (h *DeliveryExpressHandler) ExportDeliveryExpress(c *gin.Context) {
 	var r req.DeliveryExpressPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	r.PageNo = 1
@@ -163,7 +165,7 @@ func (h *DeliveryExpressHandler) ExportDeliveryExpress(c *gin.Context) {
 	page, err := h.svc.GetDeliveryExpressPage(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("导出物流公司失败", zap.Error(err))
-		core.WriteError(c, 500, "导出失败")
+		response.WriteError(c, 500, "导出失败")
 		return
 	}
 
@@ -182,7 +184,7 @@ func (h *DeliveryExpressHandler) ExportDeliveryExpress(c *gin.Context) {
 
 	if err := excel.WriteExcel(c, "快递公司.xls", "数据", list); err != nil {
 		h.logger.Error("导出Excel失败", zap.Error(err))
-		core.WriteError(c, 500, "导出失败")
+		response.WriteError(c, 500, "导出失败")
 	}
 }
 
@@ -202,60 +204,60 @@ func NewDeliveryPickUpStoreHandler(svc *trade.DeliveryPickUpStoreService, logger
 func (h *DeliveryPickUpStoreHandler) CreateDeliveryPickUpStore(c *gin.Context) {
 	var r req.DeliveryPickUpStoreSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	id, err := h.svc.CreateDeliveryPickUpStore(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("创建自提门店失败", zap.Error(err))
-		core.WriteError(c, 500, "创建失败")
+		response.WriteError(c, 500, "创建失败")
 		return
 	}
 
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateDeliveryPickUpStore 更新自提门店
 func (h *DeliveryPickUpStoreHandler) UpdateDeliveryPickUpStore(c *gin.Context) {
 	var r req.DeliveryPickUpStoreSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	if err := h.svc.UpdateDeliveryPickUpStore(c.Request.Context(), &r); err != nil {
 		h.logger.Error("更新自提门店失败", zap.Error(err))
-		core.WriteError(c, 500, "更新失败")
+		response.WriteError(c, 500, "更新失败")
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteDeliveryPickUpStore 删除自提门店
 func (h *DeliveryPickUpStoreHandler) DeleteDeliveryPickUpStore(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.DeleteDeliveryPickUpStore(c.Request.Context(), id); err != nil {
 		h.logger.Error("删除自提门店失败", zap.Error(err))
-		core.WriteError(c, 500, "删除失败")
+		response.WriteError(c, 500, "删除失败")
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetDeliveryPickUpStore 获取自提门店
 func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	store, err := h.svc.GetDeliveryPickUpStore(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("获取自提门店失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
-	core.WriteSuccess(c, resp.DeliveryPickUpStoreResp{
+	response.WriteSuccess(c, resp.DeliveryPickUpStoreResp{
 		ID:            store.ID,
 		Name:          store.Name,
 		Introduction:  store.Introduction,
@@ -275,14 +277,14 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
 func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) {
 	var r req.DeliveryPickUpStorePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	page, err := h.svc.GetDeliveryPickUpStorePage(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("获取自提门店分页失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
@@ -304,7 +306,7 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.DeliveryPickUpStoreResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.DeliveryPickUpStoreResp]{
 		List:  list,
 		Total: page.Total,
 	})
@@ -315,7 +317,7 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 	list, err := h.svc.GetSimpleDeliveryPickUpStoreList(c.Request.Context())
 	if err != nil {
 		h.logger.Error("获取自提门店列表失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
@@ -336,7 +338,7 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 			CreateTime:    item.CreatedAt,
 		}
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 type DeliveryExpressTemplateHandler struct {
@@ -355,74 +357,74 @@ func NewDeliveryExpressTemplateHandler(svc *trade.DeliveryExpressTemplateService
 func (h *DeliveryExpressTemplateHandler) CreateDeliveryExpressTemplate(c *gin.Context) {
 	var r req.DeliveryFreightTemplateSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	id, err := h.svc.CreateDeliveryExpressTemplate(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("创建运费模板失败", zap.Error(err))
-		core.WriteError(c, 500, "创建失败")
+		response.WriteError(c, 500, "创建失败")
 		return
 	}
 
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateDeliveryExpressTemplate 更新运费模板
 func (h *DeliveryExpressTemplateHandler) UpdateDeliveryExpressTemplate(c *gin.Context) {
 	var r req.DeliveryFreightTemplateSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	if err := h.svc.UpdateDeliveryExpressTemplate(c.Request.Context(), &r); err != nil {
 		h.logger.Error("更新运费模板失败", zap.Error(err))
-		core.WriteError(c, 500, "更新失败")
+		response.WriteError(c, 500, "更新失败")
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteDeliveryExpressTemplate 删除运费模板
 func (h *DeliveryExpressTemplateHandler) DeleteDeliveryExpressTemplate(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.DeleteDeliveryExpressTemplate(c.Request.Context(), id); err != nil {
 		h.logger.Error("删除运费模板失败", zap.Error(err))
-		core.WriteError(c, 500, "删除失败")
+		response.WriteError(c, 500, "删除失败")
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetDeliveryExpressTemplate 获取运费模板详情
 func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplate(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	template, err := h.svc.GetDeliveryExpressTemplate(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("获取运费模板失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
-	core.WriteSuccess(c, template)
+	response.WriteSuccess(c, template)
 }
 
 // GetDeliveryExpressTemplatePage 获取运费模板分页
 func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.Context) {
 	var r req.DeliveryFreightTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	page, err := h.svc.GetDeliveryExpressTemplatePage(c.Request.Context(), &r)
 	if err != nil {
 		h.logger.Error("获取运费模板分页失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
 
@@ -437,7 +439,7 @@ func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.C
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.DeliveryFreightTemplateResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.DeliveryFreightTemplateResp]{
 		List:  list,
 		Total: page.Total,
 	})
@@ -448,8 +450,8 @@ func (h *DeliveryExpressTemplateHandler) GetSimpleDeliveryExpressTemplateList(c 
 	list, err := h.svc.GetSimpleDeliveryExpressTemplateList(c.Request.Context())
 	if err != nil {
 		h.logger.Error("获取运费模板列表失败", zap.Error(err))
-		core.WriteError(c, 500, "获取失败")
+		response.WriteError(c, 500, "获取失败")
 		return
 	}
-	core.WriteSuccess(c, list)
+	response.WriteSuccess(c, list)
 }

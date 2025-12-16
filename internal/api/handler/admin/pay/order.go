@@ -1,12 +1,15 @@
 package pay
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +28,7 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -36,7 +39,7 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(convertOrderResp(order)))
+	c.JSON(200, response.Success(convertOrderResp(order)))
 }
 
 // GetOrderDetail 获得支付订单详情
@@ -44,7 +47,7 @@ func (h *PayOrderHandler) GetOrderDetail(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -65,14 +68,14 @@ func (h *PayOrderHandler) GetOrderDetail(c *gin.Context) {
 		Extension:    convertExtensionResp(extension),
 		App:          convertAppResp(app), // Need to export/access this converter or rewrite
 	}
-	c.JSON(200, core.Success(detail))
+	c.JSON(200, response.Success(detail))
 }
 
 // GetOrderPage 获得支付订单分页
 func (h *PayOrderHandler) GetOrderPage(c *gin.Context) {
 	var r req.PayOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -98,7 +101,7 @@ func (h *PayOrderHandler) GetOrderPage(c *gin.Context) {
 		list = append(list, r)
 	}
 
-	c.JSON(200, core.Success(core.PageResult[resp.PayOrderResp]{
+	c.JSON(200, response.Success(pagination.PageResult[resp.PayOrderResp]{
 		List:  list,
 		Total: pageResult.Total,
 	}))
@@ -108,7 +111,7 @@ func (h *PayOrderHandler) GetOrderPage(c *gin.Context) {
 func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 	var r req.PayOrderSubmitReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -123,7 +126,7 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(respVO))
+	c.JSON(200, response.Success(respVO))
 }
 
 // Helpers

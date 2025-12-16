@@ -3,8 +3,11 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -26,57 +29,57 @@ func NewSocialUserHandler(socialUserService *service.SocialUserService, logger *
 func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 	var req req.SocialUserBindReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	// 从上下文获取当前用户信息 (假设已通过认证中间件)
 	// 从上下文获取当前用户信息
-	userID := core.GetLoginUserID(c)
+	userID := context.GetLoginUserID(c)
 	userType := 2 // 2=System/Admin
 
 	if err := h.socialUserService.BindSocialUser(c.Request.Context(), userID, userType, &req); err != nil {
 		h.logger.Error("绑定社交用户失败", zap.Error(err))
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UnbindSocialUser 解绑社交用户
 func (h *SocialUserHandler) UnbindSocialUser(c *gin.Context) {
 	var req req.SocialUserUnbindReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	// 从上下文获取当前用户信息
 	// 从上下文获取当前用户信息
-	userID := core.GetLoginUserID(c)
+	userID := context.GetLoginUserID(c)
 	userType := 2 // 2=System/Admin
 
 	if err := h.socialUserService.UnbindSocialUser(c.Request.Context(), userID, userType, req.Type, req.Openid); err != nil {
 		h.logger.Error("解绑社交用户失败", zap.Error(err))
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetSocialUserList 获取用户绑定的社交账号列表
 func (h *SocialUserHandler) GetSocialUserList(c *gin.Context) {
 	// 从上下文获取当前用户信息
 	// 从上下文获取当前用户信息
-	userID := core.GetLoginUserID(c)
+	userID := context.GetLoginUserID(c)
 	userType := 2 // 2=System/Admin
 
 	list, err := h.socialUserService.GetSocialUserList(c.Request.Context(), userID, userType)
 	if err != nil {
 		h.logger.Error("获取社交用户列表失败", zap.Error(err))
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -95,17 +98,17 @@ func (h *SocialUserHandler) GetSocialUserList(c *gin.Context) {
 			CreateTime:  user.CreatedAt,
 		}
 	}
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }
 
 // GetSocialUser 获取社交用户
 func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 
 	user, err := h.socialUserService.GetSocialUser(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("获取社交用户失败", zap.Error(err))
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -121,21 +124,21 @@ func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
 		State:       user.State,
 		CreateTime:  user.CreatedAt,
 	}
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }
 
 // GetSocialUserPage 获取社交用户分页
 func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
 	var req req.SocialUserPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	page, err := h.socialUserService.GetSocialUserPage(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Error("获取社交用户分页失败", zap.Error(err))
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -155,7 +158,7 @@ func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.SocialUserResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.SocialUserResp]{
 		List:  list,
 		Total: page.Total,
 	})

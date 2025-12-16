@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,13 +22,13 @@ func NewSmsLogHandler(smsLogSvc *service.SmsLogService) *SmsLogHandler {
 func (h *SmsLogHandler) GetSmsLogPage(c *gin.Context) {
 	var req req.SmsLogPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, core.Error(400, err.Error()))
+		c.JSON(400, response.Error(400, err.Error()))
 		return
 	}
 	res, err := h.smsLogSvc.GetSmsLogPage(c, &req)
 	if err != nil {
-		c.JSON(500, core.Error(500, err.Error()))
+		c.JSON(500, response.Error(500, err.Error()))
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

@@ -4,8 +4,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -23,78 +25,78 @@ func NewMemberSignInConfigHandler(svc *memberSvc.MemberSignInConfigService) *Mem
 func (h *MemberSignInConfigHandler) CreateSignInConfig(c *gin.Context) {
 	var r req.MemberSignInConfigCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateSignInConfig(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateSignInConfig 更新签到规则
 func (h *MemberSignInConfigHandler) UpdateSignInConfig(c *gin.Context) {
 	var r req.MemberSignInConfigUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateSignInConfig(c, &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteSignInConfig 删除签到规则
 func (h *MemberSignInConfigHandler) DeleteSignInConfig(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteSignInConfig(c, id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetSignInConfig 获得签到规则
 func (h *MemberSignInConfigHandler) GetSignInConfig(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	config, err := h.svc.GetSignInConfig(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, toConfigResp(config))
+	response.WriteSuccess(c, toConfigResp(config))
 }
 
 // GetSignInConfigList 获得签到规则列表
 func (h *MemberSignInConfigHandler) GetSignInConfigList(c *gin.Context) {
 	var status *int
 	if val, ok := c.GetQuery("status"); ok {
-		s := int(core.ParseInt64(val))
+		s := int(utils.ParseInt64(val))
 		status = &s
 	}
 
 	list, err := h.svc.GetSignInConfigList(c, status)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	respList := lo.Map(list, func(item *memberModel.MemberSignInConfig, _ int) resp.MemberSignInConfigResp {
 		return toConfigResp(item)
 	})
-	core.WriteSuccess(c, respList)
+	response.WriteSuccess(c, respList)
 }
 
 func toConfigResp(config *memberModel.MemberSignInConfig) resp.MemberSignInConfigResp {

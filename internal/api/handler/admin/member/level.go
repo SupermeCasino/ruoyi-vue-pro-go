@@ -4,8 +4,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -23,75 +25,75 @@ func NewMemberLevelHandler(svc *memberSvc.MemberLevelService) *MemberLevelHandle
 func (h *MemberLevelHandler) CreateLevel(c *gin.Context) {
 	var r req.MemberLevelCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateLevel(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateLevel 更新等级
 func (h *MemberLevelHandler) UpdateLevel(c *gin.Context) {
 	var r req.MemberLevelUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateLevel(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteLevel 删除等级
 func (h *MemberLevelHandler) DeleteLevel(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.DeleteLevel(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetLevel 获得等级详情
 func (h *MemberLevelHandler) GetLevel(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	item, err := h.svc.GetLevel(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, h.convertResp(item))
+	response.WriteSuccess(c, h.convertResp(item))
 }
 
 // GetLevelPage 获得等级分页
 func (h *MemberLevelHandler) GetLevelPage(c *gin.Context) {
 	var r req.MemberLevelPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetLevelPage(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *member.MemberLevel, _ int) *resp.MemberLevelResp {
+	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *member.MemberLevel, _ int) *resp.MemberLevelResp {
 		return h.convertResp(item)
 	}))
 }
@@ -100,10 +102,10 @@ func (h *MemberLevelHandler) GetLevelPage(c *gin.Context) {
 func (h *MemberLevelHandler) GetLevelListSimple(c *gin.Context) {
 	list, err := h.svc.GetLevelSimpleList(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, lo.Map(list, func(item *member.MemberLevel, _ int) *resp.MemberLevelResp {
+	response.WriteSuccess(c, lo.Map(list, func(item *member.MemberLevel, _ int) *resp.MemberLevelResp {
 		return h.convertResp(item)
 	}))
 }

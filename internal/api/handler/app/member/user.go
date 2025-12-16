@@ -2,8 +2,10 @@ package member
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,7 +28,7 @@ func (h *AppMemberUserHandler) GetUserInfo(c *gin.Context) {
 	userId := c.GetInt64("userId")
 	if userId == 0 {
 		// Fallback for testing or error if no middleware
-		// c.JSON(401, core.Error(401, "Unauthorized"))
+		// c.JSON(401, response.Error(401, "Unauthorized"))
 		// return
 		// For verification purposes without middleware, we might mock it or expect 0 and fail.
 	}
@@ -36,7 +38,7 @@ func (h *AppMemberUserHandler) GetUserInfo(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // UpdateUser 修改基本信息
@@ -44,7 +46,7 @@ func (h *AppMemberUserHandler) GetUserInfo(c *gin.Context) {
 func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 	var r req.AppMemberUserUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -53,7 +55,7 @@ func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // UpdateUserMobile 修改用户手机
@@ -61,16 +63,16 @@ func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 	var r req.AppMemberUserUpdateMobileReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
-	userId := c.GetInt64(core.CtxUserIDKey)
+	userId := c.GetInt64(context.CtxUserIDKey)
 	if err := h.svc.UpdateUserMobile(c, userId, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // UpdateUserPassword 修改用户密码
@@ -78,14 +80,14 @@ func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 	var r req.AppMemberUserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
-	if err := h.svc.UpdateUserPassword(c, c.GetInt64(core.CtxUserIDKey), &r); err != nil {
+	if err := h.svc.UpdateUserPassword(c, c.GetInt64(context.CtxUserIDKey), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // ResetUserPassword 重置用户密码 (忘记密码)
@@ -93,12 +95,12 @@ func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 func (h *AppMemberUserHandler) ResetUserPassword(c *gin.Context) {
 	var r req.AppMemberUserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.ResetUserPassword(c, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }

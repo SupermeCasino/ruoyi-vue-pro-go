@@ -3,8 +3,9 @@ package promotion
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,18 +29,18 @@ func NewCombinationRecordHandler(
 func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 	var r req.CombinationRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 
 	// 1. Get Page
 	pageResult, err := h.svc.GetCombinationRecordPageAdmin(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if len(pageResult.List) == 0 {
-		core.WriteSuccess(c, core.PageResult[resp.CombinationRecordPageItemRespVO]{
+		response.WriteSuccess(c, pagination.PageResult[resp.CombinationRecordPageItemRespVO]{
 			List:  []resp.CombinationRecordPageItemRespVO{},
 			Total: pageResult.Total,
 		})
@@ -93,7 +94,7 @@ func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 		list[i] = vo
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.CombinationRecordPageItemRespVO]{
+	response.WriteSuccess(c, pagination.PageResult[resp.CombinationRecordPageItemRespVO]{
 		List:  list,
 		Total: pageResult.Total,
 	})

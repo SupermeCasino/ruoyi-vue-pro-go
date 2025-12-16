@@ -4,8 +4,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +24,7 @@ func NewPayWalletRechargeHandler(svc *payData.PayWalletRechargeService) *PayWall
 func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
 	var r req.PayWalletRechargePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetWalletRechargePage(c, &r)
@@ -32,11 +34,11 @@ func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
 	}
 
 	// Convert list
-	newRes := core.NewPageResult(make([]*resp.PayWalletRechargeResp, 0, len(res.List)), res.Total)
+	newRes := pagination.NewPageResult(make([]*resp.PayWalletRechargeResp, 0, len(res.List)), res.Total)
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertRechargeResp(item))
 	}
-	c.JSON(200, core.Success(newRes))
+	c.JSON(200, response.Success(newRes))
 }
 
 func convertRechargeResp(item *pay.PayWalletRecharge) *resp.PayWalletRechargeResp {

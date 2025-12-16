@@ -4,9 +4,11 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -40,44 +42,44 @@ func NewMemberUserHandler(
 func (h *MemberUserHandler) UpdateUser(c *gin.Context) {
 	var r req.MemberUserUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.userSvc.AdminUpdateUser(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateUserLevel 更新会员等级
 func (h *MemberUserHandler) UpdateUserLevel(c *gin.Context) {
 	var r req.MemberUserUpdateLevelReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.levelSvc.UpdateUserLevel(c, r.ID, r.LevelID, r.Reason)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateUserPoint 更新会员积分
 func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
 	var r req.MemberUserUpdatePointReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// Java: memberPointRecordService.createPointRecord(updateReqVO.getId(), updateReqVO.getPoint(),
 	//       MemberPointBizTypeEnum.ADMIN, String.valueOf(getLoginUserId()));
 	// MemberPointBizTypeEnum: SIGN=1, ADMIN=2
 	bizType := 2 // ADMIN
-	bizId := utils.ToString(core.GetLoginUserID(c))
+	bizId := utils.ToString(context.GetLoginUserID(c))
 	// 标题和描述在 Java 中由 MemberPointBizTypeEnum.ADMIN 的 name/description 字段提供
 	// ADMIN.name = "管理员修改", ADMIN.description = "管理员修改 {} 积分"
 	title := "管理员修改"
@@ -85,22 +87,22 @@ func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
 
 	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, bizType, bizId, title, desc)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetUser 获得会员用户详情
 func (h *MemberUserHandler) GetUser(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	user, err := h.userSvc.GetUser(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -124,19 +126,19 @@ func (h *MemberUserHandler) GetUser(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, h.convertRespWithExt(user, tagNames, levelName, groupName))
+	response.WriteSuccess(c, h.convertRespWithExt(user, tagNames, levelName, groupName))
 }
 
 // GetUserPage 获得会员用户分页
 func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 	var r req.MemberUserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.userSvc.GetUserPage(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -187,7 +189,7 @@ func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 		return h.convertRespWithExt(user, tagNames, levelMap[user.LevelID], groupMap[user.GroupID])
 	})
 
-	core.WritePage(c, pageResult.Total, respList)
+	response.WritePage(c, pageResult.Total, respList)
 }
 
 func (h *MemberUserHandler) convertRespWithExt(user *memberModel.MemberUser, tagNames []string, levelName, groupName string) *resp.MemberUserResp {

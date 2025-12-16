@@ -1,12 +1,14 @@
 package product
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +26,7 @@ func NewProductSpuHandler(svc *product.ProductSpuService) *ProductSpuHandler {
 func (h *ProductSpuHandler) CreateSpu(c *gin.Context) {
 	var r req.ProductSpuSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateSpu(c, &r)
@@ -32,7 +34,7 @@ func (h *ProductSpuHandler) CreateSpu(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateSpu 更新 SPU
@@ -40,14 +42,14 @@ func (h *ProductSpuHandler) CreateSpu(c *gin.Context) {
 func (h *ProductSpuHandler) UpdateSpu(c *gin.Context) {
 	var r req.ProductSpuSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateSpu(c, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // UpdateSpuStatus 更新 SPU 状态
@@ -55,14 +57,14 @@ func (h *ProductSpuHandler) UpdateSpu(c *gin.Context) {
 func (h *ProductSpuHandler) UpdateSpuStatus(c *gin.Context) {
 	var r req.ProductSpuUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateSpuStatus(c, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteSpu 删除 SPU
@@ -71,14 +73,14 @@ func (h *ProductSpuHandler) DeleteSpu(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteSpu(c, id); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetSpuDetail 获得 SPU 详情
@@ -87,7 +89,7 @@ func (h *ProductSpuHandler) GetSpuDetail(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetSpuDetail(c, id)
@@ -95,7 +97,7 @@ func (h *ProductSpuHandler) GetSpuDetail(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetSpuPage 获得 SPU 分页
@@ -103,7 +105,7 @@ func (h *ProductSpuHandler) GetSpuDetail(c *gin.Context) {
 func (h *ProductSpuHandler) GetSpuPage(c *gin.Context) {
 	var r req.ProductSpuPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetSpuPage(c, &r)
@@ -111,7 +113,7 @@ func (h *ProductSpuHandler) GetSpuPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetTabsCount 获得 SPU Tab 统计
@@ -122,7 +124,7 @@ func (h *ProductSpuHandler) GetTabsCount(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetSpuSimpleList 获得 SPU 精简列表
@@ -133,7 +135,7 @@ func (h *ProductSpuHandler) GetSpuSimpleList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetSpuList 根据 ID 列表获得 SPU 详情列表
@@ -141,7 +143,7 @@ func (h *ProductSpuHandler) GetSpuSimpleList(c *gin.Context) {
 func (h *ProductSpuHandler) GetSpuList(c *gin.Context) {
 	var r req.ProductSpuListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetSpuList(c, r.SpuIDs)
@@ -149,7 +151,7 @@ func (h *ProductSpuHandler) GetSpuList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // ExportSpuList 导出商品列表
@@ -157,7 +159,7 @@ func (h *ProductSpuHandler) GetSpuList(c *gin.Context) {
 func (h *ProductSpuHandler) ExportSpuList(c *gin.Context) {
 	var r req.ProductSpuPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	// 导出不分页

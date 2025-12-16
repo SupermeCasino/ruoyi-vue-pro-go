@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type TenantCreateReq struct {
@@ -32,7 +32,7 @@ type TenantUpdateReq struct {
 }
 
 type TenantPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name          string     `form:"name"`
 	ContactName   string     `form:"contactName"`
 	ContactMobile string     `form:"contactMobile"`

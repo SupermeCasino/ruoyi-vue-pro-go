@@ -6,9 +6,12 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -49,7 +52,7 @@ func NewPayNotifyHandler(
 // POST /pay/notify/order/:channelId
 // 对齐 Java: PayNotifyController.notifyOrder
 func (h *PayNotifyHandler) NotifyOrder(c *gin.Context) {
-	channelId := core.ParseInt64(c.Param("channelId"))
+	channelId := utils.ParseInt64(c.Param("channelId"))
 	h.logger.Info("[NotifyOrder] 收到支付回调", zap.Int64("channelId", channelId))
 
 	// 1. 获取 PayClient
@@ -90,7 +93,7 @@ func (h *PayNotifyHandler) NotifyOrder(c *gin.Context) {
 // POST /pay/notify/refund/:channelId
 // 对齐 Java: PayNotifyController.notifyRefund
 func (h *PayNotifyHandler) NotifyRefund(c *gin.Context) {
-	channelId := core.ParseInt64(c.Param("channelId"))
+	channelId := utils.ParseInt64(c.Param("channelId"))
 	h.logger.Info("[NotifyRefund] 收到退款回调", zap.Int64("channelId", channelId))
 
 	// 1. 获取 PayClient
@@ -131,7 +134,7 @@ func (h *PayNotifyHandler) NotifyRefund(c *gin.Context) {
 // POST /pay/notify/transfer/:channelId
 // 对齐 Java: PayNotifyController.notifyTransfer
 func (h *PayNotifyHandler) NotifyTransfer(c *gin.Context) {
-	channelId := core.ParseInt64(c.Param("channelId"))
+	channelId := utils.ParseInt64(c.Param("channelId"))
 	h.logger.Info("[NotifyTransfer] 收到转账回调", zap.Int64("channelId", channelId))
 
 	// 1. 获取 PayClient
@@ -173,14 +176,14 @@ func (h *PayNotifyHandler) NotifyTransfer(c *gin.Context) {
 
 // GetNotifyTaskDetail 获得回调通知详情 (Task + Logs)
 func (h *PayNotifyHandler) GetNotifyTaskDetail(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	task, err := h.svc.GetNotifyTask(c, id)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 	if task == nil {
-		c.JSON(200, core.Success(&resp.PayNotifyTaskDetailResp{}))
+		c.JSON(200, response.Success(&resp.PayNotifyTaskDetailResp{}))
 		return
 	}
 
@@ -201,14 +204,14 @@ func (h *PayNotifyHandler) GetNotifyTaskDetail(c *gin.Context) {
 	}
 	r.Logs = logResps
 
-	c.JSON(200, core.Success(r))
+	c.JSON(200, response.Success(r))
 }
 
 // GetNotifyTaskPage 获得回调通知分页
 func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
 	var r req.PayNotifyTaskPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetNotifyTaskPage(c, &r)
@@ -233,7 +236,7 @@ func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
 		list = append(list, tr)
 	}
 
-	c.JSON(200, core.Success(core.PageResult[*resp.PayNotifyTaskResp]{
+	c.JSON(200, response.Success(pagination.PageResult[*resp.PayNotifyTaskResp]{
 		List:  list,
 		Total: pageResult.Total,
 	}))

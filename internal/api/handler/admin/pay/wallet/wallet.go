@@ -1,12 +1,15 @@
 package wallet
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +26,7 @@ func NewPayWalletHandler(svc *payData.PayWalletService) *PayWalletHandler {
 func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
 	var r req.PayWalletPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetWalletPage(c, &r)
@@ -33,11 +36,11 @@ func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
 	}
 
 	// Convert list
-	newRes := core.NewPageResult(make([]*resp.PayWalletResp, 0, len(res.List)), res.Total)
+	newRes := pagination.NewPageResult(make([]*resp.PayWalletResp, 0, len(res.List)), res.Total)
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertWalletResp(item))
 	}
-	c.JSON(200, core.Success(newRes))
+	c.JSON(200, response.Success(newRes))
 }
 
 // GetWallet 获得会员钱包
@@ -45,7 +48,7 @@ func (h *PayWalletHandler) GetWallet(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	wallet, err := h.svc.GetWallet(c, id)
@@ -53,7 +56,7 @@ func (h *PayWalletHandler) GetWallet(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(convertWalletResp(wallet)))
+	c.JSON(200, response.Success(convertWalletResp(wallet)))
 }
 
 func convertWalletResp(item *pay.PayWallet) *resp.PayWalletResp {

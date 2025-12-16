@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

@@ -2,8 +2,9 @@ package product
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,12 +23,12 @@ func NewProductFavoriteHandler(svc *product.ProductFavoriteService) *ProductFavo
 // @Produce json
 // @Param pageNo query int true "页码"
 // @Param pageSize query int true "页数"
-// @Success 200 {object} core.PageResult[resp.ProductFavoriteResp]
+// @Success 200 {object} pagination.PageResult[resp.ProductFavoriteResp]
 // @Router /admin-api/product/favorite/page [get]
 func (h *ProductFavoriteHandler) GetFavoritePage(c *gin.Context) {
 	var r req.ProductFavoritePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetFavoritePage(c, &r)
@@ -35,5 +36,5 @@ func (h *ProductFavoriteHandler) GetFavoritePage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

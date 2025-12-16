@@ -2,7 +2,7 @@ package req
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type PayChannelCreateReq struct {
@@ -20,7 +20,7 @@ type PayChannelUpdateReq struct {
 }
 
 type PayChannelPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Code   string `json:"code" form:"code"`
 	Status *int   `json:"status" form:"status"`
 	AppID  int64  `json:"appId" form:"appId"`

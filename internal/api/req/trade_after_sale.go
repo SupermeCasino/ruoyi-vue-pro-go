@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type AppAfterSaleCreateReq struct {
@@ -26,7 +26,7 @@ type AppAfterSaleDeliveryReq struct {
 }
 
 type TradeAfterSalePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	No          string   `form:"no"`
 	UserID      *int64   `form:"userId"` // Admin can filter by userId, App sets it manually
 	Status      *int     `form:"status"`

@@ -1,10 +1,12 @@
 package handler
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"strconv"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +24,7 @@ func NewAuthHandler(svc *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req req.AuthLoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -32,7 +34,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, core.Success(resp))
+	c.JSON(200, response.Success(resp))
 }
 
 // GetPermissionInfo 获取权限信息
@@ -43,7 +45,7 @@ func (h *AuthHandler) GetPermissionInfo(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(resp))
+	c.JSON(200, response.Success(resp))
 }
 
 // Logout 登出
@@ -60,7 +62,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // RefreshToken 刷新令牌
@@ -68,7 +70,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	refreshToken := c.Query("refreshToken")
 	if refreshToken == "" {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -77,7 +79,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(resp))
+	c.JSON(200, response.Success(resp))
 }
 
 // SmsLogin 短信登录
@@ -85,7 +87,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 func (h *AuthHandler) SmsLogin(c *gin.Context) {
 	var r req.AuthSmsLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -94,7 +96,7 @@ func (h *AuthHandler) SmsLogin(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(resp))
+	c.JSON(200, response.Success(resp))
 }
 
 // SendSmsCode 发送短信验证码
@@ -102,7 +104,7 @@ func (h *AuthHandler) SmsLogin(c *gin.Context) {
 func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 	var r req.AuthSmsSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -111,7 +113,7 @@ func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // Register 注册
@@ -119,7 +121,7 @@ func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var r req.AuthRegisterReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -128,7 +130,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(resp))
+	c.JSON(200, response.Success(resp))
 }
 
 // ResetPassword 重置密码
@@ -136,7 +138,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var r req.AuthResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -145,7 +147,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // SocialAuthRedirect 社交授权跳转
@@ -155,14 +157,14 @@ func (h *AuthHandler) SocialAuthRedirect(c *gin.Context) {
 	redirectUri := c.Query("redirectUri")
 
 	if socialType == "" {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
 	// 转换类型
 	typeInt, err := strconv.Atoi(socialType)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -171,7 +173,7 @@ func (h *AuthHandler) SocialAuthRedirect(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(url))
+	c.JSON(200, response.Success(url))
 }
 
 // SocialLogin 社交登录
@@ -179,7 +181,7 @@ func (h *AuthHandler) SocialAuthRedirect(c *gin.Context) {
 func (h *AuthHandler) SocialLogin(c *gin.Context) {
 	var r req.AuthSocialLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -188,5 +190,5 @@ func (h *AuthHandler) SocialLogin(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(resp))
+	c.JSON(200, response.Success(resp))
 }

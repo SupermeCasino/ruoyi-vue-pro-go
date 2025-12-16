@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type ArticleCategoryHandler struct {
@@ -21,77 +22,77 @@ func NewArticleCategoryHandler(svc promotion.ArticleCategoryService) *ArticleCat
 func (h *ArticleCategoryHandler) CreateArticleCategory(c *gin.Context) {
 	var r req.ArticleCategoryCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateArticleCategory(c, r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 func (h *ArticleCategoryHandler) UpdateArticleCategory(c *gin.Context) {
 	var r req.ArticleCategoryUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateArticleCategory(c, r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *ArticleCategoryHandler) DeleteArticleCategory(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteArticleCategory(c, id); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 func (h *ArticleCategoryHandler) GetArticleCategory(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetArticleCategory(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 func (h *ArticleCategoryHandler) GetArticleCategoryList(c *gin.Context) {
 	var r req.ArticleCategoryListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetArticleCategoryList(c, r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetSimpleList 获得文章分类精简列表 (Only Enabled)
 func (h *ArticleCategoryHandler) GetSimpleList(c *gin.Context) {
 	res, err := h.svc.GetArticleCategorySimpleList(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }

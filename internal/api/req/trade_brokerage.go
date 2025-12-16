@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // BrokerageUserCreateReq 创建分销用户 Request
 type BrokerageUserCreateReq struct {
@@ -27,7 +29,7 @@ type BrokerageUserUpdateBrokerageEnabledReq struct {
 
 // BrokerageUserPageReq 分销用户分页 Request
 type BrokerageUserPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	BindUserID       int64    `form:"bindUserId"`
 	BrokerageEnabled *bool    `form:"brokerageEnabled"`
 	CreateTime       []string `form:"createTime[]"`   // Range
@@ -37,7 +39,7 @@ type BrokerageUserPageReq struct {
 
 // BrokerageRecordPageReq 分销记录分页 Request
 type BrokerageRecordPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserID     int64    `form:"userId"`
 	BizType    string   `form:"bizType"` // 业务类型: order, withdraw
 	Status     int      `form:"status"`
@@ -47,7 +49,7 @@ type BrokerageRecordPageReq struct {
 
 // BrokerageWithdrawPageReq 分销提现分页 Request
 type BrokerageWithdrawPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserID      int64    `form:"userId"`
 	Type        int      `form:"type"`
 	Status      int      `form:"status"`

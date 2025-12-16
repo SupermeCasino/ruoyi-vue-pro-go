@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // CombinationActivityBaseVO 拼团活动 Base VO
@@ -40,20 +40,20 @@ type CombinationActivityUpdateReq struct {
 
 // CombinationActivityPageReq 拼团活动分页 Request VO
 type CombinationActivityPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `json:"name"`
 	Status int    `json:"status"`
 }
 
 // AppCombinationRecordPageReq 拼团记录分页 Request VO
 type AppCombinationRecordPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Status int `json:"status"` // 0-进行中 1-成功 2-失败
 }
 
 // CombinationRecordPageReq 拼团记录分页 Request VO (Admin)
 type CombinationRecordPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Status    *int        `json:"status" form:"status"`
 	Name      string      `json:"name" form:"name"` // User Nickname?
 	DateRange []time.Time `json:"dateRange" form:"dateRange" time_format:"2006-01-02 15:04:05"`

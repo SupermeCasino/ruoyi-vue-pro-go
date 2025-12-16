@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type AppArticleHandler struct {
@@ -23,39 +24,39 @@ func NewAppArticleHandler(articleSvc promotion.ArticleService, categorySvc promo
 func (h *AppArticleHandler) GetArticleCategoryList(c *gin.Context) {
 	res, err := h.categorySvc.GetArticleCategorySimpleList(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetArticlePage 获得文章分页
 func (h *AppArticleHandler) GetArticlePage(c *gin.Context) {
 	var r req.ArticlePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.articleSvc.GetArticlePageApp(c, r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetArticle 获得文章详情
 func (h *AppArticleHandler) GetArticle(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 1. Get Detail
 	res, err := h.articleSvc.GetArticle(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -64,5 +65,5 @@ func (h *AppArticleHandler) GetArticle(c *gin.Context) {
 	// Java: articleService.addArticleBrowseCount(id);
 	_ = h.articleSvc.AddArticleBrowseCount(c, id)
 
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }

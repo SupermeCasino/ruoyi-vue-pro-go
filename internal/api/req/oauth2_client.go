@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type OAuth2ClientCreateReq struct {
@@ -42,7 +42,7 @@ type OAuth2ClientUpdateReq struct {
 }
 
 type OAuth2ClientPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name   string `form:"name"`
 	Status *int   `form:"status"`
 }

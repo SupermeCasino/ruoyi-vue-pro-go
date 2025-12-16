@@ -2,8 +2,9 @@ package promotion
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func NewAppBannerHandler(svc *promotion.PromotionBannerService) *AppBannerHandle
 func (h *AppBannerHandler) GetBannerList(c *gin.Context) {
 	var r req.AppBannerListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAppBannerList(c, r.Position)
@@ -33,5 +34,5 @@ func (h *AppBannerHandler) GetBannerList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

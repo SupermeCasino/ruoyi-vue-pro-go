@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // AppTradeOrderSettlementReq 交易订单结算请求
@@ -35,14 +35,14 @@ type AppTradeOrderCreateReq struct {
 
 // AppTradeOrderPageReq 交易订单分页请求
 type AppTradeOrderPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Status        *int  `form:"status"`
 	CommentStatus *bool `form:"commentStatus"`
 }
 
 // TradeOrderPageReq 管理后台 - 交易订单分页请求
 type TradeOrderPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	No               string   `form:"no"`
 	UserID           *int64   `form:"userId"`
 	UserNickname     string   `form:"userNickname"`

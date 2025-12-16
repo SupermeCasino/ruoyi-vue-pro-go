@@ -1,10 +1,12 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"strconv"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +29,7 @@ func NewBannerHandler(svc *promotion.PromotionBannerService) *BannerHandler {
 func (h *BannerHandler) CreateBanner(c *gin.Context) {
 	var r req.PromotionBannerCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateBanner(c, &r)
@@ -35,7 +37,7 @@ func (h *BannerHandler) CreateBanner(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateBanner 更新 Banner
@@ -48,14 +50,14 @@ func (h *BannerHandler) CreateBanner(c *gin.Context) {
 func (h *BannerHandler) UpdateBanner(c *gin.Context) {
 	var r req.PromotionBannerUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateBanner(c, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteBanner 删除 Banner
@@ -69,14 +71,14 @@ func (h *BannerHandler) DeleteBanner(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteBanner(c, id); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetBanner 获得 Banner
@@ -89,7 +91,7 @@ func (h *BannerHandler) GetBanner(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetBanner(c, id)
@@ -97,7 +99,7 @@ func (h *BannerHandler) GetBanner(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetBannerPage 获得 Banner 分页
@@ -112,7 +114,7 @@ func (h *BannerHandler) GetBanner(c *gin.Context) {
 func (h *BannerHandler) GetBannerPage(c *gin.Context) {
 	var r req.PromotionBannerPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetBannerPage(c, &r)
@@ -120,5 +122,5 @@ func (h *BannerHandler) GetBannerPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

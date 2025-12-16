@@ -4,8 +4,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -24,13 +26,13 @@ func NewMemberSignInRecordHandler(svc *memberSvc.MemberSignInRecordService, user
 func (h *MemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 	var r req.MemberSignInRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	pageResult, err := h.svc.GetSignInRecordPage(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -54,5 +56,5 @@ func (h *MemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 		}
 	})
 
-	core.WriteSuccess(c, core.NewPageResult(respList, pageResult.Total))
+	response.WriteSuccess(c, pagination.NewPageResult(respList, pageResult.Total))
 }

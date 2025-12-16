@@ -2,8 +2,9 @@ package trade
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,10 +22,10 @@ func NewTradeConfigHandler(svc *trade.TradeConfigService) *TradeConfigHandler {
 func (h *TradeConfigHandler) GetTradeConfig(c *gin.Context) {
 	res, err := h.svc.GetTradeConfig(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // SaveTradeConfig @Summary 保存交易配置
@@ -32,13 +33,13 @@ func (h *TradeConfigHandler) GetTradeConfig(c *gin.Context) {
 func (h *TradeConfigHandler) SaveTradeConfig(c *gin.Context) {
 	var r req.TradeConfigSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if err := h.svc.SaveTradeConfig(c, &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }

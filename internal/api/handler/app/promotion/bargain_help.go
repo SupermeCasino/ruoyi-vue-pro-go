@@ -4,9 +4,11 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,29 +30,29 @@ func NewAppBargainHelpHandler(helpSvc *promotion.BargainHelpService, userSvc *me
 func (h *AppBargainHelpHandler) CreateBargainHelp(c *gin.Context) {
 	var r req.AppBargainHelpCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 1001004001, "参数校验失败")
+		response.WriteError(c, 1001004001, "参数校验失败")
 		return
 	}
-	help, err := h.helpSvc.CreateBargainHelp(c.Request.Context(), c.GetInt64(core.CtxUserIDKey), &r)
+	help, err := h.helpSvc.CreateBargainHelp(c.Request.Context(), c.GetInt64(context.CtxUserIDKey), &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, help.ReducePrice)
+	response.WriteSuccess(c, help.ReducePrice)
 }
 
 // GetBargainHelpList 获得砍价助力列表
 // Java: GET /list
 func (h *AppBargainHelpHandler) GetBargainHelpList(c *gin.Context) {
-	recordId := core.ParseInt64(c.Query("recordId"))
+	recordId := utils.ParseInt64(c.Query("recordId"))
 	if recordId == 0 {
-		core.WriteSuccess(c, []resp.AppBargainHelpRespVO{})
+		response.WriteSuccess(c, []resp.AppBargainHelpRespVO{})
 		return
 	}
 
 	list, err := h.helpSvc.GetBargainHelpList(c.Request.Context(), recordId)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -81,5 +83,5 @@ func (h *AppBargainHelpHandler) GetBargainHelpList(c *gin.Context) {
 		}
 		resList[i] = vo
 	}
-	core.WriteSuccess(c, resList)
+	response.WriteSuccess(c, resList)
 }

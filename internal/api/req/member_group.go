@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // MemberGroupCreateReq 创建用户分组 Request
@@ -21,7 +21,7 @@ type MemberGroupUpdateReq struct {
 
 // MemberGroupPageReq 用户分组分页 Request
 type MemberGroupPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name       string   `form:"name"`       // 名称
 	Status     *int     `form:"status"`     // 状态
 	CreateTime []string `form:"createTime"` // 创建时间

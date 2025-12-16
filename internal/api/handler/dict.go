@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type DictHandler struct {
@@ -25,7 +26,7 @@ func NewDictHandler(svc *service.DictService) *DictHandler {
 func (h *DictHandler) CreateDictType(c *gin.Context) {
 	var r req.DictTypeSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateDictType(c.Request.Context(), &r)
@@ -33,20 +34,20 @@ func (h *DictHandler) CreateDictType(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 func (h *DictHandler) UpdateDictType(c *gin.Context) {
 	var r req.DictTypeSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateDictType(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *DictHandler) DeleteDictType(c *gin.Context) {
@@ -56,7 +57,7 @@ func (h *DictHandler) DeleteDictType(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *DictHandler) GetDictType(c *gin.Context) {
@@ -67,13 +68,13 @@ func (h *DictHandler) GetDictType(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(item))
+	c.JSON(200, response.Success(item))
 }
 
 func (h *DictHandler) GetDictTypePage(c *gin.Context) {
 	var r req.DictTypePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetDictTypePage(c.Request.Context(), &r)
@@ -81,7 +82,7 @@ func (h *DictHandler) GetDictTypePage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(page))
+	c.JSON(200, response.Success(page))
 }
 
 func (h *DictHandler) GetSimpleDictTypeList(c *gin.Context) {
@@ -90,14 +91,14 @@ func (h *DictHandler) GetSimpleDictTypeList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }
 
 // ExportDictTypeExcel 导出字典类型 Excel
 func (h *DictHandler) ExportDictTypeExcel(c *gin.Context) {
 	var r req.DictTypePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	// TODO: 实现 Excel 导出逻辑
@@ -112,7 +113,7 @@ func (h *DictHandler) ExportDictTypeExcel(c *gin.Context) {
 func (h *DictHandler) CreateDictData(c *gin.Context) {
 	var r req.DictDataSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateDictData(c.Request.Context(), &r)
@@ -120,20 +121,20 @@ func (h *DictHandler) CreateDictData(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 func (h *DictHandler) UpdateDictData(c *gin.Context) {
 	var r req.DictDataSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateDictData(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *DictHandler) DeleteDictData(c *gin.Context) {
@@ -143,7 +144,7 @@ func (h *DictHandler) DeleteDictData(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 func (h *DictHandler) GetDictData(c *gin.Context) {
@@ -154,13 +155,13 @@ func (h *DictHandler) GetDictData(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(item))
+	c.JSON(200, response.Success(item))
 }
 
 func (h *DictHandler) GetDictDataPage(c *gin.Context) {
 	var r req.DictDataPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetDictDataPage(c.Request.Context(), &r)
@@ -168,7 +169,7 @@ func (h *DictHandler) GetDictDataPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(page))
+	c.JSON(200, response.Success(page))
 }
 
 func (h *DictHandler) GetSimpleDictDataList(c *gin.Context) {
@@ -177,5 +178,5 @@ func (h *DictHandler) GetSimpleDictDataList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }

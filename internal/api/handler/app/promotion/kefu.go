@@ -4,8 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type AppKefuHandler struct {
@@ -20,30 +21,30 @@ func NewAppKefuHandler(svc promotion.KefuService) *AppKefuHandler {
 func (h *AppKefuHandler) GetMessagePage(c *gin.Context) {
 	var r req.KefuMessagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetMessagePage(c, r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // SendMessage 发送消息
 func (h *AppKefuHandler) SendMessage(c *gin.Context) {
 	var r req.KefuMessageCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// 获取当前登录用户ID
 	userID := c.GetInt64("userId")                  // 假设中间件注入了 userId
 	id, err := h.svc.CreateMessage(c, r, userID, 1) // SenderType 1 = User
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }

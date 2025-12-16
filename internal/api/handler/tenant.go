@@ -2,12 +2,14 @@ package handler
 
 import (
 	"fmt"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
@@ -29,7 +31,7 @@ func (h *TenantHandler) GetTenantSimpleList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(list))
+	c.JSON(200, response.Success(list))
 }
 
 // CreateTenant 创建租户
@@ -37,7 +39,7 @@ func (h *TenantHandler) GetTenantSimpleList(c *gin.Context) {
 func (h *TenantHandler) CreateTenant(c *gin.Context) {
 	var r req.TenantCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateTenant(c.Request.Context(), &r)
@@ -45,7 +47,7 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateTenant 更新租户
@@ -53,14 +55,14 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 	var r req.TenantUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateTenant(c.Request.Context(), &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteTenant 删除租户
@@ -72,7 +74,7 @@ func (h *TenantHandler) DeleteTenant(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetTenant 获得租户
@@ -85,7 +87,7 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(item))
+	c.JSON(200, response.Success(item))
 }
 
 // GetTenantPage 获得租户分页
@@ -93,7 +95,7 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 func (h *TenantHandler) GetTenantPage(c *gin.Context) {
 	var r req.TenantPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetTenantPage(c.Request.Context(), &r)
@@ -101,7 +103,7 @@ func (h *TenantHandler) GetTenantPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(page))
+	c.JSON(200, response.Success(page))
 }
 
 // ExportTenantExcel 导出租户 Excel
@@ -109,7 +111,7 @@ func (h *TenantHandler) GetTenantPage(c *gin.Context) {
 func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 	var r req.TenantExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 
@@ -185,7 +187,7 @@ func (h *TenantHandler) GetTenantByWebsite(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(tenant))
+	c.JSON(200, response.Success(tenant))
 }
 
 // GetTenantIdByName 根据租户名获取租户ID
@@ -197,5 +199,5 @@ func (h *TenantHandler) GetTenantIdByName(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(tenantId))
+	c.JSON(200, response.Success(tenantId))
 }

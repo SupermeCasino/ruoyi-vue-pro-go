@@ -1,12 +1,12 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // SmsLogPageReq 短信日志分页 Request
 type SmsLogPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	ChannelId     *int64   `form:"channelId"`
 	TemplateId    *int64   `form:"templateId"`
 	Mobile        string   `form:"mobile"`

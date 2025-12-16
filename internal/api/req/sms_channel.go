@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // SmsChannelSaveReq 短信渠道创建/修改 Request
 type SmsChannelSaveReq struct {
@@ -16,7 +18,7 @@ type SmsChannelSaveReq struct {
 
 // SmsChannelPageReq 短信渠道分页 Request
 type SmsChannelPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Signature string `form:"signature"`
 	Status    *int32 `form:"status"`
 }

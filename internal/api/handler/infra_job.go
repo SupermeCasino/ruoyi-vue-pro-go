@@ -3,8 +3,10 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,65 +23,65 @@ func NewJobHandler(svc *service.JobService) *JobHandler {
 func (h *JobHandler) CreateJob(c *gin.Context) {
 	var r req.JobSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	id, err := h.svc.CreateJob(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateJob 更新定时任务
 func (h *JobHandler) UpdateJob(c *gin.Context) {
 	var r req.JobSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateJob(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateJobStatus 更新定时任务状态
 func (h *JobHandler) UpdateJobStatus(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
-	status := int(core.ParseInt64(c.Query("status")))
+	id := utils.ParseInt64(c.Query("id"))
+	status := int(utils.ParseInt64(c.Query("status")))
 	if err := h.svc.UpdateJobStatus(c, id, status); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteJob 删除定时任务
 func (h *JobHandler) DeleteJob(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.DeleteJob(c, id); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetJob 获取定时任务
 func (h *JobHandler) GetJob(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	job, err := h.svc.GetJob(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if job == nil {
-		core.WriteError(c, 404, "任务不存在")
+		response.WriteError(c, 404, "任务不存在")
 		return
 	}
-	core.WriteSuccess(c, resp.JobResp{
+	response.WriteSuccess(c, resp.JobResp{
 		ID:             job.ID,
 		Name:           job.Name,
 		Status:         job.Status,
@@ -97,12 +99,12 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 func (h *JobHandler) GetJobPage(c *gin.Context) {
 	var r req.JobPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	pageResult, err := h.svc.GetJobPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -122,7 +124,7 @@ func (h *JobHandler) GetJobPage(c *gin.Context) {
 		}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.JobResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.JobResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -130,10 +132,10 @@ func (h *JobHandler) GetJobPage(c *gin.Context) {
 
 // TriggerJob 触发定时任务
 func (h *JobHandler) TriggerJob(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.TriggerJob(c, id); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }

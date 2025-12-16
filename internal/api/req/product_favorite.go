@@ -1,17 +1,19 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // ProductFavoritePageReq (Admin)
 type ProductFavoritePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserId int64 `form:"userId"` // 用户编号
 	SpuId  int64 `form:"spuId"`  // 商品 SPU 编号
 }
 
 // AppFavoritePageReq (App)
 type AppFavoritePageReq struct {
-	core.PageParam
+	pagination.PageParam
 }
 
 // AppFavoriteReq (App) - For Create, Delete, Exists

@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 type NoticeSaveReq struct {
 	ID      int64  `json:"id"`
@@ -11,7 +13,7 @@ type NoticeSaveReq struct {
 }
 
 type NoticePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Title  string `form:"title"`
 	Status *int32 `form:"status"`
 }

@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // ArticleCategoryCreateReq 文章分类创建请求
@@ -60,7 +60,7 @@ type ArticleUpdateReq struct {
 
 // ArticlePageReq 文章分页请求
 type ArticlePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Title      string `form:"title"`
 	CategoryID int64  `form:"categoryId"`
 	Status     *int   `form:"status"`

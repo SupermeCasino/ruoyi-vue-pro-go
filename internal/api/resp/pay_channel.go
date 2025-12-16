@@ -1,8 +1,9 @@
 package resp
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 )
 
 type PayChannelResp struct {

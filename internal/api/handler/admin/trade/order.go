@@ -3,9 +3,12 @@ package trade
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,13 +33,13 @@ func NewTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.Tr
 func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 	var r req.TradeOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	// Call Service
 	pageResult, err := h.querySvc.GetOrderPageForAdmin(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -58,7 +61,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 		// Query Items
 		items, err := h.querySvc.GetOrderItemListByOrderIds(c, orderIds)
 		if err != nil {
-			core.WriteError(c, 500, err.Error())
+			response.WriteError(c, 500, err.Error())
 			return
 		}
 		itemMap := make(map[int64][]resp.TradeOrderItemBase)
@@ -82,7 +85,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 		userMap, err := h.memberSvc.GetUserRespMap(c, userIds)
 		if err != nil {
 			// Log error but continue? Or fail? Java fails if user query fails usually.
-			core.WriteError(c, 500, err.Error())
+			response.WriteError(c, 500, err.Error())
 			return
 		}
 
@@ -91,7 +94,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 		if len(brokerageUserIds) > 0 {
 			brokerageUserMap, err = h.memberSvc.GetUserRespMap(c, brokerageUserIds)
 			if err != nil {
-				core.WriteError(c, 500, err.Error())
+				response.WriteError(c, 500, err.Error())
 				return
 			}
 		}
@@ -156,7 +159,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 		resultList = []resp.TradeOrderPageItemResp{}
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.TradeOrderPageItemResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.TradeOrderPageItemResp]{
 		List:  resultList,
 		Total: pageResult.Total,
 	})
@@ -164,33 +167,33 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 
 // GetOrderDetail 获得订单详情
 func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "id is required")
+		response.WriteError(c, 400, "id is required")
 		return
 	}
 	// 1. Get Order
 	order, err := h.querySvc.GetOrder(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if order == nil {
-		core.WriteError(c, 404, "订单不存在")
+		response.WriteError(c, 404, "订单不存在")
 		return
 	}
 
 	// 2. Get Items
 	items, err := h.querySvc.GetOrderItemListByOrderId(c, order.ID)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
 	// 3. Get Logs
 	logs, err := h.querySvc.GetOrderLogListByOrderId(c, order.ID)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -270,134 +273,134 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 		// User: Fetch User if possible, or leave nil for now.
 	}
 
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetOrderExpressTrackList 获得交易订单的物流轨迹
 func (h *TradeOrderHandler) GetOrderExpressTrackList(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "id is required")
+		response.WriteError(c, 400, "id is required")
 		return
 	}
 	tracks, err := h.querySvc.GetExpressTrackListById(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, tracks)
+	response.WriteSuccess(c, tracks)
 }
 
 // DeliveryOrder 订单发货
 func (h *TradeOrderHandler) DeliveryOrder(c *gin.Context) {
 	var r req.TradeOrderDeliveryReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.DeliveryOrder(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateOrderRemark 订单备注
 func (h *TradeOrderHandler) UpdateOrderRemark(c *gin.Context) {
 	var r req.TradeOrderRemarkReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateOrderRemark(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateOrderPrice 订单调价
 func (h *TradeOrderHandler) UpdateOrderPrice(c *gin.Context) {
 	var r req.TradeOrderUpdatePriceReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateOrderPrice(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // UpdateOrderAddress 修改订单收货地址
 func (h *TradeOrderHandler) UpdateOrderAddress(c *gin.Context) {
 	var r req.TradeOrderUpdateAddressReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdateOrderAddress(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // PickUpOrderById 订单核销 (By ID)
 func (h *TradeOrderHandler) PickUpOrderById(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteError(c, 400, "id is required")
+		response.WriteError(c, 400, "id is required")
 		return
 	}
-	if err := h.svc.PickUpOrderByAdmin(c, core.GetUserId(c), id); err != nil {
-		core.WriteError(c, 500, err.Error())
+	if err := h.svc.PickUpOrderByAdmin(c, context.GetUserId(c), id); err != nil {
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // PickUpOrderByVerifyCode 订单核销 (By Code)
 func (h *TradeOrderHandler) PickUpOrderByVerifyCode(c *gin.Context) {
 	code := c.Query("pickUpVerifyCode")
 	if code == "" {
-		core.WriteError(c, 400, "pickUpVerifyCode is required")
+		response.WriteError(c, 400, "pickUpVerifyCode is required")
 		return
 	}
-	if err := h.svc.PickUpOrderByVerifyCode(c, core.GetUserId(c), code); err != nil {
-		core.WriteError(c, 500, err.Error())
+	if err := h.svc.PickUpOrderByVerifyCode(c, context.GetUserId(c), code); err != nil {
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetByPickUpVerifyCode 查询核销码对应的订单
 func (h *TradeOrderHandler) GetByPickUpVerifyCode(c *gin.Context) {
 	code := c.Query("pickUpVerifyCode")
 	if code == "" {
-		core.WriteError(c, 400, "pickUpVerifyCode is required")
+		response.WriteError(c, 400, "pickUpVerifyCode is required")
 		return
 	}
 	res, err := h.svc.GetByPickUpVerifyCode(c, code)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // GetOrderSummary 获得交易订单统计
 func (h *TradeOrderHandler) GetOrderSummary(c *gin.Context) {
 	var r req.TradeOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	res, err := h.querySvc.GetOrderSummary(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }

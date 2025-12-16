@@ -2,8 +2,9 @@ package member
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,15 +22,15 @@ func NewAppAuthHandler(svc *member.MemberAuthService) *AppAuthHandler {
 func (h *AppAuthHandler) Login(c *gin.Context) {
 	var r req.AppAuthLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.Login(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // SmsLogin 手机+验证码登录
@@ -37,15 +38,15 @@ func (h *AppAuthHandler) Login(c *gin.Context) {
 func (h *AppAuthHandler) SmsLogin(c *gin.Context) {
 	var r req.AppAuthSmsLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.SmsLogin(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // SocialLogin 社交登录
@@ -53,15 +54,15 @@ func (h *AppAuthHandler) SmsLogin(c *gin.Context) {
 func (h *AppAuthHandler) SocialLogin(c *gin.Context) {
 	var r req.AppAuthSocialLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.SocialLogin(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // SendSmsCode 发送手机验证码
@@ -69,14 +70,14 @@ func (h *AppAuthHandler) SocialLogin(c *gin.Context) {
 func (h *AppAuthHandler) SendSmsCode(c *gin.Context) {
 	var r req.AppAuthSmsSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.SendSmsCode(c, &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // ValidateSmsCode 校验手机验证码
@@ -84,14 +85,14 @@ func (h *AppAuthHandler) SendSmsCode(c *gin.Context) {
 func (h *AppAuthHandler) ValidateSmsCode(c *gin.Context) {
 	var r req.AppAuthSmsValidateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.ValidateSmsCode(c, &r); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // RefreshToken 刷新令牌
@@ -99,15 +100,15 @@ func (h *AppAuthHandler) ValidateSmsCode(c *gin.Context) {
 func (h *AppAuthHandler) RefreshToken(c *gin.Context) {
 	refreshToken := c.Query("refreshToken")
 	if refreshToken == "" {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.RefreshToken(c, refreshToken)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, res)
+	response.WriteSuccess(c, res)
 }
 
 // Logout 退出登录
@@ -115,8 +116,8 @@ func (h *AppAuthHandler) RefreshToken(c *gin.Context) {
 func (h *AppAuthHandler) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if err := h.svc.Logout(c, token); err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }

@@ -1,13 +1,15 @@
 package promotion
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
-	"strconv"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -29,29 +31,29 @@ func NewPointActivityHandler(svc *promotionSvc.PointActivityService, spuSvc *pro
 func (h *PointActivityHandler) CreatePointActivity(c *gin.Context) {
 	var r req.PointActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	id, err := h.svc.CreatePointActivity(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdatePointActivity 更新积分商城活动
 func (h *PointActivityHandler) UpdatePointActivity(c *gin.Context) {
 	var r req.PointActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	if err := h.svc.UpdatePointActivity(c, &r); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // ClosePointActivity 关闭积分商城活动
@@ -59,14 +61,14 @@ func (h *PointActivityHandler) ClosePointActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	if err := h.svc.ClosePointActivity(c, id); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeletePointActivity 删除积分商城活动
@@ -74,14 +76,14 @@ func (h *PointActivityHandler) DeletePointActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	if err := h.svc.DeletePointActivity(c, id); err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetPointActivity 获得积分商城活动
@@ -89,16 +91,16 @@ func (h *PointActivityHandler) GetPointActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		core.WriteError(c, 400, "参数错误")
+		response.WriteError(c, 400, "参数错误")
 		return
 	}
 	activity, products, err := h.svc.GetPointActivity(c, id)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 	if activity == nil {
-		core.WriteSuccess(c, nil)
+		response.WriteSuccess(c, nil)
 		return
 	}
 
@@ -130,19 +132,19 @@ func (h *PointActivityHandler) GetPointActivity(c *gin.Context) {
 	}
 	vo.Products = productVOs
 
-	core.WriteSuccess(c, vo)
+	response.WriteSuccess(c, vo)
 }
 
 // GetPointActivityPage 获得积分商城活动分页
 func (h *PointActivityHandler) GetPointActivityPage(c *gin.Context) {
 	var r req.PointActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error())
 		return
 	}
 	pageResult, err := h.svc.GetPointActivityPage(c, &r)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
@@ -153,11 +155,11 @@ func (h *PointActivityHandler) GetPointActivityPage(c *gin.Context) {
 	}
 	resultList, err := h.buildPointActivityRespVOList(c, list)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
-	core.WriteSuccess(c, core.PageResult[resp.PointActivityRespVO]{
+	response.WriteSuccess(c, pagination.PageResult[resp.PointActivityRespVO]{
 		List:  resultList,
 		Total: pageResult.Total,
 	})
@@ -174,16 +176,16 @@ func (h *PointActivityHandler) GetPointActivityListByIds(c *gin.Context) {
 	}
 	list, err := h.svc.GetPointActivityListByIds(c, ids)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
 
 	result, err := h.buildPointActivityRespVOList(c, list)
 	if err != nil {
-		core.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error())
 		return
 	}
-	core.WriteSuccess(c, result)
+	response.WriteSuccess(c, result)
 }
 
 func (h *PointActivityHandler) buildPointActivityRespVOList(c *gin.Context, activityList []*promotion.PromotionPointActivity) ([]resp.PointActivityRespVO, error) {

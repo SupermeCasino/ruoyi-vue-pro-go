@@ -1,7 +1,7 @@
 package req
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // MailAccount Requests
@@ -27,7 +27,7 @@ type MailAccountUpdateReq struct {
 }
 
 type MailAccountPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Mail     string `form:"mail"`
 	Username string `form:"username"`
 }
@@ -57,7 +57,7 @@ type MailTemplateUpdateReq struct {
 }
 
 type MailTemplatePageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Name      string `form:"name"`
 	Code      string `form:"code"`
 	AccountID int64  `form:"accountId"`
@@ -74,7 +74,7 @@ type MailTemplateSendReq struct {
 
 // MailLog Requests
 type MailLogPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	UserID     int64  `form:"userId"`
 	UserType   int    `form:"userType"`
 	ToMail     string `form:"toMail"`

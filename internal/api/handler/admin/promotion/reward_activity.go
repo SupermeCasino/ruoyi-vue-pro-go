@@ -1,10 +1,12 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"strconv"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +25,7 @@ func NewRewardActivityHandler(svc *promotion.RewardActivityService) *RewardActiv
 func (h *RewardActivityHandler) CreateRewardActivity(c *gin.Context) {
 	var r req.PromotionRewardActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateRewardActivity(c, &r)
@@ -31,7 +33,7 @@ func (h *RewardActivityHandler) CreateRewardActivity(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(id))
+	c.JSON(200, response.Success(id))
 }
 
 // UpdateRewardActivity 更新活动
@@ -40,14 +42,14 @@ func (h *RewardActivityHandler) CreateRewardActivity(c *gin.Context) {
 func (h *RewardActivityHandler) UpdateRewardActivity(c *gin.Context) {
 	var r req.PromotionRewardActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateRewardActivity(c, &r); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // DeleteRewardActivity 删除活动
@@ -57,14 +59,14 @@ func (h *RewardActivityHandler) DeleteRewardActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteRewardActivity(c, id); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // CloseRewardActivity 关闭活动
@@ -75,14 +77,14 @@ func (h *RewardActivityHandler) CloseRewardActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	if err := h.svc.CloseRewardActivity(c, id); err != nil {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(true))
+	c.JSON(200, response.Success(true))
 }
 
 // GetRewardActivity 获得活动
@@ -92,7 +94,7 @@ func (h *RewardActivityHandler) GetRewardActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetRewardActivity(c, id)
@@ -100,7 +102,7 @@ func (h *RewardActivityHandler) GetRewardActivity(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }
 
 // GetRewardActivityPage 获得活动分页
@@ -109,7 +111,7 @@ func (h *RewardActivityHandler) GetRewardActivity(c *gin.Context) {
 func (h *RewardActivityHandler) GetRewardActivityPage(c *gin.Context) {
 	var r req.PromotionRewardActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, core.ErrParam)
+		c.JSON(200, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetRewardActivityPage(c, &r)
@@ -117,5 +119,5 @@ func (h *RewardActivityHandler) GetRewardActivityPage(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, core.Success(res))
+	c.JSON(200, response.Success(res))
 }

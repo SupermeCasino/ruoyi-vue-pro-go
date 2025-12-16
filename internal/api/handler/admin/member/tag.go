@@ -4,8 +4,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -23,75 +25,75 @@ func NewMemberTagHandler(svc *memberSvc.MemberTagService) *MemberTagHandler {
 func (h *MemberTagHandler) CreateTag(c *gin.Context) {
 	var r req.MemberTagCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateTag(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, id)
+	response.WriteSuccess(c, id)
 }
 
 // UpdateTag 更新用户标签
 func (h *MemberTagHandler) UpdateTag(c *gin.Context) {
 	var r req.MemberTagUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateTag(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // DeleteTag 删除用户标签
 func (h *MemberTagHandler) DeleteTag(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.DeleteTag(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, true)
+	response.WriteSuccess(c, true)
 }
 
 // GetTag 获得用户标签详情
 func (h *MemberTagHandler) GetTag(c *gin.Context) {
-	id := core.ParseInt64(c.Query("id"))
+	id := utils.ParseInt64(c.Query("id"))
 	if id == 0 {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	item, err := h.svc.GetTag(c, id)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, h.convertResp(item))
+	response.WriteSuccess(c, h.convertResp(item))
 }
 
 // GetTagPage 获得用户标签分页
 func (h *MemberTagHandler) GetTagPage(c *gin.Context) {
 	var r req.MemberTagPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		core.WriteBizError(c, core.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetTagPage(c, &r)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *memberModel.MemberTag, _ int) *resp.MemberTagResp {
+	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *memberModel.MemberTag, _ int) *resp.MemberTagResp {
 		return h.convertResp(item)
 	}))
 }
@@ -100,10 +102,10 @@ func (h *MemberTagHandler) GetTagPage(c *gin.Context) {
 func (h *MemberTagHandler) GetSimpleTagList(c *gin.Context) {
 	list, err := h.svc.GetTagList(c)
 	if err != nil {
-		core.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
-	core.WriteSuccess(c, lo.Map(list, func(item *memberModel.MemberTag, _ int) *resp.MemberTagResp {
+	response.WriteSuccess(c, lo.Map(list, func(item *memberModel.MemberTag, _ int) *resp.MemberTagResp {
 		return h.convertResp(item)
 	}))
 }

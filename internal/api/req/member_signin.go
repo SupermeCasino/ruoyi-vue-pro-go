@@ -1,6 +1,8 @@
 package req
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // MemberSignInConfigCreateReq 签到规则创建请求
 type MemberSignInConfigCreateReq struct {
@@ -32,7 +34,7 @@ type MemberSignInConfigUpdateReq struct {
 
 // MemberSignInRecordPageReq 签到记录分页请求
 type MemberSignInRecordPageReq struct {
-	core.PageParam
+	pagination.PageParam
 	Nickname string `form:"nickname"`
 	Day      *int   `form:"day"`
 	UserID   int64  `form:"userId"` // Optional filter
@@ -40,5 +42,5 @@ type MemberSignInRecordPageReq struct {
 
 // AppMemberSignInRecordPageReq App签到记录分页请求
 type AppMemberSignInRecordPageReq struct {
-	core.PageParam
+	pagination.PageParam
 }
