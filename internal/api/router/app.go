@@ -203,6 +203,15 @@ func RegisterAppRoutes(engine *gin.Engine,
 			}
 		}
 
+		// ========== Trade (Public) ==========
+		tradePublicGroup := appGroup.Group("/trade")
+		{
+			orderPublicGroup := tradePublicGroup.Group("/order")
+			{
+				orderPublicGroup.POST("/update-paid", appTradeOrderHandler.UpdateOrderPaid)
+			}
+		}
+
 		// Trade Config (Public)
 		tradeConfigGroup := appGroup.Group("/trade/config")
 		{

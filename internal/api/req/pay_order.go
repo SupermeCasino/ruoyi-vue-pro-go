@@ -43,3 +43,8 @@ type PayOrderCreateReq struct {
 	Price           int    `json:"price" binding:"required,min=0"`
 	ExpireTime      string `json:"expireTime" binding:"required"` // time string
 }
+
+type PayOrderNotifyReq struct {
+	MerchantOrderId string `json:"merchantOrderId" binding:"required"`
+	PayOrderID      int64  `json:"payOrderId" binding:"required"`
+}

@@ -77,6 +77,29 @@ func (h *AppTradeOrderHandler) CreateOrder(c *gin.Context) {
 	response.WriteSuccess(c, vo)
 }
 
+// UpdateOrderPaid 更新订单为已支付
+// 这是一个回调接口,通常由 Pay 模块通过 HTTP 调用
+func (h *AppTradeOrderHandler) UpdateOrderPaid(c *gin.Context) {
+	var r req.PayOrderNotifyReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+
+	id := utils.ParseInt64(r.MerchantOrderId)
+	if id == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+
+	err := h.svc.UpdateOrderPaid(c, id, r.PayOrderID)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
 // GetOrderDetail 获得订单详情
 func (h *AppTradeOrderHandler) GetOrderDetail(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
