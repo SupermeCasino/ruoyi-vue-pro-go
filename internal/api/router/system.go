@@ -359,6 +359,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			smsTemplateGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:sms-template:delete"), smsTemplateHandler.DeleteSmsTemplate)
 			smsTemplateGroup.GET("/get", casbinMiddleware.RequirePermission("system:sms-template:query"), smsTemplateHandler.GetSmsTemplate)
 			smsTemplateGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-template:query"), smsTemplateHandler.GetSmsTemplatePage)
+			smsTemplateGroup.POST("/send-sms", casbinMiddleware.RequirePermission("system:sms-template:send-sms"), smsTemplateHandler.SendSms)
 		}
 
 		smsLogGroup := api.Group("/system/sms-log", middleware.Auth())
