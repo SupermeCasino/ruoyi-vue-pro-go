@@ -277,6 +277,7 @@ func InitApp() (*gin.Engine, error) {
 		promotionApp.NewAppCombinationRecordHandler,   // Added Combination Record
 		promotionApp.NewAppArticleHandler,             // Added Article
 		promotionApp.NewAppDiyPageHandler,             // Added Diy Page
+		promotionApp.NewAppDiyTemplateHandler,
 		// WebSocket
 		ws.ProviderSet,
 		handler.NewWebSocketHandler,

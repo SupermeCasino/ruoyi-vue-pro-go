@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 // SystemSmsChannel 短信渠道表
@@ -29,17 +31,17 @@ func (SystemSmsChannel) TableName() string {
 
 // SystemSmsTemplate 短信模板表
 type SystemSmsTemplate struct {
-	ID            int64    `gorm:"primaryKey;autoIncrement;comment:自增编号" json:"id"`
-	Type          int32    `gorm:"not null;comment:短信类型" json:"type"`
-	Status        int32    `gorm:"not null;comment:启用状态" json:"status"`
-	Code          string   `gorm:"size:63;not null;comment:模板编码" json:"code"`
-	Name          string   `gorm:"size:63;not null;comment:模板名称" json:"name"`
-	Content       string   `gorm:"size:255;not null;comment:模板内容" json:"content"`
-	Params        []string `gorm:"serializer:json;comment:参数数组" json:"params"`
-	Remark        string   `gorm:"size:255;comment:备注" json:"remark"`
-	ApiTemplateId string   `gorm:"size:63;not null;comment:短信 API 的模板编号" json:"apiTemplateId"`
-	ChannelId     int64    `gorm:"not null;comment:短信渠道编号" json:"channelId"`
-	ChannelCode   string   `gorm:"size:63;not null;comment:短信渠道编码" json:"channelCode"`
+	ID            int64                       `gorm:"primaryKey;autoIncrement;comment:自增编号" json:"id"`
+	Type          int32                       `gorm:"not null;comment:短信类型" json:"type"`
+	Status        int32                       `gorm:"not null;comment:启用状态" json:"status"`
+	Code          string                      `gorm:"size:63;not null;comment:模板编码" json:"code"`
+	Name          string                      `gorm:"size:63;not null;comment:模板名称" json:"name"`
+	Content       string                      `gorm:"size:255;not null;comment:模板内容" json:"content"`
+	Params        datatypes.JSONSlice[string] `gorm:"serializer:json;comment:参数数组" json:"params"`
+	Remark        string                      `gorm:"size:255;comment:备注" json:"remark"`
+	ApiTemplateId string                      `gorm:"size:63;not null;comment:短信 API 的模板编号" json:"apiTemplateId"`
+	ChannelId     int64                       `gorm:"not null;comment:短信渠道编号" json:"channelId"`
+	ChannelCode   string                      `gorm:"size:63;not null;comment:短信渠道编码" json:"channelCode"`
 
 	// Base fields
 	Creator   string    `gorm:"column:creator;size:64;comment:创建者" json:"creator"`

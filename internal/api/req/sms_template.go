@@ -8,7 +8,7 @@ import (
 type SmsTemplateSaveReq struct {
 	ID            int64  `json:"id"`
 	Type          int32  `json:"type" binding:"required"`
-	Status        int32  `json:"status" binding:"required"`
+	Status        *int32 `json:"status"`
 	Code          string `json:"code" binding:"required"`
 	Name          string `json:"name" binding:"required"`
 	Content       string `json:"content" binding:"required"`

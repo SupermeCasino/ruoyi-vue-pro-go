@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"regexp"
 
@@ -33,10 +34,14 @@ func (s *SmsTemplateService) CreateSmsTemplate(ctx context.Context, req *req.Sms
 	}
 
 	params := s.parseTemplateContentParams(req.Content)
+	status := int32(0) // Default status (e.g., Enable/Normal)
+	if req.Status != nil {
+		status = *req.Status
+	}
 
 	template := &model.SystemSmsTemplate{
 		Type:          req.Type,
-		Status:        req.Status,
+		Status:        status,
 		Code:          req.Code,
 		Name:          req.Name,
 		Content:       req.Content,
@@ -65,19 +70,24 @@ func (s *SmsTemplateService) UpdateSmsTemplate(ctx context.Context, req *req.Sms
 	}
 
 	params := s.parseTemplateContentParams(req.Content)
+	paramsBytes, _ := json.Marshal(params)
 
-	_, err = t.WithContext(ctx).Where(t.ID.Eq(req.ID)).Updates(&model.SystemSmsTemplate{
-		Type:          req.Type,
-		Status:        req.Status,
-		Code:          req.Code,
-		Name:          req.Name,
-		Content:       req.Content,
-		Params:        params,
-		Remark:        req.Remark,
-		ApiTemplateId: req.ApiTemplateId,
-		ChannelId:     req.ChannelId,
-		ChannelCode:   channel.Code,
-	})
+	updates := map[string]interface{}{
+		"type":            req.Type,
+		"code":            req.Code,
+		"name":            req.Name,
+		"content":         req.Content,
+		"params":          paramsBytes,
+		"remark":          req.Remark,
+		"api_template_id": req.ApiTemplateId,
+		"channel_id":      req.ChannelId,
+		"channel_code":    channel.Code,
+	}
+	if req.Status != nil {
+		updates["status"] = *req.Status
+	}
+
+	_, err = t.WithContext(ctx).Where(t.ID.Eq(req.ID)).Updates(updates)
 	return err
 }
 
