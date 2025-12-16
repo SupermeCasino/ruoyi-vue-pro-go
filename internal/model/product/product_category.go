@@ -1,9 +1,8 @@
 package product
 
 import (
-	"backend-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"time"
-
 )
 
 // ProductCategory 商品分类
@@ -16,12 +15,12 @@ type ProductCategory struct {
 	Status      int32  `gorm:"default:0;comment:开启状态" json:"status"` // 参见 CommonStatusEnum
 	Description string `gorm:"size:512;default:'';comment:分类描述" json:"description"`
 
-	Creator   string         `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string         `gorm:"size:64;default:'';comment:更新者" json:"updater"`
-	CreatedAt time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   model.BitBool  `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID         int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	Creator   string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
+	Updater   string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
+	CreatedAt time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdatedAt time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	Deleted   model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
+	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }
 
 func (ProductCategory) TableName() string {

@@ -1,7 +1,7 @@
 package member
 
 import (
-	"backend-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 
 	"time"
 )
