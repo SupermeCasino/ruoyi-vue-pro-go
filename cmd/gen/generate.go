@@ -146,6 +146,7 @@ func main() {
 		pay.PayWalletRecharge{},
 		pay.PayWalletTransaction{},
 		pay.PayWalletRechargePackage{},
+		pay.PayTransfer{},
 	)
 
 	// 4. 执行生成

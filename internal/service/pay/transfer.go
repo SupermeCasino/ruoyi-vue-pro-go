@@ -2,294 +2,511 @@ package pay
 
 import (
 	"context"
-	"fmt"
-	"time"
+	"encoding/json"
+	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
+	respPay "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/pay"
+	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	repoPay "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
-	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
+	"github.com/samber/lo"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
+const transferNoPrefix = "T"
+
 type PayTransferService struct {
-	db            *gorm.DB
-	logger        *zap.Logger
+	transferRepo  repoPay.PayTransferRepository
 	appSvc        *PayAppService
 	channelSvc    *PayChannelService
 	notifySvc     *PayNotifyService
 	clientFactory *client.PayClientFactory
-	q             *query.Query
+	noRedisDAO    *repoPay.PayNoRedisDAO
+	logger        *zap.Logger
 }
 
-func NewPayTransferService(db *gorm.DB, logger *zap.Logger, appSvc *PayAppService, channelSvc *PayChannelService, notifySvc *PayNotifyService, clientFactory *client.PayClientFactory, q *query.Query) *PayTransferService {
+func NewPayTransferService(
+	transferRepo repoPay.PayTransferRepository,
+	appSvc *PayAppService,
+	channelSvc *PayChannelService,
+	notifySvc *PayNotifyService,
+	clientFactory *client.PayClientFactory,
+	noRedisDAO *repoPay.PayNoRedisDAO,
+	logger *zap.Logger,
+) *PayTransferService {
 	return &PayTransferService{
-		db:            db,
-		logger:        logger,
+		transferRepo:  transferRepo,
 		appSvc:        appSvc,
 		channelSvc:    channelSvc,
 		notifySvc:     notifySvc,
 		clientFactory: clientFactory,
-		q:             q,
+		noRedisDAO:    noRedisDAO,
+		logger:        logger,
 	}
 }
 
-// CreateTransfer 创建转账
-func (s *PayTransferService) CreateTransfer(ctx context.Context, req *PayTransferCreateReqDTO) (*PayTransferCreateRespDTO, error) {
-	// 1. 校验应用
+// GetTransferPage 获得转账单分页
+func (s *PayTransferService) GetTransferPage(ctx context.Context, req *reqPay.PayTransferPageReq) (*pagination.PageResult[*respPay.PayTransferResp], error) {
+	// 1. 查询转账单分页
+	pageResult, err := s.transferRepo.SelectPage(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 拼接应用名称
+	appIds := lo.Map(pageResult.List, func(item *modelPay.PayTransfer, _ int) int64 {
+		return item.AppID
+	})
+	appMap, err := s.appSvc.GetAppMap(ctx, appIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 转换返回结果
+	resultList := make([]*respPay.PayTransferResp, len(pageResult.List))
+	for i, item := range pageResult.List {
+		resp := &respPay.PayTransferResp{
+			ID:                 item.ID,
+			No:                 item.No,
+			AppID:              item.AppID,
+			ChannelID:          item.ChannelID,
+			ChannelCode:        item.ChannelCode,
+			MerchantTransferID: item.MerchantTransferID,
+			Subject:            item.Subject,
+			Price:              item.Price,
+			UserAccount:        item.UserAccount,
+			UserName:           item.UserName,
+			Status:             item.Status,
+			SuccessTime:        item.SuccessTime,
+			NotifyURL:          item.NotifyURL,
+			UserIP:             item.UserIP,
+			ChannelExtras:      item.ChannelExtras,
+			ChannelTransferNo:  item.ChannelTransferNo,
+			ChannelErrorCode:   item.ChannelErrorCode,
+			ChannelErrorMsg:    item.ChannelErrorMsg,
+			ChannelNotifyData:  item.ChannelNotifyData,
+			ChannelPackageInfo: item.ChannelPackageInfo,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
+			Creator:            item.Creator,
+			Updater:            item.Updater,
+			Deleted:            item.Deleted,
+			TenantID:           item.TenantID,
+		}
+		if app, ok := appMap[item.AppID]; ok {
+			resp.AppName = app.Name
+		}
+		resultList[i] = resp
+	}
+
+	return pagination.NewPageResult(resultList, pageResult.Total), nil
+}
+
+// GetTransfer 获得转账单
+func (s *PayTransferService) GetTransfer(ctx context.Context, id int64) (*respPay.PayTransferResp, error) {
+	transfer, err := s.transferRepo.SelectById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if transfer == nil {
+		return nil, nil
+	}
+
+	resp := &respPay.PayTransferResp{
+		ID:                 transfer.ID,
+		No:                 transfer.No,
+		AppID:              transfer.AppID,
+		ChannelID:          transfer.ChannelID,
+		ChannelCode:        transfer.ChannelCode,
+		MerchantTransferID: transfer.MerchantTransferID,
+		Subject:            transfer.Subject,
+		Price:              transfer.Price,
+		UserAccount:        transfer.UserAccount,
+		UserName:           transfer.UserName,
+		Status:             transfer.Status,
+		SuccessTime:        transfer.SuccessTime,
+		NotifyURL:          transfer.NotifyURL,
+		UserIP:             transfer.UserIP,
+		ChannelExtras:      transfer.ChannelExtras,
+		ChannelTransferNo:  transfer.ChannelTransferNo,
+		ChannelErrorCode:   transfer.ChannelErrorCode,
+		ChannelErrorMsg:    transfer.ChannelErrorMsg,
+		ChannelNotifyData:  transfer.ChannelNotifyData,
+		ChannelPackageInfo: transfer.ChannelPackageInfo,
+		CreatedAt:          transfer.CreatedAt,
+		UpdatedAt:          transfer.UpdatedAt,
+		Creator:            transfer.Creator,
+		Updater:            transfer.Updater,
+		Deleted:            transfer.Deleted,
+		TenantID:           transfer.TenantID,
+	}
+
+	app, err := s.appSvc.GetApp(ctx, transfer.AppID)
+	if err != nil {
+		return nil, err
+	}
+	if app != nil {
+		resp.AppName = app.Name
+	}
+	return resp, nil
+}
+
+// CreateTransfer 创建转账单
+// 对齐 Java: PayTransferServiceImpl.createTransfer
+func (s *PayTransferService) CreateTransfer(ctx context.Context, req *reqPay.PayTransferCreateReq) (*respPay.PayTransferCreateResp, error) {
+	// 1.1 校验 App
 	app, err := s.appSvc.ValidPayApp(ctx, req.AppID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. 校验渠道
-	channel, err := s.channelSvc.GetChannelByAppIdAndCode(ctx, req.AppID, req.ChannelCode)
+	// 1.2 校验支付渠道是否有效
+	channel, err := s.channelSvc.GetChannelByAppIdAndCode(ctx, app.ID, req.ChannelCode)
 	if err != nil {
 		return nil, err
 	}
 	if channel == nil {
-		return nil, errors.NewBizError(1006002002, "支付渠道不存在") // PAY_CHANNEL_NOT_FOUND
+		return nil, errors.New("pay channel not found")
 	}
-	if channel.Status != 0 {
-		return nil, errors.NewBizError(1006002001, "支付渠道处于关闭状态") // PAY_CHANNEL_IS_DISABLE
-	}
-
-	// 3. 获得支付客户端
-	payClient := s.clientFactory.GetPayClient(channel.ID)
-	if payClient == nil {
-		return nil, errors.NewBizError(1006000003, "支付渠道客户端不存在") // PAY_CHANNEL_CLIENT_NOT_FOUND
-	}
-
-	// 3. 创建转账单
-	// subject and no generation logic
-	no := s.generateNo()
-	transfer := &pay.PayTransfer{
-		AppID:              req.AppID,
-		ChannelID:          channel.ID,
-		ChannelCode:        channel.Code,
-		MerchantTransferID: req.MerchantTransferID,
-		Subject:            req.Subject,
-		Price:              req.Price,
-		UserAccount:        req.UserAccount,
-		UserName:           req.UserName,
-		Status:             0, // WAITING
-		No:                 no,
-		NotifyURL:          app.TransferNotifyURL,
-		UserIP:             req.UserIP,
-		ChannelExtras:      req.ChannelExtras,
-	}
-	if err := s.db.WithContext(ctx).Create(transfer).Error; err != nil {
+	if _, err := s.channelSvc.ValidPayChannel(ctx, channel.ID); err != nil {
 		return nil, err
 	}
 
-	// 4. 调用支付渠道
+	payClient := s.channelSvc.GetPayClient(channel.ID)
+	if payClient == nil {
+		s.logger.Error("[createTransfer][渠道编号找不到对应的支付客户端]", zap.Int64("channelId", channel.ID))
+		return nil, errors.New("pay client not found")
+	}
+
+	// 1.3 校验转账单已经发起过转账
+	transfer, err := s.validateTransferCanCreate(ctx, req, app.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2.1 情况一：不存在创建转账单，则进行创建
+	if transfer == nil {
+		no, err := s.noRedisDAO.Generate(ctx, transferNoPrefix)
+		if err != nil {
+			return nil, err
+		}
+		transfer = &modelPay.PayTransfer{
+			No:                 no,
+			AppID:              channel.AppID,
+			ChannelID:          channel.ID,
+			ChannelCode:        req.ChannelCode,
+			MerchantTransferID: req.MerchantTransferID,
+			Subject:            req.Subject,
+			Price:              req.Price,
+			Type:               req.Type,
+			UserName:           req.UserName,
+			UserAccount:        req.UserAccount,
+			Status:             modelPay.PayTransferStatusWaiting,
+			NotifyURL:          app.TransferNotifyURL,
+			UserIP:             req.UserIP,
+			ChannelExtras:      req.ChannelExtras,
+		}
+		if req.Type == modelPay.PayTransferTypeWxBalance {
+			transfer.UserAccount = req.OpenID
+		} else if req.Type == modelPay.PayTransferTypeAlipayBalance {
+			transfer.UserAccount = req.AlipayLogonID
+		}
+		if err := s.transferRepo.Create(ctx, transfer); err != nil {
+			return nil, err
+		}
+	} else {
+		// 2.2 情况二：存在创建转账单，但是状态为关闭，则更新为等待中
+		_, err := s.transferRepo.UpdateByIdAndStatus(ctx, transfer.ID, []int{modelPay.PayTransferStatusClosed},
+			&modelPay.PayTransfer{Status: modelPay.PayTransferStatusWaiting})
+		if err != nil {
+			return nil, err
+		}
+		transfer.Status = modelPay.PayTransferStatusWaiting
+	}
+
+	// 3. 调用三方渠道发起转账
+	var unifiedTransferResp *client.TransferResp
 	unifiedReq := &client.UnifiedTransferReq{
 		OutTradeNo:    transfer.No,
 		Subject:       transfer.Subject,
 		Price:         transfer.Price,
-		ChannelExtras: req.ChannelExtras,
+		UserName:      transfer.UserName,
+		UserAccount:   transfer.UserAccount,
 		UserIP:        req.UserIP,
-		ChannelUserID: req.OpenID, // Assumed passed in extras or somehow?
-		UserName:      req.UserName,
-		UserAccount:   req.UserAccount,
+		ChannelExtras: req.ChannelExtras,
 	}
-	// Note: OpenID might be needed for WeChat. Often passed in ChannelExtras or a separate field in CreateReq?
-	// In Java reqDTO has `channelExtras`.
-
-	resp, err := payClient.UnifiedTransfer(ctx, unifiedReq)
+	unifiedTransferResp, err = payClient.UnifiedTransfer(ctx, unifiedReq)
 	if err != nil {
-		// Log error and update status to CLOSED or FAIL?
-		s.logger.Error("UnifiedTransfer failed", zap.Error(err))
-		// Optional: Update transfer status to FAIL
-		return nil, err
+		// 注意这里仅打印异常，不进行抛出
+		// 原因是：虽然调用支付渠道进行转账发生异常（网络请求超时），实际转账成功。这个结果，后续转账轮询可以拿到。
+		s.logger.Error("[createTransfer][转账编号发生异常]",
+			zap.Int64("transferId", transfer.ID),
+			zap.Any("req", req),
+			zap.Error(err))
 	}
 
-	// 5. 更新转账单状态
-	// Map client status to system status
-	// Assuming resp.Status is aligned or needs mapping.
-	// 0: Waiting, 10: Success, 20: Closed/Fail?
-	transfer.Status = resp.Status
-	transfer.ChannelTransferNo = resp.ChannelTransferNo
-	if !resp.SuccessTime.IsZero() {
-		transfer.SuccessTime = &resp.SuccessTime
+	// 4. 通知转账结果
+	if unifiedTransferResp != nil {
+		s.NotifyTransfer(ctx, channel.ID, unifiedTransferResp)
 	}
-	// channel extras, error code etc.
 
-	s.db.WithContext(ctx).Save(transfer)
-
-	return &PayTransferCreateRespDTO{
-		ID:     transfer.ID,
-		Status: transfer.Status,
+	return &respPay.PayTransferCreateResp{
+		ID:                 transfer.ID,
+		Status:             transfer.Status,
+		ChannelPackageInfo: lo.If(unifiedTransferResp != nil, unifiedTransferResp.ChannelPackageInfo).Else(""),
 	}, nil
 }
 
-func (s *PayTransferService) GetTransfer(ctx context.Context, id int64) (*PayTransferRespDTO, error) {
-	var transfer pay.PayTransfer
-	if err := s.db.WithContext(ctx).First(&transfer, id).Error; err != nil {
+// validateTransferCanCreate 校验转账单是否可以创建
+// 对齐 Java: PayTransferServiceImpl.validateTransferCanCreate
+func (s *PayTransferService) validateTransferCanCreate(ctx context.Context, req *reqPay.PayTransferCreateReq, appId int64) (*modelPay.PayTransfer, error) {
+	transfer, err := s.transferRepo.SelectByAppIdAndMerchantTransferId(ctx, appId, req.MerchantTransferID)
+	if err != nil {
 		return nil, err
 	}
-	return s.convertRespDTO(&transfer), nil
-}
-
-func (s *PayTransferService) convertRespDTO(t *pay.PayTransfer) *PayTransferRespDTO {
-	return &PayTransferRespDTO{
-		ID:                 t.ID,
-		Status:             t.Status,
-		Price:              t.Price,
-		MerchantTransferId: t.MerchantTransferID,
-		ChannelCode:        t.ChannelCode,
-		SuccessTime:        t.SuccessTime,
-		ChannelErrorMsg:    t.ChannelErrorMsg,
-		ChannelExtras:      t.ChannelExtras,
+	if transfer != nil {
+		// 只有转账单状态为关闭，才能再次发起转账
+		if transfer.Status != modelPay.PayTransferStatusClosed {
+			return nil, errors.New("转账单已存在且状态不是关闭，无法重新发起")
+		}
+		// 校验参数是否一致
+		if req.Price != transfer.Price {
+			return nil, errors.New("转账金额不匹配")
+		}
+		if req.ChannelCode != transfer.ChannelCode {
+			return nil, errors.New("转账渠道不匹配")
+		}
 	}
+	// 如果状态为等待状态：不知道渠道转账是否发起成功
+	// 特殊：允许使用相同的 no 再次发起转账，渠道会保证幂等
+	return transfer, nil
 }
 
-func (s *PayTransferService) generateNo() string {
-	return fmt.Sprintf("T%d", time.Now().UnixNano())
-}
-
-// NotifyTransfer 通知并更新转账结果
-// 对齐 Java: PayTransferService.notifyTransfer(Long channelId, PayTransferRespDTO notify)
-func (s *PayTransferService) NotifyTransfer(ctx context.Context, channelID int64, notify *client.TransferResp) error {
+// NotifyTransfer 转账回调通知
+// 对齐 Java: PayTransferServiceImpl.notifyTransfer(Long channelId, PayTransferRespDTO notify)
+func (s *PayTransferService) NotifyTransfer(ctx context.Context, channelId int64, notify *client.TransferResp) error {
 	// 校验渠道是否有效
-	channel, err := s.channelSvc.ValidPayChannel(ctx, channelID)
+	channel, err := s.channelSvc.ValidPayChannel(ctx, channelId)
 	if err != nil {
 		return err
 	}
+	// 通知转账结果给对应的业务
+	return s.notifyTransferInternal(ctx, channel, notify)
+}
 
+// notifyTransferInternal 内部转账通知处理
+// 对齐 Java: PayTransferServiceImpl.notifyTransfer(PayChannelDO channel, PayTransferRespDTO notify)
+func (s *PayTransferService) notifyTransferInternal(ctx context.Context, channel *modelPay.PayChannel, notify *client.TransferResp) error {
 	// 转账成功的回调
 	if notify.Status == PayTransferStatusSuccess {
 		return s.notifyTransferSuccess(ctx, channel, notify)
 	}
-
 	// 转账关闭的回调
 	if notify.Status == PayTransferStatusClosed {
 		return s.notifyTransferClosed(ctx, channel, notify)
 	}
-
 	// 转账处理中的回调
 	if notify.Status == PayTransferStatusProcessing {
-		return s.notifyTransferProcessing(ctx, channel, notify)
+		return s.notifyTransferProgressing(ctx, channel, notify)
 	}
-
 	// WAITING 状态无需处理
 	return nil
 }
 
-// notifyTransferProcessing 处理转账进行中
-func (s *PayTransferService) notifyTransferProcessing(ctx context.Context, channel *pay.PayChannel, notify *client.TransferResp) error {
-	// 1. 查询转账单
-	var transfer pay.PayTransfer
-	if err := s.db.WithContext(ctx).
-		Where("app_id = ? AND no = ?", channel.AppID, notify.OutTradeNo).
-		First(&transfer).Error; err != nil {
-		return fmt.Errorf("转账单不存在")
+// notifyTransferProgressing 处理转账进行中的回调
+// 对齐 Java: PayTransferServiceImpl.notifyTransferProgressing
+func (s *PayTransferService) notifyTransferProgressing(ctx context.Context, channel *modelPay.PayChannel, notify *client.TransferResp) error {
+	// 1. 校验
+	transfer, err := s.transferRepo.SelectByAppIdAndNo(ctx, channel.AppID, notify.OutTradeNo)
+	if err != nil {
+		return err
 	}
-
-	// 如果已经是转账中，直接返回
+	if transfer == nil {
+		return errors.New("转账单不存在")
+	}
 	if transfer.Status == PayTransferStatusProcessing {
+		// 如果已经是转账中，直接返回，不用重复更新
+		s.logger.Info("[notifyTransferProgressing][transfer已经是转账中状态，无需更新]", zap.Int64("transferId", transfer.ID))
 		return nil
 	}
-
-	// 校验状态，必须是等待状态
 	if transfer.Status != PayTransferStatusWaiting {
-		return fmt.Errorf("转账单状态不是待转账")
+		return errors.New("转账单状态不是等待中，无法更新为进行中")
 	}
 
-	// 2. 更新状态 (使用乐观锁)
-	result := s.db.WithContext(ctx).
-		Model(&pay.PayTransfer{}).
-		Where("id = ? AND status = ?", transfer.ID, PayTransferStatusWaiting).
-		Updates(map[string]interface{}{
-			"status": PayTransferStatusProcessing,
+	// 2. 更新状态
+	updateCounts, err := s.transferRepo.UpdateByIdAndStatus(ctx, transfer.ID, []int{PayTransferStatusWaiting},
+		&modelPay.PayTransfer{
+			Status:             PayTransferStatusProcessing,
+			ChannelPackageInfo: notify.ChannelPackageInfo,
 		})
-
-	if result.Error != nil || result.RowsAffected == 0 {
-		return fmt.Errorf("转账单状态不是待转账")
+	if err != nil {
+		return err
 	}
-
+	if updateCounts == 0 {
+		return errors.New("转账单状态不是等待中，无法更新为进行中")
+	}
+	s.logger.Info("[notifyTransferProgressing][transfer更新为转账进行中状态]", zap.Int64("transferId", transfer.ID))
 	return nil
 }
 
-// notifyTransferSuccess 处理转账成功
-func (s *PayTransferService) notifyTransferSuccess(ctx context.Context, channel *pay.PayChannel, notify *client.TransferResp) error {
-	// 1. 查询转账单
-	var transfer pay.PayTransfer
-	if err := s.db.WithContext(ctx).
-		Where("app_id = ? AND no = ?", channel.AppID, notify.OutTradeNo).
-		First(&transfer).Error; err != nil {
-		return fmt.Errorf("转账单不存在")
+// notifyTransferSuccess 处理转账成功的回调
+// 对齐 Java: PayTransferServiceImpl.notifyTransferSuccess
+func (s *PayTransferService) notifyTransferSuccess(ctx context.Context, channel *modelPay.PayChannel, notify *client.TransferResp) error {
+	// 1. 校验状态
+	transfer, err := s.transferRepo.SelectByAppIdAndNo(ctx, channel.AppID, notify.OutTradeNo)
+	if err != nil {
+		return err
 	}
-
-	// 如果已经是成功，直接返回
+	if transfer == nil {
+		return errors.New("转账单不存在")
+	}
 	if transfer.Status == PayTransferStatusSuccess {
+		// 如果已成功，直接返回，不用重复更新
+		s.logger.Info("[notifyTransferSuccess][transfer已经是成功状态，无需更新]", zap.Int64("transferId", transfer.ID))
 		return nil
 	}
-
-	// 校验状态，必须是等待或进行中状态
 	if transfer.Status != PayTransferStatusWaiting && transfer.Status != PayTransferStatusProcessing {
-		return fmt.Errorf("转账单状态不是待转账或转账中")
+		return errors.New("转账单状态不是等待中或进行中，无法更新为成功")
 	}
 
-	// 2. 更新状态 (使用乐观锁)
-	result := s.db.WithContext(ctx).
-		Model(&pay.PayTransfer{}).
-		Where("id = ? AND status IN (?, ?)", transfer.ID, PayTransferStatusWaiting, PayTransferStatusProcessing).
-		Updates(map[string]interface{}{
-			"status":              PayTransferStatusSuccess,
-			"success_time":        notify.SuccessTime,
-			"channel_transfer_no": notify.ChannelTransferNo,
+	// 2. 更新状态
+	notifyDataJSON, _ := json.Marshal(notify)
+	updateCounts, err := s.transferRepo.UpdateByIdAndStatus(ctx, transfer.ID,
+		[]int{PayTransferStatusWaiting, PayTransferStatusProcessing},
+		&modelPay.PayTransfer{
+			Status:            PayTransferStatusSuccess,
+			SuccessTime:       &notify.SuccessTime,
+			ChannelTransferNo: notify.ChannelTransferNo,
+			ChannelNotifyData: string(notifyDataJSON),
 		})
-
-	if result.Error != nil || result.RowsAffected == 0 {
-		return fmt.Errorf("转账单状态不是待转账或转账中")
+	if err != nil {
+		return err
 	}
+	if updateCounts == 0 {
+		return errors.New("转账单状态不是等待中或进行中，无法更新为成功")
+	}
+	s.logger.Info("[notifyTransferSuccess][transfer更新为已转账]", zap.Int64("transferId", transfer.ID))
 
 	// 3. 插入转账通知记录
-	s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeTransfer, transfer.ID)
+	return s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeTransfer, transfer.ID)
+}
 
+// notifyTransferClosed 处理转账关闭的回调
+// 对齐 Java: PayTransferServiceImpl.notifyTransferClosed
+func (s *PayTransferService) notifyTransferClosed(ctx context.Context, channel *modelPay.PayChannel, notify *client.TransferResp) error {
+	// 1. 校验状态
+	transfer, err := s.transferRepo.SelectByAppIdAndNo(ctx, channel.AppID, notify.OutTradeNo)
+	if err != nil {
+		return err
+	}
+	if transfer == nil {
+		return errors.New("转账单不存在")
+	}
+	if transfer.Status == PayTransferStatusClosed {
+		// 如果已是关闭状态，直接返回，不用重复更新
+		s.logger.Info("[notifyTransferClosed][transfer已经是关闭状态，无需更新]", zap.Int64("transferId", transfer.ID))
+		return nil
+	}
+	if transfer.Status != PayTransferStatusWaiting && transfer.Status != PayTransferStatusProcessing {
+		return errors.New("转账单状态不是等待中或进行中，无法更新为关闭")
+	}
+
+	// 2. 更新状态
+	notifyDataJSON, _ := json.Marshal(notify)
+	updateCount, err := s.transferRepo.UpdateByIdAndStatus(ctx, transfer.ID,
+		[]int{PayTransferStatusWaiting, PayTransferStatusProcessing},
+		&modelPay.PayTransfer{
+			Status:            PayTransferStatusClosed,
+			ChannelTransferNo: notify.ChannelTransferNo,
+			ChannelNotifyData: string(notifyDataJSON),
+			ChannelErrorCode:  notify.ChannelErrorCode,
+			ChannelErrorMsg:   notify.ChannelErrorMsg,
+		})
+	if err != nil {
+		return err
+	}
+	if updateCount == 0 {
+		return errors.New("转账单状态不是等待中或进行中，无法更新为关闭")
+	}
+	s.logger.Info("[notifyTransferClosed][transfer更新为关闭状态]", zap.Int64("transferId", transfer.ID))
+
+	// 3. 插入转账通知记录
+	return s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeTransfer, transfer.ID)
+}
+
+// SyncTransfer 同步转账单状态
+// 对齐 Java: PayTransferServiceImpl.syncTransfer()
+func (s *PayTransferService) SyncTransfer(ctx context.Context) (int, error) {
+	list, err := s.transferRepo.SelectListByStatus(ctx, []int{PayTransferStatusWaiting, PayTransferStatusProcessing})
+	if err != nil {
+		return 0, err
+	}
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	count := 0
+	for _, transfer := range list {
+		if s.syncTransfer(ctx, transfer) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// SyncTransferById 同步指定转账单状态
+// 对齐 Java: PayTransferServiceImpl.syncTransfer(Long id)
+func (s *PayTransferService) SyncTransferById(ctx context.Context, id int64) error {
+	transfer, err := s.transferRepo.SelectById(ctx, id)
+	if err != nil {
+		return err
+	}
+	if transfer == nil {
+		return errors.New("转账单不存在")
+	}
+	s.syncTransfer(ctx, transfer)
 	return nil
 }
 
-// notifyTransferClosed 处理转账关闭
-func (s *PayTransferService) notifyTransferClosed(ctx context.Context, channel *pay.PayChannel, notify *client.TransferResp) error {
-	// 1. 查询转账单
-	var transfer pay.PayTransfer
-	if err := s.db.WithContext(ctx).
-		Where("app_id = ? AND no = ?", channel.AppID, notify.OutTradeNo).
-		First(&transfer).Error; err != nil {
-		return fmt.Errorf("转账单不存在")
+// syncTransfer 同步单个转账单
+// 对齐 Java: PayTransferServiceImpl.syncTransfer(PayTransferDO transfer)
+func (s *PayTransferService) syncTransfer(ctx context.Context, transfer *modelPay.PayTransfer) bool {
+	defer func() {
+		if r := recover(); r != nil {
+			s.logger.Error("[syncTransfer][transfer同步转账单状态异常]",
+				zap.Int64("transferId", transfer.ID),
+				zap.Any("error", r))
+		}
+	}()
+
+	// 1. 查询转账订单信息
+	payClient := s.channelSvc.GetPayClient(transfer.ChannelID)
+	if payClient == nil {
+		s.logger.Error("[syncTransfer][渠道编号找不到对应的支付客户端]", zap.Int64("channelId", transfer.ChannelID))
+		return false
+	}
+	resp, err := payClient.GetTransfer(ctx, transfer.No)
+	if err != nil {
+		s.logger.Error("[syncTransfer][查询转账订单失败]",
+			zap.Int64("transferId", transfer.ID),
+			zap.Error(err))
+		return false
 	}
 
-	// 如果已经是关闭，直接返回
-	if transfer.Status == PayTransferStatusClosed {
-		return nil
+	// 2. 回调转账结果
+	if err := s.NotifyTransfer(ctx, transfer.ChannelID, resp); err != nil {
+		s.logger.Error("[syncTransfer][回调转账结果失败]",
+			zap.Int64("transferId", transfer.ID),
+			zap.Error(err))
+		return false
 	}
+	return true
+}
 
-	// 校验状态，必须是等待或进行中状态
-	if transfer.Status != PayTransferStatusWaiting && transfer.Status != PayTransferStatusProcessing {
-		return fmt.Errorf("转账单状态不是待转账或转账中")
-	}
-
-	// 2. 更新状态 (使用乐观锁)
-	result := s.db.WithContext(ctx).
-		Model(&pay.PayTransfer{}).
-		Where("id = ? AND status IN (?, ?)", transfer.ID, PayTransferStatusWaiting, PayTransferStatusProcessing).
-		Updates(map[string]interface{}{
-			"status":              PayTransferStatusClosed,
-			"channel_transfer_no": notify.ChannelTransferNo,
-			"channel_error_code":  notify.ChannelErrorCode,
-			"channel_error_msg":   notify.ChannelErrorMsg,
-		})
-
-	if result.Error != nil || result.RowsAffected == 0 {
-		return fmt.Errorf("转账单状态不是待转账或转账中")
-	}
-
-	// 3. 插入转账通知记录
-	s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeTransfer, transfer.ID)
-
-	return nil
+// GetTransferByNo 根据转账单号获取转账单
+func (s *PayTransferService) GetTransferByNo(ctx context.Context, no string) (*modelPay.PayTransfer, error) {
+	return s.transferRepo.SelectByNo(ctx, no)
 }
