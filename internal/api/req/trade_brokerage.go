@@ -64,3 +64,9 @@ type BrokerageWithdrawRejectReq struct {
 	ID          int64  `json:"id" binding:"required"`
 	AuditReason string `json:"auditReason" binding:"required"`
 }
+
+// AppBrokerageUserRankPageReq 分销用户排行分页 Request (App)
+type AppBrokerageUserRankPageReq struct {
+	pagination.PageParam
+	Times []string `form:"times[]"` // 时间范围 [start, end]
+}

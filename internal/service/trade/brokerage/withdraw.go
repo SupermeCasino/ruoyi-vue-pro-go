@@ -9,6 +9,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -42,31 +43,29 @@ func NewBrokerageWithdrawService(q *query.Query, logger *zap.Logger, recordSvc *
 // AuditBrokerageWithdraw 审批佣金提现
 func (s *BrokerageWithdrawService) AuditBrokerageWithdraw(ctx context.Context, id int64, status int, auditReason string) error {
 	w := s.q.BrokerageWithdraw
+
+	// 1.1 校验存在
 	withdraw, err := w.WithContext(ctx).Where(w.ID.Eq(id)).First()
 	if err != nil {
 		return errors.New("提现记录不存在")
 	}
 
-	// 1.2 特殊：【重新转账】如果是提现失败，并且状态是审核中，那么更新状态为审核中，并且清空 transferErrorMsg
-	// Java: if (WITHDRAW_FAIL.equals(withdraw.getStatus())) { ... }
-	// But the request status (arg) is usually AUDIT_SUCCESS or AUDIT_FAIL.
-	// The Java logic checks if *current DB status* is WITHDRAW_FAIL (21).
-	// If so, it allows re-auditing -> reset to AUDITING (0).
-	if withdraw.Status == 21 { // WITHDRAW_FAIL
-		// Reset to AUDITING
+	// 1.2 特殊：【重新转账】如果是提现失败，允许重新审核
+	if withdraw.Status == tradeModel.BrokerageWithdrawStatusWithdrawFail {
+		// 重置为审核中状态
 		if _, err := w.WithContext(ctx).Where(w.ID.Eq(id)).
 			Updates(map[string]interface{}{
-				"status":             0, // AUDITING
+				"status":             tradeModel.BrokerageWithdrawStatusAuditing,
 				"transfer_error_msg": "",
 			}); err != nil {
 			return err
 		}
-		withdraw.Status = 0
+		withdraw.Status = tradeModel.BrokerageWithdrawStatusAuditing
 		withdraw.TransferErrorMsg = ""
 	}
 
-	// 1.2 校验状态为审核中
-	if withdraw.Status != 0 { // 0: Auditing
+	// 1.3 校验状态为审核中
+	if withdraw.Status != tradeModel.BrokerageWithdrawStatusAuditing {
 		return errors.New("当前状态不可审核")
 	}
 
@@ -76,93 +75,93 @@ func (s *BrokerageWithdrawService) AuditBrokerageWithdraw(ctx context.Context, i
 		"audit_reason": auditReason,
 		"audit_time":   time.Now(),
 	}
-
 	if _, err := w.WithContext(ctx).Where(w.ID.Eq(id)).Updates(updateMap); err != nil {
 		return err
 	}
 
-	// 3. Handle Success/Fail
-	if status == 10 { // AUDIT_SUCCESS
-		// If API Type, create transfer
-		// Enum: WALLET(1), BANK(2), WECHAT(3), ALIPAY(4)
-		if withdraw.Type == 1 || withdraw.Type == 3 || withdraw.Type == 4 { // Wallet/Wechat/Alipay
-			s.createPayTransfer(ctx, withdraw)
-		} else {
-			// Manual (Bank) -> Mark Withdraw Success
-			w.WithContext(ctx).Where(w.ID.Eq(id)).Update(w.Status, 11) // WITHDRAW_SUCCESS
-		}
-	} else if status == 20 { // AUDIT_FAIL
-		// Refund Brokerage
-		// Java: BrokerageRecordBizTypeEnum.WITHDRAW_REJECT
-		s.recordSvc.AddBrokerage(ctx, withdraw.UserID, "withdraw_reject", // BizType
-			string(rune(withdraw.ID)), withdraw.Price, "提现驳回")
+	// 3. 处理审批结果
+	switch status {
+	case tradeModel.BrokerageWithdrawStatusAuditSuccess:
+		// 3.1 审批通过的后续处理
+		s.auditBrokerageWithdrawSuccess(ctx, withdraw)
+	case tradeModel.BrokerageWithdrawStatusAuditFail:
+		// 3.2 审批不通过：退还佣金
+		s.recordSvc.AddBrokerage(ctx, withdraw.UserID, "withdraw_reject",
+			strconv.FormatInt(withdraw.ID, 10), withdraw.Price, "提现驳回")
+	default:
+		return fmt.Errorf("不支持的提现状态：%d", status)
 	}
 
 	return nil
 }
 
-// createPayTransfer 创建支付转账
-func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdraw *brokerage.BrokerageWithdraw) error {
-	// 1. 获取用户信息
-	user, err := s.memberSvc.GetUser(ctx, withdraw.UserID)
-	if err != nil {
-		return err
-	}
-	if user == nil {
-		return fmt.Errorf("user not found: %d", withdraw.UserID)
+// auditBrokerageWithdrawSuccess 审批通过的后续处理
+func (s *BrokerageWithdrawService) auditBrokerageWithdrawSuccess(ctx context.Context, withdraw *brokerage.BrokerageWithdraw) {
+	// 情况一：通过 API 转账（钱包/微信/支付宝）
+	if s.isApiWithdrawType(withdraw.Type) {
+		s.createPayTransfer(ctx, withdraw)
+		return
 	}
 
-	// 2. 获取交易配置
-	// Assuming there's a method to get config, e.g., GetTradeConfig() since it's singleton or implies context?
-	// Or pass tenant/appId? BrokerageWithdraw doesn't explicitly store AppID, but assuming single tenant context or logic.
-	// For now, let's try to get by default or mock if needed.
-	// Actually tradeConfigSvc likely has specific accessor.
+	// 情况二：非 API 转账（银行卡，手动打款）
+	s.q.BrokerageWithdraw.WithContext(ctx).Where(s.q.BrokerageWithdraw.ID.Eq(withdraw.ID)).
+		Update(s.q.BrokerageWithdraw.Status, tradeModel.BrokerageWithdrawStatusWithdrawSuccess)
+}
+
+// isApiWithdrawType 判断是否为 API 提现类型
+func (s *BrokerageWithdrawService) isApiWithdrawType(withdrawType int) bool {
+	return withdrawType == tradeModel.BrokerageWithdrawTypeWallet ||
+		withdrawType == tradeModel.BrokerageWithdrawTypeWechat ||
+		withdrawType == tradeModel.BrokerageWithdrawTypeAlipay
+}
+
+// createPayTransfer 创建支付转账
+func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdraw *brokerage.BrokerageWithdraw) error {
+	// 1.1 获取基础信息
+	userAccount := withdraw.UserAccount
+	userName := withdraw.UserName
+	channelCode := ""
+	var channelExtras map[string]string
+
+	switch withdraw.Type {
+	case tradeModel.BrokerageWithdrawTypeAlipay:
+		channelCode = "alipay_pc"
+	case tradeModel.BrokerageWithdrawTypeWechat:
+		channelCode = withdraw.TransferChannelCode
+		userAccount = withdraw.UserAccount
+		// 特殊：微信需要有报备信息
+		channelExtras = map[string]string{
+			"scene":    "佣金提现",
+			"sceneId":  "1000",
+			"userName": userName,
+		}
+	case tradeModel.BrokerageWithdrawTypeWallet:
+		// 钱包转账
+		channelCode = "wallet"
+	}
+
+	// 1.2 获取交易配置
 	tradeConfig, err := s.tradeConfigSvc.GetTradeConfig(ctx)
 	if err != nil {
 		return err
 	}
 
-	// 1.1 获取基础信息
-	// userAccount := withdraw.UserAccount // Used in logic below
-	channelCode := ""
-	var channelExtras map[string]string
-
-	// Enum: WALLET(1), BANK(2), WECHAT(3), ALIPAY(4)
-	if withdraw.Type == 4 { // ALIPAY_API
-		channelCode = "alipay_pc" // PayChannelEnum.ALIPAY_PC.getCode()
-	} else if withdraw.Type == 3 { // WECHAT_API
-		channelCode = withdraw.TransferChannelCode
-		// userAccount = withdraw.UserAccount // Already set
-		// 特殊：微信需要有报备信息
-		channelExtras = map[string]string{
-			"desc": "佣金提现", // Approx
-		}
-	} else if withdraw.Type == 1 { // WALLET
-		channelCode = "wallet"
-	}
-
-	// 1.2 构建请求
+	// 1.3 构建请求
 	createReq := &pay.PayTransferCreateReqDTO{
 		AppID:              tradeConfig.AppID,
 		ChannelCode:        channelCode,
-		MerchantTransferID: strconv.FormatInt(withdraw.ID, 10), // Use withdraw ID as MerchantTransferID
-		Subject:            fmt.Sprintf("用户提现 - %d", withdraw.ID),
+		MerchantTransferID: strconv.FormatInt(withdraw.ID, 10),
+		Subject:            "佣金提现",
 		Price:              withdraw.Price,
-		UserAccount:        user.Mobile, // Default to mobile as account? Or need real account?
-		UserName:           user.Nickname,
-		UserIP:             "127.0.0.1", // TODO: Get from context or request
+		UserAccount:        userAccount,
+		UserName:           userName,
+		UserIP:             "127.0.0.1", // TODO: 暂用默认值，后续可通过 context 传递
 		ChannelExtras:      channelExtras,
 	}
-	if channelCode == "wx_pub" || channelCode == "wx_lite" || channelCode == "wx_app" {
-		createReq.OpenID = "TODO" // Need OpenID for WeChat, likely from UserSocial or similar
-	}
 
-	// 1.3 发起请求
+	// 1.4 发起请求
 	resp, err := s.payTransferSvc.CreateTransfer(ctx, createReq)
 	if err != nil {
-		// Log error handling? Java doesn't catch exception here, allows it to bubble up?
-		// But valid alignment implies dealing with it.
-		// If failed, status stays AUDIT_SUCCESS (10), but transfer info missing.
 		return err
 	}
 
@@ -177,7 +176,7 @@ func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdr
 
 // CreateBrokerageWithdraw 创建佣金提现
 func (s *BrokerageWithdrawService) CreateBrokerageWithdraw(ctx context.Context, userId int64, reqVO *tradeReq.AppBrokerageWithdrawCreateReqVO) (int64, error) {
-	// 1. Check Config
+	// 1.1 校验提现金额
 	config, err := s.tradeConfigSvc.GetTradeConfig(ctx)
 	if err != nil {
 		return 0, err
@@ -186,56 +185,36 @@ func (s *BrokerageWithdrawService) CreateBrokerageWithdraw(ctx context.Context, 
 		return 0, errors.New("提现金额低于最低提现金额")
 	}
 
-	// 2. Check Wallet / Realname (Simplified)
-	// Java checks if wallet exists and realname is set for Wechat/Bank.
-	// We skip strict wallet check here or assume PayWalletService handles it?
-	// For now, simple validation.
-
-	// 3. Calculate Fee
+	// 2.1 计算手续费
 	feePrice := 0
 	if config.BrokerageWithdrawFeePercent > 0 {
 		feePrice = reqVO.Price * config.BrokerageWithdrawFeePercent / 100
 	}
 
-	// 4. Create Withdraw Record
+	// 2.2 创建佣金提现记录
 	withdraw := &brokerage.BrokerageWithdraw{
-		UserID:   userId,
-		Price:    reqVO.Price,
-		FeePrice: feePrice,
-		// TotalPrice: realPrice, // Removed duplicate
-		// Java: total_price = price.
-		// Wait, Java sets `TotalPrice` to `price`.
-		// And `Price` to `price` (withdrawal amount).
-		// `FeePrice` is additional or deducted?
-		// Java: `withdraw.setPrice(createReqVO.getPrice());`
-		// `withdraw.setFeePrice(feePrice);`
-		// `withdraw.setTotalPrice(createReqVO.getPrice());`
-		// So TotalPrice seems to be the full amount deducted from user balance.
-		// Real transfer amount would be Price - FeePrice?
-		// If Fee is deducted FROM price, then user creates withdraw of 100, receives 90 (10 fee).
-		// If Fee is extra, user needs 110 balance.
-		// Usually Fee is deducted from the withdrawal amount.
-		// Let's assume deducted.
+		UserID:      userId,
+		Price:       reqVO.Price,
+		FeePrice:    feePrice,
+		TotalPrice:  reqVO.Price, // Java: setTotalPrice(price)
 		Type:        reqVO.Type,
-		UserName:    reqVO.Name,    // Map Name -> UserName
-		UserAccount: reqVO.Account, // Map Account -> UserAccount
+		UserName:    reqVO.Name,
+		UserAccount: reqVO.Account,
 		BankName:    reqVO.BankName,
 		BankAddress: reqVO.BankAddress,
 		QrCodeURL:   reqVO.QrCodeUrl,
-		Status:      1, // Auditing
-		TotalPrice:  reqVO.Price,
+		Status:      tradeModel.BrokerageWithdrawStatusAuditing,
 	}
 
 	err = s.q.Transaction(func(tx *query.Query) error {
-		// 1. Create Withdrawal Record
+		// 创建提现记录
 		err := tx.BrokerageWithdraw.WithContext(ctx).Create(withdraw)
 		if err != nil {
 			return err
 		}
 
-		// 2. Deduct Brokerage (Atomic)
-		// Java: brokerageRecordService.reduceBrokerage(...)
-		// Pass withdraw.ID as BizID
+		// 3. 创建用户佣金记录（扣减佣金）
+		// 注意：佣金是否充足，ReduceBrokerageForWithdraw 已经进行校验
 		return s.recordSvc.ReduceBrokerageForWithdraw(ctx, userId, strconv.FormatInt(withdraw.ID, 10), reqVO.Price)
 	})
 	if err != nil {
@@ -248,28 +227,61 @@ func (s *BrokerageWithdrawService) CreateBrokerageWithdraw(ctx context.Context, 
 // UpdateBrokerageWithdrawTransferred 更新佣金提现的转账结果
 func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx context.Context, id int64, payTransferId int64) error {
 	w := s.q.BrokerageWithdraw
+
+	// 1.1 校验提现单是否存在
 	withdraw, err := w.WithContext(ctx).Where(w.ID.Eq(id)).First()
 	if err != nil {
+		s.logger.Error("提现单不存在", zap.Int64("id", id), zap.Int64("payTransferId", payTransferId))
 		return errors.New("提现记录不存在")
 	}
 
-	// 1.2 Verify status ended
-	// WITHDRAW_SUCCESS(11), WITHDRAW_FAIL(21)
-	if withdraw.Status == 11 || withdraw.Status == 21 {
+	// 1.2 校验提现单已经结束（成功或失败）
+	if withdraw.Status == tradeModel.BrokerageWithdrawStatusWithdrawSuccess ||
+		withdraw.Status == tradeModel.BrokerageWithdrawStatusWithdrawFail {
+		// 特殊：转账单编号相同，直接返回，说明重复回调
 		if withdraw.PayTransferID == payTransferId {
-			return nil // Duplicate callback
+			s.logger.Warn("提现单已结束，且转账单编号相同，直接返回",
+				zap.Int64("id", id), zap.Int64("payTransferId", payTransferId))
+			return nil
 		}
+		// 异常：转账单编号不同，说明转账单编号错误
+		s.logger.Error("转账单不匹配", zap.Int64("id", id), zap.Int64("payTransferId", payTransferId))
 		return errors.New("转账单不匹配")
 	}
 
-	// 2. 校验转账单 (Call Pay Service)
-	// Placeholder: payTransferApi.GetTransfer(payTransferId)
-	// Assuming PayTransferService has GetTransfer
-	// ...
+	// 2. 校验转账单的合法性
+	payTransfer, err := s.payTransferSvc.GetTransfer(ctx, payTransferId)
+	if err != nil || payTransfer == nil {
+		s.logger.Error("转账单不存在", zap.Int64("id", id), zap.Int64("payTransferId", payTransferId))
+		return errors.New("转账单不存在")
+	}
 
-	// 3. Update Status
-	// Placeholder logic
-	return nil
+	// 2.1 校验转账单已成功或关闭
+	if payTransfer.Status != tradeModel.PayTransferStatusSuccess && payTransfer.Status != tradeModel.PayTransferStatusClosed {
+		s.logger.Error("转账单未结束", zap.Int64("id", id), zap.Int64("payTransferId", payTransferId))
+		return errors.New("转账单未结束")
+	}
+
+	// 2.2 校验转账金额一致
+	if payTransfer.Price != withdraw.Price {
+		s.logger.Error("转账金额不匹配", zap.Int64("id", id), zap.Int("withdrawPrice", withdraw.Price), zap.Int("transferPrice", payTransfer.Price))
+		return errors.New("转账金额不匹配")
+	}
+
+	// 3. 更新提现单状态
+	var newStatus int
+	if payTransfer.Status == tradeModel.PayTransferStatusSuccess {
+		newStatus = tradeModel.BrokerageWithdrawStatusWithdrawSuccess
+	} else {
+		newStatus = tradeModel.BrokerageWithdrawStatusWithdrawFail
+	}
+
+	_, err = w.WithContext(ctx).Where(w.ID.Eq(id)).Updates(map[string]interface{}{
+		"status":             newStatus,
+		"transfer_time":      payTransfer.SuccessTime,
+		"transfer_error_msg": payTransfer.ChannelErrorMsg,
+	})
+	return err
 }
 
 // GetBrokerageWithdraw 获得佣金提现

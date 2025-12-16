@@ -6,6 +6,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
@@ -109,7 +110,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
 	// Wechat Transfer Info Logic
 	// Status: AUDIT_SUCCESS(10), Type: WECHAT(3)
 	// We check against constants.
-	if withdraw.Status == 10 && withdraw.Type == 3 && withdraw.PayTransferID > 0 {
+	if withdraw.Status == tradeModel.BrokerageWithdrawStatusAuditSuccess && withdraw.Type == tradeModel.BrokerageWithdrawTypeWechat && withdraw.PayTransferID > 0 {
 		transfer, err := h.payTransferSvc.GetTransfer(c.Request.Context(), int64(withdraw.PayTransferID))
 		if err != nil {
 			response.WriteError(c, 500, err.Error())

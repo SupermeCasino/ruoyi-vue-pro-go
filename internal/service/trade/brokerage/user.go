@@ -14,7 +14,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type BrokerageUserService struct {
@@ -89,97 +88,123 @@ func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.
 	}, nil
 }
 
-// CreateBrokerageUser 创建分销用户
+// CreateBrokerageUser 创建分销用户（Admin 手动创建）
 func (s *BrokerageUserService) CreateBrokerageUser(ctx context.Context, r *req.BrokerageUserCreateReq) (int64, error) {
-	// 1. Check if exists
-	exists, err := s.GetBrokerageUser(ctx, r.UserID)
-	if err == nil && exists != nil {
+	// 1.1 校验分销用户是否已存在
+	exists, _ := s.GetBrokerageUser(ctx, r.UserID)
+	if exists != nil {
 		return 0, errors.New("分销用户已存在")
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) { // Assuming gorm.ErrRecordNotFound handled by repo or checked here
-		// Actually s.GetBrokerageUser returns error if not found?
-		// Usually generated code returns error.
+	}
+
+	// 1.2 校验是否能绑定用户
+	user := &brokerage.BrokerageUser{ID: r.UserID}
+	if err := s.validateCanBindUser(ctx, user, r.BindUserID); err != nil {
 		return 0, err
 	}
 
-	// 2. Validate Bind
-	if err := s.validateCanBindUser(ctx, &brokerage.BrokerageUser{ID: r.UserID}, r.BindUserID); err != nil {
-		return 0, err
-	}
-
-	// 3. Create
+	// 2. 创建分销人
 	now := time.Now()
-	user := &brokerage.BrokerageUser{
-		ID:               r.UserID,
-		BindUserID:       r.BindUserID,
-		BindUserTime:     &now,
-		BrokerageTime:    &now,
-		BrokerageEnabled: true, // Assuming enabled on manual create
+	newUser := &brokerage.BrokerageUser{
+		ID:            r.UserID,
+		BindUserID:    r.BindUserID,
+		BindUserTime:  &now,
+		BrokerageTime: &now,
 	}
-	if err := s.q.BrokerageUser.WithContext(ctx).Create(user); err != nil {
+	if err := s.q.BrokerageUser.WithContext(ctx).Create(newUser); err != nil {
 		return 0, err
 	}
-	return user.ID, nil
+	return newUser.ID, nil
 }
 
 // GetOrCreateBrokerageUser 获得或创建分销用户
+// 特殊：人人分销的情况下，如果分销人为空则创建分销人
 func (s *BrokerageUserService) GetOrCreateBrokerageUser(ctx context.Context, id int64) (*brokerage.BrokerageUser, error) {
-	u, err := s.GetBrokerageUser(ctx, id)
-	if err == nil && u != nil {
-		return u, nil
+	user, _ := s.GetBrokerageUser(ctx, id)
+	if user != nil {
+		return user, nil
 	}
-	// Create if not found
-	// In Java: default enabled = true? Check TradeConfig.
-	// For now assume default enabled if configured.
-	now := time.Now()
-	user := &brokerage.BrokerageUser{
-		ID:               id,
-		BrokerageEnabled: true, // Default enabled? Or check config?
-		BrokerageTime:    &now,
-		CreatedAt:        now,
-		UpdatedAt:        now,
-	}
-	if err := s.q.BrokerageUser.WithContext(ctx).Create(user); err != nil {
+
+	// 获取分销配置
+	config, err := s.configSvc.GetTradeConfig(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return user, nil
+
+	// 人人分销（BrokerageEnabledCondition = 1）的情况下才自动创建
+	if config == nil || config.BrokerageEnabledCondition != 1 {
+		return nil, nil
+	}
+
+	now := time.Now()
+	newUser := &brokerage.BrokerageUser{
+		ID:               id,
+		BrokerageEnabled: true,
+		BrokeragePrice:   0,
+		FrozenPrice:      0,
+		BrokerageTime:    &now,
+	}
+	if err := s.q.BrokerageUser.WithContext(ctx).Create(newUser); err != nil {
+		return nil, err
+	}
+	return newUser, nil
 }
 
 // BindBrokerageUser 绑定推广员
 func (s *BrokerageUserService) BindBrokerageUser(ctx context.Context, userId int64, bindUserId int64) (bool, error) {
-	// Java valid: bindUserId > 0 && userId != bindUserId
-	if bindUserId == 0 || userId == bindUserId {
-		return false, nil // Should return error or false? Java returns boolean success.
+	// 1. 获得分销用户
+	isNewBrokerageUser := false
+	user, _ := s.GetBrokerageUser(ctx, userId)
+	if user == nil {
+		// 分销用户不存在的情况：1. 新注册；2. 旧数据；3. 分销功能关闭后又打开
+		isNewBrokerageUser = true
+		user = &brokerage.BrokerageUser{
+			ID:               userId,
+			BrokerageEnabled: false,
+			BrokeragePrice:   0,
+			FrozenPrice:      0,
+		}
 	}
-	// Check if already bound
-	user, err := s.GetBrokerageUser(ctx, userId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+
+	// 2.1 校验是否能绑定用户
+	canBind, err := s.isUserCanBind(ctx, user)
+	if err != nil {
 		return false, err
 	}
-	if user != nil && user.BindUserID > 0 {
-		return false, nil // Already bound
+	if !canBind {
+		return false, nil
 	}
 
-	// Delegate to UpdateBrokerageUserId logic which contains validation
-	// But UpdateBrokerageUserId requires manual handling?
-	// Or we can call validate and update.
-	// Let's reuse UpdateBrokerageUserId for consistency, but UpdateBrokerageUserId assumes Admin override?
-	// App binding usually has simpler rules (can't change once bound).
-	// Admin can change.
+	// 2.2 校验能否绑定
+	if err := s.validateCanBindUser(ctx, user, bindUserId); err != nil {
+		return false, err
+	}
 
-	// If user does not exist, create it first?
-	if user == nil {
-		if _, err := s.CreateBrokerageUser(ctx, &req.BrokerageUserCreateReq{
-			UserID:     userId,
-			BindUserID: bindUserId,
-		}); err != nil {
+	// 2.3 绑定用户
+	now := time.Now()
+	if isNewBrokerageUser {
+		// 获取分销配置，判断是否人人分销
+		config, _ := s.configSvc.GetTradeConfig(ctx)
+		if config != nil && config.BrokerageEnabledCondition == 1 {
+			// 人人分销：用户默认就有分销资格
+			user.BrokerageEnabled = true
+			user.BrokerageTime = &now
+		} else {
+			user.BrokerageEnabled = false
+			user.BrokerageTime = &now
+		}
+		user.BindUserID = bindUserId
+		user.BindUserTime = &now
+		if err := s.q.BrokerageUser.WithContext(ctx).Create(user); err != nil {
 			return false, err
 		}
-		return true, nil
-	}
-
-	// If exists, update
-	if err := s.UpdateBrokerageUserId(ctx, userId, bindUserId); err != nil {
-		return false, err
+	} else {
+		_, err := s.q.BrokerageUser.WithContext(ctx).Where(s.q.BrokerageUser.ID.Eq(userId)).Updates(map[string]interface{}{
+			"bind_user_id":   bindUserId,
+			"bind_user_time": &now,
+		})
+		if err != nil {
+			return false, err
+		}
 	}
 	return true, nil
 }
@@ -239,40 +264,74 @@ func (s *BrokerageUserService) UpdateBrokerageUserId(ctx context.Context, id int
 	return err
 }
 
+// isUserCanBind 校验是否能绑定用户
+func (s *BrokerageUserService) isUserCanBind(ctx context.Context, user *brokerage.BrokerageUser) (bool, error) {
+	// 校验分销功能是否启用
+	config, err := s.configSvc.GetTradeConfig(ctx)
+	if err != nil {
+		return false, err
+	}
+	if config == nil || !config.BrokerageEnabled {
+		return false, nil
+	}
+
+	// 校验分销关系绑定模式
+	// BrokerageBindMode: 1=首次绑定 2=注册绑定 3=覆盖绑定
+	switch config.BrokerageBindMode {
+	case 2:
+		// 注册绑定模式：判断是否为新用户（注册时间在 30 秒内）
+		memberUser, err := s.memberSvc.GetUser(ctx, user.ID)
+		if err != nil || memberUser == nil {
+			return false, nil
+		}
+		if time.Since(memberUser.CreatedAt) > 30*time.Second {
+			return false, errors.New("只有在注册时可以绑定")
+		}
+	case 3:
+		// 覆盖绑定模式：不允许
+		if user.BindUserID > 0 {
+			return false, errors.New("已绑定了推广人")
+		}
+	}
+	// 首次绑定模式 (默认)：如果已绑定则返回 false
+	if user.BindUserID > 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 // validateCanBindUser 校验能否绑定
 func (s *BrokerageUserService) validateCanBindUser(ctx context.Context, user *brokerage.BrokerageUser, bindUserId int64) error {
 	if bindUserId == 0 {
 		return nil
 	}
-	// 1. Check Bind User exists
-	bindUser, err := s.memberSvc.GetUser(ctx, bindUserId) // This is MemberUser
+	// 1.1 校验推广人是否存在
+	bindUser, err := s.memberSvc.GetUser(ctx, bindUserId)
 	if err != nil || bindUser == nil {
 		return errors.New("推广人不存在")
 	}
 
-	// 2. Check Bind User Brokerage Enabled
-	brokerageBindUser, err := s.GetBrokerageUser(ctx, bindUserId)
-	if err != nil || brokerageBindUser == nil || !brokerageBindUser.BrokerageEnabled {
+	// 1.2 校验要绑定的用户有无推广资格
+	brokerageBindUser, _ := s.GetOrCreateBrokerageUser(ctx, bindUserId)
+	if brokerageBindUser == nil || !brokerageBindUser.BrokerageEnabled {
 		return errors.New("推广人无推广资格")
 	}
 
-	// 3. Self bind
+	// 2. 校验绑定自己
 	if user.ID == bindUserId {
 		return errors.New("不能绑定自己")
 	}
 
-	// 4. Loop check
-	// A -> B -> A
+	// 3. 下级不能绑定自己的上级（循环绑定检查）
 	currentBindId := brokerageBindUser.BindUserID
-	for i := 0; i < 100; i++ { // Limit loop
+	for i := 0; i < 32767; i++ { // Short.MAX_VALUE
 		if currentBindId == 0 {
 			break
 		}
 		if currentBindId == user.ID {
 			return errors.New("不能循环绑定")
 		}
-		// Fetch next
-		next, err := s.GetBrokerageUser(ctx, currentBindId)
+		next, _ := s.GetBrokerageUser(ctx, currentBindId)
 		if err != nil || next == nil {
 			break
 		}
@@ -335,15 +394,15 @@ func (s *BrokerageUserService) GetBrokerageUserChildSummaryPage(ctx context.Cont
 
 	q := s.q.BrokerageUser.WithContext(ctx).Where(s.q.BrokerageUser.ID.In(childIDs...))
 
-	// Note: Nickname filtering requires Join with MemberUser, skipping for simple implementation or assuming nicknames not in BrokerageUser table.
-	// Java joins or fetches map.
-	// Here, we just return the page of BrokerageUsers, logic layer will fill info.
-	// But Sorting?
-	if r.Sorting == "userCount" {
-		// Complex sort, skip for now or use default
-	} else if r.Sorting == "brokeragePrice" {
+	// 注：昵称过滤需要与 MemberUser 表关联，此处简化实现，昵称信息由调用层补充
+	// Java 实现通过 join 或 map 方式获取用户信息
+	// 排序逻辑:
+	switch r.Sorting {
+	case "userCount":
+		// 按用户数量排序：复杂查询，暂用默认排序
+	case "brokeragePrice":
 		q = q.Order(s.q.BrokerageUser.BrokeragePrice.Desc())
-	} else {
+	default:
 		q = q.Order(s.q.BrokerageUser.BrokerageTime.Desc())
 	}
 
@@ -359,14 +418,66 @@ func (s *BrokerageUserService) GetBrokerageUserChildSummaryPage(ctx context.Cont
 	return &pagination.PageResult[*brokerage.BrokerageUser]{List: list, Total: total}, nil
 }
 
-// GetBrokerageUserRankPageByUserCount 获得分销用户排行分页（基于用户量）
-func (s *BrokerageUserService) GetBrokerageUserRankPageByUserCount(ctx context.Context, r *tradeReq.AppBrokerageUserRankPageReqVO) (*pagination.PageResult[*brokerage.BrokerageUser], error) {
-	// Complex query: Count sub-users and rank.
-	// This usually involves Group By or Subquery.
-	// Simplified: return empty for now or Implement proper SQL.
-	// Java uses: select id, nickname, avatar, (select count(*) from trade_brokerage_user where bind_user_id = t.id) as brokerage_user_count ...
-	// GORM raw SQL might be best.
+// BrokerageUserRankByUserCountResult 分销用户排行（基于用户量）结果
+type BrokerageUserRankByUserCountResult struct {
+	ID                 int64 `gorm:"column:id"`
+	BrokerageUserCount int   `gorm:"column:brokerage_user_count"`
+}
 
-	// Placeholder
-	return &pagination.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
+// GetBrokerageUserRankPageByUserCount 获得分销用户排行分页（基于用户量）
+func (s *BrokerageUserService) GetBrokerageUserRankPageByUserCount(ctx context.Context, r *tradeReq.AppBrokerageUserRankPageReqVO) (*pagination.PageResult[*BrokerageUserRankByUserCountResult], error) {
+	// 解析时间范围
+	var beginTime, endTime time.Time
+	if len(r.Times) >= 2 {
+		beginTime = parseTime(r.Times[0])
+		endTime = parseTime(r.Times[1])
+	}
+
+	// 使用 Gen 生成的字段和表名构建查询
+	bu := s.q.BrokerageUser
+	tableName := bu.TableName()
+	bindUserIDCol := bu.BindUserID.ColumnName().String()
+	bindUserTimeCol := bu.BindUserTime.ColumnName().String()
+
+	// 构建基础查询条件
+	q := bu.WithContext(ctx).
+		Where(bu.BindUserID.Gt(0))
+
+	if !beginTime.IsZero() && !endTime.IsZero() {
+		q = q.Where(bu.BindUserTime.Between(beginTime, endTime))
+	}
+
+	// 获取总数（不同绑定用户数）
+	// 使用 GORM Gen 的 Distinct 进行统计
+	total, err := q.Distinct(bu.BindUserID).Count()
+	if err != nil {
+		return nil, err
+	}
+
+	// 分组查询需要使用原生 GORM，因为 Gen 不支持 GROUP BY 聚合
+	// 使用 Gen 生成的字段名确保类型安全
+	db := bu.WithContext(ctx).UnderlyingDB()
+	offset := (r.PageNo - 1) * r.PageSize
+
+	var results []*BrokerageUserRankByUserCountResult
+	selectClause := bindUserIDCol + " as id, COUNT(*) as brokerage_user_count"
+	query := db.Table(tableName).
+		Select(selectClause).
+		Where(bindUserIDCol+" > ?", 0).
+		Where("deleted = 0")
+
+	if !beginTime.IsZero() && !endTime.IsZero() {
+		query = query.Where(bindUserTimeCol+" BETWEEN ? AND ?", beginTime, endTime)
+	}
+
+	query.Group(bindUserIDCol).
+		Order("brokerage_user_count DESC").
+		Limit(r.PageSize).
+		Offset(offset).
+		Scan(&results)
+
+	return &pagination.PageResult[*BrokerageUserRankByUserCountResult]{
+		List:  results,
+		Total: total,
+	}, nil
 }

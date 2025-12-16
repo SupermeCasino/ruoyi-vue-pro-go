@@ -3,9 +3,12 @@ package brokerage
 import (
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	model "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -17,13 +20,15 @@ type AppBrokerageUserHandler struct {
 	userSvc     *brokerage.BrokerageUserService
 	recordSvc   *brokerage.BrokerageRecordService
 	withdrawSvc *brokerage.BrokerageWithdrawService
+	memberSvc   *member.MemberUserService
 }
 
-func NewAppBrokerageUserHandler(userSvc *brokerage.BrokerageUserService, recordSvc *brokerage.BrokerageRecordService, withdrawSvc *brokerage.BrokerageWithdrawService) *AppBrokerageUserHandler {
+func NewAppBrokerageUserHandler(userSvc *brokerage.BrokerageUserService, recordSvc *brokerage.BrokerageRecordService, withdrawSvc *brokerage.BrokerageWithdrawService, memberSvc *member.MemberUserService) *AppBrokerageUserHandler {
 	return &AppBrokerageUserHandler{
 		userSvc:     userSvc,
 		recordSvc:   recordSvc,
 		withdrawSvc: withdrawSvc,
+		memberSvc:   memberSvc,
 	}
 }
 
@@ -81,7 +86,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 	endOfDay := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 23, 59, 59, 999999999, time.Local)
 
 	// BizType: ORDER=1 (Assume). Status: SETTLEMENT=1 (Assume).
-	yesterdayPrice, err := h.recordSvc.GetSummaryPriceByUserId(c, userId, 1, 1, beginOfDay, endOfDay)
+	yesterdayPrice, err := h.recordSvc.GetSummaryPriceByUserId(c, userId, tradeModel.BrokerageRecordBizTypeOrder, tradeModel.BrokerageRecordStatusSettlement, beginOfDay, endOfDay)
 	if err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
@@ -89,7 +94,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 
 	// 2. Withdraw Price
 	// Status: AUDIT_SUCCESS(10), WITHDRAW_SUCCESS(11)
-	summaries, err := h.withdrawSvc.GetWithdrawSummaryListByUserId(c, []int64{userId}, []int{10, 11})
+	summaries, err := h.withdrawSvc.GetWithdrawSummaryListByUserId(c, []int64{userId}, []int{tradeModel.BrokerageWithdrawStatusAuditSuccess, tradeModel.BrokerageWithdrawStatusWithdrawSuccess})
 	if err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
@@ -100,8 +105,8 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 	}
 
 	// 3. Count
-	firstCount, _ := h.userSvc.GetBrokerageUserCountByBindUserId(c, userId, 1)
-	secondCount, _ := h.userSvc.GetBrokerageUserCountByBindUserId(c, userId, 2)
+	firstCount, _ := h.userSvc.GetBrokerageUserCountByBindUserId(c, userId, tradeModel.BrokerageUserLevelOne)
+	secondCount, _ := h.userSvc.GetBrokerageUserCountByBindUserId(c, userId, tradeModel.BrokerageUserLevelTwo)
 
 	respVO := &tradeResp.AppBrokerageUserMySummaryRespVO{
 		YesterdayPrice:           yesterdayPrice,
@@ -142,4 +147,107 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserChildSummaryPage(c *gin.Contex
 		List:  list,
 		Total: pageResult.Total,
 	})
+}
+
+// GetBrokerageUserRankPageByUserCount 获得分销用户排行分页（基于用户量）
+func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByUserCount(c *gin.Context) {
+	var r tradeReq.AppBrokerageUserRankPageReqVO
+	if err := c.ShouldBindQuery(&r); err != nil {
+		response.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	pageResult, err := h.userSvc.GetBrokerageUserRankPageByUserCount(c, &r)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	// 收集用户 ID
+	userIds := make([]int64, len(pageResult.List))
+	for i, u := range pageResult.List {
+		userIds[i] = u.ID
+	}
+
+	// 批量获取用户信息
+	userMap, _ := h.memberSvc.GetUserMap(c, userIds)
+
+	// 转换为 VO
+	list := make([]tradeResp.AppBrokerageUserRankByUserCountRespVO, len(pageResult.List))
+	for i, u := range pageResult.List {
+		vo := tradeResp.AppBrokerageUserRankByUserCountRespVO{
+			ID:                 u.ID,
+			BrokerageUserCount: u.BrokerageUserCount,
+		}
+		if info, ok := userMap[u.ID]; ok {
+			vo.Nickname = info.Nickname
+			vo.Avatar = info.Avatar
+		}
+		list[i] = vo
+	}
+
+	response.WriteSuccess(c, &pagination.PageResult[tradeResp.AppBrokerageUserRankByUserCountRespVO]{
+		List:  list,
+		Total: pageResult.Total,
+	})
+}
+
+// GetBrokerageUserRankPageByPrice 获得分销用户排行分页（基于佣金）
+func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByPrice(c *gin.Context) {
+	var r req.AppBrokerageUserRankPageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		response.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	pageResult, err := h.recordSvc.GetBrokerageUserRankPageByPrice(c, &r)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	// 收集用户 ID 并获取用户信息
+	userIds := make([]int64, len(pageResult.List))
+	for i, u := range pageResult.List {
+		userIds[i] = u.ID
+	}
+	userMap, _ := h.memberSvc.GetUserMap(c, userIds)
+
+	// 填充用户昵称/头像
+	for _, vo := range pageResult.List {
+		if info, ok := userMap[vo.ID]; ok {
+			vo.Nickname = info.Nickname
+			vo.Avatar = info.Avatar
+		}
+	}
+
+	response.WriteSuccess(c, pageResult)
+}
+
+// GetRankByPrice 获得分销用户排行（基于佣金）
+func (h *AppBrokerageUserHandler) GetRankByPrice(c *gin.Context) {
+	// 解析时间参数
+	timesStr := c.QueryArray("times[]")
+	var times []time.Time
+	for _, t := range timesStr {
+		parsed := parseTime(t)
+		if !parsed.IsZero() {
+			times = append(times, parsed)
+		}
+	}
+
+	userId := c.GetInt64("userId")
+	rank, err := h.recordSvc.GetUserRankByPrice(c, userId, times)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	response.WriteSuccess(c, rank)
+}
+
+// parseTime 辅助函数解析时间字符串
+func parseTime(t string) time.Time {
+	parsed, _ := time.Parse("2006-01-02 15:04:05", t)
+	return parsed
 }
