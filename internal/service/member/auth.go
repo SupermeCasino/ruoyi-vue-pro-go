@@ -7,10 +7,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 // 确保 utils 包被使用（用于密码校验）
@@ -40,17 +40,17 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq) (
 	userRepo := s.repo.MemberUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.Mobile.Eq(r.Mobile)).First()
 	if err != nil {
-		return nil, core.NewBizError(1004003002, "账号或密码不正确") // 参考 Java MemberErrorCodeConstants
+		return nil, errors.NewBizError(1004003002, "账号或密码不正确") // 参考 Java MemberErrorCodeConstants
 	}
 
 	// 2. 校验状态. 0:开启, 1:关闭
 	if user.Status != 0 {
-		return nil, core.NewBizError(1004003001, "用户已被禁用")
+		return nil, errors.NewBizError(1004003001, "用户已被禁用")
 	}
 
 	// 3. 校验密码
 	if !utils.CheckPasswordHash(r.Password, user.Password) {
-		return nil, core.NewBizError(1004003002, "账号或密码不正确")
+		return nil, errors.NewBizError(1004003002, "账号或密码不正确")
 	}
 
 	// 4. Check Social Bind need?
@@ -90,7 +90,7 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 
 	// 3. 校验状态
 	if user.Status != 0 {
-		return nil, core.NewBizError(1004003001, "用户已被禁用")
+		return nil, errors.NewBizError(1004003001, "用户已被禁用")
 	}
 
 	// 4. Bind Social if needed
@@ -117,7 +117,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 		return nil, err
 	}
 	if socialUser == nil {
-		return nil, core.NewBizError(1002002000, "社交账号不存在") // AUTH_SOCIAL_USER_NOT_FOUND
+		return nil, errors.NewBizError(1002002000, "社交账号不存在") // AUTH_SOCIAL_USER_NOT_FOUND
 	}
 
 	var user *member.MemberUser
@@ -146,7 +146,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 	}
 
 	if user == nil {
-		return nil, core.NewBizError(1004003005, "用户不存在")
+		return nil, errors.NewBizError(1004003005, "用户不存在")
 	}
 
 	// Create Token（使用 OAuth2TokenService）
@@ -168,19 +168,19 @@ func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken strin
 	// 1. 验证 refreshToken（从 Redis 获取原令牌信息）
 	oldToken, err := s.tokenSvc.GetAccessToken(ctx, refreshToken)
 	if err != nil || oldToken == nil {
-		return nil, core.NewBizError(401, "Token无效或已过期")
+		return nil, errors.NewBizError(401, "Token无效或已过期")
 	}
 
 	// 2. 获取用户信息
 	userRepo := s.repo.MemberUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.ID.Eq(oldToken.UserID)).First()
 	if err != nil {
-		return nil, core.NewBizError(401, "用户不存在")
+		return nil, errors.NewBizError(401, "用户不存在")
 	}
 
 	// 3. 校验状态
 	if user.Status != 0 {
-		return nil, core.NewBizError(1004003001, "用户已被禁用")
+		return nil, errors.NewBizError(1004003001, "用户已被禁用")
 	}
 
 	// 4. 创建新的访问令牌
@@ -212,7 +212,7 @@ func (s *MemberAuthService) createToken(ctx context.Context, user *member.Member
 	// 创建访问令牌（UserType=1 表示会员，TenantID=0 表示默认租户）
 	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, service.UserTypeMember, 0, userInfo)
 	if err != nil {
-		return nil, core.ErrUnknown
+		return nil, errors.ErrUnknown
 	}
 
 	return &resp.AppAuthLoginResp{

@@ -7,9 +7,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -84,7 +85,7 @@ func (s *PointActivityService) UpdatePointActivity(ctx context.Context, req *req
 		return err
 	}
 	if activity.Status == 0 { // DISABLE
-		return core.NewBizError(1006003001, "积分商城活动已关闭") // POINT_ACTIVITY_UPDATE_FAIL_STATUS_CLOSED
+		return errors.NewBizError(1006003001, "积分商城活动已关闭") // POINT_ACTIVITY_UPDATE_FAIL_STATUS_CLOSED
 	}
 
 	// 1.2 校验商品是否存在
@@ -202,7 +203,7 @@ func (s *PointActivityService) ClosePointActivity(ctx context.Context, id int64)
 		return err
 	}
 	if activity.Status == 0 { // already closed
-		return core.NewBizError(1006003002, "积分商城活动已关闭") // POINT_ACTIVITY_CLOSE_FAIL_STATUS_CLOSED
+		return errors.NewBizError(1006003002, "积分商城活动已关闭") // POINT_ACTIVITY_CLOSE_FAIL_STATUS_CLOSED
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
@@ -225,7 +226,7 @@ func (s *PointActivityService) DeletePointActivity(ctx context.Context, id int64
 		return err
 	}
 	if activity.Status == 1 { // ENABLE
-		return core.NewBizError(1006003003, "活动未关闭或未结束，不能删除") // POINT_ACTIVITY_DELETE_FAIL_STATUS_NOT_CLOSED_OR_END
+		return errors.NewBizError(1006003003, "活动未关闭或未结束，不能删除") // POINT_ACTIVITY_DELETE_FAIL_STATUS_NOT_CLOSED_OR_END
 	}
 
 	// 逻辑删除
@@ -259,7 +260,7 @@ func (s *PointActivityService) GetPointActivity(ctx context.Context, id int64) (
 
 // GetPointActivityPage 获得积分商城活动分页
 // 对应 Java: PointActivityServiceImpl.getPointActivityPage
-func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *req.PointActivityPageReq) (*core.PageResult[promotion.PromotionPointActivity], error) {
+func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *req.PointActivityPageReq) (*pagination.PageResult[promotion.PromotionPointActivity], error) {
 	q := s.q.PromotionPointActivity.WithContext(ctx)
 	if req.Status != nil {
 		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*req.Status))
@@ -276,7 +277,7 @@ func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *re
 		list[i] = *v
 	}
 
-	return &core.PageResult[promotion.PromotionPointActivity]{
+	return &pagination.PageResult[promotion.PromotionPointActivity]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -305,10 +306,10 @@ func (s *PointActivityService) validatePointActivityExists(ctx context.Context, 
 	t := s.q.PromotionPointActivity
 	activity, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1006003000, "积分商城活动不存在") // POINT_ACTIVITY_NOT_EXISTS
+		return nil, errors.NewBizError(1006003000, "积分商城活动不存在") // POINT_ACTIVITY_NOT_EXISTS
 	}
 	if activity == nil {
-		return nil, core.NewBizError(1006003000, "积分商城活动不存在")
+		return nil, errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
 	return activity, nil
 }
@@ -321,7 +322,7 @@ func (s *PointActivityService) validateProductExists(ctx context.Context, spuID 
 		return err
 	}
 	if spu == nil {
-		return core.NewBizError(1006000002, "商品不存在") // SPU_NOT_EXISTS
+		return errors.NewBizError(1006000002, "商品不存在") // SPU_NOT_EXISTS
 	}
 
 	// 2. 校验商品 sku 都存在
@@ -335,7 +336,7 @@ func (s *PointActivityService) validateProductExists(ctx context.Context, spuID 
 
 	for _, p := range products {
 		if _, ok := skuMap[p.SkuID]; !ok {
-			return core.NewBizError(1006002002, "商品 SKU 不存在") // SKU_NOT_EXISTS
+			return errors.NewBizError(1006002002, "商品 SKU 不存在") // SKU_NOT_EXISTS
 		}
 	}
 	return nil
@@ -354,7 +355,7 @@ func (s *PointActivityService) validatePointActivityProductConflicts(ctx context
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(1006003004, "该商品已经参加了其他积分活动") // POINT_ACTIVITY_PRODUCT_CONFLICTS
+		return errors.NewBizError(1006003004, "该商品已经参加了其他积分活动") // POINT_ACTIVITY_PRODUCT_CONFLICTS
 	}
 	return nil
 }
@@ -368,10 +369,10 @@ func (s *PointActivityService) UpdatePointStockDecr(ctx context.Context, id int6
 		return err
 	}
 	if activity == nil {
-		return core.NewBizError(1006003000, "积分商城活动不存在")
+		return errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
 	if activity.Status != 1 { // ENABLE
-		return core.NewBizError(1006003002, "积分商城活动已关闭")
+		return errors.NewBizError(1006003002, "积分商城活动已关闭")
 	}
 
 	// 2. 校验商品是否存在
@@ -379,12 +380,12 @@ func (s *PointActivityService) UpdatePointStockDecr(ctx context.Context, id int6
 		return item.SkuID == skuID
 	})
 	if !found {
-		return core.NewBizError(1006002002, "商品 SKU 不存在")
+		return errors.NewBizError(1006002002, "商品 SKU 不存在")
 	}
 
 	// 3. 校验库存是否充足
 	if product.Stock < count {
-		return core.NewBizError(1006003005, "积分商品库存不足") // POINT_ACTIVITY_STOCK_NOT_ENOUGH
+		return errors.NewBizError(1006003005, "积分商品库存不足") // POINT_ACTIVITY_STOCK_NOT_ENOUGH
 	}
 
 	// 4. 扣减库存
@@ -414,7 +415,7 @@ func (s *PointActivityService) UpdatePointStockIncr(ctx context.Context, id int6
 		return err
 	}
 	if activity == nil {
-		return core.NewBizError(1006003000, "积分商城活动不存在")
+		return errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
 
 	// 2. 校验商品是否存在
@@ -422,7 +423,7 @@ func (s *PointActivityService) UpdatePointStockIncr(ctx context.Context, id int6
 		return item.SkuID == skuID
 	})
 	if !found {
-		return core.NewBizError(1006002002, "商品 SKU 不存在")
+		return errors.NewBizError(1006002002, "商品 SKU 不存在")
 	}
 
 	// 3. 增加库存
@@ -453,10 +454,10 @@ func (s *PointActivityService) ValidateJoinPointActivity(ctx context.Context, ac
 		return nil, err
 	}
 	if activity == nil {
-		return nil, core.NewBizError(1006003000, "积分商城活动不存在")
+		return nil, errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
 	if activity.Status != 1 { // ENABLE
-		return nil, core.NewBizError(1006003002, "积分商城活动已关闭")
+		return nil, errors.NewBizError(1006003002, "积分商城活动已关闭")
 	}
 
 	// 2. 校验商品是否存在
@@ -464,15 +465,15 @@ func (s *PointActivityService) ValidateJoinPointActivity(ctx context.Context, ac
 		return item.SkuID == skuID
 	})
 	if !found {
-		return nil, core.NewBizError(1006002002, "商品 SKU 不存在")
+		return nil, errors.NewBizError(1006002002, "商品 SKU 不存在")
 	}
 	if product.SpuID != spuID {
-		return nil, core.NewBizError(1006002002, "商品 SPU 不匹配") // Should not happen if data integrity is good
+		return nil, errors.NewBizError(1006002002, "商品 SPU 不匹配") // Should not happen if data integrity is good
 	}
 
 	// 3. 校验库存是否充足
 	if product.Stock < count {
-		return nil, core.NewBizError(1006003005, "积分商品库存不足")
+		return nil, errors.NewBizError(1006003005, "积分商品库存不足")
 	}
 
 	return product, nil

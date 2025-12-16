@@ -3,13 +3,14 @@ package member
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils" // Added utils
 	query "github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils" // Added utils
 )
 
 type MemberUserService struct {
@@ -77,7 +78,7 @@ func (s *MemberUserService) CreateUser(ctx context.Context, nickname, avatar, re
 	}
 	// Generate random name if nickname empty?
 	if user.Nickname == "" {
-		user.Nickname = "user_" + core.GenerateRandomString(6)
+		user.Nickname = "user_" + utils.GenerateRandomString(6)
 	}
 
 	if err := s.q.MemberUser.WithContext(ctx).Create(user); err != nil {
@@ -299,7 +300,7 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 }
 
 // GetUserPage Admin 获得会员用户分页
-func (s *MemberUserService) GetUserPage(ctx context.Context, r *req.MemberUserPageReq) (*core.PageResult[*member.MemberUser], error) {
+func (s *MemberUserService) GetUserPage(ctx context.Context, r *req.MemberUserPageReq) (*pagination.PageResult[*member.MemberUser], error) {
 	u := s.q.MemberUser
 	q := u.WithContext(ctx)
 
@@ -330,7 +331,7 @@ func (s *MemberUserService) GetUserPage(ctx context.Context, r *req.MemberUserPa
 		return nil, err
 	}
 
-	return &core.PageResult[*member.MemberUser]{
+	return &pagination.PageResult[*member.MemberUser]{
 		Total: total,
 		List:  list,
 	}, nil

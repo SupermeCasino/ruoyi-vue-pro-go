@@ -2,10 +2,11 @@ package member
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type MemberGroupService struct {
@@ -53,7 +54,7 @@ func (s *MemberGroupService) GetGroup(ctx context.Context, id int64) (*member.Me
 }
 
 // GetGroupPage 获得用户分组分页
-func (s *MemberGroupService) GetGroupPage(ctx context.Context, r *req.MemberGroupPageReq) (*core.PageResult[*member.MemberGroup], error) {
+func (s *MemberGroupService) GetGroupPage(ctx context.Context, r *req.MemberGroupPageReq) (*pagination.PageResult[*member.MemberGroup], error) {
 	q := s.q.MemberGroup.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.MemberGroup.Name.Like("%" + r.Name + "%"))
@@ -67,7 +68,7 @@ func (s *MemberGroupService) GetGroupPage(ctx context.Context, r *req.MemberGrou
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*member.MemberGroup]{
+	return &pagination.PageResult[*member.MemberGroup]{
 		List:  list,
 		Total: count,
 	}, nil

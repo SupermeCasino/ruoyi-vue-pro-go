@@ -6,9 +6,10 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product" // Import Product services
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gen"
 )
@@ -98,10 +99,10 @@ func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *r
 	q := s.q.PromotionSeckillActivity
 	oldActivity, err := q.WithContext(ctx).Where(q.ID.Eq(r.ID)).First()
 	if err != nil {
-		return core.NewBizError(1001002000, "秒杀活动不存在")
+		return errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
 	if oldActivity.Status == 2 { // Disable?
-		return core.NewBizError(1001002003, "秒杀活动已关闭，不能修改")
+		return errors.NewBizError(1001002003, "秒杀活动已关闭，不能修改")
 	}
 
 	if err := s.validateProductConflict(ctx, r.ConfigIds, r.SpuID, r.ID); err != nil {
@@ -175,10 +176,10 @@ func (s *SeckillActivityService) DeleteSeckillActivity(ctx context.Context, id i
 	q := s.q.PromotionSeckillActivity
 	act, err := q.WithContext(ctx).Where(q.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1001002000, "秒杀活动不存在")
+		return errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
 	if act.Status == 1 { // Enable
-		return core.NewBizError(1001002004, "活动未关闭，不能删除")
+		return errors.NewBizError(1001002004, "活动未关闭，不能删除")
 	}
 	// Delete Activity and Products
 	return s.q.Transaction(func(tx *query.Query) error {
@@ -217,7 +218,7 @@ func (s *SeckillActivityService) GetSeckillProductListByActivityIds(ctx context.
 }
 
 // GetSeckillActivityPage 分页获得秒杀活动
-func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *req.SeckillActivityPageReq) (*core.PageResult[*promotion.PromotionSeckillActivity], error) {
+func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *req.SeckillActivityPageReq) (*pagination.PageResult[*promotion.PromotionSeckillActivity], error) {
 	q := s.q.PromotionSeckillActivity
 	do := q.WithContext(ctx)
 	if r.Name != "" {
@@ -231,7 +232,7 @@ func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionSeckillActivity]{List: list, Total: count}, nil
+	return &pagination.PageResult[*promotion.PromotionSeckillActivity]{List: list, Total: count}, nil
 }
 
 // GetSeckillActivityListByIds 获得秒杀活动列表
@@ -275,14 +276,14 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 			}
 		}
 		if hasConfigOverlap {
-			return core.NewBizError(1001002002, "该商品已参加其它秒杀活动")
+			return errors.NewBizError(1001002002, "该商品已参加其它秒杀活动")
 		}
 	}
 	return nil
 }
 
 // GetSeckillActivityAppPage 获得 App 端秒杀活动分页
-func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, pageNo, pageSize int, configId int64) (*core.PageResult[*promotion.PromotionSeckillActivity], error) {
+func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, pageNo, pageSize int, configId int64) (*pagination.PageResult[*promotion.PromotionSeckillActivity], error) {
 	// Java logic: filter by configId, status=ENABLE, now between startTime/endTime
 	q := s.q.PromotionSeckillActivity
 
@@ -318,14 +319,14 @@ func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, 
 	total := int64(len(filtered))
 	start := (pageNo - 1) * pageSize
 	if start >= len(filtered) {
-		return &core.PageResult[*promotion.PromotionSeckillActivity]{List: []*promotion.PromotionSeckillActivity{}, Total: total}, nil
+		return &pagination.PageResult[*promotion.PromotionSeckillActivity]{List: []*promotion.PromotionSeckillActivity{}, Total: total}, nil
 	}
 	end := start + pageSize
 	if end > len(filtered) {
 		end = len(filtered)
 	}
 
-	return &core.PageResult[*promotion.PromotionSeckillActivity]{
+	return &pagination.PageResult[*promotion.PromotionSeckillActivity]{
 		List:  filtered[start:end],
 		Total: total,
 	}, nil
@@ -336,31 +337,31 @@ func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activi
 	// 1. Get Activity
 	act, err := s.GetSeckillActivity(ctx, activityId)
 	if err != nil || act == nil {
-		return nil, nil, core.NewBizError(1001002000, "秒杀活动不存在")
+		return nil, nil, errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
 	if act.Status != 1 {
-		return nil, nil, core.NewBizError(1001002003, "秒杀活动已关闭")
+		return nil, nil, errors.NewBizError(1001002003, "秒杀活动已关闭")
 	}
 	now := time.Now()
 	if now.Before(act.StartTime) || now.After(act.EndTime) {
-		return nil, nil, core.NewBizError(1001002005, "秒杀活动时间不符")
+		return nil, nil, errors.NewBizError(1001002005, "秒杀活动时间不符")
 	}
 
 	// 2. Get Product
 	q := s.q.PromotionSeckillProduct
 	prod, err := q.WithContext(ctx).Where(q.ActivityID.Eq(activityId), q.SkuID.Eq(skuId)).First()
 	if err != nil {
-		return nil, nil, core.NewBizError(1001002006, "秒杀商品不存在")
+		return nil, nil, errors.NewBizError(1001002006, "秒杀商品不存在")
 	}
 
 	// 3. Check Stock
 	if prod.Stock < count {
-		return nil, nil, core.NewBizError(1001002007, "秒杀库存不足")
+		return nil, nil, errors.NewBizError(1001002007, "秒杀库存不足")
 	}
 
 	// 4. Check Single Limit
 	if act.SingleLimitCount > 0 && count > act.SingleLimitCount {
-		return nil, nil, core.NewBizError(1001002008, "超出单次限购数量")
+		return nil, nil, errors.NewBizError(1001002008, "超出单次限购数量")
 	}
 
 	return act, prod, nil

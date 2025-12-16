@@ -2,11 +2,13 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -55,7 +57,7 @@ func (s *ProductPropertyService) UpdateProperty(ctx context.Context, req *req.Pr
 	u := s.q.ProductProperty
 	exist, err := u.WithContext(ctx).Where(u.Name.Eq(req.Name)).First()
 	if err == nil && exist != nil && exist.ID != req.ID {
-		return core.NewBizError(1006002000, "属性项名称已存在") // PROPERTY_EXISTS
+		return errors.NewBizError(1006002000, "属性项名称已存在") // PROPERTY_EXISTS
 	}
 
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&product.ProductProperty{
@@ -82,7 +84,7 @@ func (s *ProductPropertyService) DeleteProperty(ctx context.Context, id int64) e
 	// 校验其下是否有属性值
 	count := s.valueService.GetPropertyValueCountByPropertyId(ctx, id)
 	if count > 0 {
-		return core.NewBizError(1006002002, "属性项下存在属性值，无法删除") // PROPERTY_DELETE_FAIL_VALUE_EXISTS
+		return errors.NewBizError(1006002002, "属性项下存在属性值，无法删除") // PROPERTY_DELETE_FAIL_VALUE_EXISTS
 	}
 
 	// 删除
@@ -105,7 +107,7 @@ func (s *ProductPropertyService) GetProperty(ctx context.Context, id int64) (*re
 }
 
 // GetPropertyPage 获得属性项分页
-func (s *ProductPropertyService) GetPropertyPage(ctx context.Context, req *req.ProductPropertyPageReq) (*core.PageResult[*resp.ProductPropertyResp], error) {
+func (s *ProductPropertyService) GetPropertyPage(ctx context.Context, req *req.ProductPropertyPageReq) (*pagination.PageResult[*resp.ProductPropertyResp], error) {
 	u := s.q.ProductProperty
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -120,7 +122,7 @@ func (s *ProductPropertyService) GetPropertyPage(ctx context.Context, req *req.P
 	resList := lo.Map(list, func(item *product.ProductProperty, _ int) *resp.ProductPropertyResp {
 		return s.convertResp(item)
 	})
-	return &core.PageResult[*resp.ProductPropertyResp]{
+	return &pagination.PageResult[*resp.ProductPropertyResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -164,7 +166,7 @@ func (s *ProductPropertyService) validatePropertyExists(ctx context.Context, id 
 		return err
 	}
 	if count == 0 {
-		return core.NewBizError(1006002001, "属性项不存在") // PROPERTY_NOT_EXISTS
+		return errors.NewBizError(1006002001, "属性项不存在") // PROPERTY_NOT_EXISTS
 	}
 	return nil
 }

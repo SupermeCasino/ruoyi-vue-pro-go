@@ -2,11 +2,12 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"github.com/samber/lo"
 )
@@ -49,7 +50,7 @@ func (s *ProductCategoryService) UpdateCategory(ctx context.Context, req *req.Pr
 	}
 	// 校验不能设置自己为父分类
 	if req.ID == req.ParentID {
-		return core.NewBizError(1006001004, "不能设置自己为父分类")
+		return errors.NewBizError(1006001004, "不能设置自己为父分类")
 	}
 
 	u := s.q.ProductCategory
@@ -75,7 +76,7 @@ func (s *ProductCategoryService) DeleteCategory(ctx context.Context, id int64) e
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(1006001001, "存在子分类，无法删除")
+		return errors.NewBizError(1006001001, "存在子分类，无法删除")
 	}
 	// 校验是否绑定了 SPU
 	spuCount, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.CategoryID.Eq(id)).Count()
@@ -83,7 +84,7 @@ func (s *ProductCategoryService) DeleteCategory(ctx context.Context, id int64) e
 		return err
 	}
 	if spuCount > 0 {
-		return core.NewBizError(1006001004, "存在商品绑定，无法删除")
+		return errors.NewBizError(1006001004, "存在商品绑定，无法删除")
 	}
 
 	_, err = s.q.ProductCategory.WithContext(ctx).Where(s.q.ProductCategory.ID.Eq(id)).Delete()
@@ -130,13 +131,13 @@ func (s *ProductCategoryService) validateParentCategory(ctx context.Context, par
 	u := s.q.ProductCategory
 	parent, err := u.WithContext(ctx).Where(u.ID.Eq(parentId)).First()
 	if err != nil {
-		return core.NewBizError(1006001002, "父分类不存在")
+		return errors.NewBizError(1006001002, "父分类不存在")
 	}
 	// 父分类不能是二级分类 (即 parentId != 0) -> 意味着只能创建二级分类 (parentId 指向一级), 不能创建三级
 	// Logic: If parent's ParentID is NOT 0, it means parent is ALREADY a child (Level 2).
 	// So we cannot add a child to it.
 	if parent.ParentID != 0 {
-		return core.NewBizError(1006001003, "父分类不能是二级分类")
+		return errors.NewBizError(1006001003, "父分类不能是二级分类")
 	}
 	return nil
 }
@@ -148,7 +149,7 @@ func (s *ProductCategoryService) ValidateCategory(ctx context.Context, id int64)
 		return err
 	}
 	if count == 0 {
-		return core.NewBizError(1006001000, "分类不存在")
+		return errors.NewBizError(1006001000, "分类不存在")
 	}
 	return nil
 }

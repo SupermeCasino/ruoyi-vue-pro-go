@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -92,7 +93,7 @@ func (s *ConfigService) GetConfigByKey(ctx context.Context, key string) (*model.
 }
 
 // GetConfigPage 获得参数配置分页
-func (s *ConfigService) GetConfigPage(ctx context.Context, req *req.ConfigPageReq) (*core.PageResult[*resp.ConfigRespVO], error) {
+func (s *ConfigService) GetConfigPage(ctx context.Context, req *req.ConfigPageReq) (*pagination.PageResult[*resp.ConfigRespVO], error) {
 	c := s.q.SystemConfig
 	qb := c.WithContext(ctx)
 
@@ -116,7 +117,7 @@ func (s *ConfigService) GetConfigPage(ctx context.Context, req *req.ConfigPageRe
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.ConfigRespVO]{
+	return &pagination.PageResult[*resp.ConfigRespVO]{
 		List:  lo.Map(list, func(item *model.SystemConfig, _ int) *resp.ConfigRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

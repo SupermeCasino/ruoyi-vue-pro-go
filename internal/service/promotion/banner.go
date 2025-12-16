@@ -2,11 +2,13 @@ package promotion
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -38,7 +40,7 @@ func (s *PromotionBannerService) CreateBanner(ctx context.Context, r *req.Promot
 func (s *PromotionBannerService) UpdateBanner(ctx context.Context, r *req.PromotionBannerUpdateReq) error {
 	_, err := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.ID.Eq(r.ID)).First()
 	if err != nil {
-		return core.NewBizError(1004001000, "Banner不存在") // TODO: Error Code
+		return errors.NewBizError(1004001000, "Banner不存在") // TODO: Error Code
 	}
 	_, err = s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.ID.Eq(r.ID)).Updates(promotion.PromotionBanner{
 		Title:    r.Title,
@@ -68,7 +70,7 @@ func (s *PromotionBannerService) GetBanner(ctx context.Context, id int64) (*resp
 }
 
 // GetBannerPage 获得 Banner 分页 (Admin)
-func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.PromotionBannerPageReq) (*core.PageResult[*resp.PromotionBannerResp], error) {
+func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.PromotionBannerPageReq) (*pagination.PageResult[*resp.PromotionBannerResp], error) {
 	q := s.q.PromotionBanner.WithContext(ctx)
 	if r.Title != "" {
 		q = q.Where(s.q.PromotionBanner.Title.Like("%" + r.Title + "%"))
@@ -86,7 +88,7 @@ func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.Promo
 		return s.convertResp(item)
 	})
 
-	return &core.PageResult[*resp.PromotionBannerResp]{
+	return &pagination.PageResult[*resp.PromotionBannerResp]{
 		List:  resList,
 		Total: total,
 	}, nil

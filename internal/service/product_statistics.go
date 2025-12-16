@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // ProductStatisticsService 商品统计服务接口
 type ProductStatisticsService interface {
-	GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *core.PageParam) (*core.PageResult[interface{}], error)
+	GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error)
 	GetProductStatisticsAnalyse(ctx context.Context, reqVO *req.ProductStatisticsReqVO) (*resp.DataComparisonRespVO[resp.ProductStatisticsRespVO], error)
 	GetProductStatisticsList(ctx context.Context, reqVO *req.ProductStatisticsReqVO) ([]*resp.ProductStatisticsRespVO, error)
 	StatisticsProduct(ctx context.Context, days int) (string, error)
@@ -34,7 +35,7 @@ func NewProductStatisticsService(repo ProductStatisticsRepository) ProductStatis
 }
 
 // GetProductStatisticsRankPage 获得商品统计排行榜分页
-func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *core.PageParam) (*core.PageResult[interface{}], error) {
+func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error) {
 	// 获取所有数据（排序交给前端或后续处理，这里先获取范围内的数据并聚合）
 	// 注意：这里假设 Repo GetByDateRange 返回的是聚合后的数据，或者我们需要在内存中聚合
 	// 如果 Repo 只是返回明细，我们需要自己聚合。
@@ -61,7 +62,7 @@ func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.
 		resultList = append(resultList, item)
 	}
 
-	return &core.PageResult[interface{}]{
+	return &pagination.PageResult[interface{}]{
 		List:  resultList,
 		Total: total,
 	}, nil

@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -22,7 +23,7 @@ func NewSmsLogService(q *query.Query) *SmsLogService {
 }
 
 // GetSmsLogPage 获得短信日志分页
-func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *req.SmsLogPageReq) (*core.PageResult[*resp.SmsLogRespVO], error) {
+func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *req.SmsLogPageReq) (*pagination.PageResult[*resp.SmsLogRespVO], error) {
 	l := s.q.SystemSmsLog
 	qb := l.WithContext(ctx)
 
@@ -52,7 +53,7 @@ func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *req.SmsLogPageRe
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.SmsLogRespVO]{
+	return &pagination.PageResult[*resp.SmsLogRespVO]{
 		List:  lo.Map(list, func(item *model.SystemSmsLog, _ int) *resp.SmsLogRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

@@ -3,10 +3,12 @@ package member
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type MemberPointRecordService struct {
@@ -22,7 +24,7 @@ func NewMemberPointRecordService(q *query.Query, memberUserSvc *MemberUserServic
 }
 
 // GetPointRecordPage 获得用户积分记录分页
-func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *req.MemberPointRecordPageReq) (*core.PageResult[*member.MemberPointRecord], error) {
+func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *req.MemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
 	q := s.q.MemberPointRecord.WithContext(ctx)
 
 	// Filter by Nickname -> UserIDs
@@ -32,7 +34,7 @@ func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *re
 			return nil, err
 		}
 		if len(users) == 0 {
-			return core.NewEmptyPageResult[*member.MemberPointRecord](), nil
+			return pagination.NewEmptyPageResult[*member.MemberPointRecord](), nil
 		}
 		var userIds []int64
 		for _, u := range users {
@@ -57,11 +59,11 @@ func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *re
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, count), nil
+	return pagination.NewPageResult(list, count), nil
 }
 
 // GetAppPointRecordPage 获得用户App积分记录分页
-func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, userId int64, r *req.AppMemberPointRecordPageReq) (*core.PageResult[*member.MemberPointRecord], error) {
+func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, userId int64, r *req.AppMemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
 	q := s.q.MemberPointRecord.WithContext(ctx).Where(s.q.MemberPointRecord.UserID.Eq(userId))
 
 	if r.AddStatus != nil {
@@ -78,7 +80,7 @@ func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, us
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, count), nil
+	return pagination.NewPageResult(list, count), nil
 }
 
 // CreatePointRecord 创建积分记录
@@ -100,7 +102,7 @@ func (s *MemberPointRecordService) CreatePointRecord(ctx context.Context, userId
 		userPoint := user.Point
 		totalPoint := int(userPoint) + point
 		if totalPoint < 0 {
-			return core.NewBizError(1004014003, "用户积分余额不足") // Assuming error code
+			return pkgErrors.NewBizError(1004014003, "用户积分余额不足") // Assuming error code
 		}
 
 		// 2. 更新用户积分

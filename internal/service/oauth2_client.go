@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -93,7 +93,7 @@ func (s *OAuth2ClientService) GetOAuth2Client(ctx context.Context, id int64) (*m
 	return &c, nil
 }
 
-func (s *OAuth2ClientService) GetOAuth2ClientPage(ctx context.Context, r *req.OAuth2ClientPageReq) (*core.PageResult[*model.SystemOAuth2Client], error) {
+func (s *OAuth2ClientService) GetOAuth2ClientPage(ctx context.Context, r *req.OAuth2ClientPageReq) (*pagination.PageResult[*model.SystemOAuth2Client], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemOAuth2Client{})
 	if r.Name != "" {
 		db = db.Where("name LIKE ?", "%"+r.Name+"%")
@@ -110,5 +110,5 @@ func (s *OAuth2ClientService) GetOAuth2ClientPage(ctx context.Context, r *req.OA
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemOAuth2Client]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemOAuth2Client]{List: list, Total: total}, nil
 }

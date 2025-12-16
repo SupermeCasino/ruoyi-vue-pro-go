@@ -3,10 +3,11 @@ package member
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 )
 
 type MemberSignInConfigService struct {
@@ -93,11 +94,11 @@ func (s *MemberSignInConfigService) validateSignInConfigDayDuplicate(ctx context
 
 	// 1. New: config exists -> duplicate
 	if id == 0 {
-		return core.NewBizError(1004014004, "Sign-in day config already exists") // Assuming error code
+		return pkgErrors.NewBizError(1004014004, "Sign-in day config already exists") // Assuming error code
 	}
 	// 2. Update: config exists and id not match -> duplicate
 	if config.ID != id {
-		return core.NewBizError(1004014004, "Sign-in day config already exists")
+		return pkgErrors.NewBizError(1004014004, "Sign-in day config already exists")
 	}
 	return nil
 }

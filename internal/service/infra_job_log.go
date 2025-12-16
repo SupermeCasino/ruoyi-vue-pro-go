@@ -5,8 +5,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type JobLogService struct {
@@ -23,7 +23,7 @@ func (s *JobLogService) GetJobLog(ctx context.Context, id int64) (*model.InfraJo
 }
 
 // GetJobLogPage 获取定时任务日志分页
-func (s *JobLogService) GetJobLogPage(ctx context.Context, r *req.JobLogPageReq) (*core.PageResult[*model.InfraJobLog], error) {
+func (s *JobLogService) GetJobLogPage(ctx context.Context, r *req.JobLogPageReq) (*pagination.PageResult[*model.InfraJobLog], error) {
 	q := s.q.InfraJobLog.WithContext(ctx)
 
 	if r.JobID != nil {
@@ -59,7 +59,7 @@ func (s *JobLogService) GetJobLogPage(ctx context.Context, r *req.JobLogPageReq)
 		return nil, err
 	}
 
-	return &core.PageResult[*model.InfraJobLog]{
+	return &pagination.PageResult[*model.InfraJobLog]{
 		List:  list,
 		Total: total,
 	}, nil

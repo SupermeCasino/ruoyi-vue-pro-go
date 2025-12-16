@@ -6,8 +6,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type ApiErrorLogService struct {
@@ -19,7 +19,7 @@ func NewApiErrorLogService(q *query.Query) *ApiErrorLogService {
 }
 
 // GetApiErrorLogPage 获取API错误日志分页
-func (s *ApiErrorLogService) GetApiErrorLogPage(ctx context.Context, r *req.ApiErrorLogPageReq) (*core.PageResult[*model.InfraApiErrorLog], error) {
+func (s *ApiErrorLogService) GetApiErrorLogPage(ctx context.Context, r *req.ApiErrorLogPageReq) (*pagination.PageResult[*model.InfraApiErrorLog], error) {
 	q := s.q.InfraApiErrorLog.WithContext(ctx)
 
 	if r.UserID != nil {
@@ -61,7 +61,7 @@ func (s *ApiErrorLogService) GetApiErrorLogPage(ctx context.Context, r *req.ApiE
 		return nil, err
 	}
 
-	return &core.PageResult[*model.InfraApiErrorLog]{
+	return &pagination.PageResult[*model.InfraApiErrorLog]{
 		List:  list,
 		Total: total,
 	}, nil

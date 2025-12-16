@@ -2,12 +2,14 @@ package trade
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type TradeOrderQueryService struct {
@@ -34,7 +36,7 @@ func (s *TradeOrderQueryService) GetOrder(ctx context.Context, id int64) (*trade
 }
 
 // GetOrderPage 获得交易订单分页
-func (s *TradeOrderQueryService) GetOrderPage(ctx context.Context, uId int64, r *req.AppTradeOrderPageReq) (*core.PageResult[*trade.TradeOrder], error) {
+func (s *TradeOrderQueryService) GetOrderPage(ctx context.Context, uId int64, r *req.AppTradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
 	q := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.UserID.Eq(uId))
 
 	if r.Status != nil {
@@ -49,7 +51,7 @@ func (s *TradeOrderQueryService) GetOrderPage(ctx context.Context, uId int64, r 
 		return nil, err
 	}
 
-	result := &core.PageResult[*trade.TradeOrder]{
+	result := &pagination.PageResult[*trade.TradeOrder]{
 		List:  list,
 		Total: total,
 	}
@@ -84,7 +86,7 @@ func (s *TradeOrderQueryService) GetOrderItem(ctx context.Context, userId int64,
 }
 
 // GetOrderPageForAdmin 获得交易订单分页 (Admin)
-func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *req.TradeOrderPageReq) (*core.PageResult[*trade.TradeOrder], error) {
+func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *req.TradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
 	q := s.q.TradeOrder.WithContext(ctx)
 
 	if r.No != "" {
@@ -103,7 +105,7 @@ func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *re
 		return nil, err
 	}
 
-	result := &core.PageResult[*trade.TradeOrder]{
+	result := &pagination.PageResult[*trade.TradeOrder]{
 		List:  list,
 		Total: total,
 	}
@@ -115,7 +117,7 @@ func (s *TradeOrderQueryService) GetExpressTrackList(ctx context.Context, id int
 	// 查询订单
 	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(id), s.q.TradeOrder.UserID.Eq(userId)).First()
 	if err != nil {
-		return nil, core.NewBizError(2002001, "订单不存在") // ORDER_NOT_FOUND code
+		return nil, errors.NewBizError(2002001, "订单不存在") // ORDER_NOT_FOUND code
 	}
 	return s.getExpressTrackList(ctx, order)
 }
@@ -125,7 +127,7 @@ func (s *TradeOrderQueryService) GetExpressTrackListById(ctx context.Context, id
 	// 查询订单
 	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(2002001, "订单不存在") // ORDER_NOT_FOUND code
+		return nil, errors.NewBizError(2002001, "订单不存在") // ORDER_NOT_FOUND code
 	}
 	return s.getExpressTrackList(ctx, order)
 }
@@ -137,7 +139,7 @@ func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order 
 	// 查询物流公司
 	express, err := s.deliveryExpressSvc.GetDeliveryExpress(ctx, order.LogisticsID)
 	if err != nil || express == nil {
-		return nil, core.NewBizError(2002015, "物流公司不存在") // EXPRESS_NOT_EXISTS
+		return nil, errors.NewBizError(2002015, "物流公司不存在") // EXPRESS_NOT_EXISTS
 	}
 
 	// 获得客户端
@@ -145,7 +147,7 @@ func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order 
 	if expressClient == nil {
 		// Mock Data if no client configured ? Or return error?
 		// User wants Kd100 implemented. If configured, it should work.
-		return nil, core.NewBizError(500, "物流客户端未配置")
+		return nil, errors.NewBizError(500, "物流客户端未配置")
 	}
 
 	// 查询物流轨迹

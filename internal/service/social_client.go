@@ -6,8 +6,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type SocialClientService struct {
@@ -64,7 +64,7 @@ func (s *SocialClientService) GetSocialClient(ctx context.Context, id int64) (*m
 }
 
 // GetSocialClientPage 获取社交客户端分页
-func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *req.SocialClientPageReq) (*core.PageResult[*model.SocialClient], error) {
+func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *req.SocialClientPageReq) (*pagination.PageResult[*model.SocialClient], error) {
 	q := s.q.SocialClient.WithContext(ctx)
 
 	if r.Name != "" {
@@ -100,7 +100,7 @@ func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *req.So
 		return nil, err
 	}
 
-	return &core.PageResult[*model.SocialClient]{
+	return &pagination.PageResult[*model.SocialClient]{
 		List:  list,
 		Total: total,
 	}, nil

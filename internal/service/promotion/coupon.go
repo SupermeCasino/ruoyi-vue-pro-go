@@ -2,11 +2,13 @@ package promotion
 
 import (
 	"context"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type CouponService struct {
@@ -69,7 +71,7 @@ func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *req.Coupo
 }
 
 // GetCouponTemplatePage 获得优惠券模板分页 (Admin)
-func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.CouponTemplatePageReq) (*core.PageResult[promotion.PromotionCouponTemplate], error) {
+func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.CouponTemplatePageReq) (*pagination.PageResult[promotion.PromotionCouponTemplate], error) {
 	q := s.q.PromotionCouponTemplate.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PromotionCouponTemplate.Name.Like("%" + req.Name + "%"))
@@ -88,7 +90,7 @@ func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.Coup
 		list[i] = *v
 	}
 
-	return &core.PageResult[promotion.PromotionCouponTemplate]{
+	return &pagination.PageResult[promotion.PromotionCouponTemplate]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -101,10 +103,10 @@ func (s *CouponService) UpdateCouponTemplateStatus(ctx context.Context, id int64
 	// 校验存在
 	template, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1006001000, "优惠券模板不存在")
+		return errors.NewBizError(1006001000, "优惠券模板不存在")
 	}
 	if template == nil {
-		return core.NewBizError(1006001000, "优惠券模板不存在")
+		return errors.NewBizError(1006001000, "优惠券模板不存在")
 	}
 
 	// 更新状态
@@ -119,10 +121,10 @@ func (s *CouponService) DeleteCouponTemplate(ctx context.Context, id int64) erro
 	// 校验存在
 	template, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1006001000, "优惠券模板不存在")
+		return errors.NewBizError(1006001000, "优惠券模板不存在")
 	}
 	if template == nil {
-		return core.NewBizError(1006001000, "优惠券模板不存在")
+		return errors.NewBizError(1006001000, "优惠券模板不存在")
 	}
 
 	// 删除
@@ -148,7 +150,7 @@ func (s *CouponService) GetCouponTemplateList(ctx context.Context, ids []int64) 
 }
 
 // GetCouponPage 获得优惠券分页 (Admin)
-func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageReq) (*core.PageResult[promotion.PromotionCoupon], error) {
+func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageReq) (*pagination.PageResult[promotion.PromotionCoupon], error) {
 	q := s.q.PromotionCoupon.WithContext(ctx)
 	if req.UserID != nil {
 		q = q.Where(s.q.PromotionCoupon.UserID.Eq(*req.UserID))
@@ -167,7 +169,7 @@ func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageRe
 		list[i] = *v
 	}
 
-	return &core.PageResult[promotion.PromotionCoupon]{
+	return &pagination.PageResult[promotion.PromotionCoupon]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -180,10 +182,10 @@ func (s *CouponService) DeleteCoupon(ctx context.Context, id int64) error {
 	// 校验存在
 	coupon, err := c.WithContext(ctx).Where(c.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1006002000, "优惠券不存在")
+		return errors.NewBizError(1006002000, "优惠券不存在")
 	}
 	if coupon == nil {
-		return core.NewBizError(1006002000, "优惠券不存在")
+		return errors.NewBizError(1006002000, "优惠券不存在")
 	}
 
 	// 删除
@@ -202,10 +204,10 @@ func (s *CouponService) TakeCouponByAdmin(ctx context.Context, templateId int64,
 	t := s.q.PromotionCouponTemplate
 	template, err := t.WithContext(ctx).Where(t.ID.Eq(templateId)).First()
 	if err != nil {
-		return core.NewBizError(1006001000, "优惠券模板不存在")
+		return errors.NewBizError(1006001000, "优惠券模板不存在")
 	}
 	if template == nil {
-		return core.NewBizError(1006001000, "优惠券模板不存在")
+		return errors.NewBizError(1006001000, "优惠券模板不存在")
 	}
 
 	// 2. 计算有效期

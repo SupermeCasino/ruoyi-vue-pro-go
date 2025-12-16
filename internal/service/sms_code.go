@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"math/rand"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -40,7 +41,7 @@ func (s *SmsCodeService) SendSmsCode(ctx context.Context, mobile string, scene i
 		return err
 	}
 	if exists > 0 {
-		return core.NewBizError(1004003001, "发送过于频繁，请稍后再试")
+		return errors.NewBizError(1004003001, "发送过于频繁，请稍后再试")
 	}
 	// Set rate limit key with 60s expiry
 	if err := s.rdb.Set(ctx, rateLimitKey, "1", 60*time.Second).Err(); err != nil {
@@ -97,13 +98,13 @@ func (s *SmsCodeService) ValidateSmsCode(ctx context.Context, mobile string, sce
 	key := s.getCacheKey(mobile, scene)
 	val, err := s.rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
-		return core.NewBizError(1004003003, "验证码已过期或不存在")
+		return errors.NewBizError(1004003003, "验证码已过期或不存在")
 	}
 	if err != nil {
 		return err
 	}
 	if val != code {
-		return core.NewBizError(1004003004, "验证码错误")
+		return errors.NewBizError(1004003004, "验证码错误")
 	}
 
 	// 验证成功后删除，避免重复使用

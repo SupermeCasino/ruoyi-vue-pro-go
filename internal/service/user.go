@@ -7,9 +7,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type UserService struct {
@@ -257,7 +257,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 }
 
 // GetUserPage 获得用户分页
-func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*core.PageResult[*resp.UserRespVO], error) {
+func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*pagination.PageResult[*resp.UserRespVO], error) {
 	u := s.q.SystemUser
 	qb := u.WithContext(ctx)
 
@@ -309,7 +309,7 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*c
 		})
 	}
 
-	return &core.PageResult[*resp.UserRespVO]{
+	return &pagination.PageResult[*resp.UserRespVO]{
 		List:  data,
 		Total: total,
 	}, nil

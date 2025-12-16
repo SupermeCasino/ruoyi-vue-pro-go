@@ -2,12 +2,14 @@ package member
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/samber/lo"
 )
@@ -75,7 +77,7 @@ func (s *MemberSignInRecordService) GetSignInRecordSummary(ctx context.Context, 
 }
 
 // GetSignInRecordPage 获得签到记录分页
-func (s *MemberSignInRecordService) GetSignInRecordPage(ctx context.Context, r *req.MemberSignInRecordPageReq) (*core.PageResult[*member.MemberSignInRecord], error) {
+func (s *MemberSignInRecordService) GetSignInRecordPage(ctx context.Context, r *req.MemberSignInRecordPageReq) (*pagination.PageResult[*member.MemberSignInRecord], error) {
 	q := s.q.MemberSignInRecord.WithContext(ctx)
 
 	if r.Nickname != "" {
@@ -84,7 +86,7 @@ func (s *MemberSignInRecordService) GetSignInRecordPage(ctx context.Context, r *
 			return nil, err
 		}
 		if len(users) == 0 {
-			return core.NewEmptyPageResult[*member.MemberSignInRecord](), nil
+			return pagination.NewEmptyPageResult[*member.MemberSignInRecord](), nil
 		}
 		userIds := lo.Map(users, func(u *member.MemberUser, _ int) int64 { return u.ID })
 		q = q.Where(s.q.MemberSignInRecord.UserID.In(userIds...))
@@ -102,7 +104,7 @@ func (s *MemberSignInRecordService) GetSignInRecordPage(ctx context.Context, r *
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, count), nil
+	return pagination.NewPageResult(list, count), nil
 }
 
 // CreateSignInRecord 创建签到记录 (Transactional)
@@ -113,7 +115,7 @@ func (s *MemberSignInRecordService) CreateSignInRecord(ctx context.Context, user
 		Order(s.q.MemberSignInRecord.ID.Desc()).First()
 
 	if lastRecord != nil && utils.IsToday(lastRecord.CreatedAt) {
-		return nil, core.NewBizError(1004014005, "Already signed in today")
+		return nil, errors.NewBizError(1004014005, "Already signed in today")
 	}
 
 	// 2. Get Configs

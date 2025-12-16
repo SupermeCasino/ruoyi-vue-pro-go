@@ -3,10 +3,12 @@ package wallet
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -24,7 +26,7 @@ func (s *PayWalletRechargePackageService) CreateWalletRechargePackage(ctx contex
 	// 校验名是否重复
 	exists, err := s.q.PayWalletRechargePackage.WithContext(ctx).Where(s.q.PayWalletRechargePackage.Name.Eq(req.Name)).First()
 	if err == nil && exists != nil {
-		return 0, core.NewBizError(1006004000, "充值套餐名已存在") // PAY_WALLET_RECHARGE_PACKAGE_NAME_EXISTS
+		return 0, pkgErrors.NewBizError(1006004000, "充值套餐名已存在") // PAY_WALLET_RECHARGE_PACKAGE_NAME_EXISTS
 	}
 
 	pkg := &pay.PayWalletRechargePackage{
@@ -52,7 +54,7 @@ func (s *PayWalletRechargePackageService) UpdateWalletRechargePackage(ctx contex
 	if req.Name != oldPkg.Name {
 		exists, err := s.q.PayWalletRechargePackage.WithContext(ctx).Where(s.q.PayWalletRechargePackage.Name.Eq(req.Name)).First()
 		if err == nil && exists != nil {
-			return core.NewBizError(1006004000, "充值套餐名已存在")
+			return pkgErrors.NewBizError(1006004000, "充值套餐名已存在")
 		}
 	}
 
@@ -82,7 +84,7 @@ func (s *PayWalletRechargePackageService) GetWalletRechargePackage(ctx context.C
 }
 
 // GetWalletRechargePackagePage 获得充值套餐分页
-func (s *PayWalletRechargePackageService) GetWalletRechargePackagePage(ctx context.Context, req *req.PayWalletRechargePackagePageReq) (*core.PageResult[*pay.PayWalletRechargePackage], error) {
+func (s *PayWalletRechargePackageService) GetWalletRechargePackagePage(ctx context.Context, req *req.PayWalletRechargePackagePageReq) (*pagination.PageResult[*pay.PayWalletRechargePackage], error) {
 	q := s.q.PayWalletRechargePackage.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PayWalletRechargePackage.Name.Like("%" + req.Name + "%"))
@@ -96,7 +98,7 @@ func (s *PayWalletRechargePackageService) GetWalletRechargePackagePage(ctx conte
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, total), nil
+	return pagination.NewPageResult(list, total), nil
 }
 
 // GetWalletRechargePackageList 获得充值套餐列表
@@ -112,7 +114,7 @@ func (s *PayWalletRechargePackageService) validatePackageExists(ctx context.Cont
 	pkg, err := s.q.PayWalletRechargePackage.WithContext(ctx).Where(s.q.PayWalletRechargePackage.ID.Eq(id)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, core.NewBizError(1006004001, "充值套餐不存在") // PAY_WALLET_RECHARGE_PACKAGE_NOT_FOUND
+			return nil, pkgErrors.NewBizError(1006004001, "充值套餐不存在") // PAY_WALLET_RECHARGE_PACKAGE_NOT_FOUND
 		}
 		return nil, err
 	}

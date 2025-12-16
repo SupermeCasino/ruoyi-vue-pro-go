@@ -7,23 +7,24 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type CombinationRecordService interface {
 	// App
 	GetCombinationRecordSummary(ctx context.Context, activityID int64) (*resp.AppCombinationRecordSummaryRespVO, error)
-	GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*core.PageResult[*resp.AppCombinationRecordRespVO], error)
+	GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*pagination.PageResult[*resp.AppCombinationRecordRespVO], error)
 	GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*resp.AppCombinationRecordDetailRespVO, error)
 	GetLatestCombinationRecordList(ctx context.Context, activityID int64, count int) ([]*promotion.PromotionCombinationRecord, error)
 
 	// Internal (for Order)
 	ValidateCombinationRecord(ctx context.Context, userID int64, activityID int64, headID int64, skuID int64, count int) (*promotion.PromotionCombinationActivity, *promotion.PromotionCombinationProduct, error)
 	CreateCombinationRecord(ctx context.Context, record *promotion.PromotionCombinationRecord) (int64, error)
-	GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*core.PageResult[*promotion.PromotionCombinationRecord], error)
+	GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error)
 }
 
 type combinationRecordService struct {
@@ -80,7 +81,7 @@ func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Conte
 	}, nil
 }
 
-func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*core.PageResult[*resp.AppCombinationRecordRespVO], error) {
+func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*pagination.PageResult[*resp.AppCombinationRecordRespVO], error) {
 	q := s.q.PromotionCombinationRecord
 	do := q.WithContext(ctx).Where(q.UserID.Eq(userID))
 	if req.Status != 0 {
@@ -109,7 +110,7 @@ func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context,
 			CombinationPrice: item.CombinationPrice,
 		}
 	}
-	return &core.PageResult[*resp.AppCombinationRecordRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*resp.AppCombinationRecordRespVO]{List: result, Total: total}, nil
 }
 
 func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*resp.AppCombinationRecordDetailRespVO, error) {
@@ -130,7 +131,7 @@ func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context
 
 	// 1.3 校验是否超出单次限购数量
 	if count > activity.SingleLimitCount {
-		return nil, nil, core.NewBizError(1001006012, "单次限购数量超出")
+		return nil, nil, errors.NewBizError(1001006012, "单次限购数量超出")
 	}
 
 	prod, err := s.q.PromotionCombinationProduct.WithContext(ctx).Where(
@@ -138,19 +139,19 @@ func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context
 		s.q.PromotionCombinationProduct.SkuID.Eq(skuID),
 	).First()
 	if err != nil {
-		return nil, nil, core.NewBizError(1001006004, "拼团活动商品不存在")
+		return nil, nil, errors.NewBizError(1001006004, "拼团活动商品不存在")
 	}
 
 	if headID > 0 {
 		head, err := s.q.PromotionCombinationRecord.WithContext(ctx).Where(s.q.PromotionCombinationRecord.ID.Eq(headID)).First()
 		if err != nil {
-			return nil, nil, core.NewBizError(1001006005, "拼团不存在")
+			return nil, nil, errors.NewBizError(1001006005, "拼团不存在")
 		}
 		if head.Status != 0 { // 0: InProgress
-			return nil, nil, core.NewBizError(1001006006, "拼团已结束")
+			return nil, nil, errors.NewBizError(1001006006, "拼团已结束")
 		}
 		if head.UserCount >= head.UserSize {
-			return nil, nil, core.NewBizError(1001006007, "拼团人数已满")
+			return nil, nil, errors.NewBizError(1001006007, "拼团人数已满")
 		}
 	}
 
@@ -168,12 +169,12 @@ func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context
 	totalCount := 0
 	for _, r := range records {
 		if r.Status == 0 { // InProgress
-			return nil, nil, core.NewBizError(1001006013, "您已有该活动的拼团记录")
+			return nil, nil, errors.NewBizError(1001006013, "您已有该活动的拼团记录")
 		}
 		totalCount += r.Count
 	}
 	if totalCount+count > activity.TotalLimitCount {
-		return nil, nil, core.NewBizError(1001006014, "总限购数量超出")
+		return nil, nil, errors.NewBizError(1001006014, "总限购数量超出")
 	}
 
 	return activity, prod, nil
@@ -236,7 +237,7 @@ func (s *combinationRecordService) updateCombinationRecordWhenCreate(ctx context
 }
 
 // GetCombinationRecordPageAdmin 获得拼团记录分页 (Admin)
-func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*core.PageResult[*promotion.PromotionCombinationRecord], error) {
+func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error) {
 	q := s.q.PromotionCombinationRecord
 	do := q.WithContext(ctx)
 
@@ -251,5 +252,5 @@ func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionCombinationRecord]{List: list, Total: total}, nil
+	return &pagination.PageResult[*promotion.PromotionCombinationRecord]{List: list, Total: total}, nil
 }

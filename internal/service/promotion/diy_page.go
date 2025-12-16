@@ -6,8 +6,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type DiyPageService interface {
@@ -16,7 +17,7 @@ type DiyPageService interface {
 	DeleteDiyPage(ctx context.Context, id int64) error
 	GetDiyPage(ctx context.Context, id int64) (*resp.DiyPageResp, error)
 	GetDiyPageList(ctx context.Context, ids []int64) ([]*resp.DiyPageResp, error)
-	GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*core.PageResult[*resp.DiyPageResp], error)
+	GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*pagination.PageResult[*resp.DiyPageResp], error)
 	GetDiyPageProperty(ctx context.Context, id int64) (string, error)
 	UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error
 }
@@ -84,7 +85,7 @@ func (s *diyPageService) GetDiyPage(ctx context.Context, id int64) (*resp.DiyPag
 	return s.convertDiyPageToResp(page), nil
 }
 
-func (s *diyPageService) GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*core.PageResult[*resp.DiyPageResp], error) {
+func (s *diyPageService) GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*pagination.PageResult[*resp.DiyPageResp], error) {
 	q := s.q.PromotionDiyPage
 	do := q.WithContext(ctx)
 	if req.Name != "" {
@@ -103,7 +104,7 @@ func (s *diyPageService) GetDiyPagePage(ctx context.Context, req req.DiyPagePage
 	for i, item := range list {
 		result[i] = s.convertDiyPageToResp(item)
 	}
-	return &core.PageResult[*resp.DiyPageResp]{List: result, Total: total}, nil
+	return &pagination.PageResult[*resp.DiyPageResp]{List: result, Total: total}, nil
 }
 
 func (s *diyPageService) GetDiyPageList(ctx context.Context, ids []int64) ([]*resp.DiyPageResp, error) {
@@ -147,7 +148,7 @@ func (s *diyPageService) UpdateDiyPageProperty(ctx context.Context, req req.DiyP
 func (s *diyPageService) validateDiyPageExists(ctx context.Context, id int64) (*promotion.PromotionDiyPage, error) {
 	page, err := s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(404, "装修页面不存在")
+		return nil, errors.NewBizError(404, "装修页面不存在")
 	}
 	return page, nil
 }

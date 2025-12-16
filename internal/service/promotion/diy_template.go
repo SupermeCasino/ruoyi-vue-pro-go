@@ -6,8 +6,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type DiyTemplateService interface {
@@ -16,7 +17,7 @@ type DiyTemplateService interface {
 	UseDiyTemplate(ctx context.Context, id int64) error
 	DeleteDiyTemplate(ctx context.Context, id int64) error
 	GetDiyTemplate(ctx context.Context, id int64) (*resp.DiyTemplateResp, error)
-	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*core.PageResult[*resp.DiyTemplateResp], error)
+	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error)
 	GetDiyTemplateProperty(ctx context.Context, id int64) (string, error)
 	UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error
 }
@@ -73,7 +74,7 @@ func (s *diyTemplateService) DeleteDiyTemplate(ctx context.Context, id int64) er
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(400, "该模板已被页面使用，无法删除")
+		return errors.NewBizError(400, "该模板已被页面使用，无法删除")
 	}
 
 	_, err = s.q.PromotionDiyTemplate.WithContext(ctx).Where(s.q.PromotionDiyTemplate.ID.Eq(id)).Delete()
@@ -88,7 +89,7 @@ func (s *diyTemplateService) GetDiyTemplate(ctx context.Context, id int64) (*res
 	return s.convertDiyTemplateToResp(template), nil
 }
 
-func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*core.PageResult[*resp.DiyTemplateResp], error) {
+func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error) {
 	q := s.q.PromotionDiyTemplate
 	do := q.WithContext(ctx)
 	if req.Name != "" {
@@ -107,7 +108,7 @@ func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.Diy
 	for i, item := range list {
 		result[i] = s.convertDiyTemplateToResp(item)
 	}
-	return &core.PageResult[*resp.DiyTemplateResp]{List: result, Total: total}, nil
+	return &pagination.PageResult[*resp.DiyTemplateResp]{List: result, Total: total}, nil
 }
 
 func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (string, error) {
@@ -155,7 +156,7 @@ func (s *diyTemplateService) UpdateDiyTemplateProperty(ctx context.Context, req 
 func (s *diyTemplateService) validateDiyTemplateExists(ctx context.Context, id int64) (*promotion.PromotionDiyTemplate, error) {
 	template, err := s.q.PromotionDiyTemplate.WithContext(ctx).Where(s.q.PromotionDiyTemplate.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(404, "装修模板不存在")
+		return nil, errors.NewBizError(404, "装修模板不存在")
 	}
 	return template, nil
 }

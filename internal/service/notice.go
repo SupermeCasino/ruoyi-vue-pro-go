@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -79,7 +80,7 @@ func (s *NoticeService) GetNotice(ctx context.Context, id int64) (*resp.NoticeRe
 }
 
 // GetNoticePage 获得通知公告分页
-func (s *NoticeService) GetNoticePage(ctx context.Context, req *req.NoticePageReq) (*core.PageResult[*resp.NoticeRespVO], error) {
+func (s *NoticeService) GetNoticePage(ctx context.Context, req *req.NoticePageReq) (*pagination.PageResult[*resp.NoticeRespVO], error) {
 	n := s.q.SystemNotice
 	qb := n.WithContext(ctx)
 
@@ -100,7 +101,7 @@ func (s *NoticeService) GetNoticePage(ctx context.Context, req *req.NoticePageRe
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.NoticeRespVO]{
+	return &pagination.PageResult[*resp.NoticeRespVO]{
 		List:  lo.Map(list, func(item *model.SystemNotice, _ int) *resp.NoticeRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

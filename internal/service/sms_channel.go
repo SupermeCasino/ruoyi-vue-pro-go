@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -75,7 +76,7 @@ func (s *SmsChannelService) GetSmsChannel(ctx context.Context, id int64) (*resp.
 }
 
 // GetSmsChannelPage 获得短信渠道分页
-func (s *SmsChannelService) GetSmsChannelPage(ctx context.Context, req *req.SmsChannelPageReq) (*core.PageResult[*resp.SmsChannelRespVO], error) {
+func (s *SmsChannelService) GetSmsChannelPage(ctx context.Context, req *req.SmsChannelPageReq) (*pagination.PageResult[*resp.SmsChannelRespVO], error) {
 	c := s.q.SystemSmsChannel
 	qb := c.WithContext(ctx)
 
@@ -96,7 +97,7 @@ func (s *SmsChannelService) GetSmsChannelPage(ctx context.Context, req *req.SmsC
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.SmsChannelRespVO]{
+	return &pagination.PageResult[*resp.SmsChannelRespVO]{
 		List:  lo.Map(list, func(item *model.SystemSmsChannel, _ int) *resp.SmsChannelRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

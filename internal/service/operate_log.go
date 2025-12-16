@@ -5,8 +5,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type OperateLogService struct {
@@ -18,7 +18,7 @@ func NewOperateLogService(q *query.Query) *OperateLogService {
 }
 
 // GetOperateLogPage 获取操作日志分页
-func (s *OperateLogService) GetOperateLogPage(ctx context.Context, r *req.OperateLogPageReq) (*core.PageResult[*model.SystemOperateLog], error) {
+func (s *OperateLogService) GetOperateLogPage(ctx context.Context, r *req.OperateLogPageReq) (*pagination.PageResult[*model.SystemOperateLog], error) {
 	q := s.q.SystemOperateLog.WithContext(ctx)
 
 	// 过滤条件
@@ -62,7 +62,7 @@ func (s *OperateLogService) GetOperateLogPage(ctx context.Context, r *req.Operat
 		return nil, err
 	}
 
-	return &core.PageResult[*model.SystemOperateLog]{
+	return &pagination.PageResult[*model.SystemOperateLog]{
 		List:  list,
 		Total: total,
 	}, nil

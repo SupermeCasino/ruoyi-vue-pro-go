@@ -7,8 +7,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type PostService struct {
@@ -91,7 +91,7 @@ func (s *PostService) GetPost(ctx context.Context, id int64) (*resp.PostRespVO, 
 	}, nil
 }
 
-func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*core.PageResult[*resp.PostRespVO], error) {
+func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*pagination.PageResult[*resp.PostRespVO], error) {
 	p := s.q.SystemPost
 	qb := p.WithContext(ctx)
 
@@ -128,7 +128,7 @@ func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*c
 		})
 	}
 
-	return &core.PageResult[*resp.PostRespVO]{
+	return &pagination.PageResult[*resp.PostRespVO]{
 		List:  data,
 		Total: total,
 	}, nil

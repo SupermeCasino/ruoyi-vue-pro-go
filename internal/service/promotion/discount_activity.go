@@ -7,9 +7,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type DiscountActivityService interface {
@@ -18,7 +19,7 @@ type DiscountActivityService interface {
 	CloseDiscountActivity(ctx context.Context, id int64) error
 	DeleteDiscountActivity(ctx context.Context, id int64) error
 	GetDiscountActivity(ctx context.Context, id int64) (*resp.DiscountActivityRespVO, error)
-	GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*core.PageResult[*resp.DiscountActivityRespVO], error)
+	GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*pagination.PageResult[*resp.DiscountActivityRespVO], error)
 }
 
 type discountActivityService struct {
@@ -86,7 +87,7 @@ func (s *discountActivityService) UpdateDiscountActivity(ctx context.Context, re
 		return err
 	}
 	if activity.Status == 0 { // Disable
-		return core.NewBizError(1001007001, "活动已关闭，不能修改")
+		return errors.NewBizError(1001007001, "活动已关闭，不能修改")
 	}
 
 	// Validate Conflict
@@ -253,7 +254,7 @@ func (s *discountActivityService) CloseDiscountActivity(ctx context.Context, id 
 		return err
 	}
 	if activity.Status == 0 {
-		return core.NewBizError(1001007002, "活动已关闭，不能重复关闭")
+		return errors.NewBizError(1001007002, "活动已关闭，不能重复关闭")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
@@ -273,7 +274,7 @@ func (s *discountActivityService) DeleteDiscountActivity(ctx context.Context, id
 		return err
 	}
 	if activity.Status == 1 {
-		return core.NewBizError(1001007003, "活动进行中，不能删除")
+		return errors.NewBizError(1001007003, "活动进行中，不能删除")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
@@ -290,7 +291,7 @@ func (s *discountActivityService) DeleteDiscountActivity(ctx context.Context, id
 func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id int64) (*resp.DiscountActivityRespVO, error) {
 	activity, err := s.q.PromotionDiscountActivity.WithContext(ctx).Where(s.q.PromotionDiscountActivity.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1001007000, "活动不存在")
+		return nil, errors.NewBizError(1001007000, "活动不存在")
 	}
 	products, err := s.q.PromotionDiscountProduct.WithContext(ctx).Where(s.q.PromotionDiscountProduct.ActivityID.Eq(id)).Find()
 	if err != nil {
@@ -321,7 +322,7 @@ func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id in
 	return res, nil
 }
 
-func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*core.PageResult[*resp.DiscountActivityRespVO], error) {
+func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*pagination.PageResult[*resp.DiscountActivityRespVO], error) {
 	q := s.q.PromotionDiscountActivity
 	do := q.WithContext(ctx)
 	if req.Name != "" {
@@ -390,20 +391,20 @@ func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, r
 		}
 	}
 
-	return &core.PageResult[*resp.DiscountActivityRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*resp.DiscountActivityRespVO]{List: result, Total: total}, nil
 }
 
 func (s *discountActivityService) validateDiscountActivityExists(ctx context.Context, id int64) (*promotion.PromotionDiscountActivity, error) {
 	activity, err := s.q.PromotionDiscountActivity.WithContext(ctx).Where(s.q.PromotionDiscountActivity.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1001007000, "活动不存在")
+		return nil, errors.NewBizError(1001007000, "活动不存在")
 	}
 	return activity, nil
 }
 
 func (s *discountActivityService) validatePeriod(startTime, endTime time.Time) error {
 	if startTime.After(endTime) {
-		return core.NewBizError(400, "结束时间不能早于开始时间")
+		return errors.NewBizError(400, "结束时间不能早于开始时间")
 	}
 	return nil
 }
@@ -418,7 +419,7 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 		return err
 	}
 	if len(skus) != len(skuIDs) {
-		return core.NewBizError(400, "部分商品不存在")
+		return errors.NewBizError(400, "部分商品不存在")
 	}
 
 	skuMap := make(map[int64]*resp.ProductSkuResp)
@@ -430,17 +431,17 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 		sku := skuMap[p.SkuID]
 		if p.DiscountType == 1 { // Fixed Price
 			if p.DiscountPrice > sku.Price {
-				return core.NewBizError(400, "优惠价格不能高于原价")
+				return errors.NewBizError(400, "优惠价格不能高于原价")
 			}
 			if p.DiscountPrice <= 0 {
-				return core.NewBizError(400, "优惠价格必须大于0")
+				return errors.NewBizError(400, "优惠价格必须大于0")
 			}
 		} else if p.DiscountType == 2 { // Percent
 			if p.DiscountPercent <= 0 || p.DiscountPercent >= 100 {
-				return core.NewBizError(400, "优惠折扣必须在1-99之间")
+				return errors.NewBizError(400, "优惠折扣必须在1-99之间")
 			}
 		} else {
-			return core.NewBizError(400, "未知的优惠类型")
+			return errors.NewBizError(400, "未知的优惠类型")
 		}
 	}
 	return nil
@@ -481,7 +482,7 @@ func (s *discountActivityService) validateProductConflict(ctx context.Context, i
 
 	for _, p := range products {
 		if existingSpuMap[p.SpuID] {
-			return core.NewBizError(1001007004, "商品冲突：商品已存在于其他开启的活动中")
+			return errors.NewBizError(1001007004, "商品冲突：商品已存在于其他开启的活动中")
 		}
 	}
 	return nil

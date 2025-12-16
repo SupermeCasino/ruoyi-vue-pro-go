@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/file"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -116,7 +117,7 @@ func (s *FileService) GetFileContent(ctx context.Context, configId int64, path s
 }
 
 // GetFilePage 获得文件分页
-func (s *FileService) GetFilePage(ctx context.Context, req *req.FilePageReq) (*core.PageResult[*resp.FileRespVO], error) {
+func (s *FileService) GetFilePage(ctx context.Context, req *req.FilePageReq) (*pagination.PageResult[*resp.FileRespVO], error) {
 	f := s.q.InfraFile
 	qb := f.WithContext(ctx)
 
@@ -137,7 +138,7 @@ func (s *FileService) GetFilePage(ctx context.Context, req *req.FilePageReq) (*c
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.FileRespVO]{
+	return &pagination.PageResult[*resp.FileRespVO]{
 		List:  lo.Map(list, func(item *model.InfraFile, _ int) *resp.FileRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

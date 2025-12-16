@@ -8,8 +8,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	tradeSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
@@ -67,7 +67,7 @@ func (s *BrokerageRecordService) GetBrokerageRecord(ctx context.Context, id int6
 }
 
 // GetBrokerageRecordPage 获得分销记录分页
-func (s *BrokerageRecordService) GetBrokerageRecordPage(ctx context.Context, r *req.BrokerageRecordPageReq) (*core.PageResult[*brokerage.BrokerageRecord], error) {
+func (s *BrokerageRecordService) GetBrokerageRecordPage(ctx context.Context, r *req.BrokerageRecordPageReq) (*pagination.PageResult[*brokerage.BrokerageRecord], error) {
 	q := s.q.BrokerageRecord.WithContext(ctx)
 
 	if r.UserID > 0 {
@@ -106,7 +106,7 @@ func (s *BrokerageRecordService) GetBrokerageRecordPage(ctx context.Context, r *
 		return nil, err
 	}
 
-	return &core.PageResult[*brokerage.BrokerageRecord]{
+	return &pagination.PageResult[*brokerage.BrokerageRecord]{
 		List:  list,
 		Total: total,
 	}, nil

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type PayRefundService struct {
@@ -33,7 +34,7 @@ func (s *PayRefundService) GetRefund(ctx context.Context, id int64) (*pay.PayRef
 }
 
 // GetRefundPage 获得退款订单分页
-func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefundPageReq) (*core.PageResult[*pay.PayRefund], error) {
+func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefundPageReq) (*pagination.PageResult[*pay.PayRefund], error) {
 	q := s.q.PayRefund.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayRefund.AppID.Eq(req.AppID))
@@ -65,7 +66,7 @@ func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefund
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*pay.PayRefund]{
+	return &pagination.PageResult[*pay.PayRefund]{
 		List:  list,
 		Total: total,
 	}, nil

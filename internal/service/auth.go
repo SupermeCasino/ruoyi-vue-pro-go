@@ -7,9 +7,10 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type AuthService struct {
@@ -68,19 +69,19 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 
 	// 2. 检查是否绑定
 	if userId == 0 {
-		return nil, core.NewBizError(1002004004, "社交账号未绑定，请先绑定")
+		return nil, errors.NewBizError(1002004004, "社交账号未绑定，请先绑定")
 	}
 
 	// 3. 获取用户信息
 	userRepo := s.repo.SystemUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.ID.Eq(userId)).First()
 	if err != nil {
-		return nil, core.NewBizError(1002000002, "用户不存在")
+		return nil, errors.NewBizError(1002000002, "用户不存在")
 	}
 
 	// 4. 校验状态
 	if user.Status != 0 {
-		return nil, core.NewBizError(1002000001, "用户已被禁用")
+		return nil, errors.NewBizError(1002000001, "用户已被禁用")
 	}
 
 	// 5. 构建用户信息
@@ -91,7 +92,7 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 	// 6. 创建访问令牌
 	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, UserTypeAdmin, user.TenantID, userInfo)
 	if err != nil {
-		return nil, core.ErrUnknown
+		return nil, errors.ErrUnknown
 	}
 
 	// 7. 记录登录日志
@@ -108,13 +109,13 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 // GetPermissionInfo 获取登录用户的权限信息
 func (s *AuthService) GetPermissionInfo(ctx context.Context) (*resp.AuthPermissionInfoResp, error) {
 	// 1. 获取当前用户 ID (从 Context)
-	userIdVal := ctx.Value(core.CtxUserIDKey)
+	userIdVal := ctx.Value(pkgContext.CtxUserIDKey)
 	if userIdVal == nil {
-		return nil, core.NewBizError(401, "未登录")
+		return nil, errors.NewBizError(401, "未登录")
 	}
 	userId, ok := userIdVal.(int64)
 	if !ok {
-		return nil, core.NewBizError(401, "用户标识无效")
+		return nil, errors.NewBizError(401, "用户标识无效")
 	}
 
 	// 2. 获取用户信息
@@ -123,7 +124,7 @@ func (s *AuthService) GetPermissionInfo(ctx context.Context) (*resp.AuthPermissi
 	if err != nil {
 		// 区分是否是 RecordNotFound (已在 InitDB 中忽略日志，这里 err 可能为 gorm.ErrRecordNotFound)
 		// 但为了安全，通常模糊返回
-		return nil, core.NewBizError(1002000002, "账号或密码不正确")
+		return nil, errors.NewBizError(1002000002, "账号或密码不正确")
 	}
 
 	// 3. 获取用户角色
@@ -200,10 +201,10 @@ func (s *AuthService) Login(ctx context.Context, req *req.AuthLoginReq) (*resp.A
 		tenantRepo := s.repo.SystemTenant
 		tenant, err := tenantRepo.WithContext(ctx).Where(tenantRepo.Name.Eq(req.TenantName)).First()
 		if err != nil {
-			return nil, core.NewBizError(1002000003, "租户不存在")
+			return nil, errors.NewBizError(1002000003, "租户不存在")
 		}
 		if tenant.Status != 0 {
-			return nil, core.NewBizError(1002000004, "租户已被禁用")
+			return nil, errors.NewBizError(1002000004, "租户已被禁用")
 		}
 		tenantId = tenant.ID
 	}
@@ -214,17 +215,17 @@ func (s *AuthService) Login(ctx context.Context, req *req.AuthLoginReq) (*resp.A
 	if err != nil {
 		// 区分是否是 RecordNotFound (已在 InitDB 中忽略日志，这里 err 可能为 gorm.ErrRecordNotFound)
 		// 但为了安全，通常模糊返回
-		return nil, core.NewBizError(1002000002, "账号或密码不正确")
+		return nil, errors.NewBizError(1002000002, "账号或密码不正确")
 	}
 
 	// 2. 校验状态
 	if user.Status != 0 { // 假设 0 是开启
-		return nil, core.NewBizError(1002000001, "用户已被禁用")
+		return nil, errors.NewBizError(1002000001, "用户已被禁用")
 	}
 
 	// 3. 校验密码
 	if !utils.CheckPasswordHash(req.Password, user.Password) {
-		return nil, core.NewBizError(1002000002, "账号或密码不正确")
+		return nil, errors.NewBizError(1002000002, "账号或密码不正确")
 	}
 
 	// 4. 构建用户信息
@@ -238,7 +239,7 @@ func (s *AuthService) Login(ctx context.Context, req *req.AuthLoginReq) (*resp.A
 	// 5. 创建访问令牌（使用 OAuth2TokenService，与 Java 对齐）
 	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, UserTypeAdmin, tenantId, userInfo)
 	if err != nil {
-		return nil, core.ErrUnknown
+		return nil, errors.ErrUnknown
 	}
 
 	// 6. 返回结果
@@ -278,19 +279,19 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*r
 	// 1. 验证 refreshToken（从 Redis 获取原令牌信息）
 	oldToken, err := s.tokenSvc.GetAccessToken(ctx, refreshToken)
 	if err != nil || oldToken == nil {
-		return nil, core.NewBizError(1002000005, "刷新令牌无效或已过期")
+		return nil, errors.NewBizError(1002000005, "刷新令牌无效或已过期")
 	}
 
 	// 2. 获取用户信息
 	userRepo := s.repo.SystemUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.ID.Eq(oldToken.UserID)).First()
 	if err != nil {
-		return nil, core.NewBizError(1002000002, "用户不存在")
+		return nil, errors.NewBizError(1002000002, "用户不存在")
 	}
 
 	// 3. 校验状态
 	if user.Status != 0 {
-		return nil, core.NewBizError(1002000001, "用户已被禁用")
+		return nil, errors.NewBizError(1002000001, "用户已被禁用")
 	}
 
 	// 4. 构建用户信息
@@ -301,7 +302,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*r
 	// 5. 创建新的访问令牌
 	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, oldToken.UserType, oldToken.TenantID, userInfo)
 	if err != nil {
-		return nil, core.ErrUnknown
+		return nil, errors.ErrUnknown
 	}
 
 	// 6. 返回结果
@@ -324,12 +325,12 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 	userRepo := s.repo.SystemUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.Mobile.Eq(req.Mobile)).First()
 	if err != nil {
-		return nil, core.NewBizError(1002000002, "账号不存在")
+		return nil, errors.NewBizError(1002000002, "账号不存在")
 	}
 
 	// 3. 校验状态
 	if user.Status != 0 {
-		return nil, core.NewBizError(1002000001, "用户已被禁用")
+		return nil, errors.NewBizError(1002000001, "用户已被禁用")
 	}
 
 	// 4. 构建用户信息
@@ -340,7 +341,7 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 	// 5. 创建访问令牌
 	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, UserTypeAdmin, user.TenantID, userInfo)
 	if err != nil {
-		return nil, core.ErrUnknown
+		return nil, errors.ErrUnknown
 	}
 
 	// 6. 记录登录日志 (TODO: 异步?)
@@ -399,13 +400,13 @@ func (s *AuthService) ResetPassword(ctx context.Context, req *req.AuthResetPassw
 	userRepo := s.repo.SystemUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.Mobile.Eq(req.Mobile)).First()
 	if err != nil {
-		return core.NewBizError(1002000002, "用户不存在")
+		return errors.NewBizError(1002000002, "用户不存在")
 	}
 
 	// 3. 更新密码
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return core.ErrUnknown
+		return errors.ErrUnknown
 	}
 
 	_, err = userRepo.WithContext(ctx).Where(userRepo.ID.Eq(user.ID)).Update(userRepo.Password, hashedPassword)

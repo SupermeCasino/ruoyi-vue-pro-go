@@ -6,8 +6,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type SeckillConfigService struct {
@@ -40,7 +41,7 @@ func (s *SeckillConfigService) UpdateSeckillConfig(ctx context.Context, r *req.S
 	q := s.q.PromotionSeckillConfig
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(r.ID)).First()
 	if err != nil {
-		return core.NewBizError(1001001000, "秒杀时段不存在")
+		return errors.NewBizError(1001001000, "秒杀时段不存在")
 	}
 
 	_, err = q.WithContext(ctx).Where(q.ID.Eq(r.ID)).Updates(&promotion.PromotionSeckillConfig{
@@ -58,7 +59,7 @@ func (s *SeckillConfigService) UpdateSeckillConfigStatus(ctx context.Context, id
 	q := s.q.PromotionSeckillConfig
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1001001000, "秒杀时段不存在")
+		return errors.NewBizError(1001001000, "秒杀时段不存在")
 	}
 	_, err = q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, status)
 	return err
@@ -69,7 +70,7 @@ func (s *SeckillConfigService) DeleteSeckillConfig(ctx context.Context, id int64
 	q := s.q.PromotionSeckillConfig
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1001001000, "秒杀时段不存在")
+		return errors.NewBizError(1001001000, "秒杀时段不存在")
 	}
 	_, err = q.WithContext(ctx).Where(q.ID.Eq(id)).Delete()
 	return err
@@ -94,7 +95,7 @@ func (s *SeckillConfigService) GetSeckillConfigListByStatus(ctx context.Context,
 }
 
 // GetSeckillConfigPage 分页获得秒杀时段
-func (s *SeckillConfigService) GetSeckillConfigPage(ctx context.Context, r *req.SeckillConfigPageReq) (*core.PageResult[*promotion.PromotionSeckillConfig], error) {
+func (s *SeckillConfigService) GetSeckillConfigPage(ctx context.Context, r *req.SeckillConfigPageReq) (*pagination.PageResult[*promotion.PromotionSeckillConfig], error) {
 	q := s.q.PromotionSeckillConfig
 	do := q.WithContext(ctx)
 
@@ -111,7 +112,7 @@ func (s *SeckillConfigService) GetSeckillConfigPage(ctx context.Context, r *req.
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionSeckillConfig]{
+	return &pagination.PageResult[*promotion.PromotionSeckillConfig]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -128,7 +129,7 @@ func (s *SeckillConfigService) ValidateSeckillConfigExists(ctx context.Context, 
 		return err
 	}
 	if int(count) != len(configIds) {
-		return core.NewBizError(1001001000, "秒杀时段不存在")
+		return errors.NewBizError(1001001000, "秒杀时段不存在")
 	}
 	return nil
 }

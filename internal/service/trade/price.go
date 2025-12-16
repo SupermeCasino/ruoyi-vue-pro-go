@@ -3,11 +3,12 @@ package trade
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 )
 
 // TradePriceService 价格计算服务
@@ -439,7 +440,7 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 				// Java 逻辑：TradePointUsePriceCalculator -> if (payPrice <= pointPrice) throw exception
 				// 严格对齐：禁止 0 元购
 				if pointTotalValue >= respBO.Price.PayPrice {
-					return nil, core.NewBizError(1004003005, "支付金额不能小于等于 0") // PRICE_CALCULATE_PAY_PRICE_ILLEGAL
+					return nil, pkgErrors.NewBizError(1004003005, "支付金额不能小于等于 0") // PRICE_CALCULATE_PAY_PRICE_ILLEGAL
 				}
 
 				// 7.5 分摊积分抵扣到各项

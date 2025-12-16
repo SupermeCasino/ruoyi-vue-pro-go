@@ -9,8 +9,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type RoleService struct {
@@ -132,7 +132,7 @@ func (s *RoleService) GetRole(ctx context.Context, id int64) (*resp.RoleRespVO, 
 }
 
 // GetRolePage 分页
-func (s *RoleService) GetRolePage(ctx context.Context, req *req.RolePageReq) (*core.PageResult[*resp.RoleRespVO], error) {
+func (s *RoleService) GetRolePage(ctx context.Context, req *req.RolePageReq) (*pagination.PageResult[*resp.RoleRespVO], error) {
 	r := s.q.SystemRole
 	qb := r.WithContext(ctx)
 
@@ -161,7 +161,7 @@ func (s *RoleService) GetRolePage(ctx context.Context, req *req.RolePageReq) (*c
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.RoleRespVO]{
+	return &pagination.PageResult[*resp.RoleRespVO]{
 		List:  lo.Map(list, func(item *model.SystemRole, _ int) *resp.RoleRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

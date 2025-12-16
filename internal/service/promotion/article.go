@@ -6,8 +6,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type ArticleService interface {
@@ -15,8 +16,8 @@ type ArticleService interface {
 	UpdateArticle(ctx context.Context, req req.ArticleUpdateReq) error
 	DeleteArticle(ctx context.Context, id int64) error
 	GetArticle(ctx context.Context, id int64) (*resp.ArticleRespVO, error)
-	GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*core.PageResult[*resp.ArticleRespVO], error)
-	GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*core.PageResult[*resp.ArticleRespVO], error)
+	GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error)
+	GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error)
 	AddArticleBrowseCount(ctx context.Context, id int64) error
 }
 
@@ -93,7 +94,7 @@ func (s *articleService) GetArticle(ctx context.Context, id int64) (*resp.Articl
 	return s.convertArticleToResp(article), nil
 }
 
-func (s *articleService) GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*core.PageResult[*resp.ArticleRespVO], error) {
+func (s *articleService) GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error) {
 	q := s.q.PromotionArticle
 	do := q.WithContext(ctx)
 	if req.Title != "" {
@@ -115,10 +116,10 @@ func (s *articleService) GetArticlePage(ctx context.Context, req req.ArticlePage
 	for i, item := range list {
 		result[i] = s.convertArticleToResp(item)
 	}
-	return &core.PageResult[*resp.ArticleRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*resp.ArticleRespVO]{List: result, Total: total}, nil
 }
 
-func (s *articleService) GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*core.PageResult[*resp.ArticleRespVO], error) {
+func (s *articleService) GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error) {
 	q := s.q.PromotionArticle
 	do := q.WithContext(ctx).Where(q.Status.Eq(0)) // Only Enable
 
@@ -139,7 +140,7 @@ func (s *articleService) GetArticlePageApp(ctx context.Context, req req.ArticleP
 	for i, item := range list {
 		result[i] = s.convertArticleToResp(item)
 	}
-	return &core.PageResult[*resp.ArticleRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*resp.ArticleRespVO]{List: result, Total: total}, nil
 }
 
 func (s *articleService) AddArticleBrowseCount(ctx context.Context, id int64) error {
@@ -153,7 +154,7 @@ func (s *articleService) AddArticleBrowseCount(ctx context.Context, id int64) er
 func (s *articleService) validateArticleExists(ctx context.Context, id int64) (*promotion.PromotionArticle, error) {
 	article, err := s.q.PromotionArticle.WithContext(ctx).Where(s.q.PromotionArticle.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(404, "文章不存在")
+		return nil, errors.NewBizError(404, "文章不存在")
 	}
 	return article, nil
 }
@@ -164,7 +165,7 @@ func (s *articleService) validateArticleCategory(ctx context.Context, categoryID
 		return err
 	}
 	if count == 0 {
-		return core.NewBizError(400, "文章分类不存在或已关闭")
+		return errors.NewBizError(400, "文章分类不存在或已关闭")
 	}
 	return nil
 }

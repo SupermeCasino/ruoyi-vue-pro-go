@@ -11,7 +11,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -109,7 +110,7 @@ func (s *MailService) GetMailAccount(ctx context.Context, id int64) (*model.Syst
 	return &account, nil
 }
 
-func (s *MailService) GetMailAccountPage(ctx context.Context, r *req.MailAccountPageReq) (*core.PageResult[*model.SystemMailAccount], error) {
+func (s *MailService) GetMailAccountPage(ctx context.Context, r *req.MailAccountPageReq) (*pagination.PageResult[*model.SystemMailAccount], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemMailAccount{})
 	if r.Mail != "" {
 		db = db.Where("mail LIKE ?", "%"+r.Mail+"%")
@@ -126,7 +127,7 @@ func (s *MailService) GetMailAccountPage(ctx context.Context, r *req.MailAccount
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemMailAccount]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemMailAccount]{List: list, Total: total}, nil
 }
 
 func (s *MailService) GetSimpleMailAccountList(ctx context.Context) ([]*model.SystemMailAccount, error) {
@@ -192,7 +193,7 @@ func (s *MailService) GetMailTemplate(ctx context.Context, id int64) (*model.Sys
 	return &template, nil
 }
 
-func (s *MailService) GetMailTemplatePage(ctx context.Context, r *req.MailTemplatePageReq) (*core.PageResult[*model.SystemMailTemplate], error) {
+func (s *MailService) GetMailTemplatePage(ctx context.Context, r *req.MailTemplatePageReq) (*pagination.PageResult[*model.SystemMailTemplate], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemMailTemplate{})
 	if r.Name != "" {
 		db = db.Where("name LIKE ?", "%"+r.Name+"%")
@@ -215,7 +216,7 @@ func (s *MailService) GetMailTemplatePage(ctx context.Context, r *req.MailTempla
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemMailTemplate]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemMailTemplate]{List: list, Total: total}, nil
 }
 
 // ================= Mail Sending Logic =================
@@ -226,7 +227,7 @@ func (s *MailService) SendMail(ctx context.Context, userID int64, userType int, 
 	template, ok := s.templateCache[templateCode]
 	s.mu.RUnlock()
 	if !ok || template == nil {
-		return 0, core.NewBizError(1002005001, "邮件模板不存在")
+		return 0, errors.NewBizError(1002005001, "邮件模板不存在")
 	}
 
 	// 2. Get Account
@@ -234,7 +235,7 @@ func (s *MailService) SendMail(ctx context.Context, userID int64, userType int, 
 	account, ok := s.accountCache[template.AccountID]
 	s.mu.RUnlock()
 	if !ok || account == nil {
-		return 0, core.NewBizError(1002005002, "邮箱账号不存在")
+		return 0, errors.NewBizError(1002005002, "邮箱账号不存在")
 	}
 
 	// 3. Render Content
@@ -299,7 +300,7 @@ func (s *MailService) doSend(account *model.SystemMailAccount, to string, subjec
 
 // ================= Mail Log =================
 
-func (s *MailService) GetMailLogPage(ctx context.Context, r *req.MailLogPageReq) (*core.PageResult[*model.SystemMailLog], error) {
+func (s *MailService) GetMailLogPage(ctx context.Context, r *req.MailLogPageReq) (*pagination.PageResult[*model.SystemMailLog], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemMailLog{})
 	if r.ToMail != "" {
 		db = db.Where("to_mail LIKE ?", "%"+r.ToMail+"%")
@@ -325,5 +326,5 @@ func (s *MailService) GetMailLogPage(ctx context.Context, r *req.MailLogPageReq)
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemMailLog]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemMailLog]{List: list, Total: total}, nil
 }

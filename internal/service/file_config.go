@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -116,7 +117,7 @@ func (s *FileConfigService) GetMasterFileConfig(ctx context.Context) (*model.Inf
 }
 
 // GetFileConfigPage 获得文件配置分页
-func (s *FileConfigService) GetFileConfigPage(ctx context.Context, req *req.FileConfigPageReq) (*core.PageResult[*resp.FileConfigRespVO], error) {
+func (s *FileConfigService) GetFileConfigPage(ctx context.Context, req *req.FileConfigPageReq) (*pagination.PageResult[*resp.FileConfigRespVO], error) {
 	c := s.q.InfraFileConfig
 	qb := c.WithContext(ctx)
 
@@ -137,7 +138,7 @@ func (s *FileConfigService) GetFileConfigPage(ctx context.Context, req *req.File
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.FileConfigRespVO]{
+	return &pagination.PageResult[*resp.FileConfigRespVO]{
 		List:  lo.Map(list, func(item *model.InfraFileConfig, _ int) *resp.FileConfigRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

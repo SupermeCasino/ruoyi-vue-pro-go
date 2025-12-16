@@ -3,11 +3,12 @@ package pay
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -49,16 +50,16 @@ func (s *PayTransferService) CreateTransfer(ctx context.Context, req *PayTransfe
 		return nil, err
 	}
 	if channel == nil {
-		return nil, core.NewBizError(1006002002, "支付渠道不存在") // PAY_CHANNEL_NOT_FOUND
+		return nil, errors.NewBizError(1006002002, "支付渠道不存在") // PAY_CHANNEL_NOT_FOUND
 	}
 	if channel.Status != 0 {
-		return nil, core.NewBizError(1006002001, "支付渠道处于关闭状态") // PAY_CHANNEL_IS_DISABLE
+		return nil, errors.NewBizError(1006002001, "支付渠道处于关闭状态") // PAY_CHANNEL_IS_DISABLE
 	}
 
 	// 3. 获得支付客户端
 	payClient := s.clientFactory.GetPayClient(channel.ID)
 	if payClient == nil {
-		return nil, core.NewBizError(1006000003, "支付渠道客户端不存在") // PAY_CHANNEL_CLIENT_NOT_FOUND
+		return nil, errors.NewBizError(1006000003, "支付渠道客户端不存在") // PAY_CHANNEL_CLIENT_NOT_FOUND
 	}
 
 	// 3. 创建转账单

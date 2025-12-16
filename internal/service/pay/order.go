@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -41,7 +43,7 @@ func (s *PayOrderService) GetOrder(ctx context.Context, id int64) (*pay.PayOrder
 }
 
 // GetOrderPage 获得支付订单分页
-func (s *PayOrderService) GetOrderPage(ctx context.Context, req *req.PayOrderPageReq) (*core.PageResult[*pay.PayOrder], error) {
+func (s *PayOrderService) GetOrderPage(ctx context.Context, req *req.PayOrderPageReq) (*pagination.PageResult[*pay.PayOrder], error) {
 	q := s.q.PayOrder.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayOrder.AppID.Eq(req.AppID))
@@ -70,7 +72,7 @@ func (s *PayOrderService) GetOrderPage(ctx context.Context, req *req.PayOrderPag
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*pay.PayOrder]{
+	return &pagination.PageResult[*pay.PayOrder]{
 		List:  list,
 		Total: total,
 	}, nil
@@ -209,9 +211,9 @@ func (s *PayOrderService) genChannelOrderNotifyUrl(channel *pay.PayChannel) stri
 
 func (s *PayOrderService) generateNo() string {
 	// Simple timestamp + random for now.
-	// Java uses Redis. We can use core.RDB.Incr if we want strictly strict.
+	// Java uses Redis. We can use cache.RDB.Incr if we want strictly strict.
 	// For MVP: P + yyyyMMddHHmmss + 6 digit random
-	return "P" + time.Now().Format("20060102150405") + core.GenerateRandomString(6) // Need helper?
+	return "P" + time.Now().Format("20060102150405") + utils.GenerateRandomString(6) // Need helper?
 	// Let's use simplified version
 	return "P" + time.Now().Format("20060102150405") + "000000"
 }

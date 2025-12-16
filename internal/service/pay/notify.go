@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -217,7 +218,7 @@ func (s *PayNotifyService) GetNotifyTask(ctx context.Context, id int64) (*pay.Pa
 }
 
 // GetNotifyTaskPage 获得回调通知分页
-func (s *PayNotifyService) GetNotifyTaskPage(ctx context.Context, req *req.PayNotifyTaskPageReq) (*core.PageResult[*pay.PayNotifyTask], error) {
+func (s *PayNotifyService) GetNotifyTaskPage(ctx context.Context, req *req.PayNotifyTaskPageReq) (*pagination.PageResult[*pay.PayNotifyTask], error) {
 	q := s.q.PayNotifyTask.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayNotifyTask.AppID.Eq(req.AppID))
@@ -243,7 +244,7 @@ func (s *PayNotifyService) GetNotifyTaskPage(ctx context.Context, req *req.PayNo
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*pay.PayNotifyTask]{
+	return &pagination.PageResult[*pay.PayNotifyTask]{
 		List:  list,
 		Total: total,
 	}, nil

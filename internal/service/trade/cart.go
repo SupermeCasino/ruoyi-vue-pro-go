@@ -3,12 +3,13 @@ package trade
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"github.com/samber/lo"
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func (s *CartService) AddCart(ctx context.Context, userId int64, r *req.AppCartA
 		return 0, err
 	}
 	if sku == nil {
-		return 0, core.NewBizError(1007001001, "商品 SKU 不存在")
+		return 0, pkgErrors.NewBizError(1007001001, "商品 SKU 不存在")
 	}
 	// 校验库存
 	newCount := r.Count
@@ -51,7 +52,7 @@ func (s *CartService) AddCart(ctx context.Context, userId int64, r *req.AppCartA
 		newCount = cart.Count + r.Count
 	}
 	if sku.Stock < newCount {
-		return 0, core.NewBizError(1007001002, "库存不足")
+		return 0, pkgErrors.NewBizError(1007001002, "库存不足")
 	}
 
 	if cart != nil {
@@ -78,7 +79,7 @@ func (s *CartService) UpdateCartCount(ctx context.Context, userId int64, r *req.
 	cart, err := c.WithContext(ctx).Where(c.ID.Eq(r.ID), c.UserID.Eq(userId)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return core.NewBizError(1007001003, "购物车项不存在")
+			return pkgErrors.NewBizError(1007001003, "购物车项不存在")
 		}
 		return err
 	}
@@ -88,7 +89,7 @@ func (s *CartService) UpdateCartCount(ctx context.Context, userId int64, r *req.
 		return err
 	}
 	if sku != nil && sku.Stock < r.Count {
-		return core.NewBizError(1007001002, "库存不足")
+		return pkgErrors.NewBizError(1007001002, "库存不足")
 	}
 	_, err = c.WithContext(ctx).Where(c.ID.Eq(r.ID)).Update(c.Count, r.Count)
 	return err
@@ -108,7 +109,7 @@ func (s *CartService) ResetCart(ctx context.Context, userId int64, r *req.AppCar
 	cart, err := c.WithContext(ctx).Where(c.ID.Eq(r.ID), c.UserID.Eq(userId)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return core.NewBizError(1007001003, "购物车项不存在")
+			return pkgErrors.NewBizError(1007001003, "购物车项不存在")
 		}
 		return err
 	}
@@ -119,10 +120,10 @@ func (s *CartService) ResetCart(ctx context.Context, userId int64, r *req.AppCar
 		return err
 	}
 	if sku == nil {
-		return core.NewBizError(1007001001, "商品 SKU 不存在")
+		return pkgErrors.NewBizError(1007001001, "商品 SKU 不存在")
 	}
 	if sku.Stock < r.Count {
-		return core.NewBizError(1007001002, "库存不足")
+		return pkgErrors.NewBizError(1007001002, "库存不足")
 	}
 
 	// 如果新 SKU 和原 SKU 相同，只更新数量

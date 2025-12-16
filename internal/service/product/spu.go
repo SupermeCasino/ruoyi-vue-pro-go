@@ -2,12 +2,14 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -137,7 +139,7 @@ func (s *ProductSpuService) DeleteSpu(ctx context.Context, id int64) error {
 	}
 	// 校验状态 (只有回收站可以删除)
 	if spu.Status != -1 { // RECYCLE_BIN
-		return core.NewBizError(1006000004, "商品必须是回收站状态才能删除") // SPU_NOT_RECYCLE
+		return errors.NewBizError(1006000004, "商品必须是回收站状态才能删除") // SPU_NOT_RECYCLE
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
@@ -180,7 +182,7 @@ func (s *ProductSpuService) GetSpuDetail(ctx context.Context, id int64) (*resp.P
 }
 
 // GetSpuPage 获得 SPU 分页
-func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuPageReq) (*core.PageResult[*resp.ProductSpuResp], error) {
+func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuPageReq) (*pagination.PageResult[*resp.ProductSpuResp], error) {
 	u := s.q.ProductSpu
 	q := u.WithContext(ctx)
 
@@ -220,7 +222,7 @@ func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuP
 		return s.convertResp(item, nil)
 	})
 
-	return &core.PageResult[*resp.ProductSpuResp]{
+	return &pagination.PageResult[*resp.ProductSpuResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -316,7 +318,7 @@ func (s *ProductSpuService) GetSpu(ctx context.Context, id int64) (*product.Prod
 func (s *ProductSpuService) validateSpuExists(ctx context.Context, id int64) (*product.ProductSpu, error) {
 	spu, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1006000002, "商品不存在") // SPU_NOT_EXISTS
+		return nil, errors.NewBizError(1006000002, "商品不存在") // SPU_NOT_EXISTS
 	}
 	return spu, nil
 }

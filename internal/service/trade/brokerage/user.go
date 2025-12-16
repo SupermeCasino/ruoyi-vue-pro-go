@@ -8,10 +8,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -44,7 +44,7 @@ func parseTime(t string) time.Time {
 }
 
 // GetBrokerageUserPage 获得分销用户分页
-func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.BrokerageUserPageReq) (*core.PageResult[*brokerage.BrokerageUser], error) {
+func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.BrokerageUserPageReq) (*pagination.PageResult[*brokerage.BrokerageUser], error) {
 	q := s.q.BrokerageUser.WithContext(ctx)
 
 	// Filter by BindUserId and Level
@@ -54,7 +54,7 @@ func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.
 			return nil, err
 		}
 		if len(childIDs) == 0 {
-			return &core.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
+			return &pagination.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
 		}
 		q = q.Where(s.q.BrokerageUser.ID.In(childIDs...))
 	}
@@ -83,7 +83,7 @@ func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.
 		return nil, err
 	}
 
-	return &core.PageResult[*brokerage.BrokerageUser]{
+	return &pagination.PageResult[*brokerage.BrokerageUser]{
 		List:  list,
 		Total: total,
 	}, nil
@@ -324,13 +324,13 @@ func (s *BrokerageUserService) GetBrokerageUserCountByBindUserId(ctx context.Con
 }
 
 // GetBrokerageUserChildSummaryPage 获得下级分销统计分页
-func (s *BrokerageUserService) GetBrokerageUserChildSummaryPage(ctx context.Context, r *tradeReq.AppBrokerageUserChildSummaryPageReqVO, userId int64) (*core.PageResult[*brokerage.BrokerageUser], error) {
+func (s *BrokerageUserService) GetBrokerageUserChildSummaryPage(ctx context.Context, r *tradeReq.AppBrokerageUserChildSummaryPageReqVO, userId int64) (*pagination.PageResult[*brokerage.BrokerageUser], error) {
 	childIDs, err := s.GetChildUserIdsByLevel(ctx, userId, r.Level)
 	if err != nil {
 		return nil, err
 	}
 	if len(childIDs) == 0 {
-		return &core.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
+		return &pagination.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
 	}
 
 	q := s.q.BrokerageUser.WithContext(ctx).Where(s.q.BrokerageUser.ID.In(childIDs...))
@@ -356,11 +356,11 @@ func (s *BrokerageUserService) GetBrokerageUserChildSummaryPage(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*brokerage.BrokerageUser]{List: list, Total: total}, nil
+	return &pagination.PageResult[*brokerage.BrokerageUser]{List: list, Total: total}, nil
 }
 
 // GetBrokerageUserRankPageByUserCount 获得分销用户排行分页（基于用户量）
-func (s *BrokerageUserService) GetBrokerageUserRankPageByUserCount(ctx context.Context, r *tradeReq.AppBrokerageUserRankPageReqVO) (*core.PageResult[*brokerage.BrokerageUser], error) {
+func (s *BrokerageUserService) GetBrokerageUserRankPageByUserCount(ctx context.Context, r *tradeReq.AppBrokerageUserRankPageReqVO) (*pagination.PageResult[*brokerage.BrokerageUser], error) {
 	// Complex query: Count sub-users and rank.
 	// This usually involves Group By or Subquery.
 	// Simplified: return empty for now or Implement proper SQL.
@@ -368,5 +368,5 @@ func (s *BrokerageUserService) GetBrokerageUserRankPageByUserCount(ctx context.C
 	// GORM raw SQL might be best.
 
 	// Placeholder
-	return &core.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
+	return &pagination.PageResult[*brokerage.BrokerageUser]{List: []*brokerage.BrokerageUser{}, Total: 0}, nil
 }

@@ -3,10 +3,11 @@ package wallet
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -54,7 +55,7 @@ func (s *PayWalletService) GetWallet(ctx context.Context, id int64) (*pay.PayWal
 }
 
 // GetWalletPage 获得会员钱包分页
-func (s *PayWalletService) GetWalletPage(ctx context.Context, req *req.PayWalletPageReq) (*core.PageResult[*pay.PayWallet], error) {
+func (s *PayWalletService) GetWalletPage(ctx context.Context, req *req.PayWalletPageReq) (*pagination.PageResult[*pay.PayWallet], error) {
 	q := s.q.PayWallet.WithContext(ctx)
 	if req.UserID > 0 {
 		q = q.Where(s.q.PayWallet.UserID.Eq(req.UserID))
@@ -68,5 +69,5 @@ func (s *PayWalletService) GetWalletPage(ctx context.Context, req *req.PayWallet
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, total), nil
+	return pagination.NewPageResult(list, total), nil
 }

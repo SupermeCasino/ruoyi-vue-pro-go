@@ -6,8 +6,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -53,7 +54,7 @@ func (s *SensitiveWordService) CreateSensitiveWord(ctx context.Context, r *req.S
 	var count int64
 	s.db.WithContext(ctx).Model(&model.SystemSensitiveWord{}).Where("name = ?", r.Name).Count(&count)
 	if count > 0 {
-		return 0, core.NewBizError(1002008001, "敏感词已存在")
+		return 0, errors.NewBizError(1002008001, "敏感词已存在")
 	}
 
 	word := &model.SystemSensitiveWord{
@@ -75,7 +76,7 @@ func (s *SensitiveWordService) UpdateSensitiveWord(ctx context.Context, r *req.S
 	var count int64
 	s.db.WithContext(ctx).Model(&model.SystemSensitiveWord{}).Where("name = ? AND id != ?", r.Name, r.ID).Count(&count)
 	if count > 0 {
-		return core.NewBizError(1002008001, "敏感词已存在")
+		return errors.NewBizError(1002008001, "敏感词已存在")
 	}
 
 	word := &model.SystemSensitiveWord{
@@ -111,7 +112,7 @@ func (s *SensitiveWordService) GetSensitiveWord(ctx context.Context, id int64) (
 }
 
 // GetSensitiveWordPage 获得敏感词分页
-func (s *SensitiveWordService) GetSensitiveWordPage(ctx context.Context, r *req.SensitiveWordPageReq) (*core.PageResult[*model.SystemSensitiveWord], error) {
+func (s *SensitiveWordService) GetSensitiveWordPage(ctx context.Context, r *req.SensitiveWordPageReq) (*pagination.PageResult[*model.SystemSensitiveWord], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemSensitiveWord{})
 
 	if r.Name != "" {
@@ -142,7 +143,7 @@ func (s *SensitiveWordService) GetSensitiveWordPage(ctx context.Context, r *req.
 		return nil, err
 	}
 
-	return &core.PageResult[*model.SystemSensitiveWord]{
+	return &pagination.PageResult[*model.SystemSensitiveWord]{
 		List:  list,
 		Total: total,
 	}, nil

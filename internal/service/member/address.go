@@ -2,12 +2,13 @@ package member
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"github.com/samber/lo"
 )
@@ -49,7 +50,7 @@ func (s *MemberAddressService) UpdateAddress(ctx context.Context, userId int64, 
 		return err
 	}
 	if !exists {
-		return core.NewBizError(1004003005, "收件地址不存在") // ADDRESS_NOT_EXISTS
+		return errors.NewBizError(1004003005, "收件地址不存在") // ADDRESS_NOT_EXISTS
 	}
 
 	// 如果是默认地址，先将其他地址设为非默认
@@ -77,7 +78,7 @@ func (s *MemberAddressService) DeleteAddress(ctx context.Context, userId int64, 
 		return err
 	}
 	if !exists {
-		return core.NewBizError(1004003005, "收件地址不存在")
+		return errors.NewBizError(1004003005, "收件地址不存在")
 	}
 
 	u := s.q.MemberAddress

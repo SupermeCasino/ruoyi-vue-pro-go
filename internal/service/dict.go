@@ -7,8 +7,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type DictService struct {
@@ -91,7 +91,7 @@ func (s *DictService) GetDictType(ctx context.Context, id int64) (*resp.DictType
 	}, nil
 }
 
-func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePageReq) (*core.PageResult[*resp.DictTypeRespVO], error) {
+func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePageReq) (*pagination.PageResult[*resp.DictTypeRespVO], error) {
 	t := s.q.SystemDictType
 	qb := t.WithContext(ctx)
 
@@ -127,7 +127,7 @@ func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePage
 		})
 	}
 
-	return &core.PageResult[*resp.DictTypeRespVO]{
+	return &pagination.PageResult[*resp.DictTypeRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
@@ -210,7 +210,7 @@ func (s *DictService) GetDictData(ctx context.Context, id int64) (*resp.DictData
 	}, nil
 }
 
-func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPageReq) (*core.PageResult[*resp.DictDataRespVO], error) {
+func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPageReq) (*pagination.PageResult[*resp.DictDataRespVO], error) {
 	d := s.q.SystemDictData
 	qb := d.WithContext(ctx)
 
@@ -250,7 +250,7 @@ func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPage
 		})
 	}
 
-	return &core.PageResult[*resp.DictDataRespVO]{
+	return &pagination.PageResult[*resp.DictDataRespVO]{
 		List:  data,
 		Total: total,
 	}, nil

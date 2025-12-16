@@ -2,12 +2,13 @@ package product
 
 import (
 	"context"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -74,7 +75,7 @@ func (s *ProductBrowseHistoryService) HideUserBrowseHistory(ctx context.Context,
 
 // GetBrowseHistoryPage (Admin & App share similar logic but differing reqs?)
 // Java has separate ReqVOs but logic is similar. Admin uses BrowseHistoryPageReqVO, App uses AppBrowseHistoryPageReqVO
-func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, r *req.ProductBrowseHistoryPageReq) (*core.PageResult[resp.ProductBrowseHistoryResp], error) {
+func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, r *req.ProductBrowseHistoryPageReq) (*pagination.PageResult[resp.ProductBrowseHistoryResp], error) {
 	h := s.q.ProductBrowseHistory
 	q := h.WithContext(ctx).Where(h.UserDeleted.Is(false)) // Only show non-deleted to user? Java: "Boolean userDeleted" in params.
 
@@ -117,14 +118,14 @@ func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, 
 		return r
 	})
 
-	return &core.PageResult[resp.ProductBrowseHistoryResp]{
+	return &pagination.PageResult[resp.ProductBrowseHistoryResp]{
 		List:  result,
 		Total: total,
 	}, nil
 }
 
 // GetAppBrowseHistoryPage
-func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Context, userId int64, r *req.AppProductBrowseHistoryPageReq) (*core.PageResult[resp.AppProductBrowseHistoryResp], error) {
+func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Context, userId int64, r *req.AppProductBrowseHistoryPageReq) (*pagination.PageResult[resp.AppProductBrowseHistoryResp], error) {
 	h := s.q.ProductBrowseHistory
 	q := h.WithContext(ctx).Where(h.UserID.Eq(userId)).Where(h.UserDeleted.Is(false))
 
@@ -158,7 +159,7 @@ func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Contex
 		return r
 	})
 
-	return &core.PageResult[resp.AppProductBrowseHistoryResp]{
+	return &pagination.PageResult[resp.AppProductBrowseHistoryResp]{
 		List:  result,
 		Total: total,
 	}, nil

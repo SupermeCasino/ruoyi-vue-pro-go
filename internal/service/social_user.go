@@ -6,9 +6,10 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/social/client"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -83,7 +84,7 @@ func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, us
 		return err
 	}
 	if bindCount > 0 {
-		return core.NewBizError(1002004005, "该社交账号已被绑定")
+		return pkgErrors.NewBizError(1002004005, "该社交账号已被绑定")
 	}
 
 	if count == 0 {
@@ -154,7 +155,7 @@ func (s *SocialUserService) GetSocialUser(ctx context.Context, id int64) (*model
 }
 
 // GetSocialUserPage 获取社交用户分页
-func (s *SocialUserService) GetSocialUserPage(ctx context.Context, r *req.SocialUserPageReq) (*core.PageResult[*model.SocialUser], error) {
+func (s *SocialUserService) GetSocialUserPage(ctx context.Context, r *req.SocialUserPageReq) (*pagination.PageResult[*model.SocialUser], error) {
 	q := s.q.SocialUser.WithContext(ctx)
 
 	if r.Type != nil {
@@ -187,7 +188,7 @@ func (s *SocialUserService) GetSocialUserPage(ctx context.Context, r *req.Social
 		return nil, err
 	}
 
-	return &core.PageResult[*model.SocialUser]{
+	return &pagination.PageResult[*model.SocialUser]{
 		List:  list,
 		Total: total,
 	}, nil

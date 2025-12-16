@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 )
 
 type WeChatClient struct {
@@ -73,7 +73,7 @@ func (c *WeChatClient) getMiniAuthUser(code string) (*AuthUser, error) {
 	}
 
 	if session.ErrCode != 0 {
-		return nil, core.NewBizError(1002004003, fmt.Sprintf("微信登录失败: %s", session.ErrMsg))
+		return nil, errors.NewBizError(1002004003, fmt.Sprintf("微信登录失败: %s", session.ErrMsg))
 	}
 
 	return &AuthUser{
@@ -104,7 +104,7 @@ func (c *WeChatClient) getMPAuthUser(code string) (*AuthUser, error) {
 		return nil, err
 	}
 	if tokenResp.ErrCode != 0 {
-		return nil, core.NewBizError(1002004003, fmt.Sprintf("微信登录失败: %s", tokenResp.ErrMsg))
+		return nil, errors.NewBizError(1002004003, fmt.Sprintf("微信登录失败: %s", tokenResp.ErrMsg))
 	}
 
 	// 2. 获取用户信息

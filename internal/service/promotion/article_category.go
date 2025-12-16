@@ -6,8 +6,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 )
 
 type ArticleCategoryService interface {
@@ -55,7 +55,7 @@ func (s *articleCategoryService) DeleteArticleCategory(ctx context.Context, id i
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(400, "该分类下有文章，无法删除")
+		return errors.NewBizError(400, "该分类下有文章，无法删除")
 	}
 
 	_, err = s.q.PromotionArticleCategory.WithContext(ctx).Where(s.q.PromotionArticleCategory.ID.Eq(id)).Delete()
@@ -65,7 +65,7 @@ func (s *articleCategoryService) DeleteArticleCategory(ctx context.Context, id i
 func (s *articleCategoryService) GetArticleCategory(ctx context.Context, id int64) (*resp.ArticleCategoryRespVO, error) {
 	category, err := s.q.PromotionArticleCategory.WithContext(ctx).Where(s.q.PromotionArticleCategory.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(404, "文章分类不存在")
+		return nil, errors.NewBizError(404, "文章分类不存在")
 	}
 	return &resp.ArticleCategoryRespVO{
 		ID:         category.ID,

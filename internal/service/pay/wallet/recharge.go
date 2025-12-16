@@ -3,8 +3,9 @@ package wallet
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"context"
 	"strconv"
@@ -44,7 +45,7 @@ func (s *PayWalletRechargeService) CreateWalletRecharge(ctx context.Context, req
 			return nil, err
 		}
 		if pkg == nil {
-			return nil, core.NewBizError(1006004001, "充值套餐不存在")
+			return nil, errors.NewBizError(1006004001, "充值套餐不存在")
 		}
 		payPrice = pkg.PayPrice
 		bonusPrice = pkg.BonusPrice
@@ -117,7 +118,7 @@ func (s *PayWalletRechargeService) updateWalletBalance(ctx context.Context, rech
 	return err
 }
 
-func (s *PayWalletRechargeService) GetWalletRechargePage(ctx context.Context, req *req.PayWalletRechargePageReq) (*core.PageResult[*pay.PayWalletRecharge], error) {
+func (s *PayWalletRechargeService) GetWalletRechargePage(ctx context.Context, req *req.PayWalletRechargePageReq) (*pagination.PageResult[*pay.PayWalletRecharge], error) {
 	q := s.q.PayWalletRecharge.WithContext(ctx)
 	if req.PayStatus != nil {
 		q = q.Where(s.q.PayWalletRecharge.PayStatus.Is(*req.PayStatus))
@@ -128,5 +129,5 @@ func (s *PayWalletRechargeService) GetWalletRechargePage(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, total), nil
+	return pagination.NewPageResult(list, total), nil
 }

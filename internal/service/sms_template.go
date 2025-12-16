@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"regexp"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"regexp"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -98,7 +99,7 @@ func (s *SmsTemplateService) GetSmsTemplate(ctx context.Context, id int64) (*res
 }
 
 // GetSmsTemplatePage 获得短信模板分页
-func (s *SmsTemplateService) GetSmsTemplatePage(ctx context.Context, req *req.SmsTemplatePageReq) (*core.PageResult[*resp.SmsTemplateRespVO], error) {
+func (s *SmsTemplateService) GetSmsTemplatePage(ctx context.Context, req *req.SmsTemplatePageReq) (*pagination.PageResult[*resp.SmsTemplateRespVO], error) {
 	t := s.q.SystemSmsTemplate
 	qb := t.WithContext(ctx)
 
@@ -131,7 +132,7 @@ func (s *SmsTemplateService) GetSmsTemplatePage(ctx context.Context, req *req.Sm
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.SmsTemplateRespVO]{
+	return &pagination.PageResult[*resp.SmsTemplateRespVO]{
 		List:  lo.Map(list, func(item *model.SystemSmsTemplate, _ int) *resp.SmsTemplateRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil

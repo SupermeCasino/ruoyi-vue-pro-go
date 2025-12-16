@@ -2,10 +2,12 @@ package member
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -45,7 +47,7 @@ func (s *MemberTagService) UpdateTag(ctx context.Context, r *req.MemberTagUpdate
 	_, err := s.q.MemberTag.WithContext(ctx).Where(s.q.MemberTag.ID.Eq(r.ID)).First()
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return core.NewBizError(1004014002, "标签不存在")
+			return errors.NewBizError(1004014002, "标签不存在")
 		}
 		return err
 	}
@@ -68,7 +70,7 @@ func (s *MemberTagService) DeleteTag(ctx context.Context, id int64) error {
 	_, err := s.q.MemberTag.WithContext(ctx).Where(s.q.MemberTag.ID.Eq(id)).First()
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return core.NewBizError(1004014002, "标签不存在")
+			return errors.NewBizError(1004014002, "标签不存在")
 		}
 		return err
 	}
@@ -79,7 +81,7 @@ func (s *MemberTagService) DeleteTag(ctx context.Context, id int64) error {
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(1004014003, "标签下存在用户，无法删除")
+		return errors.NewBizError(1004014003, "标签下存在用户，无法删除")
 	}
 
 	_, err = s.q.MemberTag.WithContext(ctx).Where(s.q.MemberTag.ID.Eq(id)).Delete()
@@ -92,7 +94,7 @@ func (s *MemberTagService) GetTag(ctx context.Context, id int64) (*member.Member
 }
 
 // GetTagPage 获得用户标签分页
-func (s *MemberTagService) GetTagPage(ctx context.Context, r *req.MemberTagPageReq) (*core.PageResult[*member.MemberTag], error) {
+func (s *MemberTagService) GetTagPage(ctx context.Context, r *req.MemberTagPageReq) (*pagination.PageResult[*member.MemberTag], error) {
 	q := s.q.MemberTag.WithContext(ctx)
 	if r.Name != nil && *r.Name != "" {
 		q = q.Where(s.q.MemberTag.Name.Like("%" + *r.Name + "%"))
@@ -103,7 +105,7 @@ func (s *MemberTagService) GetTagPage(ctx context.Context, r *req.MemberTagPageR
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*member.MemberTag]{
+	return &pagination.PageResult[*member.MemberTag]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -124,7 +126,7 @@ func (s *MemberTagService) validateNameUnique(ctx context.Context, id int64, nam
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(1004014000, "标签名称已存在")
+		return errors.NewBizError(1004014000, "标签名称已存在")
 	}
 	return nil
 }

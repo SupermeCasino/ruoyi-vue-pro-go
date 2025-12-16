@@ -10,11 +10,11 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"go.uber.org/zap"
 )
@@ -278,7 +278,7 @@ func (s *BrokerageWithdrawService) GetBrokerageWithdraw(ctx context.Context, id 
 }
 
 // GetBrokerageWithdrawPage 获得佣金提现分页
-func (s *BrokerageWithdrawService) GetBrokerageWithdrawPage(ctx context.Context, r *req.BrokerageWithdrawPageReq) (*core.PageResult[*brokerage.BrokerageWithdraw], error) {
+func (s *BrokerageWithdrawService) GetBrokerageWithdrawPage(ctx context.Context, r *req.BrokerageWithdrawPageReq) (*pagination.PageResult[*brokerage.BrokerageWithdraw], error) {
 	q := s.q.BrokerageWithdraw.WithContext(ctx)
 
 	if r.UserID > 0 {
@@ -315,7 +315,7 @@ func (s *BrokerageWithdrawService) GetBrokerageWithdrawPage(ctx context.Context,
 		return nil, err
 	}
 
-	return &core.PageResult[*brokerage.BrokerageWithdraw]{
+	return &pagination.PageResult[*brokerage.BrokerageWithdraw]{
 		List:  list,
 		Total: total,
 	}, nil

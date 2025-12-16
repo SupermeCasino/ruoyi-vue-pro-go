@@ -2,11 +2,12 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"github.com/samber/lo"
 )
@@ -36,7 +37,7 @@ func (s *ProductSkuService) SetSpuService(spuSvc *ProductSpuService) {
 // ValidateSkuList 校验 SKU 列表
 func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.ProductSkuSaveReq, specType bool) error {
 	if len(skus) == 0 {
-		return core.NewBizError(1006002002, "SKU不能为空") // SKU_NOT_EXISTS
+		return errors.NewBizError(1006002002, "SKU不能为空") // SKU_NOT_EXISTS
 	}
 
 	// 单规格，覆盖默认属性
@@ -61,7 +62,7 @@ func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.Pro
 		return err
 	}
 	if len(existProperties) != len(propertyIDs) {
-		return core.NewBizError(1006001004, "属性不存在") // PROPERTY_NOT_EXISTS
+		return errors.NewBizError(1006001004, "属性不存在") // PROPERTY_NOT_EXISTS
 	}
 
 	// 2. 校验，一个 SKU 下，没有重复的属性。校验方式是，遍历每个 SKU ，看看是否有重复的属性 propertyId
@@ -79,11 +80,11 @@ func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.Pro
 			if val, ok := propertyValueMap[p.ValueID]; ok {
 				skuPropertyIDs = append(skuPropertyIDs, val.PropertyID)
 			} else {
-				// return core.NewBizError(1006002004, "属性值不存在") // PROPERTY_VALUE_NOT_EXISTS
+				// return errors.NewBizError(1006002004, "属性值不存在") // PROPERTY_VALUE_NOT_EXISTS
 			}
 		}
 		if len(lo.Uniq(skuPropertyIDs)) != len(sku.Properties) {
-			return core.NewBizError(1006002005, "SKU属性重复") // SKU_PROPERTIES_DUPLICATED
+			return errors.NewBizError(1006002005, "SKU属性重复") // SKU_PROPERTIES_DUPLICATED
 		}
 	}
 
@@ -91,7 +92,7 @@ func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.Pro
 	attrValueIDsSize := len(skus[0].Properties)
 	for i := 1; i < len(skus); i++ {
 		if len(skus[i].Properties) != attrValueIDsSize {
-			return core.NewBizError(1006002006, "SKU属性数量不一致") // SPU_ATTR_NUMBERS_MUST_BE_EQUALS
+			return errors.NewBizError(1006002006, "SKU属性数量不一致") // SPU_ATTR_NUMBERS_MUST_BE_EQUALS
 		}
 	}
 
@@ -136,7 +137,7 @@ func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.Pro
 		// I'll update imports too.
 
 		if skuAttrValues[key] {
-			return core.NewBizError(1006002007, "SPU SKU 重复") // SPU_SKU_NOT_DUPLICATE
+			return errors.NewBizError(1006002007, "SPU SKU 重复") // SPU_SKU_NOT_DUPLICATE
 		}
 		skuAttrValues[key] = true
 	}
@@ -399,7 +400,7 @@ func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *req.P
 				return err
 			}
 			if result.RowsAffected == 0 {
-				return core.NewBizError(1006002008, "库存不足") // SKU_STOCK_NOT_ENOUGH
+				return errors.NewBizError(1006002008, "库存不足") // SKU_STOCK_NOT_ENOUGH
 			}
 		}
 
@@ -426,7 +427,7 @@ func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *req.P
 func (s *ProductSkuService) GetSku(ctx context.Context, id int64) (*product.ProductSku, error) {
 	sku, err := s.q.ProductSku.WithContext(ctx).Where(s.q.ProductSku.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1006002002, "商品 SKU 不存在")
+		return nil, errors.NewBizError(1006002002, "商品 SKU 不存在")
 	}
 	return sku, nil
 }

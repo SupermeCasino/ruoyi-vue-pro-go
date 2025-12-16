@@ -2,11 +2,13 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -52,7 +54,7 @@ func (s *ProductPropertyValueService) UpdatePropertyValue(ctx context.Context, r
 	u := s.q.ProductPropertyValue
 	exist, err := u.WithContext(ctx).Where(u.PropertyID.Eq(req.PropertyID), u.Name.Eq(req.Name)).First()
 	if err == nil && exist != nil && exist.ID != req.ID {
-		return core.NewBizError(1006002003, "属性值名称已存在") // PROPERTY_VALUE_EXISTS
+		return errors.NewBizError(1006002003, "属性值名称已存在") // PROPERTY_VALUE_EXISTS
 	}
 
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&product.ProductPropertyValue{
@@ -89,7 +91,7 @@ func (s *ProductPropertyValueService) GetPropertyValue(ctx context.Context, id i
 }
 
 // GetPropertyValuePage 获得属性值分页
-func (s *ProductPropertyValueService) GetPropertyValuePage(ctx context.Context, req *req.ProductPropertyValuePageReq) (*core.PageResult[*resp.ProductPropertyValueResp], error) {
+func (s *ProductPropertyValueService) GetPropertyValuePage(ctx context.Context, req *req.ProductPropertyValuePageReq) (*pagination.PageResult[*resp.ProductPropertyValueResp], error) {
 	u := s.q.ProductPropertyValue
 	q := u.WithContext(ctx)
 	if req.PropertyID != 0 {
@@ -107,7 +109,7 @@ func (s *ProductPropertyValueService) GetPropertyValuePage(ctx context.Context, 
 	resList := lo.Map(list, func(item *product.ProductPropertyValue, _ int) *resp.ProductPropertyValueResp {
 		return s.convertResp(item)
 	})
-	return &core.PageResult[*resp.ProductPropertyValueResp]{
+	return &pagination.PageResult[*resp.ProductPropertyValueResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -132,7 +134,7 @@ func (s *ProductPropertyValueService) validatePropertyValueExists(ctx context.Co
 		return err
 	}
 	if count == 0 {
-		return core.NewBizError(1006002004, "属性值不存在") // PROPERTY_VALUE_NOT_EXISTS
+		return errors.NewBizError(1006002004, "属性值不存在") // PROPERTY_VALUE_NOT_EXISTS
 	}
 	return nil
 }

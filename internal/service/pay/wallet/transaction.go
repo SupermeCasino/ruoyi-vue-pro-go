@@ -2,12 +2,13 @@ package wallet
 
 import (
 	"context"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"strconv"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type PayWalletTransactionService struct {
@@ -19,7 +20,7 @@ func NewPayWalletTransactionService(q *query.Query) *PayWalletTransactionService
 }
 
 // GetWalletTransactionPage 获得会员钱包流水分页
-func (s *PayWalletTransactionService) GetWalletTransactionPage(ctx context.Context, req *req.PayWalletTransactionPageReq) (*core.PageResult[*pay.PayWalletTransaction], error) {
+func (s *PayWalletTransactionService) GetWalletTransactionPage(ctx context.Context, req *req.PayWalletTransactionPageReq) (*pagination.PageResult[*pay.PayWalletTransaction], error) {
 	q := s.q.PayWalletTransaction.WithContext(ctx)
 	if req.WalletID > 0 {
 		q = q.Where(s.q.PayWalletTransaction.WalletID.Eq(req.WalletID))
@@ -42,7 +43,7 @@ func (s *PayWalletTransactionService) GetWalletTransactionPage(ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
-	return core.NewPageResult(list, total), nil
+	return pagination.NewPageResult(list, total), nil
 }
 
 // CreateWalletTransaction 创建/记录钱包流水

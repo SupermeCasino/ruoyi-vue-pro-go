@@ -5,8 +5,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type BargainRecordService struct {
@@ -82,18 +82,18 @@ func (s *BargainRecordService) CreateBargainRecord(ctx context.Context, userID i
 }
 
 // GetBargainRecordPage 获得砍价记录分页
-func (s *BargainRecordService) GetBargainRecordPage(ctx context.Context, userID int64, p *core.PageParam) (*core.PageResult[*promotion.PromotionBargainRecord], error) {
+func (s *BargainRecordService) GetBargainRecordPage(ctx context.Context, userID int64, p *pagination.PageParam) (*pagination.PageResult[*promotion.PromotionBargainRecord], error) {
 	q := s.q.PromotionBargainRecord
 	// List Logic: Where(UserID = userID).Order(CreateTime Desc)
 	list, total, err := q.WithContext(ctx).Where(q.UserID.Eq(userID)).Order(q.CreatedAt.Desc()).FindByPage(p.GetOffset(), p.PageSize)
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionBargainRecord]{List: list, Total: total}, nil
+	return &pagination.PageResult[*promotion.PromotionBargainRecord]{List: list, Total: total}, nil
 }
 
 // GetBargainRecordPageAdmin 获得砍价记录分页 (Admin)
-func (s *BargainRecordService) GetBargainRecordPageAdmin(ctx context.Context, req *req.BargainRecordPageReq) (*core.PageResult[*promotion.PromotionBargainRecord], error) {
+func (s *BargainRecordService) GetBargainRecordPageAdmin(ctx context.Context, req *req.BargainRecordPageReq) (*pagination.PageResult[*promotion.PromotionBargainRecord], error) {
 	q := s.q.PromotionBargainRecord
 	do := q.WithContext(ctx)
 
@@ -108,5 +108,5 @@ func (s *BargainRecordService) GetBargainRecordPageAdmin(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionBargainRecord]{List: list, Total: total}, nil
+	return &pagination.PageResult[*promotion.PromotionBargainRecord]{List: list, Total: total}, nil
 }

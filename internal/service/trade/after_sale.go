@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type TradeAfterSaleService struct {
@@ -117,7 +118,7 @@ func (s *TradeAfterSaleService) GetAfterSale(ctx context.Context, userId int64, 
 }
 
 // GetAfterSalePage 获得售后分页 (Admin)
-func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.TradeAfterSalePageReq) (*core.PageResult[*trade.AfterSale], error) {
+func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.TradeAfterSalePageReq) (*pagination.PageResult[*trade.AfterSale], error) {
 	q := s.q.AfterSale.WithContext(ctx)
 	if r.No != "" {
 		q = q.Where(s.q.AfterSale.No.Like("%" + r.No + "%"))
@@ -134,7 +135,7 @@ func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.Tra
 		return nil, err
 	}
 
-	return &core.PageResult[*trade.AfterSale]{
+	return &pagination.PageResult[*trade.AfterSale]{
 		List:  list,
 		Total: total,
 	}, nil

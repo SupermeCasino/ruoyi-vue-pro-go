@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 )
 
 type SocialPlatformFactoryImpl struct {
@@ -22,7 +22,7 @@ func (f *SocialPlatformFactoryImpl) GetPlatform(ctx context.Context, socialType 
 		Where(f.q.SocialClient.SocialType.Eq(socialType), f.q.SocialClient.UserType.Eq(userType), f.q.SocialClient.Status.Eq(0)). // 0 = Enable
 		First()
 	if err != nil {
-		return nil, core.NewBizError(1002004001, fmt.Sprintf("社交客户端不存在: type=%d", socialType))
+		return nil, errors.NewBizError(1002004001, fmt.Sprintf("社交客户端不存在: type=%d", socialType))
 	}
 
 	// 2. 根据类型创建客户端
@@ -32,6 +32,6 @@ func (f *SocialPlatformFactoryImpl) GetPlatform(ctx context.Context, socialType 
 	// case 20: DingTalk
 	// ...
 	default:
-		return nil, core.NewBizError(1002004002, fmt.Sprintf("不支持的社交类型: %d", socialType))
+		return nil, errors.NewBizError(1002004002, fmt.Sprintf("不支持的社交类型: %d", socialType))
 	}
 }

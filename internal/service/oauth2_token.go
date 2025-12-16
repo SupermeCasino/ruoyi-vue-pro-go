@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 const (
@@ -105,12 +106,12 @@ func (s *OAuth2TokenService) CreateAccessToken(ctx context.Context, userId int64
 
 // GetAccessToken 获取访问令牌
 func (s *OAuth2TokenService) GetAccessToken(ctx context.Context, accessToken string) (*OAuth2AccessToken, error) {
-	if core.RDB == nil {
+	if cache.RDB == nil {
 		return nil, nil
 	}
 
 	redisKey := fmt.Sprintf(RedisKeyOAuth2AccessToken, accessToken)
-	data, err := core.RDB.Get(ctx, redisKey).Result()
+	data, err := cache.RDB.Get(ctx, redisKey).Result()
 	if err != nil {
 		return nil, nil // Token 不存在
 	}
@@ -135,7 +136,7 @@ func (s *OAuth2TokenService) CheckAccessToken(ctx context.Context, accessToken s
 		return nil, err
 	}
 	if tokenDO == nil {
-		return nil, core.NewBizError(401, "访问令牌不存在或已过期")
+		return nil, errors.NewBizError(401, "访问令牌不存在或已过期")
 	}
 	return tokenDO, nil
 }
@@ -146,9 +147,9 @@ func (s *OAuth2TokenService) RemoveAccessToken(ctx context.Context, accessToken 
 	tokenDO, _ := s.GetAccessToken(ctx, accessToken)
 
 	// 2. 从 Redis 删除
-	if core.RDB != nil {
+	if cache.RDB != nil {
 		redisKey := fmt.Sprintf(RedisKeyOAuth2AccessToken, accessToken)
-		core.RDB.Del(ctx, redisKey)
+		cache.RDB.Del(ctx, redisKey)
 	}
 
 	return tokenDO, nil
@@ -162,7 +163,7 @@ func (s *OAuth2TokenService) RefreshAccessToken(ctx context.Context, refreshToke
 
 // setAccessTokenToRedis 将令牌存储到 Redis
 func (s *OAuth2TokenService) setAccessTokenToRedis(ctx context.Context, tokenDO *OAuth2AccessToken) error {
-	if core.RDB == nil {
+	if cache.RDB == nil {
 		return nil // Redis 不可用时跳过
 	}
 
@@ -180,5 +181,5 @@ func (s *OAuth2TokenService) setAccessTokenToRedis(ctx context.Context, tokenDO 
 		return nil
 	}
 
-	return core.RDB.Set(ctx, redisKey, string(data), ttl).Err()
+	return cache.RDB.Set(ctx, redisKey, string(data), ttl).Err()
 }

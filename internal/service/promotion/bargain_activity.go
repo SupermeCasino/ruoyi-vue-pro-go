@@ -5,9 +5,10 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type BargainActivityService struct {
@@ -81,7 +82,7 @@ func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *r
 	q := s.q.PromotionBargainActivity
 	old, err := q.WithContext(ctx).Where(q.ID.Eq(r.ID)).First()
 	if err != nil {
-		return core.NewBizError(1001004000, "砍价活动不存在")
+		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
 	if old.Status == 1 { // Enable?
 		// Usually can't update if enabled? Or just simple update?
@@ -128,7 +129,7 @@ func (s *BargainActivityService) DeleteBargainActivity(ctx context.Context, id i
 	q := s.q.PromotionBargainActivity
 	act, err := q.WithContext(ctx).Where(q.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1001004000, "砍价活动不存在")
+		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
 	if act.Status != 2 { // Not Closed?
 		// Java: If not Closed (Enable/Disable?), can delete?
@@ -153,7 +154,7 @@ func (s *BargainActivityService) GetBargainActivity(ctx context.Context, id int6
 }
 
 // GetBargainActivityPage 获得砍价活动分页
-func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *req.BargainActivityPageReq) (*core.PageResult[*promotion.PromotionBargainActivity], error) {
+func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *req.BargainActivityPageReq) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
 	q := s.q.PromotionBargainActivity
 	do := q.WithContext(ctx)
 	if r.Name != "" {
@@ -167,7 +168,7 @@ func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionBargainActivity]{List: list, Total: count}, nil
+	return &pagination.PageResult[*promotion.PromotionBargainActivity]{List: list, Total: count}, nil
 }
 
 // GetBargainActivityListByCount 获得指定数量的砍价活动
@@ -177,14 +178,14 @@ func (s *BargainActivityService) GetBargainActivityListByCount(ctx context.Conte
 }
 
 // GetBargainActivityPageForApp 获得砍价活动分页 (App端，只查询 Status=1 的活动)
-func (s *BargainActivityService) GetBargainActivityPageForApp(ctx context.Context, p *core.PageParam) (*core.PageResult[*promotion.PromotionBargainActivity], error) {
+func (s *BargainActivityService) GetBargainActivityPageForApp(ctx context.Context, p *pagination.PageParam) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
 	q := s.q.PromotionBargainActivity
 	do := q.WithContext(ctx).Where(q.Status.Eq(1)).Order(q.Sort.Desc(), q.ID.Desc())
 	list, count, err := do.FindByPage(p.GetOffset(), p.PageSize)
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionBargainActivity]{List: list, Total: count}, nil
+	return &pagination.PageResult[*promotion.PromotionBargainActivity]{List: list, Total: count}, nil
 }
 
 // GetBargainActivityList 获得砍价活动列表
@@ -226,7 +227,7 @@ func (s *BargainActivityService) validateBargainConflict(ctx context.Context, sp
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(1001004002, "该商品已参加其它砍价活动")
+		return errors.NewBizError(1001004002, "该商品已参加其它砍价活动")
 	}
 	return nil
 }

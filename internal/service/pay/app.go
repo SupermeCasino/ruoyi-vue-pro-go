@@ -3,11 +3,13 @@ package pay
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 	"gorm.io/gorm"
@@ -124,7 +126,7 @@ func (s *PayAppService) GetAppList(ctx context.Context) ([]*pay.PayApp, error) {
 }
 
 // GetAppPage 获得支付应用分页
-func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) (*core.PageResult[*resp.PayAppPageItemResp], error) {
+func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) (*pagination.PageResult[*resp.PayAppPageItemResp], error) {
 	q := s.q.PayApp.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PayApp.Name.Like("%" + req.Name + "%"))
@@ -176,7 +178,7 @@ func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) 
 		list[i] = item
 	}
 
-	return &core.PageResult[*resp.PayAppPageItemResp]{
+	return &pagination.PageResult[*resp.PayAppPageItemResp]{
 		List:  list,
 		Total: total,
 	}, nil
@@ -188,7 +190,7 @@ func (s *PayAppService) validateAppExists(ctx context.Context, id int64) (*pay.P
 	app, err := s.q.PayApp.WithContext(ctx).Where(s.q.PayApp.ID.Eq(id)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, core.NewBizError(1006000000, "支付应用不存在") // PAY_APP_NOT_FOUND
+			return nil, pkgErrors.NewBizError(1006000000, "支付应用不存在") // PAY_APP_NOT_FOUND
 		}
 		return nil, err
 	}
@@ -199,7 +201,7 @@ func (s *PayAppService) validateAppKeyUnique(ctx context.Context, id int64, appK
 	app, err := s.q.PayApp.WithContext(ctx).Where(s.q.PayApp.AppKey.Eq(appKey)).First()
 	if err == nil && app != nil {
 		if id == 0 || app.ID != id {
-			return core.NewBizError(1006000001, "支付应用 AppKey 已存在") // PAY_APP_EXIST_KEY_ERROR
+			return pkgErrors.NewBizError(1006000001, "支付应用 AppKey 已存在") // PAY_APP_EXIST_KEY_ERROR
 		}
 	}
 	return nil
@@ -213,7 +215,7 @@ func (s *PayAppService) ValidPayApp(ctx context.Context, id int64) (*pay.PayApp,
 		return nil, err
 	}
 	if app.Status != 0 { // 0 = Enabled
-		return nil, core.NewBizError(1006000002, "支付应用处于关闭状态") // PAY_APP_IS_DISABLE
+		return nil, pkgErrors.NewBizError(1006000002, "支付应用处于关闭状态") // PAY_APP_IS_DISABLE
 	}
 	return app, nil
 }

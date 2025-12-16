@@ -5,8 +5,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type ApiAccessLogService struct {
@@ -18,7 +18,7 @@ func NewApiAccessLogService(q *query.Query) *ApiAccessLogService {
 }
 
 // GetApiAccessLogPage 获取API访问日志分页
-func (s *ApiAccessLogService) GetApiAccessLogPage(ctx context.Context, r *req.ApiAccessLogPageReq) (*core.PageResult[*model.InfraApiAccessLog], error) {
+func (s *ApiAccessLogService) GetApiAccessLogPage(ctx context.Context, r *req.ApiAccessLogPageReq) (*pagination.PageResult[*model.InfraApiAccessLog], error) {
 	q := s.q.InfraApiAccessLog.WithContext(ctx)
 
 	if r.UserID != nil {
@@ -63,7 +63,7 @@ func (s *ApiAccessLogService) GetApiAccessLogPage(ctx context.Context, r *req.Ap
 		return nil, err
 	}
 
-	return &core.PageResult[*model.InfraApiAccessLog]{
+	return &pagination.PageResult[*model.InfraApiAccessLog]{
 		List:  list,
 		Total: total,
 	}, nil

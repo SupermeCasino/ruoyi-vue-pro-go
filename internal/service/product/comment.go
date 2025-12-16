@@ -2,13 +2,15 @@ package product
 
 import (
 	"context"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -28,7 +30,7 @@ func NewProductCommentService(q *query.Query, spuSvc *ProductSpuService, skuSvc 
 }
 
 // GetCommentPage 获得商品评价分页 (Admin)
-func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *req.ProductCommentPageReq) (*core.PageResult[*resp.ProductCommentResp], error) {
+func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *req.ProductCommentPageReq) (*pagination.PageResult[*resp.ProductCommentResp], error) {
 	u := s.q.ProductComment
 	q := u.WithContext(ctx)
 
@@ -57,7 +59,7 @@ func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *req.Pro
 		return nil, err
 	}
 
-	return &core.PageResult[*resp.ProductCommentResp]{
+	return &pagination.PageResult[*resp.ProductCommentResp]{
 		List:  s.convertList(list),
 		Total: total,
 	}, nil
@@ -130,7 +132,7 @@ func (s *ProductCommentService) CreateComment(ctx context.Context, req *req.Prod
 }
 
 // GetAppCommentPage 获得商品评价分页 (App)
-func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.AppProductCommentPageReq) (*core.PageResult[*resp.AppProductCommentResp], error) {
+func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.AppProductCommentPageReq) (*pagination.PageResult[*resp.AppProductCommentResp], error) {
 	u := s.q.ProductComment
 	q := u.WithContext(ctx).Where(u.SpuID.Eq(r.SpuID), u.Visible.Eq(model.BitBool(true)))
 
@@ -169,7 +171,7 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 		}
 	})
 
-	return &core.PageResult[*resp.AppProductCommentResp]{
+	return &pagination.PageResult[*resp.AppProductCommentResp]{
 		List:  result,
 		Total: total,
 	}, nil
@@ -185,7 +187,7 @@ func (s *ProductCommentService) CreateAppComment(ctx context.Context, userId int
 		return nil, err // Order item not found or not owned by user
 	}
 	if item.CommentStatus {
-		return nil, core.NewBizError(1006000007, "该商品已评价") // DUPLICATE_COMMENT
+		return nil, errors.NewBizError(1006000007, "该商品已评价") // DUPLICATE_COMMENT
 	}
 
 	// 2. Prepare Comment
@@ -261,7 +263,7 @@ func (s *ProductCommentService) CreateAppComment(ctx context.Context, userId int
 func (s *ProductCommentService) validateCommentExists(ctx context.Context, id int64) (*product.ProductComment, error) {
 	c, err := s.q.ProductComment.WithContext(ctx).Where(s.q.ProductComment.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1006000006, "评论不存在") // COMMENT_NOT_EXISTS (Mock code)
+		return nil, errors.NewBizError(1006000006, "评论不存在") // COMMENT_NOT_EXISTS (Mock code)
 	}
 	return c, nil
 }

@@ -6,8 +6,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm/clause"
 )
@@ -75,26 +76,26 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 			Where(tx.PromotionBargainRecord.ID.Eq(r.RecordID)).
 			First()
 		if err != nil {
-			return core.NewBizError(1001007000, "砍价记录不存在")
+			return errors.NewBizError(1001007000, "砍价记录不存在")
 		}
 		if record.UserID == userID {
-			return core.NewBizError(1001007001, "不能给自己砍价")
+			return errors.NewBizError(1001007001, "不能给自己砍价")
 		}
 		if record.Status != 1 { // 1: In Progress
-			return core.NewBizError(1001007002, "砍价记录已结束")
+			return errors.NewBizError(1001007002, "砍价记录已结束")
 		}
 
 		// 2. 校验砍价活动
 		activity, err := tx.PromotionBargainActivity.WithContext(ctx).Where(tx.PromotionBargainActivity.ID.Eq(record.ActivityID)).First()
 		if err != nil {
-			return core.NewBizError(1001004000, "砍价活动不存在")
+			return errors.NewBizError(1001004000, "砍价活动不存在")
 		}
 		if activity.Status != 1 { // 1: Open
-			return core.NewBizError(1001004001, "砍价活动已结束")
+			return errors.NewBizError(1001004001, "砍价活动已结束")
 		}
 		now := time.Now()
 		if now.Before(activity.StartTime) || now.After(activity.EndTime) {
-			return core.NewBizError(1001004001, "砍价活动已结束")
+			return errors.NewBizError(1001004001, "砍价活动已结束")
 		}
 
 		// 3. 校验是否已经助力过
@@ -105,13 +106,13 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 			return err
 		}
 		if count > 0 {
-			return core.NewBizError(1001007003, "您已经助力过了")
+			return errors.NewBizError(1001007003, "您已经助力过了")
 		}
 
 		// 4. 计算砍价金额
 		leftPrice := record.BargainPrice - activity.BargainMinPrice
 		if leftPrice <= 0 {
-			return core.NewBizError(1001007004, "砍价已完成")
+			return errors.NewBizError(1001007004, "砍价已完成")
 		}
 
 		reducePrice := 0
@@ -173,7 +174,7 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 }
 
 // GetBargainHelpPage 获得砍价助力分页 (Admin)
-func (s *BargainHelpService) GetBargainHelpPage(ctx context.Context, req *req.BargainHelpPageReq) (*core.PageResult[*promotion.PromotionBargainHelp], error) {
+func (s *BargainHelpService) GetBargainHelpPage(ctx context.Context, req *req.BargainHelpPageReq) (*pagination.PageResult[*promotion.PromotionBargainHelp], error) {
 	q := s.q.PromotionBargainHelp
 	do := q.WithContext(ctx)
 
@@ -188,5 +189,5 @@ func (s *BargainHelpService) GetBargainHelpPage(ctx context.Context, req *req.Ba
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*promotion.PromotionBargainHelp]{List: list, Total: total}, nil
+	return &pagination.PageResult[*promotion.PromotionBargainHelp]{List: list, Total: total}, nil
 }

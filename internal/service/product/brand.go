@@ -2,11 +2,13 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -79,7 +81,7 @@ func (s *ProductBrandService) GetBrand(ctx context.Context, id int64) (*resp.Pro
 }
 
 // GetBrandPage 获得品牌分页
-func (s *ProductBrandService) GetBrandPage(ctx context.Context, req *req.ProductBrandPageReq) (*core.PageResult[*resp.ProductBrandResp], error) {
+func (s *ProductBrandService) GetBrandPage(ctx context.Context, req *req.ProductBrandPageReq) (*pagination.PageResult[*resp.ProductBrandResp], error) {
 	u := s.q.ProductBrand
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -97,7 +99,7 @@ func (s *ProductBrandService) GetBrandPage(ctx context.Context, req *req.Product
 	resList := lo.Map(list, func(item *product.ProductBrand, _ int) *resp.ProductBrandResp {
 		return s.convertResp(item)
 	})
-	return &core.PageResult[*resp.ProductBrandResp]{
+	return &pagination.PageResult[*resp.ProductBrandResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -127,7 +129,7 @@ func (s *ProductBrandService) ValidateProductBrand(ctx context.Context, id int64
 		return err
 	}
 	if count == 0 {
-		return core.NewBizError(1006001000, "品牌不存在") // BRAND_NOT_EXISTS
+		return errors.NewBizError(1006001000, "品牌不存在") // BRAND_NOT_EXISTS
 	}
 	return nil
 }
@@ -138,7 +140,7 @@ func (s *ProductBrandService) validateBrandNameUnique(ctx context.Context, id in
 	brand, err := u.WithContext(ctx).Where(u.Name.Eq(name)).First()
 	if err == nil && brand != nil {
 		if id == 0 || brand.ID != id {
-			return core.NewBizError(1006001001, "品牌名称已存在") // BRAND_NAME_EXISTS
+			return errors.NewBizError(1006001001, "品牌名称已存在") // BRAND_NAME_EXISTS
 		}
 	}
 	return nil

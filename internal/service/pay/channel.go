@@ -3,11 +3,12 @@ package pay
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
 	"gorm.io/gorm"
 )
@@ -32,7 +33,7 @@ func (s *PayChannelService) CreateChannel(ctx context.Context, req *req.PayChann
 		return 0, err
 	}
 	if exists != nil {
-		return 0, core.NewBizError(1006002000, "支付渠道已存在") // PAY_CHANNEL_EXIST_SAME_CHANNEL_ERROR
+		return 0, pkgErrors.NewBizError(1006002000, "支付渠道已存在") // PAY_CHANNEL_EXIST_SAME_CHANNEL_ERROR
 	}
 
 	// 2. 插入
@@ -110,7 +111,7 @@ func (s *PayChannelService) validateChannelExists(ctx context.Context, id int64)
 	channel, err := s.q.PayChannel.WithContext(ctx).Where(s.q.PayChannel.ID.Eq(id)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, core.NewBizError(1006002002, "支付渠道不存在") // PAY_CHANNEL_NOT_FOUND
+			return nil, pkgErrors.NewBizError(1006002002, "支付渠道不存在") // PAY_CHANNEL_NOT_FOUND
 		}
 		return nil, err
 	}
@@ -124,7 +125,7 @@ func (s *PayChannelService) ValidPayChannel(ctx context.Context, id int64) (*pay
 		return nil, err
 	}
 	if channel.Status != 0 { // 0 = Enabled
-		return nil, core.NewBizError(1006002001, "支付渠道处于关闭状态") // PAY_CHANNEL_IS_DISABLE
+		return nil, pkgErrors.NewBizError(1006002001, "支付渠道处于关闭状态") // PAY_CHANNEL_IS_DISABLE
 	}
 	return channel, nil
 }

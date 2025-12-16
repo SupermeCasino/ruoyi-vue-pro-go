@@ -3,10 +3,12 @@ package member
 import (
 	"context"
 	"errors"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -27,7 +29,7 @@ func (s *MemberLevelService) CreateLevel(ctx context.Context, r *req.MemberLevel
 		return 0, err
 	}
 	if count > 0 {
-		return 0, core.NewBizError(1004014000, "等级名称已存在")
+		return 0, pkgErrors.NewBizError(1004014000, "等级名称已存在")
 	}
 	// Check Level Value Unique?
 	count, err = s.q.MemberLevel.WithContext(ctx).Where(s.q.MemberLevel.Level.Eq(r.Level)).Count()
@@ -35,7 +37,7 @@ func (s *MemberLevelService) CreateLevel(ctx context.Context, r *req.MemberLevel
 		return 0, err
 	}
 	if count > 0 {
-		return 0, core.NewBizError(1004014001, "等级值已存在")
+		return 0, pkgErrors.NewBizError(1004014001, "等级值已存在")
 	}
 
 	level := &member.MemberLevel{
@@ -57,7 +59,7 @@ func (s *MemberLevelService) UpdateLevel(ctx context.Context, r *req.MemberLevel
 	l, err := s.q.MemberLevel.WithContext(ctx).Where(s.q.MemberLevel.ID.Eq(r.ID)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return core.NewBizError(1004014002, "等级不存在")
+			return pkgErrors.NewBizError(1004014002, "等级不存在")
 		}
 		return err
 	}
@@ -69,7 +71,7 @@ func (s *MemberLevelService) UpdateLevel(ctx context.Context, r *req.MemberLevel
 			return err
 		}
 		if count > 0 {
-			return core.NewBizError(1004014000, "等级名称已存在")
+			return pkgErrors.NewBizError(1004014000, "等级名称已存在")
 		}
 	}
 	// Check Level Value conflict
@@ -79,7 +81,7 @@ func (s *MemberLevelService) UpdateLevel(ctx context.Context, r *req.MemberLevel
 			return err
 		}
 		if count > 0 {
-			return core.NewBizError(1004014001, "等级值已存在")
+			return pkgErrors.NewBizError(1004014001, "等级值已存在")
 		}
 	}
 
@@ -118,7 +120,7 @@ func (s *MemberLevelService) GetLevelSimpleList(ctx context.Context) ([]*member.
 }
 
 // GetLevelPage 获得等级分页
-func (s *MemberLevelService) GetLevelPage(ctx context.Context, r *req.MemberLevelPageReq) (*core.PageResult[*member.MemberLevel], error) {
+func (s *MemberLevelService) GetLevelPage(ctx context.Context, r *req.MemberLevelPageReq) (*pagination.PageResult[*member.MemberLevel], error) {
 	q := s.q.MemberLevel.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.MemberLevel.Name.Like("%" + r.Name + "%"))
@@ -127,7 +129,7 @@ func (s *MemberLevelService) GetLevelPage(ctx context.Context, r *req.MemberLeve
 		q = q.Where(s.q.MemberLevel.Status.Eq(*r.Status))
 	}
 	list, total, err := q.Order(s.q.MemberLevel.Level.Asc()).FindByPage(r.GetOffset(), r.PageSize)
-	return &core.PageResult[*member.MemberLevel]{
+	return &pagination.PageResult[*member.MemberLevel]{
 		List:  list,
 		Total: total,
 	}, err
@@ -206,7 +208,7 @@ func (s *MemberLevelService) UpdateUserLevel(ctx context.Context, userId int64, 
 	user, err := u.WithContext(ctx).Where(u.ID.Eq(userId)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return core.NewBizError(1004014003, "用户不存在")
+			return pkgErrors.NewBizError(1004014003, "用户不存在")
 		}
 		return err
 	}
@@ -216,7 +218,7 @@ func (s *MemberLevelService) UpdateUserLevel(ctx context.Context, userId int64, 
 		// 校验等级是否存在
 		_, err := s.GetLevel(ctx, *levelId)
 		if err != nil {
-			return core.NewBizError(1004014002, "等级不存在")
+			return pkgErrors.NewBizError(1004014002, "等级不存在")
 		}
 		newLevelId = *levelId
 	}

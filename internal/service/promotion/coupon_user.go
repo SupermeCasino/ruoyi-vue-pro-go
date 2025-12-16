@@ -3,11 +3,12 @@ package promotion
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -96,7 +97,7 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 }
 
 // GetCouponPage 用户优惠券分页
-func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req *req.AppCouponPageReq) (*core.PageResult[promotion.PromotionCoupon], error) {
+func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req *req.AppCouponPageReq) (*pagination.PageResult[promotion.PromotionCoupon], error) {
 	q := s.q.PromotionCoupon.WithContext(ctx).Where(s.q.PromotionCoupon.UserID.Eq(userId))
 	if req.Status != nil {
 		q = q.Where(s.q.PromotionCoupon.Status.Eq(*req.Status))
@@ -112,7 +113,7 @@ func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req
 		list[i] = *v
 	}
 
-	return &core.PageResult[promotion.PromotionCoupon]{
+	return &pagination.PageResult[promotion.PromotionCoupon]{
 		List:  list,
 		Total: count,
 	}, nil

@@ -10,7 +10,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"gorm.io/gorm"
 )
@@ -95,7 +96,7 @@ func (s *NotifyService) GetNotifyTemplate(ctx context.Context, id int64) (*model
 	return &t, nil
 }
 
-func (s *NotifyService) GetNotifyTemplatePage(ctx context.Context, r *req.NotifyTemplatePageReq) (*core.PageResult[*model.SystemNotifyTemplate], error) {
+func (s *NotifyService) GetNotifyTemplatePage(ctx context.Context, r *req.NotifyTemplatePageReq) (*pagination.PageResult[*model.SystemNotifyTemplate], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemNotifyTemplate{})
 	if r.Name != "" {
 		db = db.Where("name LIKE ?", "%"+r.Name+"%")
@@ -115,7 +116,7 @@ func (s *NotifyService) GetNotifyTemplatePage(ctx context.Context, r *req.Notify
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemNotifyTemplate]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemNotifyTemplate]{List: list, Total: total}, nil
 }
 
 // ================= Message Logic =================
@@ -125,7 +126,7 @@ func (s *NotifyService) SendNotify(ctx context.Context, userID int64, userType i
 	template, ok := s.templateCache[templateCode]
 	s.mu.RUnlock()
 	if !ok || template == nil {
-		return 0, core.NewBizError(1002006001, "站内信模板不存在")
+		return 0, errors.NewBizError(1002006001, "站内信模板不存在")
 	}
 
 	content := template.Content
@@ -151,7 +152,7 @@ func (s *NotifyService) SendNotify(ctx context.Context, userID int64, userType i
 	return msg.ID, nil
 }
 
-func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyMessagePageReq) (*core.PageResult[*model.SystemNotifyMessage], error) {
+func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{})
 	if r.UserID != 0 {
 		db = db.Where("user_id = ?", r.UserID)
@@ -181,10 +182,10 @@ func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyM
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
 }
 
-func (s *NotifyService) GetMyNotifyMessagePage(ctx context.Context, userID int64, userType int, r *req.MyNotifyMessagePageReq) (*core.PageResult[*model.SystemNotifyMessage], error) {
+func (s *NotifyService) GetMyNotifyMessagePage(ctx context.Context, userID int64, userType int, r *req.MyNotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{}).Where("user_id = ? AND user_type = ?", userID, userType)
 	if r.ReadStatus != nil {
 		db = db.Where("read_status = ?", *r.ReadStatus)
@@ -198,7 +199,7 @@ func (s *NotifyService) GetMyNotifyMessagePage(ctx context.Context, userID int64
 	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
+	return &pagination.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
 }
 
 func (s *NotifyService) UpdateNotifyMessageRead(ctx context.Context, userID int64, userType int, ids []int64) error {

@@ -12,9 +12,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type TenantService struct {
@@ -211,7 +212,7 @@ func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRe
 }
 
 // GetTenantPage 获得租户分页
-func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageReq) (*core.PageResult[*resp.TenantRespVO], error) {
+func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageReq) (*pagination.PageResult[*resp.TenantRespVO], error) {
 	t := s.q.SystemTenant
 	qb := t.WithContext(ctx)
 
@@ -260,7 +261,7 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 		})
 	}
 
-	return &core.PageResult[*resp.TenantRespVO]{
+	return &pagination.PageResult[*resp.TenantRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
@@ -399,7 +400,7 @@ func (s *TenantService) HandleTenantMenu(ctx context.Context, handler func(allow
 	// 1. 获得租户ID
 	var tenantId int64
 	if c, ok := ctx.(*gin.Context); ok {
-		tenantId = core.GetTenantId(c)
+		tenantId = pkgContext.GetTenantId(c)
 	}
 	if tenantId == 0 {
 		return nil // 如果没有租户上下文（如admin），不做过滤

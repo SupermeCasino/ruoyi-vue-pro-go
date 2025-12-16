@@ -7,9 +7,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type CombinationActivityService interface {
@@ -18,13 +19,13 @@ type CombinationActivityService interface {
 	UpdateCombinationActivity(ctx context.Context, req req.CombinationActivityUpdateReq) error
 	DeleteCombinationActivity(ctx context.Context, id int64) error
 	GetCombinationActivity(ctx context.Context, id int64) (*resp.CombinationActivityRespVO, error)
-	GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*core.PageResult[*resp.CombinationActivityRespVO], error)
+	GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*pagination.PageResult[*resp.CombinationActivityRespVO], error)
 	GetCombinationActivityMap(ctx context.Context, ids []int64) (map[int64]*promotion.PromotionCombinationActivity, error)
 	GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*resp.CombinationActivityRespVO, error)
 
 	// App
 	GetCombinationActivityList(ctx context.Context, count int) ([]*resp.AppCombinationActivityRespVO, error)
-	GetCombinationActivityPageForApp(ctx context.Context, req core.PageParam) (*core.PageResult[*resp.AppCombinationActivityRespVO], error)
+	GetCombinationActivityPageForApp(ctx context.Context, req pagination.PageParam) (*pagination.PageResult[*resp.AppCombinationActivityRespVO], error)
 	GetCombinationActivityDetail(ctx context.Context, id int64) (*resp.AppCombinationActivityDetailRespVO, error)
 	ValidateCombinationActivityCanJoin(ctx context.Context, activityID int64) (*promotion.PromotionCombinationActivity, error)
 }
@@ -98,10 +99,10 @@ func (s *combinationActivityService) UpdateCombinationActivity(ctx context.Conte
 	// 1. 校验是否存在
 	old, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(req.ID)).First()
 	if err != nil {
-		return core.NewBizError(1001006000, "拼团活动不存在")
+		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
 	if old.Status == 0 { // Disable
-		return core.NewBizError(1001006010, "拼团活动已关闭，不能修改")
+		return errors.NewBizError(1001006010, "拼团活动已关闭，不能修改")
 	}
 
 	// 2.1 校验商品
@@ -160,10 +161,10 @@ func (s *combinationActivityService) UpdateCombinationActivity(ctx context.Conte
 func (s *combinationActivityService) DeleteCombinationActivity(ctx context.Context, id int64) error {
 	activity, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1001006000, "拼团活动不存在")
+		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
 	if activity.Status == 1 { // Enable
-		return core.NewBizError(1001006011, "拼团活动进行中，无法删除")
+		return errors.NewBizError(1001006011, "拼团活动进行中，无法删除")
 	}
 	_, err = s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).Delete()
 	return err
@@ -180,7 +181,7 @@ func (s *combinationActivityService) validateProductConflict(ctx context.Context
 		return err
 	}
 	if count > 0 {
-		return core.NewBizError(1001006008, "该商品已存在于其他拼团活动中")
+		return errors.NewBizError(1001006008, "该商品已存在于其他拼团活动中")
 	}
 	return nil
 }
@@ -188,7 +189,7 @@ func (s *combinationActivityService) validateProductConflict(ctx context.Context
 func (s *combinationActivityService) GetCombinationActivity(ctx context.Context, id int64) (*resp.CombinationActivityRespVO, error) {
 	activity, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1001006000, "拼团活动不存在")
+		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
 	}
 	prods, err := s.q.PromotionCombinationProduct.WithContext(ctx).Where(s.q.PromotionCombinationProduct.ActivityID.Eq(id)).Find()
 	if err != nil {
@@ -224,7 +225,7 @@ func (s *combinationActivityService) GetCombinationActivity(ctx context.Context,
 	return vo, nil
 }
 
-func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*core.PageResult[*resp.CombinationActivityRespVO], error) {
+func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*pagination.PageResult[*resp.CombinationActivityRespVO], error) {
 	q := s.q.PromotionCombinationActivity.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PromotionCombinationActivity.Name.Like("%" + req.Name + "%"))
@@ -255,7 +256,7 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 			CreateTime:       item.CreatedAt,
 		}
 	}
-	return &core.PageResult[*resp.CombinationActivityRespVO]{
+	return &pagination.PageResult[*resp.CombinationActivityRespVO]{
 		List:  result,
 		Total: total,
 	}, nil
@@ -376,7 +377,7 @@ func (s *combinationActivityService) GetCombinationActivityList(ctx context.Cont
 	return s.buildAppActivityList(ctx, list)
 }
 
-func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx context.Context, p core.PageParam) (*core.PageResult[*resp.AppCombinationActivityRespVO], error) {
+func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx context.Context, p pagination.PageParam) (*pagination.PageResult[*resp.AppCombinationActivityRespVO], error) {
 	q := s.q.PromotionCombinationActivity
 	list, total, err := q.WithContext(ctx).
 		Where(q.Status.Eq(1)). // Enable
@@ -390,7 +391,7 @@ func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx contex
 	if err != nil {
 		return nil, err
 	}
-	return &core.PageResult[*resp.AppCombinationActivityRespVO]{
+	return &pagination.PageResult[*resp.AppCombinationActivityRespVO]{
 		List:  vos,
 		Total: total,
 	}, nil
@@ -399,10 +400,10 @@ func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx contex
 func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Context, id int64) (*resp.AppCombinationActivityDetailRespVO, error) {
 	activity, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).First()
 	if err != nil {
-		return nil, core.NewBizError(1001006000, "拼团活动不存在")
+		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
 	}
 	if activity.Status != 1 { // Enable
-		return nil, core.NewBizError(1001006001, "拼团活动已关闭")
+		return nil, errors.NewBizError(1001006001, "拼团活动已关闭")
 	}
 
 	prods, err := s.q.PromotionCombinationProduct.WithContext(ctx).Where(s.q.PromotionCombinationProduct.ActivityID.Eq(id)).Find()
@@ -459,17 +460,17 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 func (s *combinationActivityService) ValidateCombinationActivityCanJoin(ctx context.Context, activityID int64) (*promotion.PromotionCombinationActivity, error) {
 	activity, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(activityID)).First()
 	if err != nil {
-		return nil, core.NewBizError(1001006000, "拼团活动不存在")
+		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
 	}
 	if activity.Status != 1 {
-		return nil, core.NewBizError(1001006001, "拼团活动已关闭")
+		return nil, errors.NewBizError(1001006001, "拼团活动已关闭")
 	}
 	now := time.Now()
 	if now.Before(activity.StartTime) {
-		return nil, core.NewBizError(1001006002, "拼团活动未开始")
+		return nil, errors.NewBizError(1001006002, "拼团活动未开始")
 	}
 	if now.After(activity.EndTime) {
-		return nil, core.NewBizError(1001006003, "拼团活动已结束")
+		return nil, errors.NewBizError(1001006003, "拼团活动已结束")
 	}
 	return activity, nil
 }

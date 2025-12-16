@@ -2,11 +2,13 @@ package product
 
 import (
 	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -33,7 +35,7 @@ func (s *ProductFavoriteService) CreateFavorite(ctx context.Context, userId, spu
 		return 0, err
 	}
 	if count > 0 {
-		return 0, core.NewBizError(1006003000, "商品已收藏") // FAVORITE_EXISTS
+		return 0, errors.NewBizError(1006003000, "商品已收藏") // FAVORITE_EXISTS
 	}
 
 	// 2. 插入
@@ -52,7 +54,7 @@ func (s *ProductFavoriteService) DeleteFavorite(ctx context.Context, userId, spu
 	f := s.q.ProductFavorite
 	info, err := f.WithContext(ctx).Where(f.UserID.Eq(userId), f.SpuID.Eq(spuId)).First()
 	if err != nil {
-		return core.NewBizError(1006003001, "商品未收藏") // FAVORITE_NOT_EXISTS
+		return errors.NewBizError(1006003001, "商品未收藏") // FAVORITE_NOT_EXISTS
 	}
 
 	if _, err := f.WithContext(ctx).Where(f.ID.Eq(info.ID)).Delete(); err != nil {
@@ -62,7 +64,7 @@ func (s *ProductFavoriteService) DeleteFavorite(ctx context.Context, userId, spu
 }
 
 // GetFavoritePage (Admin)
-func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.ProductFavoritePageReq) (*core.PageResult[resp.ProductFavoriteResp], error) {
+func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.ProductFavoritePageReq) (*pagination.PageResult[resp.ProductFavoriteResp], error) {
 	f := s.q.ProductFavorite
 	q := f.WithContext(ctx)
 
@@ -103,14 +105,14 @@ func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.Pro
 		return r
 	})
 
-	return &core.PageResult[resp.ProductFavoriteResp]{
+	return &pagination.PageResult[resp.ProductFavoriteResp]{
 		List:  result,
 		Total: total,
 	}, nil
 }
 
 // GetAppFavoritePage (App)
-func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId int64, r *req.AppFavoritePageReq) (*core.PageResult[resp.AppFavoriteResp], error) {
+func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId int64, r *req.AppFavoritePageReq) (*pagination.PageResult[resp.AppFavoriteResp], error) {
 	f := s.q.ProductFavorite
 	q := f.WithContext(ctx).Where(f.UserID.Eq(userId))
 
@@ -142,7 +144,7 @@ func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId 
 		return r
 	})
 
-	return &core.PageResult[resp.AppFavoriteResp]{
+	return &pagination.PageResult[resp.AppFavoriteResp]{
 		List:  result,
 		Total: total,
 	}, nil

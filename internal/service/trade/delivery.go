@@ -11,8 +11,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type DeliveryExpressService struct {
@@ -62,7 +62,7 @@ func (s *DeliveryExpressService) GetDeliveryExpress(ctx context.Context, id int6
 }
 
 // GetDeliveryExpressPage 获取物流公司分页
-func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *req.DeliveryExpressPageReq) (*core.PageResult[*trade.TradeDeliveryExpress], error) {
+func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *req.DeliveryExpressPageReq) (*pagination.PageResult[*trade.TradeDeliveryExpress], error) {
 	q := s.q.TradeDeliveryExpress.WithContext(ctx)
 	if r.Code != "" {
 		q = q.Where(s.q.TradeDeliveryExpress.Code.Like("%" + r.Code + "%"))
@@ -94,7 +94,7 @@ func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *
 		return nil, err
 	}
 
-	return &core.PageResult[*trade.TradeDeliveryExpress]{
+	return &pagination.PageResult[*trade.TradeDeliveryExpress]{
 		List:  list,
 		Total: total,
 	}, nil
@@ -162,7 +162,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStore(ctx context.Context,
 }
 
 // GetDeliveryPickUpStorePage 获取自提门店分页
-func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Context, r *req.DeliveryPickUpStorePageReq) (*core.PageResult[*trade.TradeDeliveryPickUpStore], error) {
+func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Context, r *req.DeliveryPickUpStorePageReq) (*pagination.PageResult[*trade.TradeDeliveryPickUpStore], error) {
 	q := s.q.TradeDeliveryPickUpStore.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.TradeDeliveryPickUpStore.Name.Like("%" + r.Name + "%"))
@@ -194,7 +194,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 		return nil, err
 	}
 
-	return &core.PageResult[*trade.TradeDeliveryPickUpStore]{
+	return &pagination.PageResult[*trade.TradeDeliveryPickUpStore]{
 		List:  list,
 		Total: total,
 	}, nil
@@ -405,7 +405,7 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.
 }
 
 // GetDeliveryExpressTemplatePage 获取运费模板分页
-func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx context.Context, r *req.DeliveryFreightTemplatePageReq) (*core.PageResult[*trade.TradeDeliveryExpressTemplate], error) {
+func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx context.Context, r *req.DeliveryFreightTemplatePageReq) (*pagination.PageResult[*trade.TradeDeliveryExpressTemplate], error) {
 	q := s.q.TradeDeliveryExpressTemplate.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.TradeDeliveryExpressTemplate.Name.Like("%" + r.Name + "%"))
@@ -431,7 +431,7 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx cont
 		return nil, err
 	}
 
-	return &core.PageResult[*trade.TradeDeliveryExpressTemplate]{
+	return &pagination.PageResult[*trade.TradeDeliveryExpressTemplate]{
 		List:  list,
 		Total: total,
 	}, nil

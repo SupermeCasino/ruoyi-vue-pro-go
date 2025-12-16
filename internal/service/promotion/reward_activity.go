@@ -3,12 +3,14 @@ package promotion
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"time"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
 )
@@ -46,7 +48,7 @@ func (s *RewardActivityService) CreateRewardActivity(ctx context.Context, r *req
 func (s *RewardActivityService) UpdateRewardActivity(ctx context.Context, r *req.PromotionRewardActivityUpdateReq) error {
 	_, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(r.ID)).First()
 	if err != nil {
-		return core.NewBizError(1004002000, "活动不存在")
+		return errors.NewBizError(1004002000, "活动不存在")
 	}
 
 	rules, _ := json.Marshal(r.Rules)
@@ -78,12 +80,12 @@ func (s *RewardActivityService) CloseRewardActivity(ctx context.Context, id int6
 	// 1. 校验存在
 	activity, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(id)).First()
 	if err != nil {
-		return core.NewBizError(1004002000, "活动不存在")
+		return errors.NewBizError(1004002000, "活动不存在")
 	}
 
 	// 2. 检查状态：已关闭的活动不能再关闭
 	if activity.Status == 0 { // 0 = DISABLE
-		return core.NewBizError(1004002003, "活动已关闭，不能重复关闭")
+		return errors.NewBizError(1004002003, "活动已关闭，不能重复关闭")
 	}
 
 	// 3. 更新状态为关闭
@@ -103,7 +105,7 @@ func (s *RewardActivityService) GetRewardActivity(ctx context.Context, id int64)
 }
 
 // GetRewardActivityPage 获得活动分页
-func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *req.PromotionRewardActivityPageReq) (*core.PageResult[*resp.PromotionRewardActivityResp], error) {
+func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *req.PromotionRewardActivityPageReq) (*pagination.PageResult[*resp.PromotionRewardActivityResp], error) {
 	q := s.q.PromotionRewardActivity.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.PromotionRewardActivity.Name.Like("%" + r.Name + "%"))
@@ -121,7 +123,7 @@ func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *re
 		return s.convertResp(item)
 	})
 
-	return &core.PageResult[*resp.PromotionRewardActivityResp]{
+	return &pagination.PageResult[*resp.PromotionRewardActivityResp]{
 		List:  resList,
 		Total: total,
 	}, nil

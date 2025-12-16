@@ -7,8 +7,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // KefuService 客服 Service
@@ -16,9 +17,9 @@ type KefuService interface {
 	// CreateMessage 发送消息
 	CreateMessage(ctx context.Context, r req.KefuMessageCreateReq, senderID int64, senderType int) (int64, error)
 	// GetMessagePage 获得消息分页
-	GetMessagePage(ctx context.Context, r req.KefuMessagePageReq) (*core.PageResult[resp.KefuMessageResp], error)
+	GetMessagePage(ctx context.Context, r req.KefuMessagePageReq) (*pagination.PageResult[resp.KefuMessageResp], error)
 	// GetConversationPage 获得会话分页
-	GetConversationPage(ctx context.Context, r req.KefuConversationPageReq) (*core.PageResult[resp.KefuConversationResp], error)
+	GetConversationPage(ctx context.Context, r req.KefuConversationPageReq) (*pagination.PageResult[resp.KefuConversationResp], error)
 	// DeleteConversation 删除会话
 	DeleteConversation(ctx context.Context, id int64) error
 	// GetConversation 获得会话
@@ -58,12 +59,12 @@ func (s *kefuService) CreateMessage(ctx context.Context, r req.KefuMessageCreate
 			}
 			r.ConversationID = convo.ID
 		} else {
-			return 0, core.NewBizError(400, "客服发送消息必须指定会话ID")
+			return 0, errors.NewBizError(400, "客服发送消息必须指定会话ID")
 		}
 	} else {
 		convo, err = convoRepo.WithContext(ctx).Where(convoRepo.ID.Eq(r.ConversationID)).First()
 		if err != nil {
-			return 0, core.NewBizError(404, "会话不存在")
+			return 0, errors.NewBizError(404, "会话不存在")
 		}
 	}
 
@@ -106,7 +107,7 @@ func (s *kefuService) CreateMessage(ctx context.Context, r req.KefuMessageCreate
 	return msg.ID, nil
 }
 
-func (s *kefuService) GetMessagePage(ctx context.Context, r req.KefuMessagePageReq) (*core.PageResult[resp.KefuMessageResp], error) {
+func (s *kefuService) GetMessagePage(ctx context.Context, r req.KefuMessagePageReq) (*pagination.PageResult[resp.KefuMessageResp], error) {
 	msgRepo := s.q.PromotionKefuMessage
 	q := msgRepo.WithContext(ctx).Where(msgRepo.ConversationID.Eq(r.ConversationID))
 
@@ -132,13 +133,13 @@ func (s *kefuService) GetMessagePage(ctx context.Context, r req.KefuMessagePageR
 		}
 	}
 
-	return &core.PageResult[resp.KefuMessageResp]{
+	return &pagination.PageResult[resp.KefuMessageResp]{
 		List:  resList,
 		Total: count,
 	}, nil
 }
 
-func (s *kefuService) GetConversationPage(ctx context.Context, r req.KefuConversationPageReq) (*core.PageResult[resp.KefuConversationResp], error) {
+func (s *kefuService) GetConversationPage(ctx context.Context, r req.KefuConversationPageReq) (*pagination.PageResult[resp.KefuConversationResp], error) {
 	convoRepo := s.q.PromotionKefuConversation
 	q := convoRepo.WithContext(ctx)
 	// TODO: Add filters based on r
@@ -165,7 +166,7 @@ func (s *kefuService) GetConversationPage(ctx context.Context, r req.KefuConvers
 		}
 	}
 
-	return &core.PageResult[resp.KefuConversationResp]{
+	return &pagination.PageResult[resp.KefuConversationResp]{
 		List:  resList,
 		Total: count,
 	}, nil
