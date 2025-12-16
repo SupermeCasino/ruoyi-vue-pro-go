@@ -66,8 +66,8 @@ func (s *MailService) CreateMailAccount(ctx context.Context, r *req.MailAccountC
 		Password:       r.Password,
 		Host:           r.Host,
 		Port:           r.Port,
-		SslEnable:      r.SslEnable,
-		StarttlsEnable: r.StarttlsEnable,
+		SslEnable:      model.BitBool(r.SslEnable),
+		StarttlsEnable: model.BitBool(r.StarttlsEnable),
 	}
 	if err := s.db.WithContext(ctx).Create(account).Error; err != nil {
 		return 0, err
@@ -84,8 +84,8 @@ func (s *MailService) UpdateMailAccount(ctx context.Context, r *req.MailAccountU
 		Password:       r.Password,
 		Host:           r.Host,
 		Port:           r.Port,
-		SslEnable:      r.SslEnable,
-		StarttlsEnable: r.StarttlsEnable,
+		SslEnable:      model.BitBool(r.SslEnable),
+		StarttlsEnable: model.BitBool(r.StarttlsEnable),
 	}
 	if err := s.db.WithContext(ctx).Updates(account).Error; err != nil {
 		return err
