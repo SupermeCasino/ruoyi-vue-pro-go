@@ -231,6 +231,7 @@ func InitApp() (*gin.Engine, error) {
 		adminHandler.NewTradeStatisticsHandler,
 		adminHandler.NewProductStatisticsHandler,
 		adminHandler.NewMemberStatisticsHandler,
+		service.NewPayTransferSyncJob, // Added PayTransferSyncJob
 		adminHandler.NewPayStatisticsHandler,
 
 		// Promotion

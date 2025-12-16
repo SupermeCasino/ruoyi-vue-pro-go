@@ -29,18 +29,30 @@ type Scheduler struct {
 }
 
 // NewScheduler creates a new Scheduler
-func NewScheduler(q *query.Query, log *zap.Logger) (*Scheduler, error) {
+func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransferSyncJob) (*Scheduler, error) {
 	s, err := gocron.NewScheduler()
 	if err != nil {
 		return nil, err
 	}
-	return &Scheduler{
+	scheduler := &Scheduler{
 		scheduler: s,
 		q:         q,
 		log:       log,
 		handlers:  make(map[string]JobHandler),
 		jobMap:    make(map[int64]gocron.Job),
-	}, nil
+	}
+
+	// Register specific jobs
+	scheduler.RegisterHandler("payTransferSyncJob", payTransferSyncJob)
+
+	// Auto start scheduler in background
+	go func() {
+		if err := scheduler.Start(context.Background()); err != nil {
+			log.Error("Failed to start scheduler", zap.Error(err))
+		}
+	}()
+
+	return scheduler, nil
 }
 
 // RegisterHandler registers a job handler by name

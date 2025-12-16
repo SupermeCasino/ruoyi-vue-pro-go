@@ -210,7 +210,8 @@ func InitApp() (*gin.Engine, error) {
 	loginLogHandler := handler.NewLoginLogHandler(loginLogService)
 	operateLogService := service.NewOperateLogService(query)
 	operateLogHandler := handler.NewOperateLogHandler(operateLogService)
-	scheduler, err := service.NewScheduler(query, zapLogger)
+	payTransferSyncJob := service.NewPayTransferSyncJob(payTransferService, zapLogger)
+	scheduler, err := service.NewScheduler(query, zapLogger, payTransferSyncJob)
 	if err != nil {
 		return nil, err
 	}
