@@ -121,7 +121,7 @@ func (h *MemberUserHandler) GetUser(c *gin.Context) {
 		}
 	}
 	if len(user.TagIds) > 0 {
-		if tags, _ := h.tagSvc.GetTagListByIds(c, user.TagIds); tags != nil {
+		if tags, _ := h.tagSvc.GetTagListByIds(c, lo.Map(user.TagIds, func(id int, _ int) int64 { return int64(id) })); tags != nil {
 			tagNames = lo.Map(tags, func(t *memberModel.MemberTag, _ int) string { return t.Name })
 		}
 	}
@@ -150,7 +150,7 @@ func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 		return u.GroupID, u.GroupID > 0
 	}))
 	tagIds := lo.Uniq(lo.Flatten(lo.Map(pageResult.List, func(u *memberModel.MemberUser, _ int) []int64 {
-		return u.TagIds
+		return lo.Map(u.TagIds, func(id int, _ int) int64 { return int64(id) })
 	})))
 
 	levelMap := make(map[int64]string)
@@ -182,7 +182,7 @@ func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 	respList := lo.Map(pageResult.List, func(user *memberModel.MemberUser, _ int) *resp.MemberUserResp {
 		var tagNames []string
 		for _, tid := range user.TagIds {
-			if name, ok := tagMap[tid]; ok {
+			if name, ok := tagMap[int64(tid)]; ok {
 				tagNames = append(tagNames, name)
 			}
 		}
@@ -207,7 +207,7 @@ func (h *MemberUserHandler) convertRespWithExt(user *memberModel.MemberUser, tag
 		AreaID:     user.AreaID,
 		Birthday:   user.Birthday,
 		Mark:       user.Mark,
-		TagIDs:     user.TagIds,
+		TagIDs:     lo.Map(user.TagIds, func(id int, _ int) int64 { return int64(id) }),
 		LevelID:    user.LevelID,
 		GroupID:    user.GroupID,
 		RegisterIP: user.RegisterIP,

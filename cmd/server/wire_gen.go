@@ -42,9 +42,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+)
 
+import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
-
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -139,8 +140,8 @@ func InitApp() (*gin.Engine, error) {
 	deliveryExpressService := trade.NewDeliveryExpressService(query)
 	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
 	tradeOrderHandler := trade3.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
-	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService)
 	tradeAfterSaleService := trade.NewTradeAfterSaleService(query, tradeOrderUpdateService)
+	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService)
 	tradeAfterSaleHandler := trade3.NewTradeAfterSaleHandler(tradeAfterSaleService)
 	appTradeAfterSaleHandler := trade2.NewAppTradeAfterSaleHandler(tradeAfterSaleService)
 	couponService := promotion.NewCouponService()
@@ -278,7 +279,7 @@ func InitApp() (*gin.Engine, error) {
 	payWalletStatisticsRepository := repo.NewPayWalletStatisticsRepository(query)
 	payWalletStatisticsService := service.NewPayWalletStatisticsService(payWalletStatisticsRepository)
 	payStatisticsHandler := admin.NewPayStatisticsHandler(payWalletStatisticsService)
-	appBrokerageUserHandler := brokerage3.NewAppBrokerageUserHandler(brokerageUserService, brokerageRecordService, brokerageWithdrawService)
+	appBrokerageUserHandler := brokerage3.NewAppBrokerageUserHandler(brokerageUserService, brokerageRecordService, brokerageWithdrawService, memberUserService)
 	appBrokerageRecordHandler := brokerage3.NewAppBrokerageRecordHandler(brokerageRecordService)
 	appBrokerageWithdrawHandler := brokerage3.NewAppBrokerageWithdrawHandler(brokerageWithdrawService, payTransferService)
 	manager := websocket.NewManager()

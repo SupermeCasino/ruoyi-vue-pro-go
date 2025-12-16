@@ -13,5 +13,7 @@ type TradeConfigResp struct {
 	BrokerageFrozenDays         int      `json:"brokerageFrozenDays"`         // 分销佣金冻结时间（天）
 	BrokerageFirstPercent       int      `json:"brokerageFirstPercent"`       // 一级分销比例
 	BrokerageSecondPercent      int      `json:"brokerageSecondPercent"`      // 二级分销比例
+	BrokerageEnabledCondition   int      `json:"brokerageEnabledCondition"`   // 分销资格启用条件 1:人人分销 2:仅指定用户
+	BrokerageBindMode           int      `json:"brokerageBindMode"`           // 分销关系绑定模式 1:首次绑定 2:注册绑定 3:覆盖绑定
 	BrokeragePosterUrls         []string `json:"brokeragePosterUrls"`         // 分销海报图
 }

@@ -386,3 +386,12 @@ func (s *TradeAfterSaleService) UpdateRefunded(ctx context.Context, req *req.Pay
 		return s.UpdateAfterSaleRefunded(ctx, afterSaleId, req.PayRefundId)
 	}
 }
+
+// GetUserAfterSaleCount 获得用户的售后数量 (进行中)
+func (s *TradeAfterSaleService) GetUserAfterSaleCount(ctx context.Context, userId int64) (int64, error) {
+	// Status: 10 (Applying), 20 (Approved/Processing)
+	return s.q.AfterSale.WithContext(ctx).
+		Where(s.q.AfterSale.UserID.Eq(userId)).
+		Where(s.q.AfterSale.Status.In(10, 20)).
+		Count()
+}

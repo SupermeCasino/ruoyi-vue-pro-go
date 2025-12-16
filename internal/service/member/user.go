@@ -284,10 +284,16 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 		return errors.New("user not found")
 	}
 
+	// Convert []int64 to []int for model.IntListFromCSV
+	tagIds := make([]int, len(r.TagIDs))
+	for i, v := range r.TagIDs {
+		tagIds[i] = int(v)
+	}
+
 	updateUser := &member.MemberUser{
 		Nickname: r.Name,
 		Mark:     r.Mark,
-		TagIds:   r.TagIDs,
+		TagIds:   tagIds,
 	}
 	if r.GroupID != nil {
 		updateUser.GroupID = *r.GroupID
