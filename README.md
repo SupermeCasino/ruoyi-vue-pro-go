@@ -28,25 +28,48 @@
 
 - **语言**: Go 1.25.4
 - **Web框架**: [Gin 1.11.0](https://github.com/gin-gonic/gin)
-- **ORM框架**: [GORM 1.25.12](https://gorm.io/)
-- **数据库**: MySQL 8.0+
-- **缓存**: Redis 6.0+
+- **ORM框架**: [GORM 1.31.1](https://gorm.io/)
+- **数据库**: MySQL 8.0+ (支持 MySQL 8.0+)
+- **缓存**: [Redis 9.17.2](https://github.com/redis/go-redis)
+
+### 权限与安全
+
+- **认证**: [JWT v5.3.0](https://github.com/golang-jwt/jwt) (本地验证)
+- **权限控制**: [Casbin v2.135.0](https://github.com/casbin/casbin) (RBAC + 数据权限)
+- **密码加密**: golang.org/x/crypto (BCrypt 算法)
+- **跨域支持**: [CORS v1.7.6](https://github.com/gin-contrib/cors)
 
 ### 基础设施
 
-- **认证**: JWT (本地验证)
 - **依赖注入**: [Wire 0.7.0](https://github.com/google/wire)
 - **配置管理**: [Viper 1.21.0](https://github.com/spf13/viper)
-- **日志管理**: [Zap 1.27.1](https://github.com/uber-go/zap) + Lumberjack 日志轮转
-- **任务调度**: [gocron v2](https://github.com/go-co-op/gocron)
-- **参数验证**: [validator v10](https://github.com/go-playground/validator)
+- **日志管理**: [Zap 1.27.1](https://github.com/uber-go/zap) + Lumberjack v2.2.1 (日志轮转)
+- **任务调度**: [gocron v2.19.0](https://github.com/go-co-op/gocron)
+- **参数验证**: [validator v10.29.0](https://github.com/go-playground/validator)
+- **WebSocket**: [Gorilla v1.5.3](https://github.com/gorilla/websocket)
+
+### 数据处理与工具
+
+- **代码生成**: [GORM Gen 0.3.27](https://gorm.io/gen/index.html) (类型安全的查询代码)
+- **数据类型**: [GORM datatypes 1.2.7](https://gorm.io/datatypes)
+- **数据库插件**: [dbresolver 1.6.2](https://gorm.io/docs/dbresolver.html)
+- **数据复制**: [Copier 0.4.0](https://github.com/jinzhu/copier)
+- **Excel 操作**: [Excelize v2.10.0](https://github.com/xuri/excelize)
+- **实用工具**: [Samber/lo v1.52.0](https://github.com/samber/lo) (Go 函数式工具库)
+- **UUID 生成**: [Google UUID v1.6.0](https://github.com/google/uuid)
+- **IP 定位**: [ip2region v0.0.0-20251215](https://github.com/lionsoul2014/ip2region)
+
+### 支付集成
+
+- **支付宝**: [alipay/v3 v3.2.28](https://github.com/smartwalle/alipay)
+- **微信支付**: [wechatpay-go v0.2.21](https://github.com/wechatpay-apiv3/wechatpay-go)
 
 ### 开发工具
 
 - **代码生成**: GORM Gen 0.3.27
 - **构建工具**: Make
 - **热重载**: Air (开发环境)
-- **Excel 操作**: Excelize v2
+- **代码格式**: gofmt + goimports
 
 ## 📊 项目规模统计
 
@@ -894,14 +917,18 @@ make run CMD_PATH=cmd/custom/main.go
 
 ## 🛡️ 安全特性
 
-- ✅ **JWT 认证**: 基于 HS256 算法的令牌认证
-- ✅ **密码加密**: BCrypt 密码哈希存储
-- ✅ **SQL 注入防护**: GORM 预编译 SQL
+- ✅ **JWT 认证**: 基于 HS256 算法的令牌认证 (golang-jwt/jwt v5.3.0)
+- ✅ **密码加密**: BCrypt 密码哈希存储 (golang.org/x/crypto)
+- ✅ **RBAC 权限控制**: [Casbin v2.135.0](https://github.com/casbin/casbin) 实现细粒度权限控制
+  - 基于角色的权限管理
+  - 数据权限过滤 (DataScope 插件)
+  - 动态权限策略配置
+- ✅ **SQL 注入防护**: GORM 预编译 SQL + 参数化查询
 - ✅ **XSS 攻击防护**: 自动 HTML 转义
+- ✅ **CORS 防护**: [CORS v1.7.6](https://github.com/gin-contrib/cors) 跨域资源共享控制
 - ✅ **CSRF 防护**: 可选 CSRF 令牌验证
-- ✅ **租户隔离**: 数据层面的多租户隔离
-- ✅ **权限控制**: 基于 RBAC 的细粒度权限控制
-- ✅ **日志审计**: 完整的 API 访问日志
+- ✅ **租户隔离**: 数据层面的多租户隔离 (TenantID)
+- ✅ **日志审计**: 完整的 API 访问日志 + 操作日志追踪
 
 ## 🔍 监控与日志
 
