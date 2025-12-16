@@ -1,13 +1,13 @@
 package main
 
 import (
-	"backend-go/internal/model"
-	"backend-go/internal/model/member"
-	"backend-go/internal/model/pay"
-	"backend-go/internal/model/product"
-	"backend-go/internal/model/promotion" // Added system import
-	"backend-go/internal/model/trade"
-	"backend-go/internal/model/trade/brokerage" // Added brokerage import
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion" // Added system import
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage" // Added brokerage import
 
 	"gorm.io/gen"
 )

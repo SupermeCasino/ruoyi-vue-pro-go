@@ -1,11 +1,11 @@
 package main
 
 import (
-	"backend-go/internal/api/handler"
-	"backend-go/internal/api/router"
-	"backend-go/internal/pkg/area"
-	"backend-go/pkg/config"
-	"backend-go/pkg/logger"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
 
 	"go.uber.org/zap"
 )
