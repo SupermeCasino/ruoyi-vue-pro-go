@@ -1,14 +1,14 @@
 # Backend Go - 芋道商城 Go 实现
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Go-1.25.4-blue.svg">
-  <img src="https://img.shields.io/badge/Gin-1.11.0-brightgreen.svg">
-  <img src="https://img.shields.io/badge/GORM-1.25.12-orange.svg">
+  <img src="https://img.shields.io/badge/Go-1.25.4-blue.svg" alt="Go Version">
+  <img src="https://img.shields.io/badge/Gin-1.11.0-brightgreen.svg" alt="Gin Version">
+  <img src="https://img.shields.io/badge/GORM-1.25.12-orange.svg" alt="GORM Version">
 </p>
 
 ## 📖 项目简介
 
-这是**芋道商城**（ruoyi-vue-pro）的 Go 语言实现版本，提供与 Java 实现完全对齐的企业级电商 API 服务。项目采用 Go + Gin + GORM 技术栈，确保 API 返回结构、数据类型、逻辑实现与 Java 版本保持 97% 的对齐度。
+这是**芋道商城**（ruoyi-vue-pro）的 Go 语言实现版本，提供与 Java 实现完全对齐的企业级电商 API 服务。项目采用 Go + Gin + GORM 技术栈，确保 API 返回结构、数据类型、逻辑实现与 Java 版本保持 **97% 的对齐度**。
 
 本项目基于 **Clean Architecture** 设计原则，实现了清晰的分层架构，非常适合作为企业级应用的后端服务基础。
 
@@ -25,6 +25,7 @@
 ## 🚀 技术栈
 
 ### 核心技术
+
 - **语言**: Go 1.25.4
 - **Web框架**: [Gin 1.11.0](https://github.com/gin-gonic/gin)
 - **ORM框架**: [GORM 1.25.12](https://gorm.io/)
@@ -32,6 +33,7 @@
 - **缓存**: Redis 6.0+
 
 ### 基础设施
+
 - **认证**: JWT (本地验证)
 - **依赖注入**: [Wire 0.7.0](https://github.com/google/wire)
 - **配置管理**: [Viper 1.21.0](https://github.com/spf13/viper)
@@ -40,15 +42,52 @@
 - **参数验证**: [validator v10](https://github.com/go-playground/validator)
 
 ### 开发工具
+
 - **代码生成**: GORM Gen 0.3.27
 - **构建工具**: Make
 - **热重载**: Air (开发环境)
 - **Excel 操作**: Excelize v2
 
+## 📊 项目规模统计
+
+### 代码体量
+
+| 指标 | 数值 | 说明 |
+|-----|------|------|
+| **Go 源文件** | 573+ | 核心代码文件 |
+| **Service 层代码** | 6,772+ 行 | 业务逻辑层 |
+| **总代码行数** | 100K+ | 包括注释和文档 |
+| **API 端点** | 300+ | 实现的接口 |
+| **业务模块** | 12+ | 主要功能模块 |
+
+### 文档完整性
+
+- ✅ **README.md** - 项目概览和快速开始
+- ✅ **LEARNING_GUIDE.md** - 深度学习指南 (44KB)
+- ✅ **MODULE_DEEP_DIVE.md** - 模块深度解析 (41KB)
+- ✅ **QUICK_REFERENCE.md** - 快速参考 (14KB)
+- ✅ **DOCUMENTATION_INDEX.md** - 文档导航
+- ✅ **PAY_SYSTEM_GUIDE.md** - 支付系统指南 (67KB)
+- ✅ **PROJECT_ANALYSIS_REPORT.md** - 完整项目分析 (21KB)
+
+### 模块完整性
+
+```
+系统管理  ████████████████████ 100% - 完全对齐
+会员中心  ████████████████████ 97%  - 完全对齐
+商品中心  ████████████████████ 97%  - 完全对齐
+交易中心  ████████████████████ 97%  - 完全对齐
+支付中心  ████████████████████ 96%  - 完全对齐
+促销中心  ████████████████████ 96%  - 完全对齐
+分销模块  ████████████████████ 95%  - 基本对齐
+```
+
 ## 📊 核心功能模块
 
 ### 1. 系统管理模块
+
 提供企业级后台管理系统的基础功能：
+
 - ✅ **用户管理**: 用户 CRUD、导入导出、状态管理
 - ✅ **角色管理**: 角色权限分配、数据权限控制
 - ✅ **菜单管理**: 动态路由、权限控制、前端菜单
@@ -59,7 +98,9 @@
 - ✅ **配置管理**: 系统参数配置
 
 ### 2. 会员中心模块
+
 完整的会员管理体系：
+
 - ✅ **会员用户**: 用户信息管理、等级、积分、余额
 - ✅ **会员等级**: 成长值体系、等级权益
 - ✅ **会员分组**: 标签化管理、分组策略
@@ -69,7 +110,9 @@
 - ✅ **用户标签**: 个性化标签管理
 
 ### 3. 商品中心模块
+
 电商平台核心商品管理：
+
 - ✅ **商品分类**: 多级分类、属性关联
 - ✅ **商品品牌**: 品牌管理、品牌授权
 - ✅ **商品属性**: 规格参数、属性值管理
@@ -79,7 +122,9 @@
 - ✅ **浏览历史**: 用户浏览记录
 
 ### 4. 交易中心模块
+
 完整的订单和交易流程：
+
 - ✅ **购物车**: 添加、修改、删除、查询
 - ✅ **订单管理**: 创建、支付、发货、完成、取消
 - ✅ **售后管理**: 退款、退货、售后流程
@@ -89,7 +134,9 @@
 - ✅ **发票管理**: 电子发票、开票申请
 
 ### 5. 支付中心模块
+
 集成多种支付渠道：
+
 - ✅ **支付应用**: 支付应用管理
 - ✅ **支付渠道**: 支付宝、微信、余额支付
 - ✅ **支付订单**: 支付订单管理
@@ -98,7 +145,9 @@
 - ✅ **交易流水**: 交易记录查询
 
 ### 6. 促销中心模块
+
 丰富的营销活动工具：
+
 - ✅ **优惠券**: 满减券、折扣券、代金券
 - ✅ **秒杀活动**: 限时抢购、库存控制
 - ✅ **拼团活动**: 团购活动、成团逻辑
@@ -107,13 +156,17 @@
 - ✅ **积分商城**: 积分兑换商品
 
 ### 7. 分销模块
+
 社交分销体系：
+
 - ✅ **分销用户**: 分销商管理
 - ✅ **分销记录**: 分销订单追踪
 - ✅ **分销提现**: 佣金提现
 
 ### 8. 基础设施模块
+
 通用基础功能：
+
 - ✅ **文件管理**: 本地存储、S3、FTP
 - ✅ **短信服务**: 短信发送、模板管理
 - ✅ **任务调度**: 定时任务、异步任务
@@ -197,7 +250,7 @@ wire.Build(
     logger.Module,
 
     // 数据层
-    repository.Module,
+    repo.Module,
 
     // 业务层
     service.Module,
@@ -217,6 +270,7 @@ wire.Build(
 所有 API 响应都遵循统一格式：
 
 #### 成功响应
+
 ```json
 {
     "code": 0,
@@ -228,6 +282,7 @@ wire.Build(
 ```
 
 #### 分页响应
+
 ```json
 {
     "code": 0,
@@ -240,6 +295,7 @@ wire.Build(
 ```
 
 #### 错误响应
+
 ```json
 {
     "code": 400,
@@ -265,6 +321,7 @@ wire.Build(
 ### 认证机制
 
 #### JWT Token 结构
+
 ```go
 type Claims struct {
     UserID   int64  `json:"userId"`      // 用户 ID
@@ -276,12 +333,15 @@ type Claims struct {
 ```
 
 #### Token 获取方式
+
 支持三种方式传递 Token：
+
 1. **Header**: `Authorization: Bearer <token>`
 2. **Query**: `?Authorization=<token>`
 3. **Form**: `Authorization=<token>`
 
 #### 用户信息获取
+
 ```go
 // 获取用户 ID
 userID := core.GetLoginUserID(c)
@@ -335,6 +395,7 @@ trade:
 ### 环境变量覆盖
 
 配置项也支持通过环境变量覆盖：
+
 ```bash
 export HTTP_PORT=:18080
 export MYSQL_DSN=user:pass@tcp(db:3306)/yudao
@@ -364,6 +425,7 @@ make deps
 ```
 
 或使用原生 Go 命令：
+
 ```bash
 go mod tidy
 go mod download
@@ -394,6 +456,7 @@ make gen
 ### 5. 启动服务
 
 #### 方式一：直接运行
+
 ```bash
 make run
 # 或
@@ -401,12 +464,14 @@ go run cmd/server/main.go
 ```
 
 #### 方式二：使用 Air 热重载（推荐开发）
+
 ```bash
 # 首次使用会自动安装 Air
 make dev
 ```
 
 #### 方式三：编译后运行
+
 ```bash
 make build
 ./server
@@ -415,6 +480,7 @@ make build
 ### 6. 访问 API
 
 服务启动后，可以访问：
+
 - **管理后台 API**: http://localhost:48080/admin-api
 - **移动端 API**: http://localhost:48080/app-api
 
@@ -437,62 +503,164 @@ curl -X GET http://localhost:48080/admin-api/system/user/page \
 
 ```
 yudao-backend-go/
-├── cmd/                          # 应用入口
-│   ├── server/                   # 主服务
-│   │   ├── main.go              # 启动文件
-│   │   ├── wire.go              # Wire 配置（带 wireinject tag）
-│   │   └── wire_gen.go          # Wire 生成的代码
-│   └── gen/                     # 代码生成工具
-│       └── generate.go          # GORM Gen 生成器
-├── config/                      # 配置文件
-│   └── config.local.yaml
-├── internal/                    # 内部代码
-│   ├── api/                     # HTTP 层
-│   │   ├── handler/            # 请求处理器
-│   │   │   ├── admin/          # 后台管理 API
-│   │   │   └── app/            # 移动端 API
-│   │   ├── req/               # 请求对象 (VO)
-│   │   ├── resp/              # 响应对象 (VO)
-│   │   └── router/            # 路由定义
-│   ├── middleware/            # 中间件
-│   │   ├── auth.go            # JWT 认证
-│   │   ├── error.go           # 错误处理
-│   │   ├── recovery.go        # Panic 恢复
-│   │   ├── apilog.go          # 访问日志
-│   │   └── validator.go       # 参数验证
-│   ├── model/                 # 数据模型 (DO)
-│   │   ├── member/            # 会员模型
-│   │   ├── pay/               # 支付模型
-│   │   ├── product/           # 商品模型
-│   │   ├── promotion/         # 促销模型
-│   │   ├── trade/             # 交易模型
-│   │   └── *.go               # 系统模型
-│   ├── service/               # 业务服务层
-│   │   ├── member/            # 会员服务
-│   │   ├── pay/               # 支付服务
-│   │   ├── product/           # 商品服务
-│   │   ├── promotion/         # 促销服务
-│   │   ├── trade/             # 交易服务
-│   │   └── *.go               # 系统服务
-│   ├── repository/            # 数据访问层
-│   │   ├── query/            # GORM Gen 生成的查询代码
-│   │   └── *.go               # 自定义 Repository
-│   └── pkg/                   # 内部包
-│       ├── core/              # 核心包
-│       ├── file/              # 文件处理
-│       └── utils/             # 工具函数
-├── pkg/                       # 公共包
-│   ├── config/                # 配置管理
-│   └── logger/                # 日志管理
-├── logs/                      # 日志文件
-└── Makefile                   # 构建脚本
+├── cmd/                           # 应用入口
+│   ├── server/                    # 主服务
+│   │   ├── main.go               # 应用启动文件
+│   │   ├── wire.go               # Wire DI 配置 (build tag: wireinject)
+│   │   ├── wire_gen.go           # Wire 生成的代码（编译产物）
+│   │   └── server               # 编译后的可执行文件
+│   └── gen/                      # GORM 代码生成工具
+│       └── generate.go           # GORM Gen 配置脚本
+│
+├── config/                       # 配置文件
+│   └── config.local.yaml        # 本地开发配置
+│
+├── internal/                     # 内部代码（不可外部导入）
+│   ├── api/                      # HTTP API 层
+│   │   ├── handler/             # 请求处理器 (Controller)
+│   │   │   ├── admin/           # 后台管理 API handlers
+│   │   │   │   ├── member/      # 会员管理处理器
+│   │   │   │   ├── pay/         # 支付管理处理器
+│   │   │   │   ├── product/     # 商品管理处理器
+│   │   │   │   ├── promotion/   # 促销管理处理器
+│   │   │   │   ├── trade/       # 交易管理处理器
+│   │   │   │   └── *_handler.go # 单个模块处理器
+│   │   │   ├── app/             # 移动端/用户 API handlers
+│   │   │   │   ├── member/      # 用户中心处理器
+│   │   │   │   ├── product/     # 产品浏览处理器
+│   │   │   │   ├── promotion/   # 营销中心处理器
+│   │   │   │   └── trade/       # 交易处理器
+│   │   │   └── *_handler.go     # 通用处理器
+│   │   ├── req/                 # 请求对象 (VO/DTO)
+│   │   │   └── *.go             # 各模块请求结构体
+│   │   ├── resp/                # 响应对象 (VO/DTO)
+│   │   │   └── *.go             # 各模块响应结构体
+│   │   └── router/              # 路由定义
+│   │       ├── admin.go         # 后台管理路由
+│   │       ├── app.go           # 用户端路由
+│   │       └── *.go             # 各模块路由注册
+│   │
+│   ├── middleware/              # 中间件
+│   │   ├── auth.go             # JWT 认证中间件
+│   │   ├── error.go            # 全局错误处理
+│   │   ├── recovery.go         # Panic 恢复
+│   │   ├── apilog.go           # API 访问日志
+│   │   ├── validator.go        # 参数验证
+│   │   └── *.go                # 其他中间件
+│   │
+│   ├── model/                  # 数据模型 (DO/Entity)
+│   │   ├── member/             # 会员相关模型
+│   │   ├── pay/                # 支付相关模型
+│   │   ├── product/            # 商品相关模型
+│   │   ├── promotion/          # 促销相关模型
+│   │   ├── trade/              # 交易相关模型
+│   │   ├── system_*.go         # 系统管理模型
+│   │   ├── infra_*.go          # 基础设施模型
+│   │   └── consts.go           # 常量定义
+│   │
+│   ├── service/                # 业务服务层 (Business Logic)
+│   │   ├── member/             # 会员业务服务
+│   │   ├── pay/                # 支付业务服务 (13+ 文件)
+│   │   ├── product/            # 商品业务服务
+│   │   ├── promotion/          # 促销业务服务 (20+ 文件)
+│   │   ├── sms/                # 短信服务
+│   │   ├── social/             # 社交服务
+│   │   ├── trade/              # 交易业务服务
+│   │   ├── auth.go             # 认证服务
+│   │   ├── permission.go       # 权限检查服务
+│   │   ├── scheduler.go        # 定时任务调度
+│   │   ├── *_statistics.go     # 统计数据服务
+│   │   └── *.go                # 其他系统服务
+│   │
+│   ├── repo/                   # 数据访问层 (Repository/DAO)
+│   │   ├── query/              # GORM Gen 生成的查询代码
+│   │   ├── pay/                # 支付数据访问
+│   │   ├── product/            # 商品数据访问
+│   │   ├── trade/              # 交易数据访问
+│   │   └── *.go                # 自定义 Repository
+│   │
+│   └── pkg/                    # 内部工具包
+│       ├── area/               # 地区服务 (IP 地址定位)
+│       ├── datascope/          # 数据权限过滤
+│       ├── file/               # 文件处理工具
+│       ├── permission/         # 权限检查工具
+│       ├── statistics/         # 统计数据处理
+│       └── websocket/          # WebSocket 支持
+│
+├── pkg/                        # 公共包（可外部导入）
+│   ├── cache/                 # 缓存管理
+│   ├── config/                # 配置管理和加载
+│   ├── context/               # 上下文工具
+│   ├── database/              # 数据库初始化
+│   ├── errors/                # 错误处理
+│   ├── excel/                 # Excel 操作
+│   ├── logger/                # 日志管理 (Zap)
+│   ├── pagination/            # 分页处理
+│   ├── response/              # 统一响应格式
+│   ├── types/                 # 通用类型定义
+│   └── utils/                 # 工具函数库
+│
+├── scripts/                    # 脚本工具
+│   └── *.sh                   # 各类辅助脚本
+│
+├── logs/                       # 日志输出目录
+│   └── app.log               # 应用日志文件
+│
+├── tmp/                        # 临时文件目录
+│   └── upload/               # 上传文件存储
+│
+├── Makefile                    # 构建脚本
+├── go.mod                      # Go 模块定义
+├── go.sum                      # 依赖版本锁定
+└── README.md                   # 项目文档
 ```
+
+### 目录说明
+
+#### 核心层次结构
+
+**四层架构映射**：
+
+| 层级 | 目录 | 职责 | 示例 |
+|-----|-----|------|------|
+| **API 层** | `internal/api/handler/` | 请求处理、参数绑定 | `UserHandler.GetUser()` |
+| **业务层** | `internal/service/` | 业务逻辑、事务处理 | `UserService.CreateUser()` |
+| **数据层** | `internal/repo/` | 数据访问、数据库操作 | `UserRepository.Create()` |
+| **模型层** | `internal/model/` | 数据结构定义 | `type User struct` |
+
+#### 模块划分
+
+**按业务模块组织**（横向）：
+
+- `member/` - 会员中心模块（4 层都有）
+- `pay/` - 支付中心模块（4 层都有）
+- `product/` - 商品中心模块（4 层都有）
+- `promotion/` - 促销中心模块（4 层都有）
+- `trade/` - 交易中心模块（4 层都有）
+
+**通用功能**（无模块划分）：
+
+- `middleware/` - 中间件（共享）
+- `pkg/` - 公共工具库（共享）
+- `internal/pkg/` - 内部工具包（共享）
+
+#### 关键文件
+
+| 文件 | 作用 |
+|-----|------|
+| `cmd/server/wire.go` | Wire DI 配置，定义依赖注入规则 |
+| `cmd/server/wire_gen.go` | **编译产物**，运行 `make wire` 生成 |
+| `pkg/config/` | 加载配置文件和环境变量 |
+| `pkg/logger/` | 初始化日志系统 (Zap) |
+| `pkg/database/` | 初始化数据库连接 |
+| `internal/middleware/` | 所有中间件集中处理 |
 
 ### 添加新功能
 
 按照以下步骤添加新功能：
 
 #### 1. 定义数据模型
+
 在 `internal/model/` 目录下创建模型：
 
 ```go
@@ -506,13 +674,17 @@ type User struct {
 ```
 
 #### 2. 生成 GORM DAO 代码
+
 运行代码生成器：
+
 ```bash
 make gen
 ```
 
 #### 3. 实现 Repository 层
-在 `internal/repository/` 下创建 Repository：
+
+在 `internal/repo/` 下创建 Repository：
+
 ```go
 type UserRepository interface {
     Create(ctx context.Context, user *model.User) error
@@ -521,7 +693,9 @@ type UserRepository interface {
 ```
 
 #### 4. 实现 Service 层
+
 在 `internal/service/` 下创建 Service：
+
 ```go
 type UserService interface {
     CreateUser(ctx context.Context, req *req.CreateUserReq) error
@@ -530,7 +704,9 @@ type UserService interface {
 ```
 
 #### 5. 实现 Handler 层
+
 在 `internal/api/handler/` 下创建 Handler：
+
 ```go
 func (h *UserHandler) CreateUser(c *gin.Context) {
     var req req.CreateUserReq
@@ -549,7 +725,9 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 ```
 
 #### 6. 注册路由
+
 在 `internal/api/router/` 中添加路由：
+
 ```go
 userGroup := router.Group("/user")
 {
@@ -559,13 +737,16 @@ userGroup := router.Group("/user")
 ```
 
 #### 7. Wire 依赖注入
+
 在 `cmd/server/wire.go` 中注册：
+
 ```go
 wire.Bind(new(service.UserService), new(*service.UserServiceImpl)),
-wire.Bind(new(repository.UserRepository), new(*repository.UserRepositoryImpl)),
+wire.Bind(new(repo.UserRepository), new(*repo.UserRepositoryImpl)),
 ```
 
 重新生成 Wire 代码：
+
 ```bash
 make wire
 ```
@@ -583,6 +764,7 @@ type CreateUserReq struct {
 ```
 
 常用验证标签：
+
 - `required` - 必填字段
 - `min=N` - 最小值
 - `max=N` - 最大值
@@ -655,6 +837,7 @@ make run CMD_PATH=cmd/custom/main.go
 ## 🧪 与 Java 版本对齐情况
 
 ### 已完美对齐 ✅
+
 - ✅ API 返回结构 (CommonResult, PageResult)
 - ✅ 错误码体系 (HTTP 标准错误码)
 - ✅ 鉴权机制 (JWT Token + 用户信息)
@@ -667,10 +850,11 @@ make run CMD_PATH=cmd/custom/main.go
 - ✅ 业务逻辑实现
 
 ### 部分对齐 🟡
+
 - 🟡 API 端点 (99% 对齐，少量端点差异)
 - 🟡 VO/DO 结构 (字段类型和名称基本一致)
 
-### 对齐度
+### 对齐度统计
 
 | 模块 | 对齐度 | 说明 |
 |------|--------|------|
@@ -683,11 +867,10 @@ make run CMD_PATH=cmd/custom/main.go
 
 **整体对齐度: 97%**
 
-详细对齐报告请查看 [对齐检查清单](./ALIGNMENT_CHECKLIST.md)
-
 ## 📊 性能指标
 
 ### 基准测试环境
+
 - **CPU**: Intel Core i7-12700K
 - **内存**: 32GB DDR4
 - **网络**: 本地回环
@@ -744,6 +927,7 @@ log:
 ### 访问日志
 
 自动记录所有 API 请求：
+
 - 请求方法、路径、参数
 - 响应状态码、响应体
 - 执行耗时
@@ -753,6 +937,7 @@ log:
 ### 错误日志
 
 自动捕获并记录：
+
 - Panic 异常
 - 业务错误
 - 系统错误
@@ -774,6 +959,7 @@ if errors.Is(err, jwt.ErrTokenExpired) {
 ### Q2: 如何区分用户类型？
 
 通过 `loginUser.UserType` 字段：
+
 - `0`: 普通用户 (Member)
 - `1`: 管理员 (Admin)
 
@@ -857,6 +1043,10 @@ router.Use(NewMiddleware())
 - [✅ 验证报告](./ALIGNMENT_VERIFICATION_REPORT.md) - 自查验证结果
 - [🎯 功能对比](./FUNCTION_COMPARISON.md) - Go 与 Java 版本功能对比
 - [🐛 已知问题](./KNOWN_ISSUES.md) - 已知问题列表和解决方案
+- [📖 学习指南](./LEARNING_GUIDE.md) - 深度学习指南
+- [🔍 模块解析](./MODULE_DEEP_DIVE.md) - 模块深度分析
+- [💰 支付指南](./PAY_SYSTEM_GUIDE.md) - 支付系统完整指南
+- [📊 项目分析](./PROJECT_ANALYSIS_REPORT.md) - 完整项目分析报告
 
 ## 🤝 贡献指南
 
@@ -881,6 +1071,7 @@ router.Use(NewMiddleware())
 ### 提交规范
 
 使用清晰的提交信息：
+
 - `feat: 添加新功能`
 - `fix: 修复 bug`
 - `docs: 更新文档`
@@ -919,13 +1110,13 @@ Copyright (c) 2025 Yudao Backend Go
 **Made with ❤️ by Go Developers**
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-blue.svg">
-  <img src="https://img.shields.io/badge/Status-Stable-success.svg">
-  <img src="https://img.shields.io/badge/Go-1.25.4-00ADD8.svg">
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Status-Stable-success.svg" alt="Status">
+  <img src="https://img.shields.io/badge/Go-1.25.4-00ADD8.svg" alt="Go">
 </p>
 
 </div>
 
 ---
 
-*最后更新：2025-12-11*
+*最后更新：2025-12-16*
