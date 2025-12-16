@@ -61,14 +61,14 @@ func (h *AppDiyTemplateHandler) buildVo(c *gin.Context, diyTemplate *promotionMo
 		return nil
 	}
 	return h.doBuildVo(c, diyTemplate.ID, &resp.DiyTemplateResp{
-		ID:           diyTemplate.ID,
-		Name:         diyTemplate.Name,
-		CoverImage:   diyTemplate.CoverImage,
-		PreviewImage: diyTemplate.PreviewImage,
-		Property:     diyTemplate.Property,
-		Sort:         diyTemplate.Sort,
-		Remark:       diyTemplate.Remark,
-		CreateTime:   diyTemplate.CreateTime,
+		ID:             diyTemplate.ID,
+		Name:           diyTemplate.Name,
+		PreviewPicUrls: []string(diyTemplate.PreviewPicUrls),
+		Property:       diyTemplate.Property,
+		Used:           diyTemplate.Used,
+		UsedTime:       diyTemplate.UsedTime,
+		Remark:         diyTemplate.Remark,
+		CreateTime:     diyTemplate.CreateTime,
 	})
 }
 
