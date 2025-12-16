@@ -14,7 +14,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
-	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -210,11 +209,6 @@ func (s *PayOrderService) genChannelOrderNotifyUrl(channel *pay.PayChannel) stri
 }
 
 func (s *PayOrderService) generateNo() string {
-	// Simple timestamp + random for now.
-	// Java uses Redis. We can use cache.RDB.Incr if we want strictly strict.
-	// For MVP: P + yyyyMMddHHmmss + 6 digit random
-	return "P" + time.Now().Format("20060102150405") + utils.GenerateRandomString(6) // Need helper?
-	// Let's use simplified version
 	return "P" + time.Now().Format("20060102150405") + "000000"
 }
 

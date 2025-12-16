@@ -94,6 +94,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	payOrderHandler *payAdmin.PayOrderHandler,
 	payRefundHandler *payAdmin.PayRefundHandler,
 	payNotifyHandler *payAdmin.PayNotifyHandler,
+	payTransferHandler *payAdmin.PayTransferHandler,
 	// Wallet
 	payWalletHandler *payWallet.PayWalletHandler,
 	payWalletRechargeHandler *payWallet.PayWalletRechargeHandler,
@@ -224,7 +225,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 
 	// Pay 模块
 	RegisterPayRoutes(r,
-		payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler,
+		payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler, payTransferHandler,
 		payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler,
 		casbinMiddleware,
 	)

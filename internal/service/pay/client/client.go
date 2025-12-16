@@ -33,6 +33,9 @@ type PayClient interface {
 
 	// UnifiedTransfer 调用支付渠道，进行转账
 	UnifiedTransfer(ctx context.Context, req *UnifiedTransferReq) (*TransferResp, error)
+
+	// GetTransfer 获得转账订单信息
+	GetTransfer(ctx context.Context, outTransferNo string) (*TransferResp, error)
 }
 
 type NotifyData struct {

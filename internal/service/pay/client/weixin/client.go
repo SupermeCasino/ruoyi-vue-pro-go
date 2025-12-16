@@ -507,6 +507,51 @@ func (c *WxPayClient) UnifiedTransfer(ctx context.Context, req *client.UnifiedTr
 	}, nil
 }
 
+// GetTransfer 查询转账订单
+func (c *WxPayClient) GetTransfer(ctx context.Context, outTransferNo string) (*client.TransferResp, error) {
+	svc := transferbatch.TransferBatchApiService{Client: c.coreClient}
+
+	resp, _, err := svc.GetTransferBatchByOutNo(ctx, transferbatch.GetTransferBatchByOutNoRequest{
+		OutBatchNo:      core.String(outTransferNo),
+		NeedQueryDetail: core.Bool(true),
+		DetailStatus:    core.String("ALL"),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("查询转账批次失败: %w", err)
+	}
+
+	var transferStatus int
+	var successTime time.Time
+	var channelTransferNo string
+	var channelErrorMsg string
+
+	if resp.TransferBatch != nil {
+		channelTransferNo = *resp.TransferBatch.BatchId
+		batchStatus := *resp.TransferBatch.BatchStatus
+		if batchStatus == "FINISHED" {
+			transferStatus = 10
+			if resp.TransferBatch.UpdateTime != nil {
+				successTime = *resp.TransferBatch.UpdateTime
+			}
+		} else if batchStatus == "CLOSED" {
+			transferStatus = 20
+			if resp.TransferBatch.CloseReason != nil {
+				channelErrorMsg = string(*resp.TransferBatch.CloseReason)
+			}
+		} else {
+			transferStatus = 5
+		}
+	}
+
+	return &client.TransferResp{
+		Status:            transferStatus,
+		OutTradeNo:        outTransferNo,
+		ChannelTransferNo: channelTransferNo,
+		SuccessTime:       successTime,
+		ChannelErrorMsg:   channelErrorMsg,
+	}, nil
+}
+
 // ParseTransferNotify 解析转账回调
 // 对齐 Java: AbstractWxPayClient.parseTransferNotifyV3
 // 注意: 仅支持 V3 版本，V2 不支持转账回调

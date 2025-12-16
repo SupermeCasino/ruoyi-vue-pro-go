@@ -427,6 +427,47 @@ func formatAmount(price int) string {
 	return fmt.Sprintf("%.2f", float64(price)/100)
 }
 
+// GetTransfer 查询转账订单
+func (c *AlipayPayClient) GetTransfer(ctx context.Context, outTransferNo string) (*client.TransferResp, error) {
+	p := alipay.FundTransOrderQuery{}
+	p.OutBizNo = outTransferNo
+
+	resp, err := c.client.FundTransOrderQuery(ctx, p)
+	if err != nil {
+		return nil, fmt.Errorf("查询转账订单失败: %w", err)
+	}
+
+	if resp.Code != alipay.CodeSuccess {
+		return nil, fmt.Errorf("查询转账订单失败: %s - %s", resp.Code, resp.SubMsg)
+	}
+
+	var transferStatus int
+	var successTime time.Time
+
+	switch resp.Status {
+	case "SUCCESS":
+		transferStatus = 10
+		if resp.PayDate != "" {
+			successTime, _ = time.Parse("2006-01-02 15:04:05", resp.PayDate)
+		}
+	case "DEALING":
+		transferStatus = 5
+	case "REFUND", "FAIL":
+		transferStatus = 20
+	default:
+		transferStatus = 0
+	}
+
+	return &client.TransferResp{
+		Status:            transferStatus,
+		OutTradeNo:        outTransferNo,
+		ChannelTransferNo: resp.OrderId,
+		SuccessTime:       successTime,
+		ChannelErrorCode:  string(resp.SubCode),
+		ChannelErrorMsg:   resp.SubMsg,
+	}, nil
+}
+
 // ParseTransferNotify 解析转账回调
 // 对齐 Java: AbstractAlipayPayClient.doParseTransferNotify
 // 注意: 支付宝转账回调触发较少，此实现基于 Java 代码

@@ -8,6 +8,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -535,7 +536,7 @@ func (s *TradeOrderUpdateService) CreateOrderItemCommentByMember(ctx context.Con
 
 	// 4. Update Order Comment Status if all items commented
 	// Count uncommented items
-	count, _ := s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.OrderID.Eq(item.OrderID), s.q.TradeOrderItem.CommentStatus.Is(false)).Count()
+	count, _ := s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.OrderID.Eq(item.OrderID), s.q.TradeOrderItem.CommentStatus.Eq(model.NewBitBool(false))).Count()
 	if count == 0 {
 		_, _ = s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(item.OrderID)).Update(s.q.TradeOrder.CommentStatus, true)
 	}

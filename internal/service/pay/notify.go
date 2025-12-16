@@ -64,6 +64,18 @@ func (s *PayNotifyService) CreatePayNotifyTask(ctx context.Context, typeVal int,
 			MerchantRefundId: refund.MerchantRefundId,
 			NotifyURL:        refund.NotifyURL,
 		}
+	} else if typeVal == PayNotifyTypeTransfer {
+		transfer, err := s.q.PayTransfer.WithContext(ctx).Where(s.q.PayTransfer.ID.Eq(dataId)).First()
+		if err != nil {
+			return err
+		}
+		task = &pay.PayNotifyTask{
+			AppID:           transfer.AppID,
+			Type:            typeVal,
+			DataID:          dataId,
+			MerchantOrderId: transfer.MerchantTransferID,
+			NotifyURL:       transfer.NotifyURL,
+		}
 	} else {
 		return fmt.Errorf("unknown notify type: %d", typeVal)
 	}

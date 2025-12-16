@@ -56,6 +56,7 @@ type TradeOrderPageReq struct {
 	PayChannelCode   string   `form:"payChannelCode"`
 	CreateTime       []string `form:"createTime[]"` // time range
 	Terminal         *int     `form:"terminal"`
+	CommentStatus    *bool    `form:"commentStatus"`
 }
 
 // TradeOrderDeliveryReq 订单发货请求

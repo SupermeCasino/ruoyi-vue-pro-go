@@ -15,6 +15,7 @@ func RegisterPayRoutes(engine *gin.Engine,
 	payOrderHandler *payAdmin.PayOrderHandler,
 	payRefundHandler *payAdmin.PayRefundHandler,
 	payNotifyHandler *payAdmin.PayNotifyHandler,
+	payTransferHandler *payAdmin.PayTransferHandler,
 	// Wallet
 	payWalletHandler *payWallet.PayWalletHandler,
 	payWalletRechargeHandler *payWallet.PayWalletRechargeHandler,
@@ -68,6 +69,13 @@ func RegisterPayRoutes(engine *gin.Engine,
 		{
 			payNotify.GET("/get-detail", casbinMiddleware.RequirePermission("pay:notify:query"), payNotifyHandler.GetNotifyTaskDetail)
 			payNotify.GET("/page", casbinMiddleware.RequirePermission("pay:notify:query"), payNotifyHandler.GetNotifyTaskPage)
+		}
+
+		// Pay Transfer
+		payTransfer := payGroup.Group("/transfer")
+		{
+			payTransfer.GET("/get", casbinMiddleware.RequirePermission("pay:transfer:query"), payTransferHandler.GetTransfer)
+			payTransfer.GET("/page", casbinMiddleware.RequirePermission("pay:transfer:query"), payTransferHandler.GetTransferPage)
 		}
 
 		// Pay Wallet

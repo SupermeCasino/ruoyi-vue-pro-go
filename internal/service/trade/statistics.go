@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/statistics"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -209,7 +210,7 @@ func (s *TradeStatisticsService) calculateData(ctx context.Context, start, end t
 
 	// Order Data
 	// PayStatus = true, PayTime in range
-	orderQ := o.WithContext(ctx).Where(o.PayStatus.Is(true), o.PayTime.Between(start, end))
+	orderQ := o.WithContext(ctx).Where(o.PayStatus.Eq(model.NewBitBool(true)), o.PayTime.Between(start, end))
 	orderCount, err := orderQ.Count()
 	if err != nil {
 		return nil, err

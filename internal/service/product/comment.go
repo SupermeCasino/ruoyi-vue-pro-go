@@ -246,7 +246,7 @@ func (s *ProductCommentService) CreateAppComment(ctx context.Context, userId int
 		// Check Order Comment Status
 		// If all items are commented, mark order as commented?
 		// Logic: count items in this order where comment_status is false
-		count, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.OrderID.Eq(item.OrderID), tx.TradeOrderItem.CommentStatus.Is(false)).Count()
+		count, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.OrderID.Eq(item.OrderID), tx.TradeOrderItem.CommentStatus.Eq(model.NewBitBool(false))).Count()
 		if err == nil && count == 0 {
 			// All commented
 			tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(item.OrderID)).Update(tx.TradeOrder.CommentStatus, true)

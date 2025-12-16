@@ -29,7 +29,6 @@ type PayTransferRespDTO struct {
 	ID                 int64             `json:"id"`
 	Status             int               `json:"status"`
 	Price              int               `json:"price"`
-	MerchantTransferId string            `json:"merchantTransferId"` // Keep lower d if used by json? Standard Go is ID.
 	MerchantTransferID string            `json:"merchantTransferId"`
 	ChannelCode        string            `json:"channelCode"`
 	SuccessTime        *time.Time        `json:"successTime"`

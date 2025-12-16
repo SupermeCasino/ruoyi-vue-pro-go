@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
@@ -43,7 +44,7 @@ func (s *TradeOrderQueryService) GetOrderPage(ctx context.Context, uId int64, r 
 		q = q.Where(s.q.TradeOrder.Status.Eq(*r.Status))
 	}
 	if r.CommentStatus != nil {
-		q = q.Where(s.q.TradeOrder.CommentStatus.Is(*r.CommentStatus))
+		q = q.Where(s.q.TradeOrder.CommentStatus.Eq(model.NewBitBool(*r.CommentStatus)))
 	}
 
 	list, total, err := q.Order(s.q.TradeOrder.ID.Desc()).FindByPage(r.GetOffset(), r.PageSize)
@@ -75,7 +76,7 @@ func (s *TradeOrderQueryService) GetOrderCount(ctx context.Context, userId int64
 		q = q.Where(s.q.TradeOrder.Status.Eq(*status))
 	}
 	if commentStatus != nil {
-		q = q.Where(s.q.TradeOrder.CommentStatus.Is(*commentStatus))
+		q = q.Where(s.q.TradeOrder.CommentStatus.Eq(model.NewBitBool(*commentStatus)))
 	}
 	return q.Count()
 }
@@ -97,6 +98,9 @@ func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *re
 	}
 	if r.Status != nil {
 		q = q.Where(s.q.TradeOrder.Status.Eq(*r.Status))
+	}
+	if r.CommentStatus != nil {
+		q = q.Where(s.q.TradeOrder.CommentStatus.Eq(model.NewBitBool(*r.CommentStatus)))
 	}
 	// Add more filters as needed (e.g. create_time, type, etc.)
 
