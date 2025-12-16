@@ -2,6 +2,8 @@ package promotion
 
 import (
 	"context"
+	stdErrors "errors"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
@@ -9,6 +11,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"gorm.io/gorm"
 )
 
 type DiyTemplateService interface {
@@ -20,6 +23,7 @@ type DiyTemplateService interface {
 	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error)
 	GetDiyTemplateProperty(ctx context.Context, id int64) (string, error)
 	UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error
+	GetUsedDiyTemplate(ctx context.Context) (*promotion.PromotionDiyTemplate, error)
 }
 
 type diyTemplateService struct {
@@ -36,7 +40,6 @@ func (s *diyTemplateService) CreateDiyTemplate(ctx context.Context, req req.DiyT
 		Name:         req.Name,
 		CoverImage:   req.CoverImage,
 		PreviewImage: req.PreviewImage,
-		Status:       req.Status,
 		Property:     req.Property,
 		Sort:         req.Sort,
 		Remark:       req.Remark,
@@ -55,7 +58,6 @@ func (s *diyTemplateService) UpdateDiyTemplate(ctx context.Context, req req.DiyT
 		Name:         req.Name,
 		CoverImage:   req.CoverImage,
 		PreviewImage: req.PreviewImage,
-		Status:       req.Status,
 		Property:     req.Property,
 		Sort:         req.Sort,
 		Remark:       req.Remark,
@@ -95,10 +97,6 @@ func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.Diy
 	if req.Name != "" {
 		do = do.Where(q.Name.Like("%" + req.Name + "%"))
 	}
-	if req.Status != nil {
-		do = do.Where(q.Status.Eq(*req.Status))
-	}
-
 	list, total, err := do.Order(q.Sort.Asc(), q.ID.Desc()).FindByPage(req.GetOffset(), req.GetLimit())
 	if err != nil {
 		return nil, err
@@ -120,18 +118,42 @@ func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int6
 }
 
 // UseDiyTemplate 使用装修模板
-// Java: DiyTemplateServiceImpl#useDiyTemplate
-// NOTE: Java 使用 used/usedTime 字段，Go Model 当前未包含此字段
-// 简化实现：仅校验存在性，实际的使用状态由前端维护
 func (s *diyTemplateService) UseDiyTemplate(ctx context.Context, id int64) error {
 	// 校验存在
 	_, err := s.validateDiyTemplateExists(ctx, id)
 	if err != nil {
 		return err
 	}
-	// TODO: 完整实现需要在 PromotionDiyTemplate Model 中添加 Used/UsedAt 字段
-	// 参考 Java: DiyTemplateDO.used, DiyTemplateDO.usedTime
-	return nil
+
+	// 开启事务
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 1. 将所有已使用的设置为未使用 (Tenant scope handled by context/middleware)
+		tx.PromotionDiyTemplate.WithContext(ctx).UnderlyingDB().Model(&promotion.PromotionDiyTemplate{}).Where("used = ?", true).Updates(map[string]interface{}{"used": false})
+		if err != nil {
+			return err
+		}
+
+		// 2. 更新新的为使用
+		_, err = tx.PromotionDiyTemplate.WithContext(ctx).
+			Where(tx.PromotionDiyTemplate.ID.Eq(id)).
+			Updates(map[string]interface{}{
+				"used":      true,
+				"used_time": time.Now(),
+			})
+		return err
+	})
+}
+
+func (s *diyTemplateService) GetUsedDiyTemplate(ctx context.Context) (*promotion.PromotionDiyTemplate, error) {
+	template := &promotion.PromotionDiyTemplate{}
+	err := s.q.PromotionDiyTemplate.WithContext(ctx).UnderlyingDB().Where("used = ?", true).First(template).Error
+	if err != nil {
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Return nil if not found
+		}
+		return nil, err
+	}
+	return template, nil
 }
 
 // UpdateDiyTemplateProperty 更新装修模板属性
@@ -167,7 +189,6 @@ func (s *diyTemplateService) convertDiyTemplateToResp(item *promotion.PromotionD
 		Name:         item.Name,
 		CoverImage:   item.CoverImage,
 		PreviewImage: item.PreviewImage,
-		Status:       item.Status,
 		Property:     item.Property,
 		Sort:         item.Sort,
 		Remark:       item.Remark,

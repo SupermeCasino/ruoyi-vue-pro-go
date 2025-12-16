@@ -30,8 +30,7 @@ type DiyTemplateUpdateReq struct {
 // DiyTemplatePageReq 装修模板分页请求
 type DiyTemplatePageReq struct {
 	pagination.PageParam
-	Name   string `form:"name"`
-	Status *int   `form:"status"`
+	Name string `form:"name"`
 }
 
 // DiyPageCreateReq 装修页面创建请求

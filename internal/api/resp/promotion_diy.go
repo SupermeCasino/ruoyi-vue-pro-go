@@ -8,7 +8,6 @@ type DiyTemplateResp struct {
 	Name         string    `json:"name"`
 	CoverImage   string    `json:"coverImage"`
 	PreviewImage string    `json:"previewImage"`
-	Status       int       `json:"status"`
 	Property     string    `json:"property"`
 	Sort         int       `json:"sort"`
 	Remark       string    `json:"remark"`
@@ -24,4 +23,10 @@ type DiyPageResp struct {
 	Status     int       `json:"status"`
 	Property   string    `json:"property"`
 	CreateTime time.Time `json:"createTime"`
+}
+
+type AppDiyTemplatePropertyResp struct {
+	DiyTemplateResp
+	Home string `json:"home"`
+	User string `json:"user"`
 }
