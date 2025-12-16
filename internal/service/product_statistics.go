@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -11,15 +12,28 @@ import (
 
 // ProductStatisticsService 商品统计服务接口
 type ProductStatisticsService interface {
+	// GetProductStatisticsRankPage 获得商品统计排行榜分页
 	GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error)
+	// GetProductStatisticsAnalyse 获得商品统计分析（含环比对照）
 	GetProductStatisticsAnalyse(ctx context.Context, reqVO *req.ProductStatisticsReqVO) (*resp.DataComparisonRespVO[resp.ProductStatisticsRespVO], error)
+	// GetProductStatisticsList 获得商品统计列表
 	GetProductStatisticsList(ctx context.Context, reqVO *req.ProductStatisticsReqVO) ([]*resp.ProductStatisticsRespVO, error)
+	// StatisticsProduct 统计指定天数的商品数据
 	StatisticsProduct(ctx context.Context, days int) (string, error)
 }
 
 // ProductStatisticsRepository 商品统计数据访问接口
 type ProductStatisticsRepository interface {
+	// GetByDateRange 根据日期范围获取统计数据
 	GetByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*resp.ProductStatisticsRespVO, error)
+	// GetSummaryByDateRange 根据日期范围获取汇总统计数据
+	GetSummaryByDateRange(ctx context.Context, beginTime, endTime time.Time) (*resp.ProductStatisticsRespVO, error)
+	// GetPageGroupBySpuId 分页获取按 SPU 分组的统计数据
+	GetPageGroupBySpuId(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[*resp.ProductStatisticsRespVO], error)
+	// CountByDateRange 统计指定日期范围内的记录数
+	CountByDateRange(ctx context.Context, beginTime, endTime time.Time) (int64, error)
+	// StatisticsProductByDateRange 统计指定日期范围内的商品数据并入库
+	StatisticsProductByDateRange(ctx context.Context, date time.Time, beginTime, endTime time.Time) error
 }
 
 // ProductStatisticsServiceImpl 商品统计服务实现
@@ -35,89 +49,117 @@ func NewProductStatisticsService(repo ProductStatisticsRepository) ProductStatis
 }
 
 // GetProductStatisticsRankPage 获得商品统计排行榜分页
+// 对应 Java: ProductStatisticsServiceImpl.getProductStatisticsRankPage
 func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error) {
-	// 获取所有数据（排序交给前端或后续处理，这里先获取范围内的数据并聚合）
-	// 注意：这里假设 Repo GetByDateRange 返回的是聚合后的数据，或者我们需要在内存中聚合
-	// 如果 Repo 只是返回明细，我们需要自己聚合。
-	// 根据 Java 逻辑，它是查 DB 聚合。我们先假设 Repo 提供了聚合查询，或者我们先查出来再手动分页
-	list, err := s.productStatisticsRepo.GetByDateRange(ctx, reqVO.Times[0], reqVO.Times[1])
+	// 调用仓储层分页查询（按 SPU 分组聚合）
+	pageResult, err := s.productStatisticsRepo.GetPageGroupBySpuId(ctx, reqVO, pageParam)
 	if err != nil {
 		return nil, err
 	}
 
-	// 内存分页
-	total := int64(len(list))
-	start := (pageParam.PageNo - 1) * pageParam.PageSize
-	end := start + pageParam.PageSize
-	if start > int(total) {
-		start = int(total)
-	}
-	if end > int(total) {
-		end = int(total)
-	}
-
 	// 转换为 interface{} slice
 	var resultList []interface{}
-	for _, item := range list[start:end] {
+	for _, item := range pageResult.List {
 		resultList = append(resultList, item)
 	}
 
 	return &pagination.PageResult[interface{}]{
 		List:  resultList,
-		Total: total,
+		Total: pageResult.Total,
 	}, nil
 }
 
 // GetProductStatisticsAnalyse 获得商品统计分析
+// 对应 Java: ProductStatisticsServiceImpl.getProductStatisticsAnalyse
 func (s *ProductStatisticsServiceImpl) GetProductStatisticsAnalyse(ctx context.Context, reqVO *req.ProductStatisticsReqVO) (*resp.DataComparisonRespVO[resp.ProductStatisticsRespVO], error) {
-	// 1. 查询当前时间范围的数据
-	list, err := s.productStatisticsRepo.GetByDateRange(ctx, reqVO.Times[0], reqVO.Times[1])
+	beginTime := reqVO.Times[0]
+	endTime := reqVO.Times[1]
+
+	// 1. 统计数据：查询当前时间范围的汇总数据
+	value, err := s.productStatisticsRepo.GetSummaryByDateRange(ctx, beginTime, endTime)
 	if err != nil {
 		return nil, err
 	}
-
-	// 聚合数据
-	summary := &resp.ProductStatisticsRespVO{}
-	for _, item := range list {
-		summary.BuyCount += item.BuyCount
-		summary.BuyPrice += item.BuyPrice
-		summary.BrowseCount += item.BrowseCount
-		summary.FavoriteCount += item.FavoriteCount
-		summary.CommentCount += item.CommentCount
+	if value == nil {
+		value = &resp.ProductStatisticsRespVO{}
 	}
 
-	// 2. 查询对比时间范围的数据 (环比，时长一致)
-	duration := reqVO.Times[1].Sub(reqVO.Times[0])
-	compareBeginTime := reqVO.Times[0].Add(-duration)
-	compareEndTime := reqVO.Times[0]
-	compareList, err := s.productStatisticsRepo.GetByDateRange(ctx, compareBeginTime, compareEndTime)
+	// 2. 对照数据：环比，时长一致
+	duration := endTime.Sub(beginTime)
+	referenceBeginTime := beginTime.Add(-duration)
+	referenceEndTime := beginTime
+
+	reference, err := s.productStatisticsRepo.GetSummaryByDateRange(ctx, referenceBeginTime, referenceEndTime)
 	if err != nil {
 		return nil, err
 	}
-
-	// 聚合对比数据
-	compareSummary := &resp.ProductStatisticsRespVO{}
-	for _, item := range compareList {
-		compareSummary.BuyCount += item.BuyCount
-		compareSummary.BuyPrice += item.BuyPrice
-		compareSummary.BrowseCount += item.BrowseCount
-		compareSummary.FavoriteCount += item.FavoriteCount
-		compareSummary.CommentCount += item.CommentCount
+	if reference == nil {
+		reference = &resp.ProductStatisticsRespVO{}
 	}
 
 	return &resp.DataComparisonRespVO[resp.ProductStatisticsRespVO]{
-		Summary:    summary,
-		Comparison: compareSummary,
+		Summary:    value,
+		Comparison: reference,
 	}, nil
 }
 
 // GetProductStatisticsList 获得商品统计列表
+// 对应 Java: ProductStatisticsServiceImpl.getProductStatisticsList
 func (s *ProductStatisticsServiceImpl) GetProductStatisticsList(ctx context.Context, reqVO *req.ProductStatisticsReqVO) ([]*resp.ProductStatisticsRespVO, error) {
 	return s.productStatisticsRepo.GetByDateRange(ctx, reqVO.Times[0], reqVO.Times[1])
 }
 
 // StatisticsProduct 统计指定天数的商品数据
+// 对应 Java: ProductStatisticsServiceImpl.statisticsProduct
 func (s *ProductStatisticsServiceImpl) StatisticsProduct(ctx context.Context, days int) (string, error) {
-	// TODO: 实现每日统计逻辑
-	return "success", nil
+	today := time.Now()
+	var results []string
+
+	// 遍历指定天数，逐天统计
+	for day := 1; day <= days; day++ {
+		date := today.AddDate(0, 0, -day)
+		result, err := s.statisticsProductByDate(ctx, date)
+		if err != nil {
+			return "", err
+		}
+		results = append(results, result)
+	}
+
+	// 合并结果
+	var output string
+	for _, r := range results {
+		if output != "" {
+			output += "\n"
+		}
+		output += r
+	}
+	return output, nil
+}
+
+// statisticsProductByDate 统计指定日期的商品数据
+// 对应 Java: ProductStatisticsServiceImpl.statisticsProduct(LocalDateTime date)
+func (s *ProductStatisticsServiceImpl) statisticsProductByDate(ctx context.Context, date time.Time) (string, error) {
+	// 1. 处理统计时间范围（当天的开始和结束）
+	beginTime := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	endTime := time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, date.Location())
+	dateStr := date.Format("2006-01-02")
+
+	// 2. 检查该日是否已经统计过
+	count, err := s.productStatisticsRepo.CountByDateRange(ctx, beginTime, endTime)
+	if err != nil {
+		return "", err
+	}
+	if count > 0 {
+		return fmt.Sprintf("%s 数据已存在，如果需要重新统计，请先删除对应的数据", dateStr), nil
+	}
+
+	// 3. 执行统计并入库
+	startTime := time.Now()
+	err = s.productStatisticsRepo.StatisticsProductByDateRange(ctx, date, beginTime, endTime)
+	if err != nil {
+		return "", err
+	}
+	elapsed := time.Since(startTime)
+
+	return fmt.Sprintf("%s 统计完成，耗时 %v", dateStr, elapsed), nil
 }
