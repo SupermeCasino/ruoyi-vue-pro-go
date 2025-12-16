@@ -1,9 +1,9 @@
 package router
 
 import (
-	tradeAdmin "backend-go/internal/api/handler/admin/trade"
-	tradeBrokerage "backend-go/internal/api/handler/admin/trade/brokerage"
-	"backend-go/internal/middleware"
+	tradeAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
+	tradeBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

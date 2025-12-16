@@ -1,12 +1,12 @@
 package router
 
 import (
-	memberApp "backend-go/internal/api/handler/app/member"
-	productApp "backend-go/internal/api/handler/app/product"
-	promotionApp "backend-go/internal/api/handler/app/promotion"
-	tradeApp "backend-go/internal/api/handler/app/trade"
-	appBrokerage "backend-go/internal/api/handler/app/trade/brokerage"
-	"backend-go/internal/middleware"
+	memberApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
+	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
+	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
+	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
+	appBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

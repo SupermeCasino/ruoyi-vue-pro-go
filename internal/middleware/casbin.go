@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"

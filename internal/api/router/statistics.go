@@ -1,8 +1,8 @@
 package router
 
 import (
-	"backend-go/internal/api/handler/admin"
-	"backend-go/internal/middleware"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

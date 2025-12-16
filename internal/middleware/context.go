@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 	"github.com/gin-gonic/gin"
 )

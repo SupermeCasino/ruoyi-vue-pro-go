@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

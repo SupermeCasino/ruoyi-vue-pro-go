@@ -1,10 +1,9 @@
 package router
 
 import (
-	payAdmin "backend-go/internal/api/handler/admin/pay"
-	payWallet "backend-go/internal/api/handler/admin/pay/wallet"
-
-	"backend-go/internal/middleware"
+	payAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay"
+	payWallet "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay/wallet"
+	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -64,15 +63,9 @@ func RegisterPayRoutes(engine *gin.Engine,
 			payRefund.GET("/page", casbinMiddleware.RequirePermission("pay:refund:query"), payRefundHandler.GetRefundPage)
 		}
 
-		// Pay Notify
+		// Pay Notify 管理接口 - 需要认证
 		payNotify := payGroup.Group("/notify")
 		{
-			// 回调接口 - 无需认证 (对齐 Java @PermitAll @TenantIgnore)
-			payNotify.POST("/order/:channelId", payNotifyHandler.NotifyOrder)
-			payNotify.POST("/refund/:channelId", payNotifyHandler.NotifyRefund)
-			payNotify.POST("/transfer/:channelId", payNotifyHandler.NotifyTransfer)
-
-			// 管理接口 - 需要认证
 			payNotify.GET("/get-detail", casbinMiddleware.RequirePermission("pay:notify:query"), payNotifyHandler.GetNotifyTaskDetail)
 			payNotify.GET("/page", casbinMiddleware.RequirePermission("pay:notify:query"), payNotifyHandler.GetNotifyTaskPage)
 		}

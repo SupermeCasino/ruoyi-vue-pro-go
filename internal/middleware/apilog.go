@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"backend-go/internal/pkg/core"
 	"bytes"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"io"
 	"log"
 	"time"

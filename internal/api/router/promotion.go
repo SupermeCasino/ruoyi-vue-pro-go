@@ -1,8 +1,8 @@
 package router
 
 import (
-	promotionAdmin "backend-go/internal/api/handler/admin/promotion"
-	"backend-go/internal/middleware"
+	promotionAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

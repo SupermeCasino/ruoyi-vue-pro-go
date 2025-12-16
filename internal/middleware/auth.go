@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/utils"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )

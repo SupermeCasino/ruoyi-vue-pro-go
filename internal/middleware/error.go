@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"backend-go/internal/pkg/core"
-	"backend-go/pkg/logger"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

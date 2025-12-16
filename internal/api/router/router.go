@@ -1,24 +1,24 @@
 package router
 
 import (
-	"backend-go/internal/api/handler"
-	adminHandler "backend-go/internal/api/handler/admin" // Statistics Handlers
-	memberAdmin "backend-go/internal/api/handler/admin/member"
-	payAdmin "backend-go/internal/api/handler/admin/pay"
-	payWallet "backend-go/internal/api/handler/admin/pay/wallet"
-	productHandler "backend-go/internal/api/handler/admin/product"
-	promotionAdmin "backend-go/internal/api/handler/admin/promotion"
-	tradeAdmin "backend-go/internal/api/handler/admin/trade"
-	tradeBrokerageAdmin "backend-go/internal/api/handler/admin/trade/brokerage"
-	memberHandler "backend-go/internal/api/handler/app/member"
-	productApp "backend-go/internal/api/handler/app/product"
-	promotionApp "backend-go/internal/api/handler/app/promotion"
-	tradeApp "backend-go/internal/api/handler/app/trade"
-	appBrokerage "backend-go/internal/api/handler/app/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
+	adminHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin" // Statistics Handlers
+	memberAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/member"
+	payAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay"
+	payWallet "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay/wallet"
+	productHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/product"
+	promotionAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/promotion"
+	tradeAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
+	tradeBrokerageAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade/brokerage"
+	memberHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
+	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
+	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
+	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
+	appBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
 
-	"backend-go/internal/middleware"
-	"backend-go/internal/pkg/datascope"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
