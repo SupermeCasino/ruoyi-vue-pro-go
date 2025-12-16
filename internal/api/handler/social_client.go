@@ -1,14 +1,13 @@
 package handler
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
-
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
