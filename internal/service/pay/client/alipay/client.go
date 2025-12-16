@@ -1,11 +1,11 @@
 package alipay
 
 import (
-	"backend-go/internal/service/pay/client"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 	"net/url"
 	"time"
 

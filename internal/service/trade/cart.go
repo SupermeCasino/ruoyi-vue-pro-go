@@ -1,14 +1,14 @@
 package trade
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model/trade"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
-	productSvc "backend-go/internal/service/product"
 	"context"
 	"errors"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 
 	"github.com/samber/lo"
 	"gorm.io/gorm"

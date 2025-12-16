@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model/promotion"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
-	prodSvc "backend-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 )
 
 type DiscountActivityService interface {

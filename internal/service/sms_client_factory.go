@@ -3,11 +3,11 @@ package service
 import (
 	"sync"
 
-	"backend-go/internal/model"
-	"backend-go/internal/service/sms/client"
-	"backend-go/internal/service/sms/client/aliyun"
-	"backend-go/internal/service/sms/client/debug"
-	"backend-go/internal/service/sms/client/tencent"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client/aliyun"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client/debug"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client/tencent"
 )
 
 type SmsClientFactory struct {

@@ -1,12 +1,12 @@
 package product
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model/product"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
 	"context"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"time"
 
 	"github.com/samber/lo"

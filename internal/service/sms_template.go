@@ -1,13 +1,13 @@
 package service
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
 	"context"
 	"errors"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"regexp"
 
 	"github.com/samber/lo"

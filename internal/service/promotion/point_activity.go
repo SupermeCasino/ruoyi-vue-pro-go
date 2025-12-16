@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/model/product"
-	"backend-go/internal/model/promotion"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
-	productSvc "backend-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 
 	"github.com/samber/lo"
 )

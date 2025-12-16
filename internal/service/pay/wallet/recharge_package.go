@@ -1,12 +1,12 @@
 package wallet
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/model/pay"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
 	"context"
 	"errors"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 
 	"gorm.io/gorm"
 )

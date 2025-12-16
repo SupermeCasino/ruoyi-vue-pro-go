@@ -4,10 +4,10 @@ import (
 	"context"
 	"sync"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/utils"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
 
 	"gorm.io/gorm"
 )

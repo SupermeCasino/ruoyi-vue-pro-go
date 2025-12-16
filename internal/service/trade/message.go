@@ -1,8 +1,8 @@
 package trade
 
 import (
-	"backend-go/internal/model/trade"
 	"context"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 )
 
 type TradeMessageService struct {

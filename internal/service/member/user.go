@@ -1,15 +1,15 @@
 package member
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model/member"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/utils" // Added utils
-	query "backend-go/internal/repo/query"
-	"backend-go/internal/service"
 	"context"
 	"errors"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils" // Added utils
+	query "github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 )
 
 type MemberUserService struct {

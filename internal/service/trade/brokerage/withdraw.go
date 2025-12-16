@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"time"
 
-	"backend-go/internal/api/req"
-	tradeReq "backend-go/internal/api/req/app/trade"
-	"backend-go/internal/model/trade/brokerage"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
-	"backend-go/internal/service/member"
-	"backend-go/internal/service/pay"
-	"backend-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 
 	"go.uber.org/zap"
 )

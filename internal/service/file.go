@@ -1,15 +1,15 @@
 package service
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/file"
-	"backend-go/internal/repo/query"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/file"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"time"
 
 	"github.com/samber/lo"

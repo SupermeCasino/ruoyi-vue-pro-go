@@ -9,12 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp"
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/pkg/utils"
-	"backend-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/utils"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
 
 type TenantService struct {

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 )
 
 type WeChatClient struct {

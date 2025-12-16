@@ -1,13 +1,13 @@
 package trade
 
 import (
-	"backend-go/internal/api/resp"
-	"backend-go/internal/pkg/core"
-	memberSvc "backend-go/internal/service/member"
-	"backend-go/internal/service/product"
-	"backend-go/internal/service/promotion"
 	"context"
 	"errors"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 )
 
 // TradePriceService 价格计算服务

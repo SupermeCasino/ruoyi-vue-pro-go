@@ -1,7 +1,7 @@
 package client
 
 import (
-	"backend-go/pkg/config"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 )
 
 type ExpressClientFactory interface {

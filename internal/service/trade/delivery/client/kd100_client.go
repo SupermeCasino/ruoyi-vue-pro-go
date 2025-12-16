@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	"backend-go/pkg/config"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 )
 
 type Kd100ExpressClient struct {

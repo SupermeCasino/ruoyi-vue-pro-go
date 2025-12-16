@@ -3,8 +3,8 @@ package debug
 import (
 	"context"
 
-	"backend-go/internal/model"
-	"backend-go/internal/service/sms/client"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
 
 	"go.uber.org/zap"
 )

@@ -1,10 +1,10 @@
 package service
 
 import (
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
 	"context"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"math/rand"
 	"time"
 

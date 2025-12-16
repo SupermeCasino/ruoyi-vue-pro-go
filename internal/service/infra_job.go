@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
 
 // JobStatus 任务状态

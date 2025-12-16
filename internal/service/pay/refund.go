@@ -1,14 +1,14 @@
 package pay
 
 import (
-	"backend-go/internal/api/req"
-	"backend-go/internal/model/pay"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
-	"backend-go/internal/service/pay/client"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 )
 
 type PayRefundService struct {

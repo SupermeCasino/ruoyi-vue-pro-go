@@ -1,12 +1,12 @@
 package weixin
 
 import (
-	"backend-go/internal/service/pay/client"
 	"context"
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 	"time"
 
 	"io"

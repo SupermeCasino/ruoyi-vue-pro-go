@@ -5,14 +5,14 @@ import (
 	"errors"
 	"time"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/api/resp/app/trade"
-	"backend-go/internal/model/trade/brokerage"
-	"backend-go/internal/pkg/core"
-	"backend-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 
-	"backend-go/internal/service/product"
-	tradeSvc "backend-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	tradeSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 
 	"go.uber.org/zap"
 )

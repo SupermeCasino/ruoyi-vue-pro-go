@@ -1,8 +1,8 @@
 package service
 
 import (
-	"backend-go/internal/api/resp"
 	"context"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"time"
 )
 

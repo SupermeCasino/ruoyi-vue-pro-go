@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"backend-go/internal/model"
-	"backend-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 
 	"github.com/go-co-op/gocron/v2"
 	"go.uber.org/zap"

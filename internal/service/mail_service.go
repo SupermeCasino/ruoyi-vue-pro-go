@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"backend-go/internal/api/req"
-	"backend-go/internal/model"
-	"backend-go/internal/pkg/core"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 
 	"gorm.io/gorm"
 )
