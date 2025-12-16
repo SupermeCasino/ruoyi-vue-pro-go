@@ -2,7 +2,6 @@ package model
 
 import (
 	"time"
-
 )
 
 // SystemOAuth2Client OAuth2 客户端
@@ -24,11 +23,11 @@ type SystemOAuth2Client struct {
 	ResourceIDs                 string `gorm:"column:resource_ids;comment:资源" json:"resourceIds"`                               // JSON array
 	AdditionalInformation       string `gorm:"column:additional_information;comment:附加信息" json:"additionalInformation"`         // JSON string
 
-	Creator   string         `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string         `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
-	CreatedAt time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool        `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	Creator   string    `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
+	Updater   string    `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
+	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
 }
 
 func (SystemOAuth2Client) TableName() string {

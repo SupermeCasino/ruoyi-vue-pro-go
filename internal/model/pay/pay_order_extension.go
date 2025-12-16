@@ -1,8 +1,9 @@
 package pay
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 // PayOrderExtension 支付订单拓展

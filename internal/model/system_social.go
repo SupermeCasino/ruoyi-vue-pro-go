@@ -2,17 +2,16 @@ package model
 
 import (
 	"time"
-
 )
 
 // SocialUser 社交用户
 type SocialUser struct {
-	ID        int64          `gorm:"primaryKey;autoIncrement;comment:编号"`
-	Creator   string         `gorm:"size:64;default:'';comment:创建者"`
-	Updater   string         `gorm:"size:64;default:'';comment:更新者"`
-	CreatedAt time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
-	UpdatedAt time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
-	Deleted   BitBool        `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
+	ID        int64     `gorm:"primaryKey;autoIncrement;comment:编号"`
+	Creator   string    `gorm:"size:64;default:'';comment:创建者"`
+	Updater   string    `gorm:"size:64;default:'';comment:更新者"`
+	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
+	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
 
 	Type         int    `gorm:"column:type;not null;comment:社交类型"`
 	Openid       string `gorm:"column:openid;not null;comment:社交 openid"`
@@ -31,12 +30,12 @@ func (*SocialUser) TableName() string {
 
 // SocialUserBind 社交绑定
 type SocialUserBind struct {
-	ID        int64          `gorm:"primaryKey;autoIncrement;comment:编号"`
-	Creator   string         `gorm:"size:64;default:'';comment:创建者"`
-	Updater   string         `gorm:"size:64;default:'';comment:更新者"`
-	CreatedAt time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
-	UpdatedAt time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
-	Deleted   BitBool        `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
+	ID        int64     `gorm:"primaryKey;autoIncrement;comment:编号"`
+	Creator   string    `gorm:"size:64;default:'';comment:创建者"`
+	Updater   string    `gorm:"size:64;default:'';comment:更新者"`
+	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
+	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
 
 	UserID       int64 `gorm:"column:user_id;not null;comment:用户编号"`
 	UserType     int   `gorm:"column:user_type;not null;comment:用户类型"`
@@ -50,13 +49,13 @@ func (*SocialUserBind) TableName() string {
 
 // SocialClient 社交客户端
 type SocialClient struct {
-	ID        int64          `gorm:"primaryKey;autoIncrement;comment:编号"`
-	Creator   string         `gorm:"size:64;default:'';comment:创建者"`
-	Updater   string         `gorm:"size:64;default:'';comment:更新者"`
-	CreatedAt time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
-	UpdatedAt time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
-	Deleted   BitBool        `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
-	TenantID  int64          `gorm:"column:tenant_id;default:0;comment:租户编号"`
+	ID        int64     `gorm:"primaryKey;autoIncrement;comment:编号"`
+	Creator   string    `gorm:"size:64;default:'';comment:创建者"`
+	Updater   string    `gorm:"size:64;default:'';comment:更新者"`
+	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
+	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除"`
+	TenantID  int64     `gorm:"column:tenant_id;default:0;comment:租户编号"`
 
 	Name         string `gorm:"column:name;not null;comment:应用名"`
 	SocialType   int    `gorm:"column:social_type;not null;comment:社交类型"`

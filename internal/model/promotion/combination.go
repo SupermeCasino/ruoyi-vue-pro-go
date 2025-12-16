@@ -1,8 +1,9 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 // PromotionCombinationActivity 拼团活动 DO

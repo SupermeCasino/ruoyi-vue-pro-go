@@ -1,8 +1,9 @@
 package pay
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 // PayApp 支付应用 DO

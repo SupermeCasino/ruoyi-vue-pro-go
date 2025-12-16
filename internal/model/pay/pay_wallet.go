@@ -1,8 +1,9 @@
 package pay
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 // PayWallet 会员钱包表

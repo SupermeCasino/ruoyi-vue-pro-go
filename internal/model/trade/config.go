@@ -1,8 +1,9 @@
 package trade
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 // TradeConfig 交易中心 - 交易配置

@@ -2,10 +2,11 @@ package product
 
 import (
 	"context"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
-	"time"
 )
 
 // ProductStatisticsRepositoryImpl 商品统计 Repository 实现 - 使用 gorm gen Query
