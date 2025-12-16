@@ -13,19 +13,21 @@ import (
 )
 
 type UserService struct {
-	q *query.Query
+	q       *query.Query
+	deptSvc *DeptService
 }
 
-func NewUserService(q *query.Query) *UserService {
+func NewUserService(q *query.Query, deptSvc *DeptService) *UserService {
 	return &UserService{
-		q: q,
+		q:       q,
+		deptSvc: deptSvc,
 	}
 }
 
-// GetSimpleUserList 获取用户精简列表 (只包含启用用户)
+// GetSimpleUserList 获取用户精简列表（只包含启用用户）
 func (s *UserService) GetSimpleUserList(ctx context.Context) ([]resp.UserSimpleRespVO, error) {
 	u := s.q.SystemUser
-	list, err := u.WithContext(ctx).Where(u.Status.Eq(0)).Find() // 0 = Enabled
+	list, err := u.WithContext(ctx).Where(u.Status.Eq(model.CommonStatusEnable)).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -57,22 +59,22 @@ func (s *UserService) CreateUser(ctx context.Context, req *req.UserSaveReq) (int
 		}
 	}
 
-	// 2. 加密密码
+	// 2. 加密密码（空密码时使用默认密码）
 	if req.Password == "" {
-		req.Password = "123456" // Default password
+		req.Password = "123456" // 默认密码，对应 Java: system.user.init-password 配置
 	}
 	hashedPwd, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return 0, err
 	}
 
-	// 3. 构造 User 对象
+	// 3. 构造用户对象
 	user := &model.SystemUser{
 		Username: req.Username,
 		Password: hashedPwd,
 		Nickname: req.Nickname,
 		DeptID:   req.DeptID,
-		PostIDs:  "", // TODO: Remove or usage? Old usage. Now using table.
+		PostIDs:  "",
 		Email:    req.Email,
 		Mobile:   req.Mobile,
 		Sex:      req.Sex,
@@ -200,16 +202,41 @@ func (s *UserService) UpdateUser(ctx context.Context, req *req.UserSaveReq) erro
 }
 
 // DeleteUser 删除用户
+// 对应 Java: AdminUserServiceImpl.deleteUser
 func (s *UserService) DeleteUser(ctx context.Context, id int64) error {
+	// 1. 校验用户存在
 	u := s.q.SystemUser
-	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).Delete()
-	// TODO: Delete UserRole and UserPost relations physically or logically?
-	// Usually soft delete user is enough, but relations might stay.
-	// For now, simple user delete.
-	return err
+	user, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
+	if err != nil {
+		return errors.New("用户不存在")
+	}
+	if user == nil {
+		return errors.New("用户不存在")
+	}
+
+	// 2. 删除用户及关联数据（使用事务）
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 2.1 删除用户
+		if _, err := tx.SystemUser.WithContext(ctx).Where(tx.SystemUser.ID.Eq(id)).Delete(); err != nil {
+			return err
+		}
+
+		// 2.2 删除用户角色关联
+		if _, err := tx.SystemUserRole.WithContext(ctx).Where(tx.SystemUserRole.UserID.Eq(id)).Delete(); err != nil {
+			return err
+		}
+
+		// 2.3 删除用户岗位关联
+		if _, err := tx.SystemUserPost.WithContext(ctx).Where(tx.SystemUserPost.UserID.Eq(id)).Delete(); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // GetUser 获得用户详情
+// 对应 Java: AdminUserServiceImpl.getUser + 返回完整角色和岗位信息
 func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileRespVO, error) {
 	u := s.q.SystemUser
 	user, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
@@ -217,7 +244,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 		return nil, err
 	}
 
-	// Get Roles
+	// 1. 获取用户角色ID列表
 	ur := s.q.SystemUserRole
 	userRoles, _ := ur.WithContext(ctx).Where(ur.UserID.Eq(id)).Find()
 	roleIds := make([]int64, len(userRoles))
@@ -225,7 +252,19 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 		roleIds[i] = r.RoleID
 	}
 
-	// Get Posts
+	// 2. 获取角色详情
+	var roles []*resp.RoleSimpleRespVO
+	if len(roleIds) > 0 {
+		roleList, _ := s.q.SystemRole.WithContext(ctx).Where(s.q.SystemRole.ID.In(roleIds...)).Find()
+		for _, role := range roleList {
+			roles = append(roles, &resp.RoleSimpleRespVO{
+				ID:   role.ID,
+				Name: role.Name,
+			})
+		}
+	}
+
+	// 3. 获取用户岗位ID列表
 	up := s.q.SystemUserPost
 	userPosts, _ := up.WithContext(ctx).Where(up.UserID.Eq(id)).Find()
 	postIds := make([]int64, len(userPosts))
@@ -233,26 +272,51 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 		postIds[i] = p.PostID
 	}
 
+	// 4. 获取岗位详情
+	var posts []*resp.PostSimpleRespVO
+	if len(postIds) > 0 {
+		postList, _ := s.q.SystemPost.WithContext(ctx).Where(s.q.SystemPost.ID.In(postIds...)).Find()
+		for _, post := range postList {
+			posts = append(posts, &resp.PostSimpleRespVO{
+				ID:   post.ID,
+				Name: post.Name,
+			})
+		}
+	}
+
+	// 5. 获取部门信息
+	var dept *resp.DeptSimpleRespVO
+	if user.DeptID > 0 {
+		deptInfo, _ := s.q.SystemDept.WithContext(ctx).Where(s.q.SystemDept.ID.Eq(user.DeptID)).First()
+		if deptInfo != nil {
+			dept = &resp.DeptSimpleRespVO{
+				ID:       deptInfo.ID,
+				Name:     deptInfo.Name,
+				ParentID: deptInfo.ParentID,
+			}
+		}
+	}
+
 	return &resp.UserProfileRespVO{
 		UserRespVO: &resp.UserRespVO{
-			ID:       user.ID,
-			Username: user.Username,
-			Nickname: user.Nickname,
-			Remark:   user.Remark,
-			DeptID:   user.DeptID,
-			PostIDs:  postIds,
-			RoleIDs:  roleIds,
-			Email:    user.Email,
-			Mobile:   user.Mobile,
-			Sex:      user.Sex,
-			Avatar:   user.Avatar,
-			Status:   user.Status,
-			LoginIP:  user.LoginIP,
-			// LoginDate:  *user.LoginDate, // Handle nil
+			ID:         user.ID,
+			Username:   user.Username,
+			Nickname:   user.Nickname,
+			Remark:     user.Remark,
+			DeptID:     user.DeptID,
+			PostIDs:    postIds,
+			RoleIDs:    roleIds,
+			Email:      user.Email,
+			Mobile:     user.Mobile,
+			Sex:        user.Sex,
+			Avatar:     user.Avatar,
+			Status:     user.Status,
+			LoginIP:    user.LoginIP,
 			CreateTime: user.CreatedAt,
 		},
-		Roles: nil, // Frontend usually doesn't need full role objects here for basic CRUD, but maybe for profile?
-		Posts: nil,
+		Roles: roles,
+		Posts: posts,
+		Dept:  dept,
 	}, nil
 }
 
@@ -271,9 +335,12 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 		qb = qb.Where(u.Status.Eq(int32(*req.Status)))
 	}
 	if req.DeptID > 0 {
-		// TODO: Recursive Dept search? Usually yes.
-		// For now simple match.
-		qb = qb.Where(u.DeptID.Eq(req.DeptID))
+		// 部门过滤：包含指定部门及其所有子部门
+		// 对应 Java: getDeptCondition(deptId)
+		deptIds := []int64{req.DeptID}
+		childDeptIds, _ := s.deptSvc.GetDeptIdListByParentId(ctx, req.DeptID)
+		deptIds = append(deptIds, childDeptIds...)
+		qb = qb.Where(u.DeptID.In(deptIds...))
 	}
 	if req.CreateTimeGe != nil {
 		qb = qb.Where(u.CreatedAt.Gte(*req.CreateTimeGe))

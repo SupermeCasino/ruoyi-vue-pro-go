@@ -22,8 +22,9 @@ type UserRespVO struct {
 
 type UserProfileRespVO struct {
 	*UserRespVO
-	Roles []*RoleRespVO `json:"roles,omitempty"`
-	Posts []*PostRespVO `json:"posts,omitempty"`
+	Roles []*RoleSimpleRespVO `json:"roles,omitempty"`
+	Posts []*PostSimpleRespVO `json:"posts,omitempty"`
+	Dept  *DeptSimpleRespVO   `json:"dept,omitempty"`
 }
 
 type UserSimpleRespVO struct {

@@ -68,7 +68,7 @@ func InitApp() (*gin.Engine, error) {
 	smsClientFactory := service.NewSmsClientFactory()
 	smsCodeService := service.NewSmsCodeService(query, redisClient, smsClientFactory)
 	loginLogService := service.NewLoginLogService(query)
-	userService := service.NewUserService(query)
+	userService := service.NewUserService(query, deptService)
 	socialUserService := service.NewSocialUserService(query)
 	authService := service.NewAuthService(query, permissionService, roleService, menuService, oAuth2TokenService, smsCodeService, loginLogService, userService, socialUserService)
 	authHandler := handler.NewAuthHandler(authService)
