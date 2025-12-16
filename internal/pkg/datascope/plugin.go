@@ -3,9 +3,9 @@ package datascope
 import (
 	"context"
 	"fmt"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
-
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -58,12 +58,16 @@ func (p *Plugin) beforeQuery(db *gorm.DB) {
 	// 2. 获取当前登录用户
 	loginUser := core.GetLoginUserFromContext(ctx)
 	if loginUser == nil {
-		// 没有登录用户，不应用数据权限（可能是公开API）
+		// 没有登录用户,不应用数据权限(可能是公开API)
 		return
 	}
 
-	// 3. 超级管理员跳过数据权限
-	isSuperAdmin, err := p.permissionSvc.IsSuperAdmin(ctx, loginUser.UserID)
+	// 3. 为权限查询创建跳过数据权限的context,避免无限递归
+	// beforeQuery -> IsSuperAdmin -> GetUserRoleIdListByUserId -> beforeQuery (递归)
+	skipCtx := SkipDataScope(ctx)
+
+	// 4. 超级管理员跳过数据权限
+	isSuperAdmin, err := p.permissionSvc.IsSuperAdmin(skipCtx, loginUser.UserID)
 	if err != nil {
 		p.logger.Error("Failed to check super admin", zap.Error(err))
 		return
@@ -74,28 +78,28 @@ func (p *Plugin) beforeQuery(db *gorm.DB) {
 		return
 	}
 
-	// 4. 获取用户的所有角色
-	roleIDs, err := p.permissionSvc.GetUserRoleIdListByUserId(ctx, loginUser.UserID)
+	// 5. 获取用户的所有角色
+	roleIDs, err := p.permissionSvc.GetUserRoleIdListByUserId(skipCtx, loginUser.UserID)
 	if err != nil {
 		p.logger.Error("Failed to get user roles", zap.Error(err), zap.Int64("user_id", loginUser.UserID))
 		return
 	}
 
 	if len(roleIDs) == 0 {
-		// 用户没有任何角色，默认只能看到自己创建的数据
+		// 用户没有任何角色,默认只能看到自己创建的数据
 		p.applySelfScope(db, loginUser.UserID)
 		return
 	}
 
-	// 5. 计算最宽松的数据范围（数字越小权限越大）
-	// 如果任一角色有全部数据权限，则不限制
-	dataScope, customDeptIDs, err := p.calculateDataScope(ctx, roleIDs)
+	// 6. 计算最宽松的数据范围(数字越小权限越大)
+	// 如果任一角色有全部数据权限,则不限制
+	dataScope, customDeptIDs, err := p.calculateDataScope(skipCtx, roleIDs)
 	if err != nil {
 		p.logger.Error("Failed to calculate data scope", zap.Error(err))
 		return
 	}
 
-	// 6. 根据数据范围应用SQL条件
+	// 7. 根据数据范围应用SQL条件
 	p.applyDataScope(db, dataScope, customDeptIDs, loginUser)
 }
 
