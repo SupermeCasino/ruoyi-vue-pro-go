@@ -9,6 +9,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/gin-gonic/gin"
@@ -408,23 +409,16 @@ func (h *AppTradeOrderHandler) ReceiveOrder(c *gin.Context) {
 
 // SettlementProduct 获得商品结算信息
 func (h *AppTradeOrderHandler) SettlementProduct(c *gin.Context) {
-	// spuIds=1,2,3 or spuIds=1&spuIds=2
-	var req struct {
-		SpuIDs []int64 `form:"spuIds"`
-	}
-	if err := c.ShouldBindQuery(&req); err != nil {
-		response.WriteBizError(c, errors.ErrParam) // FIXED: syntax error previously here? No, duplicate WriteSuccess logic in partial
-		return
-	}
-	if len(req.SpuIDs) == 0 {
-		// Try parsing from string "spuIds" if user sends "1,2,3"
-		str := c.Query("spuIds")
-		if str != "" {
-			req.SpuIDs = utils.SplitToInt64(str)
+	// Try parsing from string "spuIds" if user sends "1,2,3"
+	str := c.Query("spuIds")
+	var spuIds types.ListFromCSV[int64]
+	if str != "" {
+		if err := spuIds.Scan(str); err != nil {
+			response.WriteBizError(c, errors.ErrParam)
+			return
 		}
 	}
-
-	res, err := h.priceSvc.CalculateProductPrice(c, context.GetUserId(c), req.SpuIDs)
+	res, err := h.priceSvc.CalculateProductPrice(c, context.GetUserId(c), spuIds)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

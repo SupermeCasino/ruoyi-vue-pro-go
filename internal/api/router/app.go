@@ -35,6 +35,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appTradeConfigHandler *tradeApp.AppTradeConfigHandler,
 	// Promotion
 	appCouponHandler *promotionApp.AppCouponHandler,
+	appCouponTemplateHandler *promotionApp.AppCouponTemplateHandler, // 新增
 	appBannerHandler *promotionApp.AppBannerHandler,
 	appArticleHandler *promotionApp.AppArticleHandler,
 	// DIY
@@ -189,7 +190,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 			orderGroup := tradeGroup.Group("/order")
 			{
 				orderGroup.GET("/settlement", appTradeOrderHandler.SettlementOrder)
-				orderGroup.GET("/settlement-product", appTradeOrderHandler.SettlementProduct)
+				// settlement-product 移至公开路由组 (对齐 Java @PermitAll)
 				orderGroup.POST("/create", appTradeOrderHandler.CreateOrder)
 				orderGroup.GET("/get-detail", appTradeOrderHandler.GetOrderDetail)
 				orderGroup.GET("/item/get", appTradeOrderHandler.GetOrderItem)
@@ -237,6 +238,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 			orderPublicGroup := tradePublicGroup.Group("/order")
 			{
 				orderPublicGroup.POST("/update-paid", appTradeOrderHandler.UpdateOrderPaid)
+				orderPublicGroup.GET("/settlement-product", appTradeOrderHandler.SettlementProduct) // @PermitAll - 获得商品结算信息
 			}
 		}
 
@@ -255,7 +257,18 @@ func RegisterAppRoutes(engine *gin.Engine,
 			{
 				couponGroup.POST("/take", appCouponHandler.TakeCoupon)
 				couponGroup.GET("/page", appCouponHandler.GetCouponPage)
+				couponGroup.GET("/get", appCouponHandler.GetCoupon)                         // 新增: 获得优惠劵
+				couponGroup.GET("/get-unused-count", appCouponHandler.GetUnusedCouponCount) // 新增: 获得未使用数量
 				couponGroup.POST("/match-list", appCouponHandler.GetCouponMatchList)
+			}
+
+			// Coupon Template (Public - 对齐 Java @PermitAll)
+			couponTemplateGroup := promotionGroup.Group("/coupon-template")
+			{
+				couponTemplateGroup.GET("/get", appCouponTemplateHandler.GetCouponTemplate)
+				couponTemplateGroup.GET("/list", appCouponTemplateHandler.GetCouponTemplateList)
+				couponTemplateGroup.GET("/list-by-ids", appCouponTemplateHandler.GetCouponTemplateListByIds)
+				couponTemplateGroup.GET("/page", appCouponTemplateHandler.GetCouponTemplatePage)
 			}
 
 			// Banner (Public)

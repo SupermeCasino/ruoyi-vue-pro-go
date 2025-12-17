@@ -72,6 +72,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appCombinationActivityHandler *promotionApp.AppCombinationActivityHandler,
 	appCombinationRecordHandler *promotionApp.AppCombinationRecordHandler,
 	appCouponHandler *promotionApp.AppCouponHandler,
+	appCouponTemplateHandler *promotionApp.AppCouponTemplateHandler, // 新增
 	deliveryExpressHandler *tradeAdmin.DeliveryExpressHandler,
 	deliveryPickUpStoreHandler *tradeAdmin.DeliveryPickUpStoreHandler,
 	deliveryExpressTemplateHandler *tradeAdmin.DeliveryExpressTemplateHandler,
@@ -252,7 +253,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		// Trade
 		appCartHandler, appTradeOrderHandler, appTradeAfterSaleHandler, appTradeConfigHandler,
 		// Promotion
-		appCouponHandler, appBannerHandler, appArticleHandler, // DIY
+		appCouponHandler, appCouponTemplateHandler, appBannerHandler, appArticleHandler, // DIY
 		appDiyPageHandler,
 		appDiyTemplateHandler,
 		// Kefu
