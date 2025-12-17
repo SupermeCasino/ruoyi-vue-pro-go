@@ -43,10 +43,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
-)
 
-import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
+
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -150,11 +149,11 @@ func InitApp() (*gin.Engine, error) {
 	couponService := promotion.NewCouponService(query)
 	couponHandler := promotion2.NewCouponHandler(couponService)
 	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
-	combinationActivityHandler := promotion2.NewCombinationActivityHandler(combinationActivityService)
+	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService)
+	combinationActivityHandler := promotion2.NewCombinationActivityHandler(combinationActivityService, combinationRecordService, productSpuService)
 	discountActivityService := promotion.NewDiscountActivityService(query, productSkuService)
 	discountActivityHandler := promotion2.NewDiscountActivityHandler(discountActivityService)
 	appCombinationActivityHandler := promotion3.NewAppCombinationActivityHandler(combinationActivityService)
-	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService)
 	appCombinationRecordHandler := promotion3.NewAppCombinationRecordHandler(combinationRecordService)
 	appCouponHandler := promotion3.NewAppCouponHandler(couponUserService)
 	appCouponTemplateHandler := promotion3.NewAppCouponTemplateHandler(couponService)

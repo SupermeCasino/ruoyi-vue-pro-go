@@ -112,6 +112,7 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 		{
 			combinationActivityGroup.POST("/create", combinationActivityHandler.CreateCombinationActivity)
 			combinationActivityGroup.PUT("/update", combinationActivityHandler.UpdateCombinationActivity)
+			combinationActivityGroup.PUT("/close", combinationActivityHandler.CloseCombinationActivity) // 新增
 			combinationActivityGroup.DELETE("/delete", combinationActivityHandler.DeleteCombinationActivity)
 			combinationActivityGroup.GET("/get", combinationActivityHandler.GetCombinationActivity)
 			combinationActivityGroup.GET("/list-by-ids", combinationActivityHandler.GetCombinationActivityListByIds)
@@ -215,6 +216,7 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 		combinationRecordGroup := promotionGroup.Group("/combination-record")
 		{
 			combinationRecordGroup.GET("/page", combinationRecordHandler.GetCombinationRecordPage)
+			combinationRecordGroup.GET("/get-summary", combinationRecordHandler.GetCombinationRecordSummary) // 新增
 		}
 
 		// Bargain Help

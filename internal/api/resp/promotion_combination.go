@@ -29,6 +29,20 @@ type CombinationActivityRespVO struct {
 	Status           int                        `json:"status"`
 	Products         []CombinationProductRespVO `json:"products"`
 	CreateTime       time.Time                  `json:"createTime"`
+	// SPU 字段
+	SpuName          string `json:"spuName"`          // 商品名称
+	PicUrl           string `json:"picUrl"`           // 商品主图
+	MarketPrice      int    `json:"marketPrice"`      // 商品市场价
+	CombinationPrice int    `json:"combinationPrice"` // 拼团最低价
+}
+
+// CombinationActivityPageItemRespVO 拼团活动分页项 Response VO (Admin page)
+type CombinationActivityPageItemRespVO struct {
+	CombinationActivityRespVO
+	// 统计字段
+	GroupCount        int `json:"groupCount"`        // 开团组数
+	GroupSuccessCount int `json:"groupSuccessCount"` // 成团组数
+	RecordCount       int `json:"recordCount"`       // 购买次数
 }
 
 // AppCombinationActivityRespVO (Simple list item)
@@ -43,10 +57,25 @@ type AppCombinationActivityRespVO struct {
 	CombinationPrice int    `json:"combinationPrice"`
 }
 
-// AppCombinationActivityDetailRespVO contains detailed info including products
+// AppCombinationActivityDetailRespVO 拼团活动详情 (App)
 type AppCombinationActivityDetailRespVO struct {
-	AppCombinationActivityRespVO
-	Products []CombinationProductRespVO `json:"products"`
+	ID               int64                                 `json:"id"`
+	Name             string                                `json:"name"`
+	Status           int                                   `json:"status"`
+	StartTime        *time.Time                            `json:"startTime"`
+	EndTime          *time.Time                            `json:"endTime"`
+	UserSize         int                                   `json:"userSize"`
+	SuccessCount     int                                   `json:"successCount"` // 成功的拼团数量
+	SpuID            int64                                 `json:"spuId"`
+	TotalLimitCount  int                                   `json:"totalLimitCount"`
+	SingleLimitCount int                                   `json:"singleLimitCount"`
+	Products         []AppCombinationActivityDetailProduct `json:"products"`
+}
+
+// AppCombinationActivityDetailProduct 拼团活动详情商品
+type AppCombinationActivityDetailProduct struct {
+	SkuID            int64 `json:"skuId"`
+	CombinationPrice int   `json:"combinationPrice"`
 }
 
 // AppCombinationRecordRespVO
@@ -100,4 +129,11 @@ type CombinationRecordPageItemRespVO struct {
 	StartTime        time.Time `json:"startTime"`
 	EndTime          time.Time `json:"endTime"`
 	CreateTime       time.Time `json:"createTime"`
+}
+
+// CombinationRecordSummaryVO 拼团记录概要 VO (Admin)
+type CombinationRecordSummaryVO struct {
+	UserCount         int64 `json:"userCount"`         // 拼团用户参与数量
+	SuccessCount      int64 `json:"successCount"`      // 成团数量
+	VirtualGroupCount int64 `json:"virtualGroupCount"` // 虚拟成团数量
 }

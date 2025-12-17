@@ -35,22 +35,31 @@ type SeckillProductResp struct {
 	Stock        int   `json:"stock"`
 }
 
-// SeckillActivityResp 秒杀活动 Response
+// SeckillActivityResp 秒杀活动 Response (Admin Page)
 type SeckillActivityResp struct {
-	ID               int64     `json:"id"`
-	SpuID            int64     `json:"spuId"`
-	Name             string    `json:"name"`
-	Status           int       `json:"status"`
-	Remark           string    `json:"remark"`
-	StartTime        time.Time `json:"startTime"`
-	EndTime          time.Time `json:"endTime"`
-	Sort             int       `json:"sort"`
-	ConfigIds        []int64   `json:"configIds"`
-	TotalLimitCount  int       `json:"totalLimitCount"`
-	SingleLimitCount int       `json:"singleLimitCount"`
-	Stock            int       `json:"stock"`
-	TotalStock       int       `json:"totalStock"`
-	CreateTime       time.Time `json:"createTime"`
+	ID               int64                `json:"id"`
+	SpuID            int64                `json:"spuId"`
+	Name             string               `json:"name"`
+	Status           int                  `json:"status"`
+	Remark           string               `json:"remark"`
+	StartTime        time.Time            `json:"startTime"`
+	EndTime          time.Time            `json:"endTime"`
+	Sort             int                  `json:"sort"`
+	ConfigIds        []int64              `json:"configIds"`
+	TotalLimitCount  int                  `json:"totalLimitCount"`
+	SingleLimitCount int                  `json:"singleLimitCount"`
+	Stock            int                  `json:"stock"`
+	TotalStock       int                  `json:"totalStock"`
+	CreateTime       time.Time            `json:"createTime"`
+	Products         []SeckillProductResp `json:"products"`     // 秒杀商品列表
+	SpuName          string               `json:"spuName"`      // 商品名称
+	PicUrl           string               `json:"picUrl"`       // 商品主图
+	MarketPrice      int                  `json:"marketPrice"`  // 商品市场价
+	SeckillPrice     int                  `json:"seckillPrice"` // 秒杀最低价
+	// 统计字段 (预留，暂返回0)
+	TotalPrice int `json:"totalPrice"` // 订单实付金额
+	OrderCount int `json:"orderCount"` // 新增订单数
+	UserCount  int `json:"userCount"`  // 付款人数
 }
 
 // SeckillActivityDetailResp 秒杀活动详情 Response

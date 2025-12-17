@@ -98,10 +98,11 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 		spu := spuMap[act.SpuID]
 		picUrl := ""
 		marketPrice := 0
-		unitName := ""
+		spuName := ""
 		if spu != nil {
 			picUrl = spu.PicURL
-			marketPrice = spu.Price
+			marketPrice = spu.MarketPrice
+			spuName = spu.Name
 		}
 		// 获取最低秒杀价
 		products, _ := h.svc.GetSeckillProductListByActivityID(c.Request.Context(), act.ID)
@@ -118,11 +119,13 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,
+			SpuName:      spuName,
 			PicURL:       picUrl,
 			MarketPrice:  marketPrice,
 			SeckillPrice: minPrice,
+			Status:       act.Status,
 			Stock:        act.Stock,
-			UnitName:     unitName,
+			TotalStock:   act.TotalStock,
 		}
 	}
 
@@ -165,10 +168,11 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		spu := spuMap[act.SpuID]
 		picUrl := ""
 		marketPrice := 0
-		unitName := ""
+		spuName := ""
 		if spu != nil {
 			picUrl = spu.PicURL
-			marketPrice = spu.Price
+			marketPrice = spu.MarketPrice
+			spuName = spu.Name
 		}
 		// 获取最低秒杀价
 		products, _ := h.svc.GetSeckillProductListByActivityID(c.Request.Context(), act.ID)
@@ -185,11 +189,13 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,
+			SpuName:      spuName,
 			PicURL:       picUrl,
 			MarketPrice:  marketPrice,
 			SeckillPrice: minPrice,
+			Status:       act.Status,
 			Stock:        act.Stock,
-			UnitName:     unitName,
+			TotalStock:   act.TotalStock,
 		}
 	}
 
@@ -224,6 +230,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	detail := resp.AppSeckillActivityDetailResp{
 		ID:               act.ID,
 		Name:             act.Name,
+		Status:           act.Status,
 		SpuID:            act.SpuID,
 		StartTime:        &act.StartTime,
 		EndTime:          &act.EndTime,

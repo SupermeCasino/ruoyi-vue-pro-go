@@ -20,17 +20,20 @@ type AppSeckillActivityResp struct {
 	ID           int64  `json:"id"`
 	Name         string `json:"name"`
 	SpuID        int64  `json:"spuId"`
+	SpuName      string `json:"spuName"` // 商品名称
 	PicURL       string `json:"picUrl"`
 	MarketPrice  int    `json:"marketPrice"`  // 市场价 (分)
 	SeckillPrice int    `json:"seckillPrice"` // 秒杀价 (分)
+	Status       int    `json:"status"`       // 活动状态
 	Stock        int    `json:"stock"`        // 库存
-	UnitName     string `json:"unitName"`     // 单位名
+	TotalStock   int    `json:"totalStock"`   // 总库存
 }
 
 // AppSeckillActivityDetailResp App 端 - 秒杀活动详情响应 (对齐 Java: AppSeckillActivityDetailRespVO)
 type AppSeckillActivityDetailResp struct {
 	ID               int64      `json:"id"`
 	Name             string     `json:"name"`
+	Status           int        `json:"status"` // 活动状态
 	SpuID            int64      `json:"spuId"`
 	StartTime        *time.Time `json:"startTime"`
 	EndTime          *time.Time `json:"endTime"`

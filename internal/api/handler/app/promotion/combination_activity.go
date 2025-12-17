@@ -46,9 +46,7 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.C
 		return
 	}
 
-	// Parse IDs "1,2,3" (assuming Gin Query param style or similar)
-	// Java: @RequestParam("ids") List<Long> ids. Spring parses comma separated?
-	// Gin Query is string.
+	// Parse IDs "1,2,3"
 	parts := strings.Split(idsStr, ",")
 	ids := make([]int64, 0, len(parts))
 	for _, p := range parts {
@@ -57,16 +55,39 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.C
 		}
 	}
 
-	// Service method needed: GetCombinationActivityListByIds
-	// I haven't implemented `GetCombinationActivityListByIds` in Service yet, only `GetList` by count.
-	// I'll skip this for now or add TODO. Java controller uses it.
-	// I'll stick to basic features first.
-	// Check plan: "GetList, GetPage, GetDetail".
-	// "GetList" usually for home page (count).
-	// "GetListByIds" is for cart/order confirmation maybe?
+	if len(ids) == 0 {
+		response.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
+		return
+	}
 
-	// I'll return empty for now to match interface if added later.
-	response.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
+	// 调用 Service 获取数据
+	list, err := h.svc.GetCombinationActivityListByIds(c.Request.Context(), ids)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	// 转换为 App 格式 (CombinationActivityRespVO -> AppCombinationActivityRespVO)
+	result := make([]*resp.AppCombinationActivityRespVO, len(list))
+	for i, item := range list {
+		minPrice := 0
+		if len(item.Products) > 0 {
+			minPrice = item.Products[0].CombinationPrice
+			for _, p := range item.Products {
+				if p.CombinationPrice < minPrice {
+					minPrice = p.CombinationPrice
+				}
+			}
+		}
+		result[i] = &resp.AppCombinationActivityRespVO{
+			ID:               item.ID,
+			Name:             item.Name,
+			UserSize:         item.UserSize,
+			SpuID:            item.SpuID,
+			CombinationPrice: minPrice,
+		}
+	}
+	response.WriteSuccess(c, result)
 }
 
 // GetCombinationActivityDetail 获得拼团活动明细
