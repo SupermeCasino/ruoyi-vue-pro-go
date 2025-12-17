@@ -23,54 +23,57 @@ func NewCouponUserService() *CouponUserService {
 	}
 }
 
-// TakeCoupon 用户领取优惠券
-func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *req.AppCouponTakeReq) (int64, error) {
-	// 1. Check Template
+// TakeCoupon 用户领取优惠券 (对齐 Java: AppCouponController.takeCoupon)
+// 返回值: canTakeAgain - 是否可继续领取
+func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *req.AppCouponTakeReq) (bool, error) {
+	// 1. 校验模板
 	template, err := s.q.PromotionCouponTemplate.WithContext(ctx).Where(s.q.PromotionCouponTemplate.ID.Eq(req.TemplateID)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, errors.New("优惠券模板不存在")
+			return false, errors.New("优惠券模板不存在")
 		}
-		return 0, err
+		return false, err
 	}
 
 	if template.Status != 1 { // 1: Enable
-		return 0, errors.New("优惠券模板已禁用")
+		return false, errors.New("优惠券模板已禁用")
 	}
 	if template.TotalCount > 0 && template.TakeCount >= template.TotalCount {
-		return 0, errors.New("优惠券已领完")
+		return false, errors.New("优惠券已领完")
 	}
 
-	// 2. Check Limit
+	// 2. 检查领取限制
+	currentTakeCount := int64(0)
 	if template.TakeLimitCount > 0 {
-		count, err := s.q.PromotionCoupon.WithContext(ctx).Where(s.q.PromotionCoupon.TemplateID.Eq(template.ID), s.q.PromotionCoupon.UserID.Eq(userId)).Count()
+		currentTakeCount, err = s.q.PromotionCoupon.WithContext(ctx).Where(s.q.PromotionCoupon.TemplateID.Eq(template.ID), s.q.PromotionCoupon.UserID.Eq(userId)).Count()
 		if err != nil {
-			return 0, err
+			return false, err
 		}
-		if int(count) >= template.TakeLimitCount {
-			return 0, errors.New("超出领取限制")
+		if int(currentTakeCount) >= template.TakeLimitCount {
+			return false, errors.New("超出领取限制")
 		}
 	}
 
-	// 3. Calculate Validity
+	// 3. 计算有效期
 	var startTime, endTime time.Time
 	now := time.Now()
-	if template.ValidityType == 1 { // Fixed Date
+	switch template.ValidityType {
+	case 1: // 固定日期
 		if template.ValidEndTime == nil || now.After(*template.ValidEndTime) {
-			return 0, errors.New("优惠券已过期")
+			return false, errors.New("优惠券已过期")
 		}
 		startTime = *template.ValidStartTime
 		endTime = *template.ValidEndTime
-	} else if template.ValidityType == 2 { // Term
+	case 2: // 领取后N天
 		startTime = now.AddDate(0, 0, template.FixedStartTerm)
 		endTime = startTime.AddDate(0, 0, template.FixedEndTerm)
 	}
 
-	// 4. Create Coupon
+	// 4. 创建优惠券
 	coupon := &promotion.PromotionCoupon{
 		TemplateID:      template.ID,
 		Name:            template.Name,
-		Status:          1, // Unused
+		Status:          1, // 未使用
 		UserID:          userId,
 		ValidStartTime:  startTime,
 		ValidEndTime:    endTime,
@@ -82,18 +85,28 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 	}
 
 	err = s.q.Transaction(func(tx *query.Query) error {
-		// Increment Template Take Count
+		// 增加模板领取数量
 		if _, err := tx.PromotionCouponTemplate.WithContext(ctx).Where(tx.PromotionCouponTemplate.ID.Eq(template.ID)).UpdateSimple(tx.PromotionCouponTemplate.TakeCount.Add(1)); err != nil {
 			return err
 		}
-		// Save Coupon
+		// 保存优惠券
 		if err := tx.PromotionCoupon.WithContext(ctx).Create(coupon); err != nil {
 			return err
 		}
 		return nil
 	})
+	if err != nil {
+		return false, err
+	}
 
-	return coupon.ID, err
+	// 5. 检查是否可以继续领取 (对齐 Java 逻辑)
+	canTakeAgain := true
+	if template.TakeLimitCount > 0 {
+		// 领取后数量 +1
+		canTakeAgain = int(currentTakeCount)+1 < template.TakeLimitCount
+	}
+
+	return canTakeAgain, nil
 }
 
 // GetCouponPage 用户优惠券分页
@@ -117,6 +130,29 @@ func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req
 		List:  list,
 		Total: count,
 	}, nil
+}
+
+// GetCoupon 获得单个优惠券 (对齐 Java: CouponService.getCoupon)
+func (s *CouponUserService) GetCoupon(ctx context.Context, userId int64, couponId int64) (*promotion.PromotionCoupon, error) {
+	coupon, err := s.q.PromotionCoupon.WithContext(ctx).
+		Where(s.q.PromotionCoupon.ID.Eq(couponId)).
+		Where(s.q.PromotionCoupon.UserID.Eq(userId)).
+		First()
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // 返回 null 对齐 Java
+		}
+		return nil, err
+	}
+	return coupon, nil
+}
+
+// GetUnusedCouponCount 获得未使用的优惠劵数量 (对齐 Java: CouponService.getUnusedCouponCount)
+func (s *CouponUserService) GetUnusedCouponCount(ctx context.Context, userId int64) (int64, error) {
+	return s.q.PromotionCoupon.WithContext(ctx).
+		Where(s.q.PromotionCoupon.UserID.Eq(userId)).
+		Where(s.q.PromotionCoupon.Status.Eq(1)). // 1: 未使用
+		Count()
 }
 
 // CalculateCoupon 计算优惠券金额
@@ -156,9 +192,10 @@ func (s *CouponUserService) CalculateCoupon(ctx context.Context, userId int64, c
 
 	// Calculate Amount
 	discount := int64(0)
-	if coupon.DiscountType == 1 { // Price
+	switch coupon.DiscountType {
+	case 1: // Price
 		discount = int64(coupon.DiscountPrice)
-	} else if coupon.DiscountType == 2 { // Percent
+	case 2: // Percent
 		discount = price * int64(coupon.DiscountPercent) / 100
 		if coupon.DiscountLimit > 0 && discount > int64(coupon.DiscountLimit) {
 			discount = int64(coupon.DiscountLimit)
