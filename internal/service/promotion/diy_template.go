@@ -237,7 +237,7 @@ func (s *diyTemplateService) convertDiyTemplateToResp(item *promotion.PromotionD
 		Name:           item.Name,
 		PreviewPicUrls: []string(item.PreviewPicUrls),
 		Property:       item.Property,
-		Used:           item.Used,
+		Used:           bool(item.Used),
 		UsedTime:       item.UsedTime,
 		Remark:         item.Remark,
 		CreateTime:     item.CreateTime,

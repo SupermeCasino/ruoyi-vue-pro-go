@@ -65,7 +65,7 @@ func (h *AppDiyTemplateHandler) buildVo(c *gin.Context, diyTemplate *promotionMo
 		Name:           diyTemplate.Name,
 		PreviewPicUrls: []string(diyTemplate.PreviewPicUrls),
 		Property:       diyTemplate.Property,
-		Used:           diyTemplate.Used,
+		Used:           bool(diyTemplate.Used),
 		UsedTime:       diyTemplate.UsedTime,
 		Remark:         diyTemplate.Remark,
 		CreateTime:     diyTemplate.CreateTime,

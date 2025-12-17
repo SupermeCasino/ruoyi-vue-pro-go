@@ -3,6 +3,7 @@ package promotion
 import (
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
 )
 
@@ -13,7 +14,7 @@ type PromotionDiyTemplate struct {
 	PreviewPicUrls types.StringListFromCSV `gorm:"column:preview_pic_urls;type:varchar(2000);comment:预览图片" json:"previewPicUrls"`
 	Property       string                  `gorm:"column:property;type:longtext;comment:模板属性" json:"property"` // JSON
 	Remark         string                  `gorm:"column:remark;type:varchar(255);comment:备注" json:"remark"`
-	Used           bool                    `gorm:"column:used;type:bit(1);not null;default:0;comment:是否使用" json:"used"`
+	Used           model.BitBool           `gorm:"column:used;type:bit(1);not null;default:0;comment:是否使用" json:"used"`
 	UsedTime       *time.Time              `gorm:"column:used_time;comment:使用时间" json:"usedTime"`
 
 	Creator    string    `gorm:"column:creator" json:"creator"`
