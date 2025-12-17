@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -246,4 +247,198 @@ func (s *CouponService) TakeCouponByAdmin(ctx context.Context, templateId int64,
 	// 4. 批量创建
 	c := s.q.PromotionCoupon
 	return c.WithContext(ctx).Create(coupons...)
+}
+
+// ========== App 端方法 ==========
+
+// GetCouponTemplateForApp 获取单个优惠券模板 (App 端)
+// 对齐 Java: AppCouponTemplateController.getCouponTemplate
+func (s *CouponService) GetCouponTemplateForApp(ctx context.Context, id int64, userId int64) (*resp.AppCouponTemplateResp, error) {
+	t := s.q.PromotionCouponTemplate
+	template, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
+	if err != nil {
+		return nil, nil // 返回 null 对齐 Java
+	}
+
+	// 处理是否可领取 (对齐 Java: couponService.getUserCanCanTakeMap)
+	canTakeMap, err := s.GetUserCanTakeMap(ctx, userId, []int64{template.ID})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.convertToAppCouponTemplateResp(template, canTakeMap[template.ID]), nil
+}
+
+// GetCouponTemplateListForApp 获取优惠券模板列表 (App 端)
+// 对齐 Java: AppCouponTemplateController.getCouponTemplateList (带条件)
+func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *int64, productScope *int, count int, userId int64) ([]*resp.AppCouponTemplateResp, error) {
+	t := s.q.PromotionCouponTemplate
+	q := t.WithContext(ctx).Where(t.Status.Eq(1)) // 只查询启用状态
+	q = q.Where(t.TakeType.Eq(1))                 // 领取方式 = 直接领取 (CouponTakeTypeEnum.USER)
+
+	if productScope != nil {
+		q = q.Where(t.ProductScope.Eq(*productScope))
+	}
+
+	if count <= 0 {
+		count = 10
+	}
+	q = q.Limit(count)
+
+	templates, err := q.Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取用户是否可领取
+	templateIds := make([]int64, len(templates))
+	for i, tmpl := range templates {
+		templateIds[i] = tmpl.ID
+	}
+	canTakeMap, err := s.GetUserCanTakeMap(ctx, userId, templateIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换响应
+	result := make([]*resp.AppCouponTemplateResp, len(templates))
+	for i, tmpl := range templates {
+		result[i] = s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
+	}
+	return result, nil
+}
+
+// GetCouponTemplateListByIdsForApp 按 ID 获取优惠券模板列表 (App 端)
+// 对齐 Java: AppCouponTemplateController.getCouponTemplateList (按ids)
+func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, ids []int64, userId int64) ([]*resp.AppCouponTemplateResp, error) {
+	if len(ids) == 0 {
+		return []*resp.AppCouponTemplateResp{}, nil
+	}
+	t := s.q.PromotionCouponTemplate
+	templates, err := t.WithContext(ctx).Where(t.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取用户是否可领取
+	canTakeMap, err := s.GetUserCanTakeMap(ctx, userId, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换响应
+	result := make([]*resp.AppCouponTemplateResp, len(templates))
+	for i, tmpl := range templates {
+		result[i] = s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
+	}
+	return result, nil
+}
+
+// GetCouponTemplatePageForApp 获取优惠券模板分页 (App 端)
+// 对齐 Java: AppCouponTemplateController.getCouponTemplatePage
+func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.AppCouponTemplatePageReq, userId int64) (*pagination.PageResult[*resp.AppCouponTemplateResp], error) {
+	t := s.q.PromotionCouponTemplate
+	q := t.WithContext(ctx).Where(t.Status.Eq(1)) // 只查询启用状态
+	q = q.Where(t.TakeType.Eq(1))                 // 领取方式 = 直接领取
+
+	if r.ProductScope != nil {
+		q = q.Where(t.ProductScope.Eq(*r.ProductScope))
+	}
+
+	templates, count, err := q.FindByPage((r.PageNo-1)*r.PageSize, r.PageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取用户是否可领取
+	templateIds := make([]int64, len(templates))
+	for i, tmpl := range templates {
+		templateIds[i] = tmpl.ID
+	}
+	canTakeMap, err := s.GetUserCanTakeMap(ctx, userId, templateIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换响应
+	result := make([]*resp.AppCouponTemplateResp, len(templates))
+	for i, tmpl := range templates {
+		result[i] = s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
+	}
+
+	return &pagination.PageResult[*resp.AppCouponTemplateResp]{
+		List:  result,
+		Total: count,
+	}, nil
+}
+
+// convertToAppCouponTemplateResp 转换模板 Model 到 App 响应 VO
+func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCouponTemplate, canTake bool) *resp.AppCouponTemplateResp {
+	return &resp.AppCouponTemplateResp{
+		ID:                 t.ID,
+		Name:               t.Name,
+		Description:        "", // 模型中暂无此字段
+		TotalCount:         t.TotalCount,
+		TakeLimitCount:     t.TakeLimitCount,
+		UsePrice:           t.UsePriceMin,
+		ProductScope:       int(t.ProductScope),
+		ProductScopeValues: t.ProductScopeValues,
+		ValidityType:       t.ValidityType,
+		ValidStartTime:     t.ValidStartTime,
+		ValidEndTime:       t.ValidEndTime,
+		FixedStartTerm:     t.FixedStartTerm,
+		FixedEndTerm:       t.FixedEndTerm,
+		DiscountType:       t.DiscountType,
+		DiscountPercent:    t.DiscountPercent,
+		DiscountPrice:      t.DiscountPrice,
+		DiscountLimitPrice: t.DiscountLimit,
+		TakeCount:          t.TakeCount,
+		CanTake:            canTake,
+	}
+}
+
+// GetUserCanTakeMap 获取用户是否可领取某模板的 Map
+// 对齐 Java: CouponService.getUserCanCanTakeMap
+func (s *CouponService) GetUserCanTakeMap(ctx context.Context, userId int64, templateIds []int64) (map[int64]bool, error) {
+	result := make(map[int64]bool)
+	if userId == 0 || len(templateIds) == 0 {
+		for _, id := range templateIds {
+			result[id] = true // 未登录用户默认可领取
+		}
+		return result, nil
+	}
+
+	// 查询用户对每个模板已领取的数量
+	c := s.q.PromotionCoupon
+	coupons, err := c.WithContext(ctx).
+		Where(c.UserID.Eq(userId)).
+		Where(c.TemplateID.In(templateIds...)).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 统计每个模板的领取数量
+	takeCountMap := make(map[int64]int)
+	for _, coupon := range coupons {
+		takeCountMap[coupon.TemplateID]++
+	}
+
+	// 查询模板的领取限制
+	t := s.q.PromotionCouponTemplate
+	templates, err := t.WithContext(ctx).Where(t.ID.In(templateIds...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, template := range templates {
+		takeCount := takeCountMap[template.ID]
+		if template.TakeLimitCount <= 0 {
+			result[template.ID] = true // 无限制
+		} else {
+			result[template.ID] = takeCount < template.TakeLimitCount
+		}
+	}
+
+	return result, nil
 }
