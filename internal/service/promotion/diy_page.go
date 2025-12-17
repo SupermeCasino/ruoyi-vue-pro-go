@@ -11,7 +11,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
-	"gorm.io/datatypes"
 )
 
 type DiyPageService interface {
@@ -21,9 +20,10 @@ type DiyPageService interface {
 	GetDiyPage(ctx context.Context, id int64) (*resp.DiyPageResp, error)
 	GetDiyPageList(ctx context.Context, ids []int64) ([]*resp.DiyPageResp, error)
 	GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*pagination.PageResult[*resp.DiyPageResp], error)
-	GetDiyPageProperty(ctx context.Context, id int64) (datatypes.JSON, error)
+	GetDiyPageProperty(ctx context.Context, id int64) (*resp.DiyPagePropertyResp, error)
 	UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error
 	GetDiyPageByTemplateId(ctx context.Context, templateId int64) ([]*promotion.PromotionDiyPage, error)
+	GetDiyPageModel(ctx context.Context, id int64) (*promotion.PromotionDiyPage, error) // App端使用
 }
 
 type diyPageService struct {
@@ -95,6 +95,10 @@ func (s *diyPageService) GetDiyPage(ctx context.Context, id int64) (*resp.DiyPag
 	return s.convertDiyPageToResp(page), nil
 }
 
+func (s *diyPageService) GetDiyPageModel(ctx context.Context, id int64) (*promotion.PromotionDiyPage, error) {
+	return s.validateDiyPageExists(ctx, id)
+}
+
 func (s *diyPageService) GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*pagination.PageResult[*resp.DiyPageResp], error) {
 	q := s.q.PromotionDiyPage
 	do := q.WithContext(ctx)
@@ -134,12 +138,21 @@ func (s *diyPageService) GetDiyPageList(ctx context.Context, ids []int64) ([]*re
 	return result, nil
 }
 
-func (s *diyPageService) GetDiyPageProperty(ctx context.Context, id int64) (datatypes.JSON, error) {
+func (s *diyPageService) GetDiyPageProperty(ctx context.Context, id int64) (*resp.DiyPagePropertyResp, error) {
 	page, err := s.validateDiyPageExists(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return page.Property, nil
+	return &resp.DiyPagePropertyResp{
+		DiyPageBase: resp.DiyPageBase{
+			TemplateID:     page.TemplateID,
+			Name:           page.Name,
+			Remark:         page.Remark,
+			PreviewPicUrls: []string(page.PreviewPicUrls),
+		},
+		ID:       page.ID,
+		Property: string(page.Property),
+	}, nil
 }
 
 func (s *diyPageService) UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error {
@@ -187,12 +200,13 @@ func (s *diyPageService) validateDiyPageExists(ctx context.Context, id int64) (*
 
 func (s *diyPageService) convertDiyPageToResp(item *promotion.PromotionDiyPage) *resp.DiyPageResp {
 	return &resp.DiyPageResp{
-		ID:             item.ID,
-		TemplateID:     item.TemplateID,
-		Name:           item.Name,
-		Remark:         item.Remark,
-		PreviewPicUrls: []string(item.PreviewPicUrls),
-		Property:       item.Property,
-		CreateTime:     item.CreateTime,
+		DiyPageBase: resp.DiyPageBase{
+			TemplateID:     item.TemplateID,
+			Name:           item.Name,
+			Remark:         item.Remark,
+			PreviewPicUrls: []string(item.PreviewPicUrls),
+		},
+		ID:         item.ID,
+		CreateTime: item.CreateTime,
 	}
 }
