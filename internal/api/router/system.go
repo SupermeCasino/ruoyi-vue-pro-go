@@ -421,6 +421,9 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				jobGroup.GET("/get", casbinMiddleware.RequirePermission("infra:job:query"), jobHandler.GetJob)
 				jobGroup.GET("/page", casbinMiddleware.RequirePermission("infra:job:query"), jobHandler.GetJobPage)
 				jobGroup.PUT("/trigger", casbinMiddleware.RequirePermission("infra:job:trigger"), jobHandler.TriggerJob)
+				jobGroup.POST("/sync", casbinMiddleware.RequirePermission("infra:job:create"), jobHandler.SyncJob)
+				jobGroup.GET("/export-excel", casbinMiddleware.RequirePermission("infra:job:export"), jobHandler.ExportJobExcel)
+				jobGroup.GET("/get_next_times", casbinMiddleware.RequirePermission("infra:job:query"), jobHandler.GetJobNextTimes)
 			}
 
 			// Job Log
@@ -428,6 +431,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			{
 				jobLogGroup.GET("/get", jobLogHandler.GetJobLog)
 				jobLogGroup.GET("/page", jobLogHandler.GetJobLogPage)
+				jobLogGroup.GET("/export-excel", casbinMiddleware.RequirePermission("infra:job:export"), jobLogHandler.ExportJobLogExcel)
 			}
 
 			// API Access Log

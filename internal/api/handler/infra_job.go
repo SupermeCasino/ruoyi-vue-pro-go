@@ -4,6 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -138,4 +139,64 @@ func (h *JobHandler) TriggerJob(c *gin.Context) {
 		return
 	}
 	response.WriteSuccess(c, true)
+}
+
+// SyncJob 同步定时任务
+func (h *JobHandler) SyncJob(c *gin.Context) {
+	if err := h.svc.SyncJob(c); err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
+// ExportJobExcel 导出定时任务 Excel
+func (h *JobHandler) ExportJobExcel(c *gin.Context) {
+	var r req.JobPageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		response.WriteError(c, 400, err.Error())
+		return
+	}
+	// 设置为导出所有数据
+	r.PageSize = 0
+	pageResult, err := h.svc.GetJobPage(c, &r)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	list := make([]resp.JobResp, len(pageResult.List))
+	for i, job := range pageResult.List {
+		list[i] = resp.JobResp{
+			ID:             job.ID,
+			Name:           job.Name,
+			Status:         job.Status,
+			HandlerName:    job.HandlerName,
+			HandlerParam:   job.HandlerParam,
+			CronExpression: job.CronExpression,
+			RetryCount:     job.RetryCount,
+			RetryInterval:  job.RetryInterval,
+			MonitorTimeout: job.MonitorTimeout,
+			CreateTime:     job.CreatedAt,
+		}
+	}
+
+	if err := excel.WriteExcel(c, "定时任务.xls", "数据", list); err != nil {
+		response.WriteError(c, 500, err.Error())
+	}
+}
+
+// GetJobNextTimes 获取定时任务的下 n 次执行时间
+func (h *JobHandler) GetJobNextTimes(c *gin.Context) {
+	id := utils.ParseInt64(c.Query("id"))
+	count := int(utils.ParseInt64(c.Query("count")))
+	if count <= 0 {
+		count = 5 // 默认 5 次
+	}
+	times, err := h.svc.GetJobNextTimes(c, id, count)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+	response.WriteSuccess(c, times)
 }
