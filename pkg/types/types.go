@@ -4,6 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -12,10 +14,10 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-// BitBool is a boolean that maps to BIT(1) in database
+// BitBool 映射到数据库 BIT(1) 类型的布尔值
 type BitBool bool
 
-// Scan implements the Scanner interface.
+// Scan 实现 Scanner 接口
 func (b *BitBool) Scan(value interface{}) error {
 	if value == nil {
 		*b = false
@@ -39,7 +41,7 @@ func (b *BitBool) Scan(value interface{}) error {
 	return nil
 }
 
-// Value implements the driver Valuer interface.
+// Value 实现 driver.Valuer 接口
 func (b BitBool) Value() (driver.Value, error) {
 	if b {
 		return int64(1), nil
@@ -163,11 +165,12 @@ func NewBitBool(b bool) BitBool {
 	return BitBool(b)
 }
 
-// IntListFromCSV handles comma-separated integer lists from MyBatis IntegerListTypeHandler.
-// Supports both "1,2,3" format and JSON "[1,2,3]" format.
-type IntListFromCSV []int
+// ListFromCSV 处理逗号分隔的列表（兼容 MyBatis TypeHandler）
+// 支持 "1,2,3" / "a,b,c" 格式和 JSON "[1,2,3]" / "[\"a\",\"b\"]" 格式
+// T 可以是数值类型 (int, int64, float64 等) 或 string
+type ListFromCSV[T int | int64 | int32 | uint | uint64 | uint32 | float64 | float32 | string] []T
 
-func (l *IntListFromCSV) Scan(value interface{}) error {
+func (l *ListFromCSV[T]) Scan(value any) error {
 	if value == nil {
 		*l = nil
 		return nil
@@ -180,7 +183,7 @@ func (l *IntListFromCSV) Scan(value interface{}) error {
 	case string:
 		data = []byte(v)
 	default:
-		return errors.New("incompatible type for IntListFromCSV")
+		return errors.New("incompatible type for ListFromCSV")
 	}
 
 	if len(data) == 0 {
@@ -194,107 +197,96 @@ func (l *IntListFromCSV) Scan(value interface{}) error {
 		return nil
 	}
 
-	// Try JSON format first
+	// 优先尝试 JSON 格式解析
 	if strings.HasPrefix(str, "[") {
-		var result []int
+		var result []T
 		if err := json.Unmarshal(data, &result); err == nil {
 			*l = result
 			return nil
 		}
 	}
 
-	// Parse as comma-separated
+	// 按逗号分隔解析
 	parts := strings.Split(str, ",")
-	result := make([]int, 0, len(parts))
+	result := make([]T, 0, len(parts))
+
+	// 使用反射判断 T 的具体类型
+	var zero T
+	elemType := reflect.TypeOf(zero)
+
 	for _, p := range parts {
 		p = strings.TrimSpace(p)
 		if p == "" {
 			continue
 		}
-		i, err := strconv.Atoi(p)
-		if err != nil {
-			return err
+
+		var val T
+		switch elemType.Kind() {
+		case reflect.String:
+			// 字符串类型直接使用
+			val = any(p).(T)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			// 整数类型解析
+			i, err := strconv.ParseInt(p, 10, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse '%s' as integer: %w", p, err)
+			}
+			rv := reflect.New(elemType).Elem()
+			rv.SetInt(i)
+			val = rv.Interface().(T)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			// 无符号整数类型解析
+			i, err := strconv.ParseUint(p, 10, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse '%s' as unsigned integer: %w", p, err)
+			}
+			rv := reflect.New(elemType).Elem()
+			rv.SetUint(i)
+			val = rv.Interface().(T)
+		case reflect.Float32, reflect.Float64:
+			// 浮点数类型解析
+			f, err := strconv.ParseFloat(p, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse '%s' as float: %w", p, err)
+			}
+			rv := reflect.New(elemType).Elem()
+			rv.SetFloat(f)
+			val = rv.Interface().(T)
+		default:
+			return fmt.Errorf("unsupported type: %v", elemType.Kind())
 		}
-		result = append(result, i)
+		result = append(result, val)
 	}
 	*l = result
 	return nil
 }
 
-func (l IntListFromCSV) Value() (driver.Value, error) {
+func (l ListFromCSV[T]) Value() (driver.Value, error) {
 	if len(l) == 0 {
 		return "", nil
 	}
 	parts := make([]string, len(l))
 	for i, v := range l {
-		parts[i] = strconv.Itoa(v)
+		parts[i] = fmt.Sprintf("%v", v)
 	}
 	return strings.Join(parts, ","), nil
 }
 
-func (l IntListFromCSV) MarshalJSON() ([]byte, error) {
-	return json.Marshal([]int(l))
+func (l ListFromCSV[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]T(l))
 }
 
-// StringListFromCSV handles comma-separated string lists.
-type StringListFromCSV []string
-
-func (l *StringListFromCSV) Scan(value interface{}) error {
-	if value == nil {
-		*l = nil
-		return nil
+// ParseListFromCSV 从 "1,2,3" 或 "[1,2,3]" 格式的字符串解析为 ListFromCSV[T]
+func ParseListFromCSV[T int | int64 | int32 | uint | uint64 | uint32 | float64 | float32 | string](s string) (ListFromCSV[T], error) {
+	var result ListFromCSV[T]
+	if err := result.Scan(s); err != nil {
+		return nil, err
 	}
-
-	var data []byte
-	switch v := value.(type) {
-	case []byte:
-		data = v
-	case string:
-		data = []byte(v)
-	default:
-		return errors.New("incompatible type for StringListFromCSV")
-	}
-
-	if len(data) == 0 {
-		*l = nil
-		return nil
-	}
-
-	str := strings.TrimSpace(string(data))
-	if str == "" {
-		*l = nil
-		return nil
-	}
-
-	// Try JSON format first
-	if strings.HasPrefix(str, "[") {
-		var result []string
-		if err := json.Unmarshal(data, &result); err == nil {
-			*l = result
-			return nil
-		}
-	}
-
-	// Parse as comma-separated
-	parts := strings.Split(str, ",")
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p != "" {
-			result = append(result, p)
-		}
-	}
-	*l = result
-	return nil
+	return result, nil
 }
 
-func (l StringListFromCSV) Value() (driver.Value, error) {
-	if len(l) == 0 {
-		return "", nil
-	}
-	return strings.Join(l, ","), nil
-}
+// IntListFromCSV 向后兼容的别名 (元素类型为 int)
+type IntListFromCSV = ListFromCSV[int]
 
-func (l StringListFromCSV) MarshalJSON() ([]byte, error) {
-	return json.Marshal([]string(l))
-}
+// StringListFromCSV 处理逗号分隔的字符串列表
+type StringListFromCSV = ListFromCSV[string]
