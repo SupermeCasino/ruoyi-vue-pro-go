@@ -247,10 +247,10 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 		return nil, err
 	}
 
-	// 获取订单信息
-	order, _ := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(as.OrderID)).First()
-	// 获取订单项信息
-	orderItem, _ := s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.ID.Eq(as.OrderItemID)).First()
+	// 获取订单信息 (用于填充嵌套对象, TODO)
+	_, _ = s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(as.OrderID)).First()
+	// 获取订单项信息 (用于填充嵌套对象, TODO)
+	_, _ = s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.ID.Eq(as.OrderItemID)).First()
 
 	var pics []string
 	_ = json.Unmarshal([]byte(as.ApplyPicURLs), &pics)
@@ -274,18 +274,20 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 		PicURL:           as.PicURL,
 		Count:            as.Count,
 		RefundPrice:      as.RefundPrice,
-		AuditTime:        as.AuditTime,
+		AuditTime:        &as.AuditTime,
+		AuditUserID:      as.AuditUserID,
 		AuditReason:      as.AuditReason,
-		RefundTime:       as.RefundTime,
+		PayRefundID:      as.PayRefundID,
+		RefundTime:       &as.RefundTime,
+		LogisticsID:      as.LogisticsID,
+		LogisticsNo:      as.LogisticsNo,
+		DeliveryTime:     &as.DeliveryTime,
+		ReceiveTime:      &as.ReceiveTime,
+		ReceiveReason:    as.ReceiveReason,
 		CreateTime:       as.CreatedAt,
 	}
 
-	if order != nil {
-		result.OrderPayPrice = order.PayPrice
-	}
-	if orderItem != nil {
-		result.OrderItemPayPrice = orderItem.PayPrice
-	}
+	// TODO: 填充嵌套对象 Order, OrderItem, User, Logs
 
 	return result, nil
 }
