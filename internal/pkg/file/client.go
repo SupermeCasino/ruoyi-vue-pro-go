@@ -13,6 +13,8 @@ type FileClient interface {
 	Upload(content []byte, path string) (string, error)
 	Delete(path string) error
 	GetContent(path string) ([]byte, error)
+	GetURL(path string) string
+	GetPresignedURL(path string) (string, error)
 }
 
 // ClientConfig 客户端配置通用结构 (用于解析 JSON)
@@ -49,7 +51,7 @@ func (c *LocalFileClient) Upload(content []byte, path string) (string, error) {
 		return "", err
 	}
 	// 返回完整 URL
-	return c.Config.Domain + "/" + path, nil
+	return c.GetURL(path), nil
 }
 
 func (c *LocalFileClient) Delete(path string) error {
@@ -60,6 +62,16 @@ func (c *LocalFileClient) Delete(path string) error {
 func (c *LocalFileClient) GetContent(path string) ([]byte, error) {
 	fullPath := filepath.Join(c.Config.BasePath, path)
 	return ioutil.ReadFile(fullPath)
+}
+
+func (c *LocalFileClient) GetURL(path string) string {
+	return c.Config.Domain + "/" + path
+}
+
+func (c *LocalFileClient) GetPresignedURL(path string) (string, error) {
+	// Local 模式下不支持真正的预签名上传，返回上传接口地址
+	// 前端需特殊处理：如果是 Local，直接调用 /upload
+	return c.Config.Domain + "/admin-api/infra/file/upload", nil
 }
 
 // FileClientFactory 简单工厂
