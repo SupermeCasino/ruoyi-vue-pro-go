@@ -4,6 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -80,4 +81,41 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 		List:  list,
 		Total: pageResult.Total,
 	})
+}
+
+// ExportJobLogExcel 导出定时任务日志 Excel
+func (h *JobLogHandler) ExportJobLogExcel(c *gin.Context) {
+	var r req.JobLogPageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		response.WriteError(c, 400, err.Error())
+		return
+	}
+	// 设置为导出所有数据
+	r.PageSize = 0
+	pageResult, err := h.svc.GetJobLogPage(c, &r)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	list := make([]resp.JobLogResp, len(pageResult.List))
+	for i, log := range pageResult.List {
+		list[i] = resp.JobLogResp{
+			ID:           log.ID,
+			JobID:        log.JobID,
+			HandlerName:  log.HandlerName,
+			HandlerParam: log.HandlerParam,
+			ExecuteIndex: log.ExecuteIndex,
+			BeginTime:    log.BeginTime,
+			EndTime:      log.EndTime,
+			Duration:     log.Duration,
+			Status:       log.Status,
+			Result:       log.Result,
+			CreateTime:   log.CreatedAt,
+		}
+	}
+
+	if err := excel.WriteExcel(c, "任务日志.xls", "数据", list); err != nil {
+		response.WriteError(c, 500, err.Error())
+	}
 }
