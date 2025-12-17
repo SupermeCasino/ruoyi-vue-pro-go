@@ -15,6 +15,7 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/lionsoul2014/ip2region/binding/golang v0.0.0-20251215094000-f12b9765b373
 	github.com/redis/go-redis/v9 v9.17.2
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.52.0
 	github.com/smartwalle/alipay/v3 v3.2.28
 	github.com/spf13/viper v1.21.0
@@ -63,7 +64,6 @@ require (
 	github.com/quic-go/quic-go v0.57.1 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/smartwalle/ncrypto v1.0.4 // indirect
 	github.com/smartwalle/ngx v1.0.12 // indirect
