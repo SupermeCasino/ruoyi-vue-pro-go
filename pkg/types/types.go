@@ -276,6 +276,31 @@ func (l ListFromCSV[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]T(l))
 }
 
+func (l *ListFromCSV[T]) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		*l = nil
+		return nil
+	}
+	// 尝试解析为数组
+	var arr []T
+	if err := json.Unmarshal(data, &arr); err == nil {
+		*l = arr
+		return nil
+	}
+	// 尝试解析为单个值
+	var single T
+	if err := json.Unmarshal(data, &single); err == nil {
+		*l = []T{single}
+		return nil
+	}
+	// 尝试解析为字符串 (CSV 格式)
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		return l.Scan(str)
+	}
+	return fmt.Errorf("cannot unmarshal %s into ListFromCSV", string(data))
+}
+
 // ParseListFromCSV 从 "1,2,3" 或 "[1,2,3]" 格式的字符串解析为 ListFromCSV[T]
 func ParseListFromCSV[T int | int64 | int32 | uint | uint64 | uint32 | float64 | float32 | string](s string) (ListFromCSV[T], error) {
 	var result ListFromCSV[T]
