@@ -24,7 +24,7 @@ type DiyTemplateService interface {
 	GetDiyTemplate(ctx context.Context, id int64) (*resp.DiyTemplateResp, error)
 	GetDiyTemplateModel(ctx context.Context, id int64) (*promotion.PromotionDiyTemplate, error) // App端使用
 	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error)
-	GetDiyTemplateProperty(ctx context.Context, id int64) (datatypes.JSON, error)
+	GetDiyTemplateProperty(ctx context.Context, id int64) (*resp.DiyTemplatePropertyResp, error)
 	UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error
 	GetUsedDiyTemplate(ctx context.Context) (*promotion.PromotionDiyTemplate, error)
 }
@@ -131,12 +131,41 @@ func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.Diy
 	return &pagination.PageResult[*resp.DiyTemplateResp]{List: result, Total: total}, nil
 }
 
-func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (datatypes.JSON, error) {
+func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (*resp.DiyTemplatePropertyResp, error) {
 	template, err := s.validateDiyTemplateExists(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return template.Property, nil
+
+	pages, err := s.q.PromotionDiyPage.WithContext(ctx).Where(s.q.PromotionDiyPage.TemplateID.Eq(id)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	pageResps := make([]resp.DiyPagePropertyResp, len(pages))
+	for i, page := range pages {
+		pageResps[i] = resp.DiyPagePropertyResp{
+			DiyPageBase: resp.DiyPageBase{
+				TemplateID:     page.TemplateID,
+				Name:           page.Name,
+				Remark:         page.Remark,
+				PreviewPicUrls: []string(page.PreviewPicUrls),
+			},
+			ID:       page.ID,
+			Property: string(page.Property),
+		}
+	}
+
+	return &resp.DiyTemplatePropertyResp{
+		DiyTemplateBase: resp.DiyTemplateBase{
+			Name:           template.Name,
+			Remark:         template.Remark,
+			PreviewPicUrls: []string(template.PreviewPicUrls),
+		},
+		ID:       template.ID,
+		Property: string(template.Property),
+		Pages:    pageResps,
+	}, nil
 }
 
 // UseDiyTemplate 使用装修模板
@@ -240,13 +269,14 @@ func (s *diyTemplateService) validateDiyTemplateExists(ctx context.Context, id i
 
 func (s *diyTemplateService) convertDiyTemplateToResp(item *promotion.PromotionDiyTemplate) *resp.DiyTemplateResp {
 	return &resp.DiyTemplateResp{
-		ID:             item.ID,
-		Name:           item.Name,
-		PreviewPicUrls: []string(item.PreviewPicUrls),
-		Property:       item.Property,
-		Used:           bool(item.Used),
-		UsedTime:       item.UsedTime,
-		Remark:         item.Remark,
-		CreateTime:     item.CreateTime,
+		DiyTemplateBase: resp.DiyTemplateBase{
+			Name:           item.Name,
+			Remark:         item.Remark,
+			PreviewPicUrls: []string(item.PreviewPicUrls),
+		},
+		ID:         item.ID,
+		Used:       bool(item.Used),
+		UsedTime:   item.UsedTime,
+		CreateTime: item.CreateTime,
 	}
 }
