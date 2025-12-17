@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 
@@ -13,12 +14,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// JobHandler is the interface for job handlers
+// JobHandler 定时任务处理器接口
 type JobHandler interface {
 	Execute(ctx context.Context, param string) error
 }
 
-// Scheduler manages cron jobs using gocron/v2
+// Scheduler 使用 gocron/v2 管理定时任务调度器
 type Scheduler struct {
 	scheduler gocron.Scheduler
 	q         *query.Query
@@ -28,7 +29,7 @@ type Scheduler struct {
 	mu        sync.RWMutex
 }
 
-// NewScheduler creates a new Scheduler
+// NewScheduler 创建新的调度器实例
 func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransferSyncJob) (*Scheduler, error) {
 	s, err := gocron.NewScheduler()
 	if err != nil {
@@ -42,10 +43,10 @@ func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransf
 		jobMap:    make(map[int64]gocron.Job),
 	}
 
-	// Register specific jobs
+	// 注册特定任务处理器
 	scheduler.RegisterHandler("payTransferSyncJob", payTransferSyncJob)
 
-	// Auto start scheduler in background
+	// 在后台自动启动调度器
 	go func() {
 		if err := scheduler.Start(context.Background()); err != nil {
 			log.Error("Failed to start scheduler", zap.Error(err))
@@ -55,14 +56,14 @@ func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransf
 	return scheduler, nil
 }
 
-// RegisterHandler registers a job handler by name
+// RegisterHandler 按名称注册任务处理器
 func (s *Scheduler) RegisterHandler(name string, handler JobHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.handlers[name] = handler
 }
 
-// Start loads all enabled jobs from DB and starts the scheduler
+// Start 从数据库加载所有启用的任务并启动调度器
 func (s *Scheduler) Start(ctx context.Context) error {
 	jobs, err := s.q.InfraJob.WithContext(ctx).Where(s.q.InfraJob.Status.Eq(JobStatusNormal)).Find()
 	if err != nil {
@@ -80,12 +81,12 @@ func (s *Scheduler) Start(ctx context.Context) error {
 	return nil
 }
 
-// Shutdown stops the scheduler
+// Shutdown 停止调度器
 func (s *Scheduler) Shutdown() error {
 	return s.scheduler.Shutdown()
 }
 
-// scheduleJob adds a single job to the scheduler
+// scheduleJob 将单个任务添加到调度器
 func (s *Scheduler) scheduleJob(ctx context.Context, job *model.InfraJob) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -111,7 +112,7 @@ func (s *Scheduler) scheduleJob(ctx context.Context, job *model.InfraJob) error 
 	return nil
 }
 
-// executeJob runs a job and logs the result
+// executeJob 执行任务并记录结果
 func (s *Scheduler) executeJob(ctx context.Context, job *model.InfraJob, handler JobHandler) {
 	beginTime := time.Now()
 
@@ -149,7 +150,7 @@ func (s *Scheduler) executeJob(ctx context.Context, job *model.InfraJob, handler
 	})
 }
 
-// AddJob adds a new job to the scheduler
+// AddJob 向调度器添加新任务
 func (s *Scheduler) AddJob(ctx context.Context, jobID int64) error {
 	job, err := s.q.InfraJob.WithContext(ctx).Where(s.q.InfraJob.ID.Eq(jobID)).First()
 	if err != nil {
@@ -161,7 +162,7 @@ func (s *Scheduler) AddJob(ctx context.Context, jobID int64) error {
 	return s.scheduleJob(ctx, job)
 }
 
-// RemoveJob removes a job from the scheduler
+// RemoveJob 从调度器中移除任务
 func (s *Scheduler) RemoveJob(jobID int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -179,7 +180,7 @@ func (s *Scheduler) RemoveJob(jobID int64) error {
 	return nil
 }
 
-// UpdateJobStatus handles status changes
+// UpdateJobStatus 处理任务状态变更
 func (s *Scheduler) UpdateJobStatus(ctx context.Context, jobID int64, status int) error {
 	if status == JobStatusNormal {
 		return s.AddJob(ctx, jobID)
@@ -187,7 +188,7 @@ func (s *Scheduler) UpdateJobStatus(ctx context.Context, jobID int64, status int
 	return s.RemoveJob(jobID)
 }
 
-// TriggerJob executes a job immediately
+// TriggerJob 立即执行任务
 func (s *Scheduler) TriggerJob(ctx context.Context, jobID int64) error {
 	job, err := s.q.InfraJob.WithContext(ctx).Where(s.q.InfraJob.ID.Eq(jobID)).First()
 	if err != nil {
@@ -205,49 +206,24 @@ func (s *Scheduler) TriggerJob(ctx context.Context, jobID int64) error {
 	return nil
 }
 
-// GetNextTimes calculates the next n execution times for a cron expression
+// GetNextTimes 计算 cron 表达式的下 n 次执行时间
 func (s *Scheduler) GetNextTimes(cronExpression string, count int) ([]string, error) {
-	// Parse the cron expression using gocron
-	// We create a temporary job just to parse the cron and get next run times
-	tempJob, err := s.scheduler.NewJob(
-		gocron.CronJob(cronExpression, false),
-		gocron.NewTask(func() {}), // dummy task
-	)
+	// 使用 robfig/cron 解析 cron 表达式
+	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+	schedule, err := parser.Parse(cronExpression)
 	if err != nil {
-		return nil, fmt.Errorf("invalid cron expression: %w", err)
+		return nil, fmt.Errorf("无效的 cron 表达式: %w", err)
 	}
 
-	// Get the next run times
+	// 计算未来 count 次执行时间
 	var times []string
-	lastRunAt, err := tempJob.LastRun()
-	if err == nil && !lastRunAt.IsZero() {
-		// Use last run as base
-	}
+	currentTime := time.Now()
 
-	nextRunAt, err := tempJob.NextRun()
-	if err != nil {
-		// Remove temp job and return error
-		_ = s.scheduler.RemoveJob(tempJob.ID())
-		return nil, err
-	}
-
-	// Collect next run times
-	// Note: gocron v2 doesn't expose multiple future runs directly
-	// We'll approximate by adding cron intervals
-	times = append(times, nextRunAt.Format("2006-01-02 15:04:05"))
-
-	// For now, return just the next run time
-	// A more accurate implementation would require parsing the cron expression manually
-	// or using a dedicated cron parser library
-
-	// Clean up temp job
-	_ = s.scheduler.RemoveJob(tempJob.ID())
-
-	// If we need more than one time, we would need to use a cron parser
-	// For MVP, returning just next run time
-	if count > 1 {
-		// TODO: Use a proper cron parser library to get multiple next times
-		// For now, just return the single next time
+	for i := 0; i < count; i++ {
+		nextTime := schedule.Next(currentTime)
+		times = append(times, nextTime.Format(time.DateTime))
+		// 推进到下一次执行时间之后，以获取后续时间
+		currentTime = nextTime
 	}
 
 	return times, nil
