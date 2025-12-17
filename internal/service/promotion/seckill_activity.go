@@ -244,6 +244,80 @@ func (s *SeckillActivityService) GetSeckillActivityListByIds(ctx context.Context
 	return q.WithContext(ctx).Where(q.ID.In(ids...)).Find()
 }
 
+// GetSeckillActivityListByConfigId 按秒杀时段获取活动列表 (App 端)
+func (s *SeckillActivityService) GetSeckillActivityListByConfigId(ctx context.Context, configId int64, limit int) ([]*promotion.PromotionSeckillActivity, error) {
+	q := s.q.PromotionSeckillActivity
+	now := time.Now()
+	list, err := q.WithContext(ctx).Where(
+		q.Status.Eq(1),
+		q.StartTime.Lte(now),
+		q.EndTime.Gte(now),
+	).Order(q.Sort.Desc()).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 过滤包含此时段的活动
+	var filtered []*promotion.PromotionSeckillActivity
+	for _, item := range list {
+		for _, cid := range item.ConfigIds {
+			if cid == configId {
+				filtered = append(filtered, item)
+				break
+			}
+		}
+		if len(filtered) >= limit {
+			break
+		}
+	}
+	return filtered, nil
+}
+
+// GetSeckillActivityPageForApp App 端秒杀活动分页 (别名)
+func (s *SeckillActivityService) GetSeckillActivityPageForApp(ctx context.Context, configId *int64, pageNo, pageSize int) (*pagination.PageResult[*promotion.PromotionSeckillActivity], error) {
+	q := s.q.PromotionSeckillActivity
+	now := time.Now()
+	list, err := q.WithContext(ctx).Where(
+		q.Status.Eq(1),
+		q.StartTime.Lte(now),
+		q.EndTime.Gte(now),
+	).Order(q.Sort.Desc()).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果指定了 configId，过滤
+	var filtered []*promotion.PromotionSeckillActivity
+	if configId != nil {
+		for _, item := range list {
+			for _, cid := range item.ConfigIds {
+				if cid == *configId {
+					filtered = append(filtered, item)
+					break
+				}
+			}
+		}
+	} else {
+		filtered = list
+	}
+
+	// 手动分页
+	total := int64(len(filtered))
+	start := (pageNo - 1) * pageSize
+	if start >= len(filtered) {
+		return &pagination.PageResult[*promotion.PromotionSeckillActivity]{List: []*promotion.PromotionSeckillActivity{}, Total: total}, nil
+	}
+	end := start + pageSize
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+
+	return &pagination.PageResult[*promotion.PromotionSeckillActivity]{
+		List:  filtered[start:end],
+		Total: total,
+	}, nil
+}
+
 // validateProductConflict 校验商品冲突
 func (s *SeckillActivityService) validateProductConflict(ctx context.Context, configIds []int64, spuID int64, activityID int64) error {
 	q := s.q.PromotionSeckillActivity

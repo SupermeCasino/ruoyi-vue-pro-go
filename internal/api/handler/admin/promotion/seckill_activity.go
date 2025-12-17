@@ -167,9 +167,6 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 // GetSeckillActivityListByIds 获得秒杀活动列表
 func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 	idsStr := c.Query("ids")
-	// Expected format: 1,2,3 ? Java accepts comma separated? Or param array?
-	// Java @RequestParam("ids") List<Long> ids. Spring usually handles comma separated.
-	// Go need simple parse.
 	var ids []int64
 	var intList model.IntListFromCSV
 	if err := intList.Scan(idsStr); err != nil {
@@ -186,8 +183,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 		return
 	}
 
-	// Filter Status Enable
-	// Java: activityList.removeIf(activity -> CommonStatusEnum.isDisable(activity.getStatus()));
+	// 过滤禁用状态 (对齐 Java: CommonStatusEnum.isDisable)
 	var activeList []*promotionModel.PromotionSeckillActivity
 	for _, act := range activityList {
 		if act.Status == 1 { // Enable
@@ -199,10 +195,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 		return
 	}
 
-	// Fetch Products & Spus to compose response
-	// Java: seckillService.getSeckillProductListByActivityIds...
-	// We lack batch get products by activity IDs in service.
-	// Let's iterate or add batch method. Batch is better.
+	// 获取活动 ID 和 SPU ID
 	actIds := make([]int64, len(activeList))
 	spuIds := make([]int64, len(activeList))
 	for i, act := range activeList {
@@ -210,9 +203,49 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 		spuIds[i] = act.SpuID
 	}
 
-	// Todo: Add GetSeckillProductListByActivityIds to Service if missing?
-	// Checking Service... Service has GetSeckillProductListByActivityID (Single).
-	// We need Batch.
-	// I'll add GetSeckillProductListByActivityIds to Service first.
-	// Assume it exists for now or use loop? Better add it.
+	// 批量获取秒杀商品
+	products, err := h.svc.GetSeckillProductListByActivityIds(c.Request.Context(), actIds)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	// 批量获取 SPU 信息
+	spuList, err := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	spuMap := make(map[int64]string)
+	for _, spu := range spuList {
+		spuMap[spu.ID] = spu.Name
+	}
+
+	// 构建商品 Map (按活动 ID 分组)
+	productMap := make(map[int64][]*promotionModel.PromotionSeckillProduct)
+	for _, p := range products {
+		productMap[p.ActivityID] = append(productMap[p.ActivityID], p)
+	}
+
+	// 构建响应
+	result := make([]resp.SeckillActivityResp, len(activeList))
+	for i, act := range activeList {
+		result[i] = resp.SeckillActivityResp{
+			ID:               act.ID,
+			SpuID:            act.SpuID,
+			Name:             act.Name,
+			Status:           act.Status,
+			Remark:           act.Remark,
+			StartTime:        act.StartTime,
+			EndTime:          act.EndTime,
+			Sort:             act.Sort,
+			ConfigIds:        act.ConfigIds,
+			TotalLimitCount:  act.TotalLimitCount,
+			SingleLimitCount: act.SingleLimitCount,
+			Stock:            act.Stock,
+			TotalStock:       act.TotalStock,
+			CreateTime:       act.CreatedAt,
+		}
+	}
+	response.WriteSuccess(c, result)
 }
