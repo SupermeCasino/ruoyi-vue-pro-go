@@ -17,9 +17,12 @@ type AppCartItem struct {
 
 // AppCartSpuInfo 购物车 SPU 信息
 type AppCartSpuInfo struct {
-	ID     int64  `json:"id"`
-	Name   string `json:"name"`
-	PicURL string `json:"picUrl"`
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	PicURL     string `json:"picUrl"`
+	CategoryID int64  `json:"categoryId"` // 新增
+	Stock      int    `json:"stock"`      // 新增
+	Status     int    `json:"status"`     // 新增
 }
 
 // AppCartSkuInfo 购物车 SKU 信息

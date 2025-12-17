@@ -98,9 +98,29 @@ func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.Pro
 			CreatedAt: item.CreatedAt,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
-			r.SpuName = spu.Name
+			r.Name = spu.Name
+			r.Keyword = spu.Keyword
+			r.Introduction = spu.Introduction
+			r.Description = spu.Description
+			r.CategoryID = spu.CategoryID
+			r.BrandID = spu.BrandID
 			r.PicURL = spu.PicURL
-			r.Price = int64(spu.Price)
+			r.SliderPicURLs = spu.SliderPicURLs
+			r.Sort = spu.Sort
+			r.Status = spu.Status
+			r.SpecType = spu.SpecType
+			r.Price = spu.Price
+			r.MarketPrice = spu.MarketPrice
+			r.CostPrice = spu.CostPrice
+			r.Stock = spu.Stock
+			r.DeliveryTypes = spu.DeliveryTypes
+			r.DeliveryTemplateID = spu.DeliveryTemplateID
+			r.GiveIntegral = spu.GiveIntegral
+			r.SubCommissionType = spu.SubCommissionType
+			r.SalesCount = spu.SalesCount
+			r.VirtualSalesCount = spu.VirtualSalesCount
+			r.BrowseCount = spu.BrowseCount
+			r.Skus = spu.Skus
 		}
 		return r
 	})

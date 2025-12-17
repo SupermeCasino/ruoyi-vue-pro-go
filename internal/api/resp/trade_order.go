@@ -200,27 +200,29 @@ type TradeOrderBase struct {
 }
 
 type TradeOrderItemBase struct {
-	ID              int64                    `json:"id"`
-	UserID          int64                    `json:"userId"`
-	OrderID         int64                    `json:"orderId"`
-	SpuID           int64                    `json:"spuId"`
-	SpuName         string                   `json:"spuName"`
-	SkuID           int64                    `json:"skuId"`
-	PicURL          string                   `json:"picUrl"`
-	Count           int                      `json:"count"`
-	Price           int                      `json:"price"`
-	DiscountPrice   int                      `json:"discountPrice"`
-	DeliveryPrice   int                      `json:"deliveryPrice"`
-	AdjustPrice     int                      `json:"adjustPrice"`
-	PayPrice        int                      `json:"payPrice"`
-	CouponPrice     int                      `json:"couponPrice"`
-	PointPrice      int                      `json:"pointPrice"`
-	UsePoint        int                      `json:"usePoint"`
-	GivePoint       int                      `json:"givePoint"`
-	VipPrice        int                      `json:"vipPrice"`
-	AfterSaleID     int64                    `json:"afterSaleId"`
-	AfterSaleStatus int                      `json:"afterSaleStatus"`
-	Properties      []ProductSkuPropertyResp `json:"properties"`
+	ID               int64                    `json:"id"`
+	UserID           int64                    `json:"userId"`
+	OrderID          int64                    `json:"orderId"`
+	SpuID            int64                    `json:"spuId"`
+	SpuName          string                   `json:"spuName"`
+	SkuID            int64                    `json:"skuId"`
+	PicURL           string                   `json:"picUrl"`
+	Count            int                      `json:"count"`
+	Price            int                      `json:"price"`
+	DiscountPrice    int                      `json:"discountPrice"`
+	DeliveryPrice    int                      `json:"deliveryPrice"`
+	AdjustPrice      int                      `json:"adjustPrice"`
+	PayPrice         int                      `json:"payPrice"`
+	OrderPartPrice   int                      `json:"orderPartPrice"`   // 子订单分摊金额
+	OrderDividePrice int                      `json:"orderDividePrice"` // 分摊后子订单实付金额
+	CouponPrice      int                      `json:"couponPrice"`
+	PointPrice       int                      `json:"pointPrice"`
+	UsePoint         int                      `json:"usePoint"`
+	GivePoint        int                      `json:"givePoint"`
+	VipPrice         int                      `json:"vipPrice"`
+	AfterSaleID      int64                    `json:"afterSaleId"`
+	AfterSaleStatus  int                      `json:"afterSaleStatus"`
+	Properties       []ProductSkuPropertyResp `json:"properties"`
 }
 
 type TradeOrderLogResp struct {
