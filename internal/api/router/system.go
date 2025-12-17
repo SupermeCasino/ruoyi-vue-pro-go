@@ -367,6 +367,12 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			smsLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-log:query"), smsLogHandler.GetSmsLogPage)
 		}
 
+		// ====== Infra Routes (Public) ======
+		infraPublicGroup := api.Group("/infra")
+		{
+			infraPublicGroup.GET("/file/:configId/get/*path", fileHandler.GetFileContent)
+		}
+
 		// ====== Infra Routes (Protected) ======
 		configGroup := api.Group("/infra/config", middleware.Auth())
 		{
@@ -392,6 +398,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				fileConfigGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:file-config:delete"), fileConfigHandler.DeleteFileConfig)
 				fileConfigGroup.GET("/page", casbinMiddleware.RequirePermission("infra:file-config:query"), fileConfigHandler.GetFileConfigPage)
 				fileConfigGroup.GET("/get", casbinMiddleware.RequirePermission("infra:file-config:query"), fileConfigHandler.GetFileConfig)
+				fileConfigGroup.GET("/test", casbinMiddleware.RequirePermission("infra:file-config:query"), fileConfigHandler.TestFileConfig)
 			}
 
 			// File
@@ -400,6 +407,8 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				fileGroup.POST("/upload", fileHandler.UploadFile)
 				fileGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:file:delete"), fileHandler.DeleteFile)
 				fileGroup.GET("/page", casbinMiddleware.RequirePermission("infra:file:query"), fileHandler.GetFilePage)
+				fileGroup.GET("/presigned-url", casbinMiddleware.RequirePermission("infra:file:query"), fileHandler.GetFilePresignedUrl)
+				fileGroup.POST("/create", casbinMiddleware.RequirePermission("infra:file:create"), fileHandler.CreateFile)
 			}
 
 			// Job

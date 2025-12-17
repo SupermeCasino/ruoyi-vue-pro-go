@@ -8,6 +8,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/file"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
@@ -154,4 +155,34 @@ func (s *FileConfigService) convertResp(item *model.InfraFileConfig) *resp.FileC
 		Remark:     item.Remark,
 		CreateTime: item.CreatedAt,
 	}
+}
+
+func (s *FileConfigService) TestFileConfig(ctx context.Context, id int64) (string, error) {
+	config, err := s.GetFileConfig(ctx, id)
+	if err != nil {
+		return "", errors.New("配置不存在")
+	}
+	if config.Config == nil {
+		return "", errors.New("配置内容为空")
+	}
+
+	client, err := file.NewFileClient(config.Storage, *config.Config)
+	if err != nil {
+		return "", err
+	}
+
+	// 测试上传文件
+	path := "test.txt"
+	content := []byte("test")
+	url, err := client.Upload(content, path)
+	if err != nil {
+		return "", errors.New("上传文件失败: " + err.Error())
+	}
+
+	// 测试删除文件
+	if err := client.Delete(path); err != nil {
+		return "", errors.New("删除文件失败: " + err.Error())
+	}
+
+	return url, nil
 }
