@@ -11,6 +11,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
+	"gorm.io/datatypes"
 )
 
 type DiyPageService interface {
@@ -20,7 +21,7 @@ type DiyPageService interface {
 	GetDiyPage(ctx context.Context, id int64) (*resp.DiyPageResp, error)
 	GetDiyPageList(ctx context.Context, ids []int64) ([]*resp.DiyPageResp, error)
 	GetDiyPagePage(ctx context.Context, req req.DiyPagePageReq) (*pagination.PageResult[*resp.DiyPageResp], error)
-	GetDiyPageProperty(ctx context.Context, id int64) (string, error)
+	GetDiyPageProperty(ctx context.Context, id int64) (datatypes.JSON, error)
 	UpdateDiyPageProperty(ctx context.Context, req req.DiyPagePropertyUpdateReq) error
 	GetDiyPageByTemplateId(ctx context.Context, templateId int64) ([]*promotion.PromotionDiyPage, error)
 }
@@ -133,10 +134,10 @@ func (s *diyPageService) GetDiyPageList(ctx context.Context, ids []int64) ([]*re
 	return result, nil
 }
 
-func (s *diyPageService) GetDiyPageProperty(ctx context.Context, id int64) (string, error) {
+func (s *diyPageService) GetDiyPageProperty(ctx context.Context, id int64) (datatypes.JSON, error) {
 	page, err := s.validateDiyPageExists(ctx, id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return page.Property, nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -21,8 +22,9 @@ type DiyTemplateService interface {
 	UseDiyTemplate(ctx context.Context, id int64) error
 	DeleteDiyTemplate(ctx context.Context, id int64) error
 	GetDiyTemplate(ctx context.Context, id int64) (*resp.DiyTemplateResp, error)
+	GetDiyTemplateModel(ctx context.Context, id int64) (*promotion.PromotionDiyTemplate, error) // App端使用
 	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error)
-	GetDiyTemplateProperty(ctx context.Context, id int64) (string, error)
+	GetDiyTemplateProperty(ctx context.Context, id int64) (datatypes.JSON, error)
 	UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error
 	GetUsedDiyTemplate(ctx context.Context) (*promotion.PromotionDiyTemplate, error)
 }
@@ -101,6 +103,11 @@ func (s *diyTemplateService) GetDiyTemplate(ctx context.Context, id int64) (*res
 	return s.convertDiyTemplateToResp(template), nil
 }
 
+// GetDiyTemplateModel 获取装修模板 Model (用于 App 端)
+func (s *diyTemplateService) GetDiyTemplateModel(ctx context.Context, id int64) (*promotion.PromotionDiyTemplate, error) {
+	return s.validateDiyTemplateExists(ctx, id)
+}
+
 func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error) {
 	q := s.q.PromotionDiyTemplate
 	do := q.WithContext(ctx)
@@ -124,10 +131,10 @@ func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.Diy
 	return &pagination.PageResult[*resp.DiyTemplateResp]{List: result, Total: total}, nil
 }
 
-func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (string, error) {
+func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (datatypes.JSON, error) {
 	template, err := s.validateDiyTemplateExists(ctx, id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return template.Property, nil
 }
@@ -195,13 +202,13 @@ func (s *diyTemplateService) createDefaultPage(ctx context.Context, templateID i
 			TemplateID: templateID,
 			Name:       "首页",
 			Remark:     "默认首页",
-			Property:   "{}",
+			Property:   datatypes.JSON("{}"),
 		},
 		{
 			TemplateID: templateID,
 			Name:       "我的",
 			Remark:     "默认我的页面",
-			Property:   "{}",
+			Property:   datatypes.JSON("{}"),
 		},
 	}
 	return s.q.PromotionDiyPage.WithContext(ctx).Create(pages...)

@@ -9,6 +9,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"gorm.io/datatypes"
 )
 
 type AppDiyTemplateHandler struct {
@@ -20,7 +21,7 @@ func NewAppDiyTemplateHandler(templateSvc promotion.DiyTemplateService, pageSvc 
 	return &AppDiyTemplateHandler{templateSvc: templateSvc, pageSvc: pageSvc}
 }
 
-// GetUsedDiyTemplate 使用中的装修模板
+// GetUsedDiyTemplate 使用中的装修模板 (对齐 Java: AppDiyTemplateController.getUsedDiyTemplate)
 func (h *AppDiyTemplateHandler) GetUsedDiyTemplate(c *gin.Context) {
 	diyTemplate, err := h.templateSvc.GetUsedDiyTemplate(c)
 	if err != nil {
@@ -30,77 +31,50 @@ func (h *AppDiyTemplateHandler) GetUsedDiyTemplate(c *gin.Context) {
 	response.WriteSuccess(c, h.buildVo(c, diyTemplate))
 }
 
-// GetDiyTemplate 获得装修模板
+// GetDiyTemplate 获得装修模板 (对齐 Java: AppDiyTemplateController.getDiyTemplate)
 func (h *AppDiyTemplateHandler) GetDiyTemplate(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	if id == 0 {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	res, err := h.templateSvc.GetDiyTemplate(c, id)
+	diyTemplate, err := h.templateSvc.GetDiyTemplateModel(c, id)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
-	// Convert Resp back to Model for buildVo (or overload buildVo)
-	// Since GetDiyTemplate returns Resp, and buildVo takes Model?
-	// Actually GetDiyTemplate returns *resp.DiyTemplateResp.
-	// But GetUsedDiyTemplate returns Model.
-	// I should unified them or implementation buildVo to accept generic properties.
-
-	// Re-fetch model or use resp object.
-	// Since I need ID to fetch pages, Resp object has ID.
-
-	// BUT, build Vo needs pages.
-	// Let's adapt buildVo to take ID and Properties.
-	response.WriteSuccess(c, h.buildVoFromResp(c, res))
+	response.WriteSuccess(c, h.buildVo(c, diyTemplate))
 }
 
+// buildVo 构建响应 (对齐 Java: AppDiyTemplateController.buildVo)
 func (h *AppDiyTemplateHandler) buildVo(c *gin.Context, diyTemplate *promotionModel.PromotionDiyTemplate) *resp.AppDiyTemplatePropertyResp {
 	if diyTemplate == nil {
 		return nil
 	}
-	return h.doBuildVo(c, diyTemplate.ID, &resp.DiyTemplateResp{
-		ID:             diyTemplate.ID,
-		Name:           diyTemplate.Name,
-		PreviewPicUrls: []string(diyTemplate.PreviewPicUrls),
-		Property:       diyTemplate.Property,
-		Used:           bool(diyTemplate.Used),
-		UsedTime:       diyTemplate.UsedTime,
-		Remark:         diyTemplate.Remark,
-		CreateTime:     diyTemplate.CreateTime,
-	})
-}
 
-func (h *AppDiyTemplateHandler) buildVoFromResp(c *gin.Context, res *resp.DiyTemplateResp) *resp.AppDiyTemplatePropertyResp {
-	if res == nil {
-		return nil
-	}
-	return h.doBuildVo(c, res.ID, res)
-}
-
-func (h *AppDiyTemplateHandler) doBuildVo(c *gin.Context, templateId int64, templateResp *resp.DiyTemplateResp) *resp.AppDiyTemplatePropertyResp {
-	pages, err := h.pageSvc.GetDiyPageByTemplateId(c, templateId)
+	// 查询模板下的页面
+	pages, err := h.pageSvc.GetDiyPageByTemplateId(c, diyTemplate.ID)
 	if err != nil {
-		// Log error? Or return partial? Java implementation ignores errors here implicitly?
-		// Java: list = diyPageService.getDiyPageByTemplateId(id);
-		// Assume success or empty.
 		pages = []*promotionModel.PromotionDiyPage{}
 	}
 
-	home := ""
-	user := ""
+	// 查找首页和我的页面 (对齐 Java: DiyPageEnum.INDEX/MY)
+	var home, user datatypes.JSON
 	for _, page := range pages {
-		if page.Name == "首页" {
+		switch page.Name {
+		case "首页": // DiyPageEnum.INDEX
 			home = page.Property
-		} else if page.Name == "我的" {
+		case "我的": // DiyPageEnum.MY
 			user = page.Property
 		}
 	}
 
+	// 拼接返回 (对齐 Java: DiyTemplateConvert.convertPropertyVo2)
 	return &resp.AppDiyTemplatePropertyResp{
-		DiyTemplateResp: *templateResp,
-		Home:            home,
-		User:            user,
+		ID:       diyTemplate.ID,
+		Name:     diyTemplate.Name,
+		Property: diyTemplate.Property,
+		Home:     home,
+		User:     user,
 	}
 }

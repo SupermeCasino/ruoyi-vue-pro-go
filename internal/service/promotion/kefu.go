@@ -7,6 +7,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -221,7 +222,7 @@ func (s *kefuService) UpdateMessageReadStatus(ctx context.Context, conversationI
 	unreadMessages, err := msgRepo.WithContext(ctx).
 		Where(msgRepo.ConversationID.Eq(conversationID)).
 		Where(msgRepo.SenderType.Eq(targetSenderType)).
-		Where(msgRepo.ReadStatus.Is(false)).
+		Where(msgRepo.ReadStatus.Eq(model.BitBool(false))).
 		Find()
 	if err != nil {
 		return err
@@ -236,7 +237,7 @@ func (s *kefuService) UpdateMessageReadStatus(ctx context.Context, conversationI
 	_, err = msgRepo.WithContext(ctx).
 		Where(msgRepo.ConversationID.Eq(conversationID)).
 		Where(msgRepo.SenderType.Eq(targetSenderType)).
-		Where(msgRepo.ReadStatus.Is(false)).
+		Where(msgRepo.ReadStatus.Eq(model.BitBool(false))).
 		Update(msgRepo.ReadStatus, true)
 	if err != nil {
 		return err
