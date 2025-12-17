@@ -1,6 +1,8 @@
 package req
 
 import (
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
@@ -11,7 +13,14 @@ type KefuMessageCreateReq struct {
 	Content        string `json:"content" binding:"required"`     // 消息内容
 }
 
-// KefuMessagePageReq 消息分页请求
+// KefuMessageListReq 消息列表请求 (对齐 Java KeFuMessageListReqVO)
+type KefuMessageListReq struct {
+	ConversationID int64      `form:"conversationId" binding:"required"`      // 会话编号
+	CreateTime     *time.Time `form:"createTime"`                             // 发送时间（用于分页）
+	Limit          int        `form:"limit" binding:"required,min=1,max=100"` // 每次查询条数，默认10，最大100
+}
+
+// KefuMessagePageReq 消息分页请求 (保留用于其他场景)
 type KefuMessagePageReq struct {
 	pagination.PageParam
 	ConversationID int64 `form:"conversationId" binding:"required"` // 会话编号
@@ -21,4 +30,10 @@ type KefuMessagePageReq struct {
 type KefuConversationPageReq struct {
 	pagination.PageParam
 	// 可扩展查询条件，如用户昵称等
+}
+
+// KeFuConversationUpdatePinnedReq 置顶客服会话请求 (对齐 Java KeFuConversationUpdatePinnedReqVO)
+type KeFuConversationUpdatePinnedReq struct {
+	ID          int64 `json:"id" binding:"required"`          // 会话编号
+	AdminPinned *bool `json:"adminPinned" binding:"required"` // 管理端置顶
 }
