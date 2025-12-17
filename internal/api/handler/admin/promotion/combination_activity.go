@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -13,11 +14,17 @@ import (
 )
 
 type CombinationActivityHandler struct {
-	svc promotion.CombinationActivityService
+	svc       promotion.CombinationActivityService
+	recordSvc promotion.CombinationRecordService
+	spuSvc    *product.ProductSpuService
 }
 
-func NewCombinationActivityHandler(svc promotion.CombinationActivityService) *CombinationActivityHandler {
-	return &CombinationActivityHandler{svc: svc}
+func NewCombinationActivityHandler(
+	svc promotion.CombinationActivityService,
+	recordSvc promotion.CombinationRecordService,
+	spuSvc *product.ProductSpuService,
+) *CombinationActivityHandler {
+	return &CombinationActivityHandler{svc: svc, recordSvc: recordSvc, spuSvc: spuSvc}
 }
 
 // CreateCombinationActivity 创建拼团活动
@@ -61,6 +68,22 @@ func (h *CombinationActivityHandler) DeleteCombinationActivity(c *gin.Context) {
 	}
 
 	err = h.svc.DeleteCombinationActivity(c.Request.Context(), id)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
+// CloseCombinationActivity 关闭拼团活动
+func (h *CombinationActivityHandler) CloseCombinationActivity(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Query("id"), 10, 64)
+	if err != nil {
+		response.WriteBizError(c, errors.NewBizError(400, "Invalid ID"))
+		return
+	}
+
+	err = h.svc.CloseCombinationActivity(c.Request.Context(), id)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

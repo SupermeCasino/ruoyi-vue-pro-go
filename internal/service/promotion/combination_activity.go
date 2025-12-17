@@ -17,6 +17,7 @@ type CombinationActivityService interface {
 	// Admin
 	CreateCombinationActivity(ctx context.Context, req req.CombinationActivityCreateReq) (int64, error)
 	UpdateCombinationActivity(ctx context.Context, req req.CombinationActivityUpdateReq) error
+	CloseCombinationActivity(ctx context.Context, id int64) error
 	DeleteCombinationActivity(ctx context.Context, id int64) error
 	GetCombinationActivity(ctx context.Context, id int64) (*resp.CombinationActivityRespVO, error)
 	GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*pagination.PageResult[*resp.CombinationActivityRespVO], error)
@@ -167,6 +168,20 @@ func (s *combinationActivityService) DeleteCombinationActivity(ctx context.Conte
 		return errors.NewBizError(1001006011, "拼团活动进行中，无法删除")
 	}
 	_, err = s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).Delete()
+	return err
+}
+
+// CloseCombinationActivity 关闭拼团活动
+func (s *combinationActivityService) CloseCombinationActivity(ctx context.Context, id int64) error {
+	q := s.q.PromotionCombinationActivity
+	activity, err := q.WithContext(ctx).Where(q.ID.Eq(id)).First()
+	if err != nil {
+		return errors.NewBizError(1001006000, "拼团活动不存在")
+	}
+	if activity.Status == 0 { // 已禁用
+		return errors.NewBizError(1001006012, "拼团活动已关闭")
+	}
+	_, err = q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, 0) // 0 = Disable
 	return err
 }
 
@@ -427,30 +442,27 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 		}
 	}
 
-	baseVo := resp.AppCombinationActivityRespVO{
-		ID:               activity.ID,
-		Name:             activity.Name,
-		UserSize:         activity.UserSize,
-		SpuID:            activity.SpuID,
-		SpuName:          spu.Name,
-		PicUrl:           spu.PicURL,
-		MarketPrice:      spu.MarketPrice,
-		CombinationPrice: minPrice,
-	}
+	_ = minPrice // 用于后续扩展
+	_ = spu      // SPU 信息用于后续扩展
 
 	detailVo := &resp.AppCombinationActivityDetailRespVO{
-		AppCombinationActivityRespVO: baseVo,
-		Products:                     make([]resp.CombinationProductRespVO, len(prods)),
+		ID:               activity.ID,
+		Name:             activity.Name,
+		Status:           activity.Status,
+		StartTime:        &activity.StartTime,
+		EndTime:          &activity.EndTime,
+		UserSize:         activity.UserSize,
+		SuccessCount:     0, // TODO: 需要从 RecordService 获取
+		SpuID:            activity.SpuID,
+		TotalLimitCount:  activity.TotalLimitCount,
+		SingleLimitCount: activity.SingleLimitCount,
+		Products:         make([]resp.AppCombinationActivityDetailProduct, len(prods)),
 	}
 
 	for i, p := range prods {
-		detailVo.Products[i] = resp.CombinationProductRespVO{
-			SpuID:             p.SpuID,
-			SkuID:             p.SkuID,
-			CombinationPrice:  p.CombinationPrice,
-			ActivityStatus:    p.ActivityStatus,
-			ActivityStartTime: p.ActivityStartTime,
-			ActivityEndTime:   p.ActivityEndTime,
+		detailVo.Products[i] = resp.AppCombinationActivityDetailProduct{
+			SkuID:            p.SkuID,
+			CombinationPrice: p.CombinationPrice,
 		}
 	}
 

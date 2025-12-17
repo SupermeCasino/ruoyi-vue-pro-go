@@ -137,10 +137,40 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	// Convert to Resp
+	if len(res.List) == 0 {
+		response.WriteSuccess(c, pagination.PageResult[resp.SeckillActivityResp]{
+			List:  []resp.SeckillActivityResp{},
+			Total: res.Total,
+		})
+		return
+	}
+
+	// 收集 ActivityIDs 和 SpuIDs
+	activityIds := make([]int64, len(res.List))
+	spuIds := make([]int64, len(res.List))
+	for i, v := range res.List {
+		activityIds[i] = v.ID
+		spuIds[i] = v.SpuID
+	}
+
+	// 批量获取 Products
+	products, _ := h.svc.GetSeckillProductListByActivityIds(c.Request.Context(), activityIds)
+	productMap := make(map[int64][]*promotionModel.PromotionSeckillProduct)
+	for _, p := range products {
+		productMap[p.ActivityID] = append(productMap[p.ActivityID], p)
+	}
+
+	// 批量获取 SPU
+	spuList, _ := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
+	spuMap := make(map[int64]*resp.ProductSpuResp)
+	for _, spu := range spuList {
+		spuMap[spu.ID] = spu
+	}
+
+	// 构建响应
 	list := make([]resp.SeckillActivityResp, len(res.List))
 	for i, v := range res.List {
-		list[i] = resp.SeckillActivityResp{
+		item := resp.SeckillActivityResp{
 			ID:               v.ID,
 			SpuID:            v.SpuID,
 			Name:             v.Name,
@@ -156,6 +186,35 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 			TotalStock:       v.TotalStock,
 			CreateTime:       v.CreatedAt,
 		}
+
+		// 拼接 Products
+		if prods, ok := productMap[v.ID]; ok {
+			item.Products = make([]resp.SeckillProductResp, len(prods))
+			minPrice := 0
+			for j, p := range prods {
+				item.Products[j] = resp.SeckillProductResp{
+					ID:           p.ID,
+					ActivityID:   p.ActivityID,
+					SpuID:        p.SpuID,
+					SkuID:        p.SkuID,
+					SeckillPrice: p.SeckillPrice,
+					Stock:        p.Stock,
+				}
+				if j == 0 || p.SeckillPrice < minPrice {
+					minPrice = p.SeckillPrice
+				}
+			}
+			item.SeckillPrice = minPrice
+		}
+
+		// 拼接 SPU
+		if spu, ok := spuMap[v.SpuID]; ok {
+			item.SpuName = spu.Name
+			item.PicUrl = spu.PicURL
+			item.MarketPrice = spu.MarketPrice
+		}
+
+		list[i] = item
 	}
 
 	response.WriteSuccess(c, pagination.PageResult[resp.SeckillActivityResp]{

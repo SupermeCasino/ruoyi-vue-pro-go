@@ -99,3 +99,13 @@ func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 		Total: pageResult.Total,
 	})
 }
+
+// GetCombinationRecordSummary 获得拼团记录的概要信息
+func (h *CombinationRecordHandler) GetCombinationRecordSummary(c *gin.Context) {
+	summary, err := h.svc.GetCombinationRecordSummaryAdmin(c.Request.Context())
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, summary)
+}

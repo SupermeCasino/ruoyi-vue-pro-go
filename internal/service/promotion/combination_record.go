@@ -25,6 +25,7 @@ type CombinationRecordService interface {
 	ValidateCombinationRecord(ctx context.Context, userID int64, activityID int64, headID int64, skuID int64, count int) (*promotion.PromotionCombinationActivity, *promotion.PromotionCombinationProduct, error)
 	CreateCombinationRecord(ctx context.Context, record *promotion.PromotionCombinationRecord) (int64, error)
 	GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error)
+	GetCombinationRecordSummaryAdmin(ctx context.Context) (*resp.CombinationRecordSummaryVO, error)
 }
 
 type combinationRecordService struct {
@@ -253,4 +254,34 @@ func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Con
 		return nil, err
 	}
 	return &pagination.PageResult[*promotion.PromotionCombinationRecord]{List: list, Total: total}, nil
+}
+
+// GetCombinationRecordSummaryAdmin 获得拼团记录的概要信息 (Admin)
+// 对齐 Java: CombinationRecordController#getCombinationRecordSummary
+func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.Context) (*resp.CombinationRecordSummaryVO, error) {
+	q := s.q.PromotionCombinationRecord
+
+	// 1. 获取拼团用户参与数量 (去重)
+	userCount, err := q.WithContext(ctx).Distinct(q.UserID).Count()
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 获取成团记录数量 (Status=1, HeadID=0 表示团长)
+	successCount, err := q.WithContext(ctx).Where(q.Status.Eq(1), q.HeadID.Eq(0)).Count()
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 获取虚拟成团记录数量 (VirtualGroup=true, HeadID=0)
+	virtualGroupCount, err := q.WithContext(ctx).Where(q.VirtualGroup.Is(true), q.HeadID.Eq(0)).Count()
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.CombinationRecordSummaryVO{
+		UserCount:         userCount,
+		SuccessCount:      successCount,
+		VirtualGroupCount: virtualGroupCount,
+	}, nil
 }
