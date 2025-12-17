@@ -179,7 +179,9 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 		// Kefu Conversation (Admin)
 		kefuConversationGroup := promotionGroup.Group("/kefu-conversation")
 		{
-			kefuConversationGroup.GET("/page", kefuHandler.GetConversationPage)
+			kefuConversationGroup.GET("/get", kefuHandler.GetConversation)
+			kefuConversationGroup.GET("/list", kefuHandler.GetConversationList)
+			kefuConversationGroup.PUT("/update-conversation-pinned", kefuHandler.UpdateConversationPinned)
 			kefuConversationGroup.DELETE("/delete", kefuHandler.DeleteConversation)
 		}
 
@@ -187,7 +189,8 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 		kefuMessageGroup := promotionGroup.Group("/kefu-message")
 		{
 			kefuMessageGroup.POST("/send", kefuHandler.SendMessage)
-			kefuMessageGroup.GET("/page", kefuHandler.GetMessagePage)
+			kefuMessageGroup.PUT("/update-read-status", kefuHandler.UpdateMessageReadStatus)
+			kefuMessageGroup.GET("/list", kefuHandler.GetMessageList)
 		}
 
 		// Point Activity

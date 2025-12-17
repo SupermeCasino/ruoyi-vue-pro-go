@@ -43,10 +43,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
-)
 
-import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
+
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -147,7 +146,7 @@ func InitApp() (*gin.Engine, error) {
 	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService, tradePriceService)
 	tradeAfterSaleHandler := trade3.NewTradeAfterSaleHandler(tradeAfterSaleService)
 	appTradeAfterSaleHandler := trade2.NewAppTradeAfterSaleHandler(tradeAfterSaleService)
-	couponService := promotion.NewCouponService()
+	couponService := promotion.NewCouponService(query)
 	couponHandler := promotion2.NewCouponHandler(couponService)
 	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
 	combinationActivityHandler := promotion2.NewCombinationActivityHandler(combinationActivityService)
@@ -250,7 +249,8 @@ func InitApp() (*gin.Engine, error) {
 	diyPageHandler := promotion2.NewDiyPageHandler(diyPageService)
 	appDiyPageHandler := promotion3.NewAppDiyPageHandler(diyPageService)
 	appDiyTemplateHandler := promotion3.NewAppDiyTemplateHandler(diyTemplateService, diyPageService)
-	kefuService := promotion.NewKefuService(query)
+	manager := websocket.NewManager() // Moved here for KefuService
+	kefuService := promotion.NewKefuService(query, memberUserService, userService, manager)
 	kefuHandler := promotion2.NewKefuHandler(kefuService)
 	appKefuHandler := promotion3.NewAppKefuHandler(kefuService)
 	pointActivityService := promotion.NewPointActivityService(productSpuService, productSkuService)
@@ -290,8 +290,7 @@ func InitApp() (*gin.Engine, error) {
 	appBrokerageUserHandler := brokerage3.NewAppBrokerageUserHandler(brokerageUserService, brokerageRecordService, brokerageWithdrawService, memberUserService)
 	appBrokerageRecordHandler := brokerage3.NewAppBrokerageRecordHandler(brokerageRecordService)
 	appBrokerageWithdrawHandler := brokerage3.NewAppBrokerageWithdrawHandler(brokerageWithdrawService, payTransferService)
-	manager := websocket.NewManager()
-	webSocketHandler := handler.NewWebSocketHandler(manager, zapLogger)
+	webSocketHandler := handler.NewWebSocketHandler(manager, zapLogger) // manager already created above
 	enforcer, err := permission.InitEnforcer(db)
 	if err != nil {
 		return nil, err
