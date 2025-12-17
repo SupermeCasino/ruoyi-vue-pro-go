@@ -33,3 +33,13 @@ type FilePageReq struct {
 type FileUploadReq struct {
 	Path string `form:"path"` // 自定义上传路径/文件名
 }
+
+// FileCreateReq 创建文件 Request (前端直传回调)
+type FileCreateReq struct {
+	ConfigID int64  `json:"configId" binding:"required"`
+	Path     string `json:"path" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	URL      string `json:"url" binding:"required"`
+	Type     string `json:"type"`
+	Size     int    `json:"size" binding:"required"`
+}

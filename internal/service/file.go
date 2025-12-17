@@ -156,3 +156,49 @@ func (s *FileService) convertResp(item *model.InfraFile) *resp.FileRespVO {
 		CreateTime: item.CreatedAt,
 	}
 }
+
+func (s *FileService) GetFilePresignedUrl(ctx context.Context, path string) (*resp.FilePresignedUrlResp, error) {
+	config, err := s.fileConfigService.GetMasterFileConfig(ctx)
+	if err != nil {
+		return nil, errors.New("请先配置主文件存储")
+	}
+
+	client, err := file.NewFileClient(config.Storage, config.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	presignedUrl, err := client.GetPresignedURL(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.FilePresignedUrlResp{
+		ConfigID:  config.ID,
+		UploadURL: presignedUrl,
+		URL:       client.GetURL(path),
+		Path:      path,
+	}, nil
+}
+
+func (s *FileService) CreateFileCallback(ctx context.Context, req *req.FileCreateReq) (int64, error) {
+	// 验证配置是否存在
+	_, err := s.fileConfigService.GetFileConfig(ctx, req.ConfigID)
+	if err != nil {
+		return 0, errors.New("配置不存在")
+	}
+
+	fileRecord := &model.InfraFile{
+		ConfigId: req.ConfigID,
+		Name:     req.Name,
+		Path:     req.Path,
+		Url:      req.URL,
+		Type:     req.Type,
+		Size:     req.Size,
+	}
+	err = s.q.InfraFile.WithContext(ctx).Create(fileRecord)
+	if err != nil {
+		return 0, err
+	}
+	return fileRecord.ID, nil
+}
