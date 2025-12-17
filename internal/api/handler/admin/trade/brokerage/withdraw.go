@@ -126,8 +126,7 @@ func (h *BrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 	for i, item := range pageResult.List {
 		res := h.convert(item)
 		if u, ok := userMap[item.UserID]; ok {
-			res.BrokerageUserResp.Nickname = u.Nickname
-			res.BrokerageUserResp.Avatar = u.Avatar
+			res.UserNickname = u.Nickname
 		}
 		list[i] = res
 	}
@@ -144,33 +143,23 @@ func (h *BrokerageWithdrawHandler) convert(do *brokerageModel.BrokerageWithdraw)
 		payTransferId = do.PayTransferID
 	}
 	return resp.BrokerageWithdrawResp{
-		ID:                  do.ID,
-		UserID:              do.UserID,
-		Price:               do.Price,
-		FeePrice:            do.FeePrice,
-		TotalPrice:          do.TotalPrice,
-		Type:                do.Type,
-		UserName:            do.UserName,
-		UserAccount:         do.UserAccount,
-		QRCodeUrl:           do.QrCodeURL,
-		BankName:            do.BankName,
-		BankAddress:         do.BankAddress,
-		Status:              do.Status,
-		AuditReason:         do.AuditReason,
-		AuditTime:           do.AuditTime,
-		Remark:              do.Remark,
-		PayTransferID:       payTransferId,
-		TransferChannelCode: do.TransferChannelCode,
-		TransferTime:        do.TransferTime,
-		TransferErrorMsg:    do.TransferErrorMsg,
-		CreateTime:          do.CreatedAt,
-		BrokerageUserResp: resp.BrokerageUserResp{
-			ID: do.UserID,
-			// Note: BrokerageUserResp expects BrokerageUserId (the user IS the brokerage user here)
-			// But BrokerageUserResp fields (Price, Frozen...) might need to be fetched?
-			// Java controller: `BrokerageWithdrawConvert.INSTANCE.convertPage(pageResult, userMap)`
-			// Standard UserInfo (Nickname/Avatar) is aggregated.
-			// We only fill Nickname/Avatar in GetPage loop.
-		},
+		ID:               do.ID,
+		UserID:           do.UserID,
+		Price:            do.Price,
+		FeePrice:         do.FeePrice,
+		TotalPrice:       do.TotalPrice,
+		Type:             do.Type,
+		UserName:         do.UserName,
+		UserAccount:      do.UserAccount,
+		QRCodeUrl:        do.QrCodeURL,
+		BankName:         do.BankName,
+		BankAddress:      do.BankAddress,
+		Status:           do.Status,
+		AuditReason:      do.AuditReason,
+		AuditTime:        do.AuditTime,
+		Remark:           do.Remark,
+		PayTransferID:    payTransferId,
+		TransferErrorMsg: do.TransferErrorMsg,
+		CreateTime:       do.CreatedAt,
 	}
 }

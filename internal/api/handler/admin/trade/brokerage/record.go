@@ -105,21 +105,15 @@ func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 			CreateTime:      item.CreatedAt,
 		}
 		if u, ok := userMap[item.UserID]; ok {
-			res.BrokerageUserResp.Nickname = u.Nickname
-			res.BrokerageUserResp.Avatar = u.Avatar
-		} else {
-			// If UserID is not found in MemberUser, maybe handle gracefully?
+			res.UserNickname = u.Nickname
+			res.UserAvatar = u.Avatar
 		}
-
-		// Note: Response might need source user info too? Java controller aggregates both userId and sourceUserId.
-		// But Java VO only seems to flatten "user" info into properites or maybe it has "user" and "sourceUser" objects?
-		// Let's check Java RespVO if needed. `BrokerageRecordRespVO.java`.
-		// Java controller: `userIds.addAll(...)`. `convertPage(pageResult, userMap)`.
-		// Let's assume standard response structure. User info usually flattened or nested.
-		// My DTO `BrokerageRecordResp` has embedded `BrokerageUserResp` which has Nickname/Avatar.
-		// It covers the primary user. Source user info might be missing in my DTO?
-		// Java `BrokerageRecordRespVO` likely has `brokerageNxUser` or similar?
-		// I won't over-engineer now.
+		if item.SourceUserID > 0 {
+			if u, ok := userMap[item.SourceUserID]; ok {
+				res.SourceUserNickname = u.Nickname
+				res.SourceUserAvatar = u.Avatar
+			}
+		}
 
 		list[i] = res
 	}

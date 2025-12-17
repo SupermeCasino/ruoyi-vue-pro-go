@@ -27,7 +27,7 @@ type BrokerageUserResp struct {
 	WithdrawCount int `json:"withdrawCount"`
 }
 
-// BrokerageRecordResp 分销记录 Response
+// BrokerageRecordResp 分销记录 Response - 严格对齐 Java BrokerageRecordRespVO
 type BrokerageRecordResp struct {
 	ID              int64      `json:"id"`
 	UserID          int64      `json:"userId"`
@@ -43,34 +43,32 @@ type BrokerageRecordResp struct {
 	SourceUserLevel int        `json:"sourceUserLevel"`
 	SourceUserID    int64      `json:"sourceUserId"`
 	CreateTime      time.Time  `json:"createTime"`
-
-	// User Info
-	BrokerageUserResp
+	// User Info - 直接字段
+	UserAvatar         string `json:"userAvatar"`
+	UserNickname       string `json:"userNickname"`
+	SourceUserAvatar   string `json:"sourceUserAvatar"`
+	SourceUserNickname string `json:"sourceUserNickname"`
 }
 
-// BrokerageWithdrawResp 分销提现 Response
+// BrokerageWithdrawResp 分销提现 Response - 严格对齐 Java BrokerageWithdrawRespVO
 type BrokerageWithdrawResp struct {
-	ID                  int64      `json:"id"`
-	UserID              int64      `json:"userId"`
-	Price               int        `json:"price"`
-	FeePrice            int        `json:"feePrice"`
-	TotalPrice          int        `json:"totalPrice"`
-	Type                int        `json:"type"`
-	UserName            string     `json:"userName"`
-	UserAccount         string     `json:"userAccount"`
-	QRCodeUrl           string     `json:"qrCodeUrl"`
-	BankName            string     `json:"bankName"`
-	BankAddress         string     `json:"bankAddress"`
-	Status              int        `json:"status"`
-	AuditReason         string     `json:"auditReason"`
-	AuditTime           *time.Time `json:"auditTime"`
-	Remark              string     `json:"remark"`
-	PayTransferID       int64      `json:"payTransferId"`
-	TransferChannelCode string     `json:"transferChannelCode"`
-	TransferTime        *time.Time `json:"transferTime"`
-	TransferErrorMsg    string     `json:"transferErrorMsg"`
-	CreateTime          time.Time  `json:"createTime"`
-
-	// User Info
-	BrokerageUserResp
+	ID               int64      `json:"id"`
+	UserID           int64      `json:"userId"`
+	UserNickname     string     `json:"userNickname"` // 新增
+	Price            int        `json:"price"`
+	FeePrice         int        `json:"feePrice"`
+	TotalPrice       int        `json:"totalPrice"`
+	Type             int        `json:"type"`
+	UserName         string     `json:"userName"`
+	UserAccount      string     `json:"userAccount"`
+	QRCodeUrl        string     `json:"qrCodeUrl"`
+	BankName         string     `json:"bankName"`
+	BankAddress      string     `json:"bankAddress"`
+	Status           int        `json:"status"`
+	AuditReason      string     `json:"auditReason"`
+	AuditTime        *time.Time `json:"auditTime"`
+	Remark           string     `json:"remark"`
+	PayTransferID    int64      `json:"payTransferId"`
+	TransferErrorMsg string     `json:"transferErrorMsg"`
+	CreateTime       time.Time  `json:"createTime"`
 }
