@@ -283,8 +283,9 @@ func RegisterAppRoutes(engine *gin.Engine,
 			// Kefu Message
 			kefuMessageGroup := promotionGroup.Group("/kefu-message")
 			{
-				kefuMessageGroup.POST("/create", appKefuHandler.SendMessage)
-				kefuMessageGroup.GET("/page", appKefuHandler.GetMessagePage)
+				kefuMessageGroup.POST("/send", appKefuHandler.SendMessage)
+				kefuMessageGroup.PUT("/update-read-status", appKefuHandler.UpdateMessageReadStatus)
+				kefuMessageGroup.GET("/list", appKefuHandler.GetMessageList)
 			}
 
 			// Combination Activity
