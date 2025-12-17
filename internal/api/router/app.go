@@ -48,6 +48,8 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appBargainActivityHandler *promotionApp.AppBargainActivityHandler,
 	appBargainRecordHandler *promotionApp.AppBargainRecordHandler,
 	appBargainHelpHandler *promotionApp.AppBargainHelpHandler,
+	appSeckillActivityHandler *promotionApp.AppSeckillActivityHandler, // 新增
+	appSeckillConfigHandler *promotionApp.AppSeckillConfigHandler, // 新增
 	// Brokerage
 	appBrokerageUserHandler *appBrokerage.AppBrokerageUserHandler,
 	appBrokerageRecordHandler *appBrokerage.AppBrokerageRecordHandler,
@@ -341,6 +343,21 @@ func RegisterAppRoutes(engine *gin.Engine,
 			{
 				bargainHelpGroup.GET("/list", appBargainHelpHandler.GetBargainHelpList)
 				bargainHelpGroup.POST("/create", middleware.Auth(), appBargainHelpHandler.CreateBargainHelp)
+			}
+
+			// Seckill Activity (Public - 对齐 Java @PermitAll)
+			seckillActivityGroup := promotionGroup.Group("/seckill-activity")
+			{
+				seckillActivityGroup.GET("/get-now", appSeckillActivityHandler.GetNowSeckillActivity)
+				seckillActivityGroup.GET("/page", appSeckillActivityHandler.GetSeckillActivityPage)
+				seckillActivityGroup.GET("/get", appSeckillActivityHandler.GetSeckillActivity)
+				seckillActivityGroup.GET("/list-by-ids", appSeckillActivityHandler.GetSeckillActivityListByIds)
+			}
+
+			// Seckill Config (Public - 对齐 Java @PermitAll)
+			seckillConfigGroup := promotionGroup.Group("/seckill-config")
+			{
+				seckillConfigGroup.GET("/list", appSeckillConfigHandler.GetSeckillConfigList)
 			}
 		}
 	}

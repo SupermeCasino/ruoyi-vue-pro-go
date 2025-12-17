@@ -276,6 +276,8 @@ func InitApp() (*gin.Engine, error) {
 		promotionApp.NewAppBargainActivityHandler,
 		promotionApp.NewAppBargainRecordHandler,
 		promotionApp.NewAppBargainHelpHandler,
+		promotionApp.NewAppSeckillActivityHandler,     // 新增
+		promotionApp.NewAppSeckillConfigHandler,       // 新增
 		promotionApp.NewAppCombinationActivityHandler, // Added Combination Activity
 		promotionApp.NewAppCombinationRecordHandler,   // Added Combination Record
 		promotionApp.NewAppArticleHandler,             // Added Article

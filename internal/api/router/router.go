@@ -118,6 +118,8 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appBargainActivityHandler *promotionApp.AppBargainActivityHandler,
 	appBargainRecordHandler *promotionApp.AppBargainRecordHandler,
 	appBargainHelpHandler *promotionApp.AppBargainHelpHandler,
+	appSeckillActivityHandler *promotionApp.AppSeckillActivityHandler, // 新增
+	appSeckillConfigHandler *promotionApp.AppSeckillConfigHandler, // 新增
 	// Article
 	articleCategoryHandler *promotionAdmin.ArticleCategoryHandler,
 	articleHandler *promotionAdmin.ArticleHandler,
@@ -260,6 +262,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		appKefuHandler,
 		appCombinationActivityHandler, appCombinationRecordHandler,
 		appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler,
+		appSeckillActivityHandler, appSeckillConfigHandler, // 新增
 		appBrokerageUserHandler,
 		appBrokerageRecordHandler,
 		appBrokerageWithdrawHandler,
