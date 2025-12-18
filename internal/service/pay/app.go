@@ -104,6 +104,11 @@ func (s *PayAppService) GetApp(ctx context.Context, id int64) (*pay.PayApp, erro
 	return s.q.PayApp.WithContext(ctx).Where(s.q.PayApp.ID.Eq(id)).First()
 }
 
+// GetAppByAppKey 根据 AppKey 获得支付应用
+func (s *PayAppService) GetAppByAppKey(ctx context.Context, appKey string) (*pay.PayApp, error) {
+	return s.q.PayApp.WithContext(ctx).Where(s.q.PayApp.AppKey.Eq(appKey)).First()
+}
+
 // GetAppMap 获得支付应用 Map
 func (s *PayAppService) GetAppMap(ctx context.Context, ids []int64) (map[int64]*pay.PayApp, error) {
 	if len(ids) == 0 {
