@@ -555,7 +555,7 @@ func (s *PayOrderService) notifyOrderClosedTx(ctx context.Context, tx *query.Que
 	}
 
 	if order.Status != PayOrderStatusWaiting {
-		return nil  // 订单已处理过，不需要重复关闭
+		return nil // 订单已处理过，不需要重复关闭
 	}
 
 	result, err = tx.PayOrder.WithContext(ctx).
@@ -625,4 +625,31 @@ func (s *PayOrderService) GetOrderList(ctx context.Context, req *req.PayOrderExp
 		q = q.Where(s.q.PayOrder.Status.Eq(*req.Status))
 	}
 	return q.Order(s.q.PayOrder.ID.Desc()).Find()
+}
+
+// SyncOrder 同步指定时间之后的待支付订单状态
+// 对齐 Java: PayOrderServiceImpl.syncOrder(LocalDateTime minCreateTime)
+func (s *PayOrderService) SyncOrder(ctx context.Context, minCreateTime time.Time) (int, error) {
+	// 1. 查询指定创建时间内的待支付订单拓展
+	extensions, err := s.q.PayOrderExtension.WithContext(ctx).
+		Where(
+			s.q.PayOrderExtension.Status.Eq(PayOrderStatusWaiting),
+			s.q.PayOrderExtension.CreatedAt.Gte(minCreateTime),
+		).
+		Find()
+	if err != nil {
+		return 0, err
+	}
+	if len(extensions) == 0 {
+		return 0, nil
+	}
+
+	// 2. 遍历执行
+	count := 0
+	for _, ext := range extensions {
+		if s.syncOrder(ctx, ext) {
+			count++
+		}
+	}
+	return count, nil
 }
