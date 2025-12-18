@@ -4,6 +4,15 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
+type PayRefundCreateReq struct {
+	AppKey           string `json:"appKey"`
+	UserIP           string `json:"userIp"`
+	MerchantOrderId  string `json:"merchantOrderId"`
+	MerchantRefundId string `json:"merchantRefundId"`
+	Reason           string `json:"reason"`
+	Price            int    `json:"price"`
+}
+
 type PayRefundPageReq struct {
 	pagination.PageParam
 	AppID            int64    `form:"appId"`

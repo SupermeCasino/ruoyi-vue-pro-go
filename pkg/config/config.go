@@ -69,6 +69,7 @@ type PayConfig struct {
 	OrderNotifyURL  string `mapstructure:"order_notify_url"`
 	RefundNotifyURL string `mapstructure:"refund_notify_url"`
 	OrderNoPrefix   string `mapstructure:"order_no_prefix"`
+	WalletPayAppKey string `mapstructure:"wallet_pay_app_key"`
 }
 
 func Load() error {

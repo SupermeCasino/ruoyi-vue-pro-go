@@ -4,9 +4,15 @@ package pay
 // 对齐 Java: PayTransferStatusEnum
 const (
 	PayTransferStatusWaiting    = 0  // 等待转账
-	PayTransferStatusProcessing = 5  // 转账进行中
-	PayTransferStatusSuccess    = 10 // 转账成功
-	PayTransferStatusClosed     = 20 // 转账关闭
+	PayTransferStatusProcessing = 10 // 转账进行中
+	PayTransferStatusSuccess    = 20 // 转账成功
+	PayTransferStatusClosed     = 30 // 转账关闭
+
+	// PayRefundStatus 退款状态
+	PayRefundStatusWaiting = 0  // 等待退款
+	PayRefundStatusSuccess = 10 // 退款成功
+	PayRefundStatusFailure = 20 // 退款失败
+	PayRefundStatusClosed  = 30 // 退款关闭
 
 	// PayTransferType 转账类型
 	PayTransferTypeAlipayBalance = 1 // 支付宝 - 余额
