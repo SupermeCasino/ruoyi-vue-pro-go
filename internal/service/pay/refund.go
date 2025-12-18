@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	stdErrors "errors"
 	"fmt"
-	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	payrepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
@@ -23,15 +24,17 @@ type PayRefundService struct {
 	channelSvc *PayChannelService
 	orderSvc   *PayOrderService
 	notifySvc  *PayNotifyService
+	noDAO      *payrepo.PayNoRedisDAO
 }
 
-func NewPayRefundService(q *query.Query, appSvc *PayAppService, channelSvc *PayChannelService, orderSvc *PayOrderService, notifySvc *PayNotifyService) *PayRefundService {
+func NewPayRefundService(q *query.Query, appSvc *PayAppService, channelSvc *PayChannelService, orderSvc *PayOrderService, notifySvc *PayNotifyService, noDAO *payrepo.PayNoRedisDAO) *PayRefundService {
 	return &PayRefundService{
 		q:          q,
 		appSvc:     appSvc,
 		channelSvc: channelSvc,
 		orderSvc:   orderSvc,
 		notifySvc:  notifySvc,
+		noDAO:      noDAO,
 	}
 }
 
@@ -73,7 +76,10 @@ func (s *PayRefundService) CreateRefund(ctx context.Context, reqDTO *req.PayRefu
 
 	// 2.1 创建退款单
 	// Generate Refund No (R + time + 6 digits)
-	no := "R" + time.Now().Format("20060102150405") + "000000" // TODO: 对齐 Java PayNoRedisDAO
+	no, err := s.noDAO.Generate(ctx, "R")
+	if err != nil {
+		return 0, fmt.Errorf("failed to generate refund no: %w", err)
+	}
 
 	refund := &payModel.PayRefund{
 		No:               no,
@@ -163,9 +169,8 @@ func (s *PayRefundService) validateNoRefundingOrder(ctx context.Context, appId i
 }
 
 func (s *PayRefundService) genChannelRefundNotifyUrl(channel *payModel.PayChannel) string {
-	// 暂时简单实现，
-	// TODO：实际应从统一配置获取
-	return "http://your-domain/api/pay/refund/notify/" + fmt.Sprintf("%d", channel.ID)
+	// 对齐 Java: payProperties.getRefundNotifyUrl() + "/" + channel.getId()
+	return fmt.Sprintf("%s/%d", config.C.Pay.RefundNotifyURL, channel.ID)
 }
 
 func (s *PayRefundService) validatePayRefundExist(ctx context.Context, appId int64, merchantRefundId string) error {
