@@ -51,17 +51,35 @@ func (b BitBool) Value() (driver.Value, error) {
 
 // QueryClauses 实现 GORM 软删除查询子句
 func (BitBool) QueryClauses(f *schema.Field) []clause.Interface {
-	return []clause.Interface{BitBoolQueryClause{Field: f}}
+	// 仅为标有 softDelete 标签的字段返回 QueryClause
+	if f != nil && f.TagSettings != nil {
+		if _, hasSoftDelete := f.TagSettings["SOFTDELETE"]; hasSoftDelete {
+			return []clause.Interface{BitBoolQueryClause{Field: f}}
+		}
+	}
+	return nil
 }
 
 // DeleteClauses 实现 GORM 软删除删除子句
 func (BitBool) DeleteClauses(f *schema.Field) []clause.Interface {
-	return []clause.Interface{BitBoolDeleteClause{Field: f}}
+	// 仅为标有 softDelete 标签的字段返回 DeleteClause
+	if f != nil && f.TagSettings != nil {
+		if _, hasSoftDelete := f.TagSettings["SOFTDELETE"]; hasSoftDelete {
+			return []clause.Interface{BitBoolDeleteClause{Field: f}}
+		}
+	}
+	return nil
 }
 
 // UpdateClauses 实现 GORM 软删除更新子句
 func (BitBool) UpdateClauses(f *schema.Field) []clause.Interface {
-	return []clause.Interface{BitBoolUpdateClause{Field: f}}
+	// 仅为标有 softDelete 标签的字段返回 UpdateClause
+	if f != nil && f.TagSettings != nil {
+		if _, hasSoftDelete := f.TagSettings["SOFTDELETE"]; hasSoftDelete {
+			return []clause.Interface{BitBoolUpdateClause{Field: f}}
+		}
+	}
+	return nil
 }
 
 // BitBoolQueryClause 查询子句 - 自动过滤已删除记录
