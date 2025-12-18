@@ -297,7 +297,9 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			// Notify Message
 			notifyMessageGroup := systemGroup.Group("/notify-message")
 			{
+				notifyMessageGroup.GET("/get", casbinMiddleware.RequirePermission("system:notify-message:query"), notifyHandler.GetNotifyMessage)
 				notifyMessageGroup.GET("/get-unread-count", notifyHandler.GetUnreadNotifyMessageCount)
+				notifyMessageGroup.GET("/get-unread-list", notifyHandler.GetUnreadNotifyMessageList)
 				notifyMessageGroup.GET("/my-page", notifyHandler.GetMyNotifyMessagePage)
 				notifyMessageGroup.GET("/page", casbinMiddleware.RequirePermission("system:notify-message:query"), notifyHandler.GetNotifyMessagePage)
 				notifyMessageGroup.PUT("/update-read", notifyHandler.UpdateNotifyMessageRead)

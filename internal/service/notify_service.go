@@ -10,33 +10,35 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
-
-	"gorm.io/gorm"
 )
 
 type NotifyService struct {
-	db *gorm.DB
+	q *query.Query
 	// Cache
 	templateCache map[string]*model.SystemNotifyTemplate
 	mu            sync.RWMutex
 }
 
-func NewNotifyService(db *gorm.DB) *NotifyService {
+func NewNotifyService(q *query.Query) *NotifyService {
 	s := &NotifyService{
-		db: db,
+		q: q,
 	}
 	s.RefreshCache()
 	return s
 }
 
 func (s *NotifyService) RefreshCache() {
-	var list []model.SystemNotifyTemplate
-	s.db.Find(&list)
+	t := s.q.SystemNotifyTemplate
+	list, err := t.WithContext(context.Background()).Find()
+	if err != nil {
+		return
+	}
 	m := make(map[string]*model.SystemNotifyTemplate)
-	for i := range list {
-		m[list[i].Code] = &list[i]
+	for _, item := range list {
+		m[item.Code] = item
 	}
 	s.mu.Lock()
 	s.templateCache = m
@@ -46,7 +48,8 @@ func (s *NotifyService) RefreshCache() {
 // ================= Template CRUD =================
 
 func (s *NotifyService) CreateNotifyTemplate(ctx context.Context, r *req.NotifyTemplateCreateReq) (int64, error) {
-	t := &model.SystemNotifyTemplate{
+	t := s.q.SystemNotifyTemplate
+	template := &model.SystemNotifyTemplate{
 		Name:     r.Name,
 		Code:     r.Code,
 		Nickname: r.Nickname,
@@ -55,16 +58,16 @@ func (s *NotifyService) CreateNotifyTemplate(ctx context.Context, r *req.NotifyT
 		Status:   r.Status,
 		Remark:   r.Remark,
 	}
-	if err := s.db.WithContext(ctx).Create(t).Error; err != nil {
+	if err := t.WithContext(ctx).Create(template); err != nil {
 		return 0, err
 	}
 	s.RefreshCache()
-	return t.ID, nil
+	return template.ID, nil
 }
 
 func (s *NotifyService) UpdateNotifyTemplate(ctx context.Context, r *req.NotifyTemplateUpdateReq) error {
-	t := &model.SystemNotifyTemplate{
-		ID:       r.ID,
+	t := s.q.SystemNotifyTemplate
+	_, err := t.WithContext(ctx).Where(t.ID.Eq(r.ID)).Updates(&model.SystemNotifyTemplate{
 		Name:     r.Name,
 		Code:     r.Code,
 		Nickname: r.Nickname,
@@ -72,8 +75,8 @@ func (s *NotifyService) UpdateNotifyTemplate(ctx context.Context, r *req.NotifyT
 		Type:     r.Type,
 		Status:   r.Status,
 		Remark:   r.Remark,
-	}
-	if err := s.db.WithContext(ctx).Updates(t).Error; err != nil {
+	})
+	if err != nil {
 		return err
 	}
 	s.RefreshCache()
@@ -81,7 +84,9 @@ func (s *NotifyService) UpdateNotifyTemplate(ctx context.Context, r *req.NotifyT
 }
 
 func (s *NotifyService) DeleteNotifyTemplate(ctx context.Context, id int64) error {
-	if err := s.db.WithContext(ctx).Delete(&model.SystemNotifyTemplate{}, id).Error; err != nil {
+	t := s.q.SystemNotifyTemplate
+	_, err := t.WithContext(ctx).Where(t.ID.Eq(id)).Delete()
+	if err != nil {
 		return err
 	}
 	s.RefreshCache()
@@ -89,33 +94,35 @@ func (s *NotifyService) DeleteNotifyTemplate(ctx context.Context, id int64) erro
 }
 
 func (s *NotifyService) GetNotifyTemplate(ctx context.Context, id int64) (*model.SystemNotifyTemplate, error) {
-	var t model.SystemNotifyTemplate
-	if err := s.db.WithContext(ctx).First(&t, id).Error; err != nil {
-		return nil, err
-	}
-	return &t, nil
+	t := s.q.SystemNotifyTemplate
+	return t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 }
 
 func (s *NotifyService) GetNotifyTemplatePage(ctx context.Context, r *req.NotifyTemplatePageReq) (*pagination.PageResult[*model.SystemNotifyTemplate], error) {
-	db := s.db.WithContext(ctx).Model(&model.SystemNotifyTemplate{})
+	t := s.q.SystemNotifyTemplate
+	qb := t.WithContext(ctx)
+
 	if r.Name != "" {
-		db = db.Where("name LIKE ?", "%"+r.Name+"%")
+		qb = qb.Where(t.Name.Like("%" + r.Name + "%"))
 	}
 	if r.Code != "" {
-		db = db.Where("code LIKE ?", "%"+r.Code+"%")
+		qb = qb.Where(t.Code.Like("%" + r.Code + "%"))
 	}
 	if r.Status != nil {
-		db = db.Where("status = ?", *r.Status)
+		qb = qb.Where(t.Status.Eq(*r.Status))
 	}
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
+
+	total, err := qb.Count()
+	if err != nil {
 		return nil, err
 	}
-	var list []*model.SystemNotifyTemplate
+
 	offset := (r.PageNo - 1) * r.PageSize
-	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
+	list, err := qb.Order(t.ID.Desc()).Offset(offset).Limit(r.PageSize).Find()
+	if err != nil {
 		return nil, err
 	}
+
 	return &pagination.PageResult[*model.SystemNotifyTemplate]{List: list, Total: total}, nil
 }
 
@@ -127,6 +134,25 @@ func (s *NotifyService) SendNotify(ctx context.Context, userID int64, userType i
 	s.mu.RUnlock()
 	if !ok || template == nil {
 		return 0, errors.NewBizError(1002006001, "站内信模板不存在")
+	}
+
+	// 对齐 Java: NotifySendServiceImpl.sendSingleNotify - 校验模板状态
+	// Status: 0=开启, 1=禁用 (CommonStatusEnum: ENABLE=0, DISABLE=1)
+	if template.Status == 1 {
+		// 模板已禁用，静默返回（对齐 Java 的 log.info 并 return null）
+		return 0, nil
+	}
+
+	// 对齐 Java: NotifySendServiceImpl.validateTemplateParams - 校验模板参数完整性
+	if template.Params != "" {
+		var requiredParams []string
+		if err := json.Unmarshal([]byte(template.Params), &requiredParams); err == nil {
+			for _, key := range requiredParams {
+				if _, exists := params[key]; !exists {
+					return 0, errors.NewBizError(1002006002, fmt.Sprintf("站内信模板参数 [%s] 缺失", key))
+				}
+			}
+		}
 	}
 
 	content := template.Content
@@ -146,86 +172,120 @@ func (s *NotifyService) SendNotify(ctx context.Context, userID int64, userType i
 		TemplateParams:   string(paramsStr),
 		ReadStatus:       false,
 	}
-	if err := s.db.WithContext(ctx).Create(msg).Error; err != nil {
+
+	m := s.q.SystemNotifyMessage
+	if err := m.WithContext(ctx).Create(msg); err != nil {
 		return 0, err
 	}
 	return msg.ID, nil
 }
 
 func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
-	db := s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{})
+	m := s.q.SystemNotifyMessage
+	qb := m.WithContext(ctx)
+
 	if r.UserID != 0 {
-		db = db.Where("user_id = ?", r.UserID)
+		qb = qb.Where(m.UserID.Eq(r.UserID))
 	}
 	if r.UserType != 0 {
-		db = db.Where("user_type = ?", r.UserType)
+		qb = qb.Where(m.UserType.Eq(r.UserType))
 	}
 	if r.TemplateCode != "" {
-		db = db.Where("template_code LIKE ?", "%"+r.TemplateCode+"%")
+		qb = qb.Where(m.TemplateCode.Like("%" + r.TemplateCode + "%"))
 	}
 	if r.TemplateType != nil {
-		db = db.Where("template_type = ?", *r.TemplateType)
+		qb = qb.Where(m.TemplateType.Eq(*r.TemplateType))
 	}
 	if r.ReadStatus != nil {
-		db = db.Where("read_status = ?", *r.ReadStatus)
+		qb = qb.Where(m.ReadStatus.Is(*r.ReadStatus))
 	}
 	if r.StartDate != "" && r.EndDate != "" {
-		db = db.Where("create_time BETWEEN ? AND ?", r.StartDate, r.EndDate)
+		// 使用 Between 查询时间范围
+		qb = qb.Where(m.CreatedAt.Between(parseTime(r.StartDate), parseTime(r.EndDate)))
 	}
 
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
+	total, err := qb.Count()
+	if err != nil {
 		return nil, err
 	}
-	var list []*model.SystemNotifyMessage
+
 	offset := (r.PageNo - 1) * r.PageSize
-	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
+	list, err := qb.Order(m.ID.Desc()).Offset(offset).Limit(r.PageSize).Find()
+	if err != nil {
 		return nil, err
 	}
+
 	return &pagination.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
 }
 
 func (s *NotifyService) GetMyNotifyMessagePage(ctx context.Context, userID int64, userType int, r *req.MyNotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
-	db := s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{}).Where("user_id = ? AND user_type = ?", userID, userType)
+	m := s.q.SystemNotifyMessage
+	qb := m.WithContext(ctx).Where(m.UserID.Eq(userID), m.UserType.Eq(userType))
+
 	if r.ReadStatus != nil {
-		db = db.Where("read_status = ?", *r.ReadStatus)
+		qb = qb.Where(m.ReadStatus.Is(*r.ReadStatus))
 	}
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
+
+	total, err := qb.Count()
+	if err != nil {
 		return nil, err
 	}
-	var list []*model.SystemNotifyMessage
+
 	offset := (r.PageNo - 1) * r.PageSize
-	if err := db.Order("id desc").Offset(offset).Limit(r.PageSize).Find(&list).Error; err != nil {
+	list, err := qb.Order(m.ID.Desc()).Offset(offset).Limit(r.PageSize).Find()
+	if err != nil {
 		return nil, err
 	}
+
 	return &pagination.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
 }
 
 func (s *NotifyService) UpdateNotifyMessageRead(ctx context.Context, userID int64, userType int, ids []int64) error {
+	m := s.q.SystemNotifyMessage
 	now := time.Now()
-	return s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{}).
-		Where("id IN ? AND user_id = ? AND user_type = ?", ids, userID, userType).
-		Updates(map[string]interface{}{
-			"read_status": true,
-			"read_time":   &now,
-		}).Error
+	_, err := m.WithContext(ctx).
+		Where(m.ID.In(ids...), m.UserID.Eq(userID), m.UserType.Eq(userType)).
+		UpdateSimple(m.ReadStatus.Value(true), m.ReadTime.Value(now))
+	return err
 }
 
 func (s *NotifyService) UpdateAllNotifyMessageRead(ctx context.Context, userID int64, userType int) error {
+	m := s.q.SystemNotifyMessage
 	now := time.Now()
-	return s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{}).
-		Where("user_id = ? AND user_type = ? AND read_status = ?", userID, userType, false).
-		Updates(map[string]interface{}{
-			"read_status": true,
-			"read_time":   &now,
-		}).Error
+	_, err := m.WithContext(ctx).
+		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Is(false)).
+		UpdateSimple(m.ReadStatus.Value(true), m.ReadTime.Value(now))
+	return err
 }
 
 func (s *NotifyService) GetUnreadNotifyMessageCount(ctx context.Context, userID int64, userType int) (int64, error) {
-	var count int64
-	err := s.db.WithContext(ctx).Model(&model.SystemNotifyMessage{}).
-		Where("user_id = ? AND user_type = ? AND read_status = ?", userID, userType, false).
-		Count(&count).Error
-	return count, err
+	m := s.q.SystemNotifyMessage
+	return m.WithContext(ctx).
+		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Is(false)).
+		Count()
+}
+
+// GetNotifyMessage 获取单条站内信 (对齐 Java: NotifyMessageService.getNotifyMessage)
+func (s *NotifyService) GetNotifyMessage(ctx context.Context, id int64) (*model.SystemNotifyMessage, error) {
+	m := s.q.SystemNotifyMessage
+	return m.WithContext(ctx).Where(m.ID.Eq(id)).First()
+}
+
+// GetUnreadNotifyMessageList 获取未读站内信列表 (对齐 Java: NotifyMessageService.getUnreadNotifyMessageList)
+func (s *NotifyService) GetUnreadNotifyMessageList(ctx context.Context, userID int64, userType int, size int) ([]*model.SystemNotifyMessage, error) {
+	m := s.q.SystemNotifyMessage
+	if size <= 0 {
+		size = 10 // Default size
+	}
+	return m.WithContext(ctx).
+		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Is(false)).
+		Order(m.ID.Desc()).
+		Limit(size).
+		Find()
+}
+
+// parseTime 解析日期字符串
+func parseTime(s string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", s)
+	return t
 }
