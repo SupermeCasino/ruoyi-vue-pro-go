@@ -2,39 +2,36 @@ package resp
 
 import (
 	"time"
-
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 type PayOrderResp struct {
-	ID              int64         `json:"id"`
-	AppID           int64         `json:"appId"`
-	AppName         string        `json:"appName"` // From PayApp
-	ChannelID       int64         `json:"channelId"`
-	ChannelCode     string        `json:"channelCode"`
-	UserID          int64         `json:"userId"`
-	UserType        int           `json:"userType"`
-	MerchantOrderId string        `json:"merchantOrderId"`
-	Subject         string        `json:"subject"`
-	Body            string        `json:"body"`
-	NotifyURL       string        `json:"notifyUrl"`
-	Price           int           `json:"price"`
-	ChannelFeeRate  float64       `json:"channelFeeRate"`
-	ChannelFeePrice int           `json:"channelFeePrice"`
-	Status          int           `json:"status"`
-	UserIP          string        `json:"userIp"`
-	ExpireTime      time.Time     `json:"expireTime"`
-	SuccessTime     *time.Time    `json:"successTime"`
-	ExtensionID     int64         `json:"extensionId"`
-	No              string        `json:"no"`
-	RefundPrice     int           `json:"refundPrice"`
-	ChannelUserID   string        `json:"channelUserId"`
-	ChannelOrderNo  string        `json:"channelOrderNo"`
-	CreateTime      time.Time     `json:"createTime"`
-	UpdateTime      time.Time     `json:"updateTime"`
-	Creator         string        `json:"creator"`
-	Updater         string        `json:"updater"`
-	Deleted         model.BitBool `json:"deleted"`
+	ID              int64     `json:"id"`
+	AppID           int64     `json:"appId"`
+	AppName         string    `json:"appName"` // From PayApp
+	ChannelID       int64     `json:"channelId"`
+	ChannelCode     string    `json:"channelCode"`
+	UserID          int64     `json:"userId"`
+	UserType        int       `json:"userType"`
+	MerchantOrderId string    `json:"merchantOrderId"`
+	Subject         string    `json:"subject"`
+	Body            string    `json:"body"`
+	NotifyURL       string    `json:"notifyUrl"`
+	Price           int64     `json:"price"`           // 改为 int64
+	ChannelFeeRate  float64   `json:"channelFeeRate"`
+	ChannelFeePrice int       `json:"channelFeePrice"`
+	Status          int       `json:"status"`
+	UserIP          string    `json:"userIp"`
+	ExpireTime      time.Time `json:"expireTime"`
+	SuccessTime     *time.Time `json:"successTime"`
+	ExtensionID     int64     `json:"extensionId"`
+	No              string    `json:"no"`
+	RefundPrice     int64     `json:"refundPrice"`     // 改为 int64
+	ChannelUserID   string    `json:"channelUserId"`
+	ChannelOrderNo  string    `json:"channelOrderNo"`
+	CreateTime      time.Time `json:"createTime"`
+	UpdateTime      time.Time `json:"updateTime"`
+	Creator         string    `json:"creator"`
+	Updater         string    `json:"updater"`
 }
 
 type PayOrderDetailsResp struct {
