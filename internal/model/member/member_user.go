@@ -25,6 +25,7 @@ type MemberUser struct {
 	Mark     string     `gorm:"size:255;default:'';comment:备注" json:"mark"`
 
 	Point      int32                `gorm:"default:0;comment:积分" json:"point"`
+	TotalPoint int32                `gorm:"default:0;comment:总积分" json:"totalPoint"`
 	TagIds     model.IntListFromCSV `gorm:"type:varchar(255);comment:标签编号数组" json:"tagIds"`
 	LevelID    int64                `gorm:"column:level_id;comment:等级编号" json:"levelId"`
 	Experience int32                `gorm:"default:0;comment:经验" json:"experience"`

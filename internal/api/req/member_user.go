@@ -60,11 +60,13 @@ type MemberUserUpdatePointReq struct {
 
 // MemberUserPageReq 会员用户分页请求
 type MemberUserPageReq struct {
-	PageNo   int     `form:"pageNo" binding:"required"`
-	PageSize int     `form:"pageSize" binding:"required"`
-	Mobile   string  `form:"mobile"`
-	Nickname string  `form:"nickname"`
-	TagIDs   []int64 `form:"tagIds"`
-	LevelID  *int64  `form:"levelId"`
-	GroupID  *int64  `form:"groupId"`
+	PageNo     int          `form:"pageNo" binding:"required"`
+	PageSize   int          `form:"pageSize" binding:"required"`
+	Mobile     string       `form:"mobile"`
+	Nickname   string       `form:"nickname"`
+	TagIDs     []int64      `form:"tagIds"`
+	LevelID    *int64       `form:"levelId"`
+	GroupID    *int64       `form:"groupId"`
+	LoginDate  []*time.Time `form:"loginDate"`  // 最近登录时间范围
+	CreateTime []*time.Time `form:"createTime"` // 创建时间范围
 }

@@ -9,9 +9,6 @@ type AppMemberUserInfoResp struct {
 	Avatar           string                  `json:"avatar"`
 	Mobile           string                  `json:"mobile"`
 	Sex              int32                   `json:"sex"`
-	Birthday         *time.Time              `json:"birthday"` // Nullable
-	AreaID           int32                   `json:"areaId"`
-	Mark             string                  `json:"mark"`
 	Point            int32                   `json:"point"`
 	Experience       int32                   `json:"experience"`
 	Level            *AppMemberUserLevelResp `json:"level"`
@@ -36,7 +33,7 @@ type MemberUserResp struct {
 	Avatar     string     `json:"avatar"`
 	Name       string     `json:"name"`
 	Sex        int32      `json:"sex"`
-	AreaID     int32      `json:"areaId"`
+	AreaID     int64      `json:"areaId"`
 	AreaName   string     `json:"areaName"`
 	Birthday   *time.Time `json:"birthday"`
 	Mark       string     `json:"mark"`

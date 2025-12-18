@@ -10,7 +10,5 @@ type MemberLevelResp struct {
 	DiscountPercent int       `json:"discountPercent"`
 	Icon            string    `json:"icon"`
 	BackgroundURL   string    `json:"backgroundUrl"`
-	Status          int       `json:"status"`
-	Remark          string    `json:"remark"`
 	CreatedAt       time.Time `json:"createTime"`
 }

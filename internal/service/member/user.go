@@ -54,9 +54,6 @@ func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*resp.Ap
 		Avatar:           user.Avatar,
 		Mobile:           user.Mobile,
 		Sex:              user.Sex,
-		Birthday:         user.Birthday,
-		AreaID:           user.AreaID,
-		Mark:             user.Mark,
 		Point:            user.Point,
 		Experience:       user.Experience,
 		Level:            levelResp,
@@ -259,7 +256,7 @@ func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (ma
 			Nickname:  user.Nickname,
 			Avatar:    user.Avatar,
 			Sex:       user.Sex,
-			AreaID:    user.AreaID,
+			AreaID:    int64(user.AreaID),
 			Birthday:  user.Birthday,
 			Mark:      user.Mark,
 			LevelID:   user.LevelID,
@@ -322,6 +319,22 @@ func (s *MemberUserService) GetUserPage(ctx context.Context, r *req.MemberUserPa
 	}
 	if r.GroupID != nil {
 		q = q.Where(u.GroupID.Eq(*r.GroupID))
+	}
+	if len(r.LoginDate) == 2 {
+		if r.LoginDate[0] != nil {
+			q = q.Where(u.LoginDate.Gte(*r.LoginDate[0]))
+		}
+		if r.LoginDate[1] != nil {
+			q = q.Where(u.LoginDate.Lte(*r.LoginDate[1]))
+		}
+	}
+	if len(r.CreateTime) == 2 {
+		if r.CreateTime[0] != nil {
+			q = q.Where(u.CreatedAt.Gte(*r.CreateTime[0]))
+		}
+		if r.CreateTime[1] != nil {
+			q = q.Where(u.CreatedAt.Lte(*r.CreateTime[1]))
+		}
 	}
 
 	// 统计总数
