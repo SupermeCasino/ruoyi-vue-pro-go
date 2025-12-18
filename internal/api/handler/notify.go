@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -128,16 +129,13 @@ func (h *NotifyHandler) GetMyNotifyMessagePage(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	// TODO: Get userId from context
-	// userId := c.GetInt64("userId") // assuming middleware sets this
-	// For now, assuming mock or passed in context manually or Test logic allows it?
-	// Usually middleware sets "userId". I'll use 0 if not present, but it should be there.
-	// Since I don't have middleware extraction helper shown, I'll assume 0/1 for dev or implement context extraction helper later.
-	// I'll leave it as 1 (admin) for testing if not found.
-	userId := int64(1) // Default Admin
-	userType := 1      // Admin
+	loginUser := context.GetLoginUser(c)
+	if loginUser == nil {
+		response.WriteBizError(c, errors.NewBizError(401, "未登录"))
+		return
+	}
 
-	page, err := h.svc.GetMyNotifyMessagePage(c, userId, userType, &r)
+	page, err := h.svc.GetMyNotifyMessagePage(c, loginUser.UserID, loginUser.UserType, &r)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -151,9 +149,12 @@ func (h *NotifyHandler) UpdateNotifyMessageRead(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	userId := int64(1)
-	userType := 1
-	if err := h.svc.UpdateNotifyMessageRead(c, userId, userType, r.IDs); err != nil {
+	loginUser := context.GetLoginUser(c)
+	if loginUser == nil {
+		response.WriteBizError(c, errors.NewBizError(401, "未登录"))
+		return
+	}
+	if err := h.svc.UpdateNotifyMessageRead(c, loginUser.UserID, loginUser.UserType, r.IDs); err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
@@ -161,9 +162,12 @@ func (h *NotifyHandler) UpdateNotifyMessageRead(c *gin.Context) {
 }
 
 func (h *NotifyHandler) UpdateAllNotifyMessageRead(c *gin.Context) {
-	userId := int64(1)
-	userType := 1
-	if err := h.svc.UpdateAllNotifyMessageRead(c, userId, userType); err != nil {
+	loginUser := context.GetLoginUser(c)
+	if loginUser == nil {
+		response.WriteBizError(c, errors.NewBizError(401, "未登录"))
+		return
+	}
+	if err := h.svc.UpdateAllNotifyMessageRead(c, loginUser.UserID, loginUser.UserType); err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
@@ -171,12 +175,51 @@ func (h *NotifyHandler) UpdateAllNotifyMessageRead(c *gin.Context) {
 }
 
 func (h *NotifyHandler) GetUnreadNotifyMessageCount(c *gin.Context) {
-	userId := int64(1)
-	userType := 1
-	count, err := h.svc.GetUnreadNotifyMessageCount(c, userId, userType)
+	loginUser := context.GetLoginUser(c)
+	if loginUser == nil {
+		response.WriteBizError(c, errors.NewBizError(401, "未登录"))
+		return
+	}
+	count, err := h.svc.GetUnreadNotifyMessageCount(c, loginUser.UserID, loginUser.UserType)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, count)
+}
+
+// GetNotifyMessage 获取单条站内信 (对齐 Java: NotifyMessageController.getNotifyMessage)
+func (h *NotifyHandler) GetNotifyMessage(c *gin.Context) {
+	idStr := c.Query("id")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if id == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	msg, err := h.svc.GetNotifyMessage(c, id)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, msg)
+}
+
+// GetUnreadNotifyMessageList 获取未读站内信列表 (对齐 Java: NotifyMessageController.getUnreadNotifyMessageList)
+func (h *NotifyHandler) GetUnreadNotifyMessageList(c *gin.Context) {
+	loginUser := context.GetLoginUser(c)
+	if loginUser == nil {
+		response.WriteBizError(c, errors.NewBizError(401, "未登录"))
+		return
+	}
+	sizeStr := c.DefaultQuery("size", "10")
+	size, _ := strconv.Atoi(sizeStr)
+	if size <= 0 {
+		size = 10
+	}
+	list, err := h.svc.GetUnreadNotifyMessageList(c, loginUser.UserID, loginUser.UserType, size)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, list)
 }
