@@ -41,13 +41,19 @@ func (s *PointActivityService) CreatePointActivity(ctx context.Context, req *req
 		return 0, err
 	}
 
+	// 计算总库存 (Sum of products stocks)
+	totalStock := 0
+	for _, p := range req.Products {
+		totalStock += p.Stock
+	}
+
 	t := &promotion.PromotionPointActivity{
 		SpuID:      req.SpuID,
 		Status:     req.Status,
 		Remark:     req.Remark,
 		Sort:       req.Sort,
-		Stock:      req.Stock,
-		TotalStock: req.Stock, // 初始化时总库存等于库存
+		Stock:      totalStock,
+		TotalStock: totalStock,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
@@ -96,18 +102,23 @@ func (s *PointActivityService) UpdatePointActivity(ctx context.Context, req *req
 	if err := s.validatePointActivityProductConflicts(ctx, req.ID, req.SpuID); err != nil {
 		return err
 	}
-
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 2.1 更新活动
+		// 计算总库存
+		newStock := 0
+		for _, p := range req.Products {
+			newStock += p.Stock
+		}
+
 		updateObj := map[string]interface{}{
 			"spu_id": req.SpuID,
 			"status": req.Status,
 			"remark": req.Remark,
 			"sort":   req.Sort,
-			"stock":  req.Stock,
+			"stock":  newStock,
 		}
-		if req.Stock > activity.TotalStock {
-			updateObj["total_stock"] = req.Stock
+		if newStock > activity.TotalStock {
+			updateObj["total_stock"] = newStock
 		}
 
 		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(req.ID)).Updates(updateObj); err != nil {
@@ -264,6 +275,9 @@ func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *re
 	q := s.q.PromotionPointActivity.WithContext(ctx)
 	if req.Status != nil {
 		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*req.Status))
+	}
+	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
+		q = q.Where(s.q.PromotionPointActivity.CreatedAt.Between(*req.CreateTime[0], *req.CreateTime[1]))
 	}
 	// TODO: 支持其他搜索条件 (Java只支持Status)
 

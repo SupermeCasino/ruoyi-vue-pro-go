@@ -1,6 +1,8 @@
 package req
 
 import (
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
@@ -30,8 +32,9 @@ type PromotionBannerUpdateReq struct {
 // PromotionBannerPageReq 分页 Request
 type PromotionBannerPageReq struct {
 	pagination.PageParam
-	Title  string `form:"title"`
-	Status *int   `form:"status"`
+	Title      string       `form:"title"`
+	Status     *int         `form:"status"`
+	CreateTime []*time.Time `form:"createTime"`
 }
 
 // AppBannerListReq App 列表 Request

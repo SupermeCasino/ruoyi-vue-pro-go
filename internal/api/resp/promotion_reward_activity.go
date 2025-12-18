@@ -18,6 +18,9 @@ type PromotionRewardActivityResp struct {
 }
 
 type Rule struct {
-	Limit       int `json:"limit"`
-	ReducePrice int `json:"reducePrice"`
+	Limit                    int           `json:"limit"`
+	ReducePrice              int           `json:"reducePrice"`
+	FreeDelivery             bool          `json:"freeDelivery"`
+	Point                    int           `json:"point"`
+	GiveCouponTemplateCounts map[int64]int `json:"giveCouponTemplateCounts"`
 }

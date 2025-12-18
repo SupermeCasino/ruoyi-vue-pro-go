@@ -328,23 +328,11 @@ func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, r
 	if req.Name != "" {
 		do = do.Where(q.Name.Like("%" + req.Name + "%"))
 	}
-	if req.Status != 0 { // Logic issue: Status enum usually has value 0? Java CommonStatus: 0=Disable, 1=Enable.
-		// If req.Status is provided (e.g. 1 or 2 in Java DB? No, Java is 0/1).
-		// If UI sends 0 as "Disable", we might mistake it for "All".
-		// Typically page search sends nil? Go int is 0.
-		// Let's assume frontend sends status parameter explicitly if filtering.
-		// If needed, check if field is present. For now, assume Status query is optional and 0 means "All" or is handled by UI sending valid enum.
-		// Actually, if UI sends 0 (Disable), we should filter.
-		// Ideally use pointer. For MVP, let's assume valid status is > 0 (Wait, 0 is valid Disable).
-		// If default is 0 (All?), then we can't filter Disable.
-		// FIX: Use -1 for "All" or pointer.
-		// Given time constraints, I'll assume req has specific logic or we adhere to common practice.
-		// In Java PageReqVO, status is Integer. Go struct int defaults 0.
-		// Refine: Check req.Status.
-		// I'll skip complex filtering for now or use >=0 logic if I passed pointer in Req.
-		// I passed `int`.
-		// Let's rely on standard practice or simple check.
-		// q.Where(q.Status.Eq(req.Status))
+	if req.Status != nil {
+		do = do.Where(q.Status.Eq(*req.Status))
+	}
+	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
+		do = do.Where(q.CreateTime.Between(*req.CreateTime[0], *req.CreateTime[1]))
 	}
 
 	list, total, err := do.Order(q.ID.Desc()).FindByPage(req.GetOffset(), req.GetLimit())

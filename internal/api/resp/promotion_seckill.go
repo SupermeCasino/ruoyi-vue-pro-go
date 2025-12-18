@@ -48,15 +48,15 @@ type SeckillActivityResp struct {
 	ConfigIds        []int64              `json:"configIds"`
 	TotalLimitCount  int                  `json:"totalLimitCount"`
 	SingleLimitCount int                  `json:"singleLimitCount"`
-	Stock            int                  `json:"stock"`
-	TotalStock       int                  `json:"totalStock"`
+	Stock            int                  `json:"stock"`      // 剩余库存
+	TotalStock       int                  `json:"totalStock"` // 总库存
 	CreateTime       time.Time            `json:"createTime"`
 	Products         []SeckillProductResp `json:"products"`     // 秒杀商品列表
 	SpuName          string               `json:"spuName"`      // 商品名称
 	PicUrl           string               `json:"picUrl"`       // 商品主图
 	MarketPrice      int                  `json:"marketPrice"`  // 商品市场价
 	SeckillPrice     int                  `json:"seckillPrice"` // 秒杀最低价
-	// 统计字段 (预留，暂返回0)
+	// 统计字段
 	TotalPrice int `json:"totalPrice"` // 订单实付金额
 	OrderCount int `json:"orderCount"` // 新增订单数
 	UserCount  int `json:"userCount"`  // 付款人数

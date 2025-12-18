@@ -245,8 +245,11 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 	if req.Name != "" {
 		q = q.Where(s.q.PromotionCombinationActivity.Name.Like("%" + req.Name + "%"))
 	}
-	if req.Status != 0 {
-		q = q.Where(s.q.PromotionCombinationActivity.Status.Eq(req.Status))
+	if req.Status != nil {
+		q = q.Where(s.q.PromotionCombinationActivity.Status.Eq(*req.Status))
+	}
+	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
+		q = q.Where(s.q.PromotionCombinationActivity.CreatedAt.Between(*req.CreateTime[0], *req.CreateTime[1]))
 	}
 
 	list, total, err := q.Order(s.q.PromotionCombinationActivity.ID.Desc()).FindByPage(req.GetOffset(), req.GetLimit())

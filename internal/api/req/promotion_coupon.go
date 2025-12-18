@@ -1,6 +1,10 @@
 package req
 
-import "time"
+import (
+	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // CouponTemplateCreateReq 创建优惠券模板 Request
 type CouponTemplateCreateReq struct {
@@ -47,10 +51,10 @@ type CouponTemplateUpdateReq struct {
 
 // CouponTemplatePageReq 优惠券模板分页 Request
 type CouponTemplatePageReq struct {
-	PageNo   int    `form:"pageNo,default=1"`
-	PageSize int    `form:"pageSize,default=10"`
-	Name     string `form:"name"`
-	Status   *int   `form:"status"`
+	pagination.PageParam
+	Name       string       `form:"name"`
+	Status     *int32       `form:"status"`
+	CreateTime []*time.Time `form:"createTime"`
 }
 
 // CouponPageReq 优惠券分页 Request

@@ -41,8 +41,9 @@ type CombinationActivityUpdateReq struct {
 // CombinationActivityPageReq 拼团活动分页 Request VO
 type CombinationActivityPageReq struct {
 	pagination.PageParam
-	Name   string `json:"name"`
-	Status int    `json:"status"`
+	Name       string       `json:"name"`
+	Status     *int         `json:"status"`
+	CreateTime []*time.Time `form:"createTime"`
 }
 
 // AppCombinationRecordPageReq 拼团记录分页 Request VO

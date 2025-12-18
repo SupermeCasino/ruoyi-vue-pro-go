@@ -20,9 +20,11 @@ type PromotionRewardActivityCreateReq struct {
 }
 
 type Rule struct {
-	Limit       int `json:"limit"`       // 门槛 (分 or 件)
-	ReducePrice int `json:"reducePrice"` // 减多少分
-	// TODO: Add Gift, Point, Coupon logic if needed
+	Limit                    int           `json:"limit"`       // 门槛 (分 or 件)
+	ReducePrice              int           `json:"reducePrice"` // 减多少分
+	FreeDelivery             bool          `json:"freeDelivery"`
+	Point                    int           `json:"point"`
+	GiveCouponTemplateCounts map[int64]int `json:"giveCouponTemplateCounts"`
 }
 
 // PromotionRewardActivityUpdateReq 更新 Request
@@ -42,6 +44,7 @@ type PromotionRewardActivityUpdateReq struct {
 // PromotionRewardActivityPageReq 分页 Request
 type PromotionRewardActivityPageReq struct {
 	pagination.PageParam
-	Name   string `form:"name"`
-	Status *int   `form:"status"` // 0: Open, 1: Close
+	Name       string       `form:"name"`
+	Status     *int         `form:"status"` // 0: Open, 1: Close
+	CreateTime []*time.Time `form:"createTime"`
 }

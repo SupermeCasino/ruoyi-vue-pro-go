@@ -1,6 +1,10 @@
 package req
 
-import "time"
+import (
+	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+)
 
 // ========== Seckill Config ==========
 
@@ -76,11 +80,11 @@ type SeckillActivityUpdateReq struct {
 	Products         []SeckillProductBaseVO `json:"products" binding:"required,dive"`
 }
 
-// SeckillActivityPageReq 分页 Request
+// SeckillActivityPageReq 分页 Request VO
 type SeckillActivityPageReq struct {
-	PageNo   int    `form:"pageNo"`
-	PageSize int    `form:"pageSize"`
-	Name     string `form:"name"`
-	Status   *int   `form:"status"`
-	SpuId    *int64 `form:"spuId"` // Optional filter? Java has?
+	pagination.PageParam
+	Name       string       `form:"name"`
+	Status     *int         `form:"status"`
+	ConfigID   *int64       `form:"configId"`
+	CreateTime []*time.Time `form:"createTime"`
 }

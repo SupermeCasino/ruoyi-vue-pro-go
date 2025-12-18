@@ -8,8 +8,9 @@ import (
 
 type DiscountActivityPageReq struct {
 	pagination.PageParam
-	Name   string `form:"name"`
-	Status int    `form:"status"`
+	Name       string       `form:"name"`
+	Status     *int         `form:"status"`
+	CreateTime []*time.Time `form:"createTime"`
 }
 
 type DiscountActivityCreateReq struct {

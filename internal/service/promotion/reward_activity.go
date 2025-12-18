@@ -113,6 +113,9 @@ func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *re
 	if r.Status != nil {
 		q = q.Where(s.q.PromotionRewardActivity.Status.Eq(*r.Status))
 	}
+	if len(r.CreateTime) == 2 && r.CreateTime[0] != nil && r.CreateTime[1] != nil {
+		q = q.Where(s.q.PromotionRewardActivity.CreatedAt.Between(*r.CreateTime[0], *r.CreateTime[1]))
+	}
 
 	list, total, err := q.Order(s.q.PromotionRewardActivity.Sort.Desc(), s.q.PromotionRewardActivity.ID.Desc()).FindByPage(r.GetOffset(), r.PageSize)
 	if err != nil {
