@@ -43,9 +43,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+)
 
+import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
-
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -196,8 +197,8 @@ func InitApp() (*gin.Engine, error) {
 	payWalletTransactionService := wallet.NewPayWalletTransactionService(query)
 	payWalletService := wallet.NewPayWalletService(query, payWalletTransactionService)
 	payOrderHandler := pay2.NewPayOrderHandler(payOrderService, payAppService, payWalletService)
-	payRefundService := pay.NewPayRefundService(query, payChannelService, payOrderService, payNotifyService)
-	payRefundHandler := pay2.NewPayRefundHandler(payRefundService, payAppService)
+	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService)
+	payRefundHandler := pay2.NewPayRefundHandler(payRefundService, payAppService, payOrderService)
 	payTransferRepository := pay3.NewPayTransferRepository(query)
 	payNoRedisDAO := pay3.NewPayNoRedisDAO(redisClient)
 	payTransferService := pay.NewPayTransferService(payTransferRepository, payAppService, payChannelService, payNotifyService, payClientFactory, payNoRedisDAO, zapLogger)
@@ -205,7 +206,7 @@ func InitApp() (*gin.Engine, error) {
 	payTransferHandler := pay2.NewPayTransferHandler(payTransferService)
 	payWalletHandler := wallet2.NewPayWalletHandler(payWalletService)
 	payWalletRechargePackageService := wallet.NewPayWalletRechargePackageService(query)
-	payWalletRechargeService := wallet.NewPayWalletRechargeService(query, payWalletService, payWalletTransactionService, payWalletRechargePackageService)
+	payWalletRechargeService := wallet.NewPayWalletRechargeService(query, payWalletService, payWalletTransactionService, payWalletRechargePackageService, payOrderService, payRefundService, payNotifyService, payChannelService)
 	payWalletRechargeHandler := wallet2.NewPayWalletRechargeHandler(payWalletRechargeService)
 	payWalletRechargePackageHandler := wallet2.NewPayWalletRechargePackageHandler(payWalletRechargePackageService)
 	payWalletTransactionHandler := wallet2.NewPayWalletTransactionHandler(payWalletTransactionService)
