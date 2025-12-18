@@ -25,6 +25,7 @@ import (
 	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo" // Pay Repo
 	payRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
+	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 
 	productRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/product" // Product Statistics Repo
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
@@ -175,6 +176,7 @@ func InitApp() (*gin.Engine, error) {
 		tradeSvc.NewTradePriceService,
 		tradeSvc.NewTradeOrderUpdateService,
 		tradeSvc.NewTradeAfterSaleService,
+		tradeSvc.NewAfterSaleLogService,  // Added
 		tradeSvc.NewTradeConfigService,   // Added Config
 		tradeSvc.NewTradeOrderLogService, // Added Log
 		tradeApp.NewAppCartHandler,
@@ -211,11 +213,13 @@ func InitApp() (*gin.Engine, error) {
 		// Pay Repositories
 		payRepo.NewPayTransferRepository,
 		payRepo.NewPayNoRedisDAO,
-
+		// Trade Repositories
+		tradeRepo.NewTradeNoRedisDAO,
 		// Statistics
 		repo.NewTradeStatisticsRepository,
 		repo.NewTradeOrderStatisticsRepository,
 		repo.NewTradeOrderLogRepository, // Added Log Repo
+		repo.NewAfterSaleLogRepository,  // Added AfterSale Log Repo
 		repo.NewAfterSaleStatisticsRepository,
 		repo.NewBrokerageStatisticsRepository,
 		repo.NewMemberStatisticsRepository,

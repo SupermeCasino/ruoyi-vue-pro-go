@@ -76,6 +76,7 @@ func main() {
 		trade.TradeOrder{},
 		trade.TradeOrderItem{},
 		trade.AfterSale{},
+		trade.AfterSaleLog{},
 		trade.TradeConfig{},
 		trade.TradeOrderLog{},
 		trade.TradeStatistics{}, // 统计

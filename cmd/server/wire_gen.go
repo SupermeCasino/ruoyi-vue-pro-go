@@ -11,11 +11,11 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin"
 	member3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/member"
-	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay"
+	pay3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay"
 	wallet2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay/wallet"
 	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/product"
 	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/promotion"
-	trade3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
+	trade4 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
 	brokerage2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade/brokerage"
 	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
 	product3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
@@ -28,8 +28,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo"
-	pay3 "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	product4 "github.com/wxlbd/ruoyi-mall-go/internal/repo/product"
+	trade3 "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
@@ -43,10 +44,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
-)
 
-import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
+
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -57,6 +57,7 @@ func InitApp() (*gin.Engine, error) {
 	redisClient := cache.InitRedis()
 	zapLogger := logger.NewLogger()
 	query := repo.NewQuery(db)
+	tradeConfigService := trade.NewTradeConfigService(query)
 	roleService := service.NewRoleService(query)
 	permissionService := service.NewPermissionService(query, roleService)
 	deptService := service.NewDeptService(query)
@@ -138,19 +139,29 @@ func InitApp() (*gin.Engine, error) {
 	tradePriceService := trade.NewTradePriceService(productSkuService, productSpuService, couponUserService, rewardActivityService, seckillActivityService, memberUserService, memberLevelService, deliveryExpressTemplateService, memberAddressService, memberConfigService)
 	tradeOrderLogRepository := repo.NewTradeOrderLogRepository(query)
 	tradeOrderLogService := trade.NewTradeOrderLogService(tradeOrderLogRepository)
-	tradeOrderUpdateService := trade.NewTradeOrderUpdateService(productSkuService, cartService, tradePriceService, memberAddressService, couponUserService, tradeOrderLogService)
+	tradeNoRedisDAO := trade3.NewTradeNoRedisDAO(redisClient)
+	tradeOrderUpdateService := trade.NewTradeOrderUpdateService(productSkuService, cartService, tradePriceService, memberAddressService, couponUserService, tradeOrderLogService, tradeNoRedisDAO)
 	expressClientFactoryImpl := client.NewExpressClientFactory()
 	deliveryExpressService := trade.NewDeliveryExpressService(query)
 	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
-	tradeOrderHandler := trade3.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
-	tradeAfterSaleService := trade.NewTradeAfterSaleService(query, tradeOrderUpdateService)
+	tradeOrderHandler := trade4.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
+	payClientFactory := client2.NewPayClientFactory()
+	payChannelService := pay.NewPayChannelService(query, payClientFactory)
+	payAppService := pay.NewPayAppService(query, payChannelService)
+	payNotifyService := pay.NewPayNotifyService(query, zapLogger, redisClient)
+	payNoRedisDAO := pay2.NewPayNoRedisDAO(redisClient)
+	payOrderService := pay.NewPayOrderService(query, payAppService, payChannelService, payClientFactory, payNotifyService, payNoRedisDAO)
+	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService, payNoRedisDAO)
+	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
+	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService)
+	afterSaleLogRepository := repo.NewAfterSaleLogRepository(query)
+	afterSaleLogService := trade.NewAfterSaleLogService(afterSaleLogRepository)
+	tradeAfterSaleService := trade.NewTradeAfterSaleService(query, tradeOrderUpdateService, tradeOrderQueryService, deliveryExpressService, tradeNoRedisDAO, payRefundService, combinationRecordService, memberUserService, afterSaleLogService, tradeOrderLogService, tradeConfigService, payAppService)
 	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService, tradePriceService)
-	tradeAfterSaleHandler := trade3.NewTradeAfterSaleHandler(tradeAfterSaleService)
+	tradeAfterSaleHandler := trade4.NewTradeAfterSaleHandler(tradeAfterSaleService)
 	appTradeAfterSaleHandler := trade2.NewAppTradeAfterSaleHandler(tradeAfterSaleService)
 	couponService := promotion.NewCouponService(query)
 	couponHandler := promotion2.NewCouponHandler(couponService)
-	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
-	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService)
 	combinationActivityHandler := promotion2.NewCombinationActivityHandler(combinationActivityService, combinationRecordService, productSpuService)
 	discountActivityService := promotion.NewDiscountActivityService(query, productSkuService)
 	discountActivityHandler := promotion2.NewDiscountActivityHandler(discountActivityService)
@@ -158,10 +169,10 @@ func InitApp() (*gin.Engine, error) {
 	appCombinationRecordHandler := promotion3.NewAppCombinationRecordHandler(combinationRecordService)
 	appCouponHandler := promotion3.NewAppCouponHandler(couponUserService)
 	appCouponTemplateHandler := promotion3.NewAppCouponTemplateHandler(couponService)
-	deliveryExpressHandler := trade3.NewDeliveryExpressHandler(deliveryExpressService, zapLogger)
+	deliveryExpressHandler := trade4.NewDeliveryExpressHandler(deliveryExpressService, zapLogger)
 	deliveryPickUpStoreService := trade.NewDeliveryPickUpStoreService(query)
-	deliveryPickUpStoreHandler := trade3.NewDeliveryPickUpStoreHandler(deliveryPickUpStoreService, zapLogger)
-	deliveryExpressTemplateHandler := trade3.NewDeliveryExpressTemplateHandler(deliveryExpressTemplateService, zapLogger)
+	deliveryPickUpStoreHandler := trade4.NewDeliveryPickUpStoreHandler(deliveryPickUpStoreService, zapLogger)
+	deliveryExpressTemplateHandler := trade4.NewDeliveryExpressTemplateHandler(deliveryExpressTemplateService, zapLogger)
 	promotionBannerService := promotion.NewPromotionBannerService(query)
 	bannerHandler := promotion2.NewBannerHandler(promotionBannerService)
 	rewardActivityHandler := promotion2.NewRewardActivityHandler(rewardActivityService)
@@ -187,23 +198,16 @@ func InitApp() (*gin.Engine, error) {
 	memberSignInRecordHandler := member3.NewMemberSignInRecordHandler(memberSignInRecordService, memberUserService)
 	appMemberSignInRecordHandler := member2.NewAppMemberSignInRecordHandler(memberSignInRecordService)
 	memberUserHandler := member3.NewMemberUserHandler(memberUserService, memberLevelService, memberPointRecordService, memberGroupService, memberTagService)
-	payClientFactory := client2.NewPayClientFactory()
-	payChannelService := pay.NewPayChannelService(query, payClientFactory)
-	payAppService := pay.NewPayAppService(query, payChannelService)
-	payAppHandler := pay2.NewPayAppHandler(payAppService)
-	payChannelHandler := pay2.NewPayChannelHandler(payChannelService)
-	payNotifyService := pay.NewPayNotifyService(query, zapLogger, redisClient)
-	payNoRedisDAO := pay3.NewPayNoRedisDAO(redisClient)
-	payOrderService := pay.NewPayOrderService(query, payAppService, payChannelService, payClientFactory, payNotifyService, payNoRedisDAO)
+	payAppHandler := pay3.NewPayAppHandler(payAppService)
+	payChannelHandler := pay3.NewPayChannelHandler(payChannelService)
 	payWalletTransactionService := wallet.NewPayWalletTransactionService(query)
 	payWalletService := wallet.NewPayWalletService(query, payWalletTransactionService)
-	payOrderHandler := pay2.NewPayOrderHandler(payOrderService, payAppService, payWalletService)
-	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService, payNoRedisDAO)
-	payRefundHandler := pay2.NewPayRefundHandler(payRefundService, payAppService, payOrderService)
-	payTransferRepository := pay3.NewPayTransferRepository(query)
+	payOrderHandler := pay3.NewPayOrderHandler(payOrderService, payAppService, payWalletService)
+	payRefundHandler := pay3.NewPayRefundHandler(payRefundService, payAppService, payOrderService)
+	payTransferRepository := pay2.NewPayTransferRepository(query)
 	payTransferService := pay.NewPayTransferService(payTransferRepository, payAppService, payChannelService, payNotifyService, payClientFactory, payNoRedisDAO, zapLogger)
-	payNotifyHandler := pay2.NewPayNotifyHandler(payNotifyService, payAppService, payChannelService, payOrderService, payRefundService, payTransferService, zapLogger)
-	payTransferHandler := pay2.NewPayTransferHandler(payTransferService)
+	payNotifyHandler := pay3.NewPayNotifyHandler(payNotifyService, payAppService, payChannelService, payOrderService, payRefundService, payTransferService, zapLogger)
+	payTransferHandler := pay3.NewPayTransferHandler(payTransferService)
 	payWalletHandler := wallet2.NewPayWalletHandler(payWalletService)
 	payWalletRechargePackageService := wallet.NewPayWalletRechargePackageService(query)
 	payWalletRechargeService := wallet.NewPayWalletRechargeService(query, payWalletService, payWalletTransactionService, payWalletRechargePackageService, payOrderService, payRefundService, payNotifyService, payChannelService)
@@ -262,8 +266,7 @@ func InitApp() (*gin.Engine, error) {
 	bargainRecordHandler := promotion2.NewBargainRecordHandler(bargainRecordService, bargainActivityService, memberUserService)
 	combinationRecordHandler := promotion2.NewCombinationRecordHandler(combinationRecordService, combinationActivityService)
 	bargainHelpHandler := promotion2.NewBargainHelpHandler(bargainHelpService, memberUserService)
-	tradeConfigService := trade.NewTradeConfigService(query)
-	tradeConfigHandler := trade3.NewTradeConfigHandler(tradeConfigService)
+	tradeConfigHandler := trade4.NewTradeConfigHandler(tradeConfigService)
 	appTradeConfigHandler := trade2.NewAppTradeConfigHandler(tradeConfigService)
 	brokerageUserService := brokerage.NewBrokerageUserService(query, zapLogger, memberUserService, tradeConfigService)
 	brokerageUserHandler := brokerage2.NewBrokerageUserHandler(brokerageUserService, memberUserService, zapLogger)
