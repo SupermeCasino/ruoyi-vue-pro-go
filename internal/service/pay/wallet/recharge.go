@@ -1,30 +1,52 @@
 package wallet
 
 import (
+	"context"
+	stdErrors "errors"
+	"strconv"
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
-	"context"
-	"strconv"
-	"time"
+	"gorm.io/gorm"
 )
 
 type PayWalletRechargeService struct {
-	q         *query.Query
-	walletSvc *PayWalletService
-	trxSvc    *PayWalletTransactionService
-	pkgSvc    *PayWalletRechargePackageService
+	q          *query.Query
+	walletSvc  *PayWalletService
+	trxSvc     *PayWalletTransactionService
+	pkgSvc     *PayWalletRechargePackageService
+	orderSvc   *paySvc.PayOrderService
+	refundSvc  *paySvc.PayRefundService
+	notifySvc  *paySvc.PayNotifyService
+	channelSvc *paySvc.PayChannelService
 }
 
-func NewPayWalletRechargeService(q *query.Query, walletSvc *PayWalletService, trxSvc *PayWalletTransactionService, pkgSvc *PayWalletRechargePackageService) *PayWalletRechargeService {
+func NewPayWalletRechargeService(
+	q *query.Query,
+	walletSvc *PayWalletService,
+	trxSvc *PayWalletTransactionService,
+	pkgSvc *PayWalletRechargePackageService,
+	orderSvc *paySvc.PayOrderService,
+	refundSvc *paySvc.PayRefundService,
+	notifySvc *paySvc.PayNotifyService,
+	channelSvc *paySvc.PayChannelService,
+) *PayWalletRechargeService {
 	return &PayWalletRechargeService{
-		q:         q,
-		walletSvc: walletSvc,
-		trxSvc:    trxSvc,
-		pkgSvc:    pkgSvc,
+		q:          q,
+		walletSvc:  walletSvc,
+		trxSvc:     trxSvc,
+		pkgSvc:     pkgSvc,
+		orderSvc:   orderSvc,
+		refundSvc:  refundSvc,
+		notifySvc:  notifySvc,
+		channelSvc: channelSvc,
 	}
 }
 
@@ -68,9 +90,9 @@ func (s *PayWalletRechargeService) CreateWalletRecharge(ctx context.Context, req
 	return recharge, nil
 }
 
-// UpdateWalletRechargePaid 更新充值支付成功
-func (s *PayWalletRechargeService) UpdateWalletRechargePaid(ctx context.Context, id int64, payOrderID int64) error {
-	// 1. 获取充值记录
+// UpdateWalletRechargerPaid 更新钱包充值为已支付
+func (s *PayWalletRechargeService) UpdateWalletRechargerPaid(ctx context.Context, id int64, payOrderID int64) error {
+	// 1.1 获取充值记录
 	recharge, err := s.q.PayWalletRecharge.WithContext(ctx).Where(s.q.PayWalletRecharge.ID.Eq(id)).First()
 	if err != nil {
 		return err
@@ -79,42 +101,145 @@ func (s *PayWalletRechargeService) UpdateWalletRechargePaid(ctx context.Context,
 		return nil // 已经支付，重复回调
 	}
 
-	// 2. 更新状态
+	// 1.2 校验支付订单
+	payOrder, err := s.orderSvc.GetOrder(ctx, payOrderID)
+	if err != nil || payOrder == nil {
+		return stdErrors.New("支付订单不存在")
+	}
+	if payOrder.Status != paySvc.PayOrderStatusSuccess {
+		return stdErrors.New("支付订单未支付")
+	}
+
+	// 2. 更新钱包充值的支付状态
 	now := time.Now()
-	_, err = s.q.PayWalletRecharge.WithContext(ctx).Where(s.q.PayWalletRecharge.ID.Eq(id)).Updates(pay.PayWalletRecharge{
-		PayStatus:  true,
-		PayOrderID: payOrderID,
-		PayTime:    &now,
-	})
+	res, err := s.q.PayWalletRecharge.WithContext(ctx).
+		Where(s.q.PayWalletRecharge.ID.Eq(id), s.q.PayWalletRecharge.PayStatus.Is(false)).
+		Updates(map[string]interface{}{
+			"pay_status":       true,
+			"pay_order_id":     payOrderID,
+			"pay_time":         now,
+			"pay_channel_code": payOrder.ChannelCode,
+		})
 	if err != nil {
 		return err
+	}
+	if res.RowsAffected == 0 {
+		return stdErrors.New("更新充值状态失败(非未支付状态)")
 	}
 
 	// 3. 更新钱包余额
-	return s.updateWalletBalance(ctx, recharge)
-}
-
-// updateWalletBalance 更新钱包余额
-func (s *PayWalletRechargeService) updateWalletBalance(ctx context.Context, recharge *pay.PayWalletRecharge) error {
-	wallet, err := s.walletSvc.GetWallet(ctx, recharge.WalletID)
+	err = s.walletSvc.AddWalletBalance(ctx, recharge.WalletID, strconv.FormatInt(id, 10), pay.PayWalletBizTypeRecharge, recharge.TotalPrice)
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
-	// 更新余额
-	newBalance := wallet.Balance + recharge.TotalPrice
-	newTotalRecharge := wallet.TotalRecharge + recharge.PayPrice
+// RefundWalletRecharge 发起钱包充值退款
+func (s *PayWalletRechargeService) RefundWalletRecharge(ctx context.Context, id int64, userIP string) error {
+	// 1.1 获取钱包充值记录
+	recharge, err := s.q.PayWalletRecharge.WithContext(ctx).Where(s.q.PayWalletRecharge.ID.Eq(id)).First()
+	if err != nil || recharge == nil {
+		return errors.ErrNotFound
+	}
+	// 1.2 校验
+	if !recharge.PayStatus {
+		return stdErrors.New("未支付，无法退款")
+	}
+	if recharge.PayRefundID > 0 { // 已经申请过退款
+		return stdErrors.New("已经申请过退款")
+	}
 
-	_, err = s.q.PayWallet.WithContext(ctx).Where(s.q.PayWallet.ID.Eq(wallet.ID)).Updates(pay.PayWallet{
-		Balance:       newBalance,
-		TotalRecharge: newTotalRecharge,
+	// 2. 冻结退款的余额
+	if err := s.walletSvc.FreezePrice(ctx, recharge.WalletID, recharge.TotalPrice); err != nil {
+		return err
+	}
+
+	// 3. 创建退款单
+	appKey := config.C.Pay.WalletPayAppKey // 需要配置
+	if appKey == "" {
+		appKey = "wallet" // fallback
+	}
+	// MerchantRefundId gen
+	refundNo := "R" + strconv.FormatInt(id, 10) + "_" + strconv.FormatInt(time.Now().Unix(), 10)
+
+	payRefundID, err := s.refundSvc.CreateRefund(ctx, &req.PayRefundCreateReq{
+		AppKey:           appKey,
+		UserIP:           userIP,
+		MerchantOrderId:  strconv.FormatInt(id, 10),
+		MerchantRefundId: refundNo,
+		Reason:           "想退钱",
+		Price:            recharge.PayPrice,
 	})
 	if err != nil {
 		return err
 	}
 
-	// 记录流水
-	_, err = s.trxSvc.CreateWalletTransaction(ctx, wallet, 1, strconv.FormatInt(recharge.ID, 10), "钱包充值", recharge.TotalPrice) // 1=充值
+	// 4. 更新充值记录退款单号
+	_, err = s.q.PayWalletRecharge.WithContext(ctx).
+		Where(s.q.PayWalletRecharge.ID.Eq(id)).
+		Updates(map[string]interface{}{
+			"pay_refund_id": payRefundID,
+			"refund_status": pay.PayRefundStatusWaiting,
+		})
+	return err
+}
+
+// UpdateWalletRechargeRefunded 更新钱包充值为已退款
+func (s *PayWalletRechargeService) UpdateWalletRechargeRefunded(ctx context.Context, id int64, refundID int64) error {
+	recharge, err := s.q.PayWalletRecharge.WithContext(ctx).Where(s.q.PayWalletRecharge.ID.Eq(id)).First()
+	if err != nil || recharge == nil {
+		return errors.ErrNotFound
+	}
+	if recharge.PayRefundID != refundID {
+		return stdErrors.New("退款单号不匹配")
+	}
+
+	payRefund, err := s.refundSvc.GetRefund(ctx, refundID)
+	if err != nil {
+		return err
+	}
+
+	// 2. 处理退款结果
+	updates := map[string]interface{}{}
+	if payRefund.Status == pay.PayRefundStatusSuccess {
+		// 2.1 退款成功: 真正的扣除余额 (ReduceFrozen)
+		// Manual update for deduacting frozen and total recharge
+		res, err := s.walletSvc.q.PayWallet.WithContext(ctx).
+			Where(s.walletSvc.q.PayWallet.ID.Eq(recharge.WalletID)).
+			Updates(map[string]interface{}{
+				"freeze_price":   gorm.Expr("freeze_price - ?", recharge.TotalPrice),
+				"total_recharge": gorm.Expr("total_recharge - ?", recharge.TotalPrice),
+			})
+		if err != nil {
+			return err
+		}
+		if res.RowsAffected == 0 {
+			// ignore?
+		}
+		// Record Transaction
+		s.trxSvc.CreateWalletTransaction(ctx, &pay.PayWallet{ID: recharge.WalletID, Balance: 0}, // approximate
+			pay.PayWalletBizTypeRechargeRefund, strconv.FormatInt(recharge.ID, 10), "充值退款", -recharge.TotalPrice)
+
+		updates["refund_status"] = pay.PayRefundStatusSuccess
+		updates["refund_time"] = payRefund.SuccessTime
+		updates["refund_total_price"] = recharge.TotalPrice
+		updates["refund_pay_price"] = recharge.PayPrice
+		updates["refund_bonus_price"] = recharge.BonusPrice
+	} else if payRefund.Status == pay.PayRefundStatusFailure {
+		// 2.2 退款失败: 解冻
+		err = s.walletSvc.UnfreezePrice(ctx, recharge.WalletID, recharge.TotalPrice)
+		if err != nil {
+			return err
+		}
+		updates["refund_status"] = pay.PayRefundStatusFailure
+	} else {
+		return nil // Still waiting
+	}
+
+	_, err = s.q.PayWalletRecharge.WithContext(ctx).
+		Where(s.q.PayWalletRecharge.ID.Eq(id)).
+		Updates(updates)
 	return err
 }
 
