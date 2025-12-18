@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
@@ -28,27 +29,63 @@ func NewJobService(q *query.Query, scheduler *Scheduler) *JobService {
 
 // CreateJob 创建定时任务
 func (s *JobService) CreateJob(ctx context.Context, r *req.JobSaveReq) (int64, error) {
-	// 为 MonitorTimeout 提供默认值
-	monitorTimeout := r.MonitorTimeout
-	if monitorTimeout == nil {
-		defaultTimeout := 0
-		monitorTimeout = &defaultTimeout
-	}
-
-	job := &model.InfraJob{
-		Name:           r.Name,
-		Status:         JobStatusInit,
-		HandlerName:    r.HandlerName,
-		HandlerParam:   r.HandlerParam,
-		CronExpression: r.CronExpression,
-		RetryCount:     r.RetryCount,
-		RetryInterval:  r.RetryInterval,
-		MonitorTimeout: monitorTimeout,
-	}
-	if err := s.q.InfraJob.WithContext(ctx).Create(job); err != nil {
+	// 1. 校验 Cron 表达式
+	if err := s.scheduler.ValidateCronExpression(r.CronExpression); err != nil {
 		return 0, err
 	}
-	return job.ID, nil
+
+	// 2. 校验 Handler 存在
+	if err := s.validateJobHandlerExists(r.HandlerName); err != nil {
+		return 0, err
+	}
+
+	var jobID int64
+	err := s.q.Transaction(func(tx *query.Query) error {
+		// 3. 校验 handlerName 唯一性
+		if err := s.validateHandlerNameUnique(ctx, r.HandlerName, nil); err != nil {
+			return err
+		}
+
+		// 4. 为 MonitorTimeout 提供默认值
+		monitorTimeout := r.MonitorTimeout
+		if monitorTimeout == nil {
+			defaultTimeout := 0
+			monitorTimeout = &defaultTimeout
+		}
+
+		// 5. 创建任务记录（初始状态）
+		job := &model.InfraJob{
+			Name:           r.Name,
+			Status:         JobStatusInit,
+			HandlerName:    r.HandlerName,
+			HandlerParam:   r.HandlerParam,
+			CronExpression: r.CronExpression,
+			RetryCount:     r.RetryCount,
+			RetryInterval:  r.RetryInterval,
+			MonitorTimeout: monitorTimeout,
+		}
+		if err := tx.InfraJob.WithContext(ctx).Create(job); err != nil {
+			return err
+		}
+		jobID = job.ID
+
+		// 6. 添加任务到调度器并更新状态为正常
+		if s.scheduler != nil {
+			if err := s.scheduler.AddJob(ctx, job.ID); err != nil {
+				return err
+			}
+			// 更新状态为正常
+			_, err := tx.InfraJob.WithContext(ctx).Where(tx.InfraJob.ID.Eq(job.ID)).Update(tx.InfraJob.Status, JobStatusNormal)
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	return jobID, nil
 }
 
 // UpdateJob 更新定时任务
@@ -56,29 +93,89 @@ func (s *JobService) UpdateJob(ctx context.Context, r *req.JobSaveReq) error {
 	if r.ID == nil {
 		return errors.New("任务 ID 不能为空")
 	}
-	// 为 MonitorTimeout 提供默认值
-	monitorTimeout := r.MonitorTimeout
-	if monitorTimeout == nil {
-		defaultTimeout := 0
-		monitorTimeout = &defaultTimeout
+
+	// 1. 校验 Cron 表达式
+	if err := s.scheduler.ValidateCronExpression(r.CronExpression); err != nil {
+		return err
 	}
 
-	_, err := s.q.InfraJob.WithContext(ctx).Where(s.q.InfraJob.ID.Eq(*r.ID)).Updates(map[string]interface{}{
-		"name":            r.Name,
-		"handler_name":    r.HandlerName,
-		"handler_param":   r.HandlerParam,
-		"cron_expression": r.CronExpression,
-		"retry_count":     r.RetryCount,
-		"retry_interval":  r.RetryInterval,
-		"monitor_timeout": monitorTimeout,
+	// 2. 校验 Handler 存在
+	if err := s.validateJobHandlerExists(r.HandlerName); err != nil {
+		return err
+	}
+
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 3. 校验任务是否存在
+		job, err := s.GetJob(ctx, *r.ID)
+		if err != nil {
+			return err
+		}
+		if job == nil {
+			return errors.New("任务不存在")
+		}
+		// 只有开启状态，才可以修改.原因是，如果出暂停状态，修改调度时，会导致任务又开始执行
+		if job.Status != JobStatusNormal {
+			return errors.New("只有开启状态的任务才可以修改")
+		}
+
+		// 4. 校验 handlerName 唯一性
+		if err := s.validateHandlerNameUnique(ctx, r.HandlerName, r.ID); err != nil {
+			return err
+		}
+
+		// 5. 为 MonitorTimeout 提供默认值
+		monitorTimeout := r.MonitorTimeout
+		if monitorTimeout == nil {
+			defaultTimeout := 0
+			monitorTimeout = &defaultTimeout
+		}
+
+		_, err = tx.InfraJob.WithContext(ctx).Where(tx.InfraJob.ID.Eq(*r.ID)).Updates(map[string]interface{}{
+			"name":            r.Name,
+			"handler_name":    r.HandlerName,
+			"handler_param":   r.HandlerParam,
+			"cron_expression": r.CronExpression,
+			"retry_count":     r.RetryCount,
+			"retry_interval":  r.RetryInterval,
+			"monitor_timeout": monitorTimeout,
+		})
+		if err != nil {
+			return err
+		}
+
+		// 6. 重新调度
+		if s.scheduler != nil {
+			_ = s.scheduler.RemoveJob(*r.ID)
+			return s.scheduler.AddJob(ctx, *r.ID)
+		}
+		return nil
 	})
+}
+
+// validateJobHandlerExists 校验 Handler 是否已注册
+func (s *JobService) validateJobHandlerExists(handlerName string) error {
+	if s.scheduler == nil {
+		return errors.New("调度器未初始化")
+	}
+	if !s.scheduler.HasHandler(handlerName) {
+		return fmt.Errorf("定时任务处理器 '%s' 不存在，请检查并确保已在 Scheduler 注册。当前可用 Handler: %v",
+			handlerName, s.scheduler.GetRegisteredHandlers())
+	}
+	return nil
+}
+
+// validateHandlerNameUnique 校验 Handler 唯一性
+func (s *JobService) validateHandlerNameUnique(ctx context.Context, handlerName string, excludeID *int64) error {
+	query := s.q.InfraJob.WithContext(ctx).Where(s.q.InfraJob.HandlerName.Eq(handlerName))
+	if excludeID != nil {
+		query = query.Where(s.q.InfraJob.ID.Neq(*excludeID))
+	}
+	count, err := query.Count()
 	if err != nil {
 		return err
 	}
-	// Reschedule if scheduler exists
-	if s.scheduler != nil {
-		_ = s.scheduler.RemoveJob(*r.ID)
-		_ = s.scheduler.AddJob(ctx, *r.ID)
+	if count > 0 {
+		return errors.New("该处理器名称已被使用")
 	}
 	return nil
 }
