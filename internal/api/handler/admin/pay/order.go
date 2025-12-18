@@ -1,6 +1,7 @@
 package pay
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -14,6 +15,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 )
 
 type PayOrderHandler struct {
@@ -49,7 +51,16 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, response.Success(convertOrderResp(order)))
+
+	// 填充应用名称
+	resp := convertOrderResp(order)
+	if order.AppID > 0 {
+		if app, err := h.appSvc.GetApp(c, order.AppID); err == nil && app != nil {
+			resp.AppName = app.Name
+		}
+	}
+
+	c.JSON(200, response.Success(resp))
 }
 
 // GetOrderDetail 获得支付订单详情
@@ -76,8 +87,14 @@ func (h *PayOrderHandler) GetOrderDetail(c *gin.Context) {
 	detail := &resp.PayOrderDetailsResp{
 		PayOrderResp: *convertOrderResp(order),
 		Extension:    convertExtensionResp(extension),
-		App:          convertAppResp(app), // Need to export/access this converter or rewrite
+		App:          convertAppResp(app),
 	}
+
+	// 填充应用名称
+	if app != nil {
+		detail.AppName = app.Name
+	}
+
 	c.JSON(200, response.Success(detail))
 }
 
@@ -153,6 +170,96 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 	c.JSON(200, response.Success(respVO))
 }
 
+// ExportOrderExcel 导出支付订单 Excel
+func (h *PayOrderHandler) ExportOrderExcel(c *gin.Context) {
+	var r req.PayOrderExportReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+
+	list, err := h.svc.GetOrderList(c, &r)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	// Fetch Apps for naming
+	appIds := make([]int64, 0, len(list))
+	for _, order := range list {
+		appIds = append(appIds, order.AppID)
+	}
+	appMap, _ := h.appSvc.GetAppMap(c, appIds)
+
+	// Create Excel
+	f := excelize.NewFile()
+	defer func() { _ = f.Close() }()
+
+	sheetName := "Sheet1"
+	index, err := f.NewSheet(sheetName)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	f.SetActiveSheet(index)
+
+	// Headers
+	// 对齐 Java PayOrderExcelVO 顺序: 编号, 创建时间, 支付金额, 退款金额, 手续金额, 商户单号, 支付单号, 渠道单号, 支付状态, 渠道编号名称, 订单支付成功时间, 订单失效时间, 应用名称, 商品标题, 商品描述
+	headers := []string{"编号", "创建时间", "支付金额", "退款金额", "手续金额", "商户单号", "支付单号", "渠道单号", "支付状态", "渠道编号名称", "订单支付成功时间", "订单失效时间", "应用名称", "商品标题", "商品描述"}
+	for i, header := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheetName, cell, header)
+	}
+
+	// Data
+	for i, item := range list {
+		row := i + 2
+		appName := ""
+		if app, ok := appMap[item.AppID]; ok {
+			appName = app.Name
+		}
+
+		statusStr := "未知"
+		switch item.Status {
+		case paySvc.PayOrderStatusWaiting:
+			statusStr = "等待支付"
+		case paySvc.PayOrderStatusSuccess:
+			statusStr = "支付成功"
+		case paySvc.PayOrderStatusClosed:
+			statusStr = "支付关闭"
+		case paySvc.PayOrderStatusRefund:
+			statusStr = "已退款"
+		}
+
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), item.ID)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.CreatedAt.Format("2006-01-02 15:04:05"))
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), float64(item.Price)/100.0)
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), float64(item.RefundPrice)/100.0)
+		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), float64(item.ChannelFeePrice)/100.0)
+		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), item.MerchantOrderId)
+		f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), item.No)
+		f.SetCellValue(sheetName, fmt.Sprintf("H%d", row), item.ChannelOrderNo)
+		f.SetCellValue(sheetName, fmt.Sprintf("I%d", row), statusStr)
+		f.SetCellValue(sheetName, fmt.Sprintf("J%d", row), item.ChannelCode)
+		if item.SuccessTime != nil {
+			f.SetCellValue(sheetName, fmt.Sprintf("K%d", row), item.SuccessTime.Format("2006-01-02 15:04:05"))
+		}
+		if !item.ExpireTime.IsZero() {
+			f.SetCellValue(sheetName, fmt.Sprintf("L%d", row), item.ExpireTime.Format("2006-01-02 15:04:05"))
+		}
+		f.SetCellValue(sheetName, fmt.Sprintf("M%d", row), appName)
+		f.SetCellValue(sheetName, fmt.Sprintf("N%d", row), item.Subject)
+		f.SetCellValue(sheetName, fmt.Sprintf("O%d", row), item.Body)
+	}
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=pay_order_list.xlsx")
+	if err := f.Write(c.Writer); err != nil {
+		c.Error(err)
+		return
+	}
+}
+
 // Helpers
 
 func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
@@ -170,7 +277,7 @@ func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
 		Subject:         order.Subject,
 		Body:            order.Body,
 		NotifyURL:       order.NotifyURL,
-		Price:           order.Price,
+		Price:           int64(order.Price),           // 转换为 int64
 		ChannelFeeRate:  order.ChannelFeeRate,
 		ChannelFeePrice: order.ChannelFeePrice,
 		Status:          order.Status,
@@ -179,14 +286,13 @@ func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
 		SuccessTime:     order.SuccessTime,
 		ExtensionID:     order.ExtensionID,
 		No:              order.No,
-		RefundPrice:     order.RefundPrice,
+		RefundPrice:     int64(order.RefundPrice),     // 转换为 int64
 		ChannelUserID:   order.ChannelUserID,
 		ChannelOrderNo:  order.ChannelOrderNo,
 		CreateTime:      order.CreatedAt,
 		UpdateTime:      order.UpdatedAt,
 		Creator:         order.Creator,
 		Updater:         order.Updater,
-		Deleted:         order.Deleted,
 	}
 }
 
