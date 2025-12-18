@@ -102,7 +102,7 @@ func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *
 
 // GetSimpleDeliveryExpressList 获取物流公司精简列表
 func (s *DeliveryExpressService) GetSimpleDeliveryExpressList(ctx context.Context) ([]*trade.TradeDeliveryExpress, error) {
-	return s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.Status.Eq(1)).Order(s.q.TradeDeliveryExpress.Sort.Asc()).Find()
+	return s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.Status.Eq(trade.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryExpress.Sort.Asc()).Find()
 }
 
 type DeliveryPickUpStoreService struct {
@@ -202,7 +202,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 
 // GetSimpleDeliveryPickUpStoreList 获取自提门店精简列表
 func (s *DeliveryPickUpStoreService) GetSimpleDeliveryPickUpStoreList(ctx context.Context) ([]*trade.TradeDeliveryPickUpStore, error) {
-	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(1)).Order(s.q.TradeDeliveryPickUpStore.Sort.Asc()).Find()
+	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(trade.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryPickUpStore.Sort.Asc()).Find()
 }
 
 type DeliveryExpressTemplateService struct {

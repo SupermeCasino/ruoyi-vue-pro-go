@@ -4,12 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
+	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -26,6 +32,7 @@ type TradeOrderUpdateService struct {
 	addressSvc *member.MemberAddressService
 	couponSvc  *promotion.CouponUserService
 	logSvc     *TradeOrderLogService
+	noDAO      *tradeRepo.TradeNoRedisDAO
 }
 
 func NewTradeOrderUpdateService(
@@ -35,6 +42,7 @@ func NewTradeOrderUpdateService(
 	addressSvc *member.MemberAddressService,
 	couponSvc *promotion.CouponUserService,
 	logSvc *TradeOrderLogService,
+	noDAO *tradeRepo.TradeNoRedisDAO,
 ) *TradeOrderUpdateService {
 	return &TradeOrderUpdateService{
 		q:          query.Q,
@@ -44,6 +52,7 @@ func NewTradeOrderUpdateService(
 		addressSvc: addressSvc,
 		couponSvc:  couponSvc,
 		logSvc:     logSvc,
+		noDAO:      noDAO,
 	}
 }
 
@@ -73,7 +82,7 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 		return nil, err
 	}
 
-	// 2. Fetch Address (if delivery)
+	// 2. Fetch Address (if delivery) - 对齐 Java TradeOrderConvert 第 244-249 行
 	var address *resp.AppTradeOrderSettlementAddress
 	if req.AddressID != nil {
 		addr, err := s.addressSvc.GetAddress(ctx, uId, *req.AddressID)
@@ -85,7 +94,7 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 				AreaID:        int64(addr.AreaID),
 				DetailAddress: addr.DetailAddress,
 				DefaultStatus: addr.DefaultStatus,
-				// AreaName: fetch area name if needed
+				AreaName:      area.Format(int(addr.AreaID)), // 使用 area.Format() 获取地区名称
 			}
 		}
 	}
@@ -109,7 +118,7 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 			Price:      item.Price,
 			PicURL:     item.PicURL,
 			Properties: item.Properties,
-			// SpuName: item.SpuName,
+			SpuName:    item.SpuName, // 补充 SpuName 字段（来自价格计算结果）
 		}
 	}
 
@@ -119,9 +128,6 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 // CreateOrder 创建交易订单
 func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, reqVO *req.AppTradeOrderCreateReq) (*trade.TradeOrder, error) {
 	// 1. Price Calculation
-	// 1. Price Calculation
-	// Call SettlementOrder logic (reuse code or abstract)
-	// Or better, just call price calc directly
 	calcReq := &TradePriceCalculateReqBO{
 		UserID:        uId,
 		CouponID:      reqVO.CouponID,
@@ -144,17 +150,28 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 		return nil, err
 	}
 
-	// 2. Transaction
+	// 生成订单号 (使用 Redis DAO 确保全局唯一，在 Transaction 前生成以减少持有时间)
+	orderNo, err := s.noDAO.GenerateOrderNo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("generate order no failed: %w", err)
+	}
+
+	// 2. Transaction - 对齐 Java TradeOrderUpdateServiceImpl 第 169-204 行
 	var order *trade.TradeOrder
 	err = s.q.Transaction(func(tx *query.Query) error {
-		// 2.1 Create Order
+		// 2.1 Create Order (对齐 Java 实现)
+		// 初始状态：0 = UNPAID (待支付)
+		// 支付后：10 = UNDELIVERED (待发货)
+		// 发货后：20 = DELIVERED (已发货)
+		// 完成：30 = COMPLETED (已完成)
+		// 取消：40 = CANCELED (已取消)
 		order = &trade.TradeOrder{
-			No:             generateOrderNo(),
-			Type:           1, // Normal order
-			Terminal:       1, // TODO: passed from header/context
+			No:             orderNo,
+			Type:           trade.OrderTypeNormal,           // 普通订单
+			Terminal:       getTerminal(ctx),                 // 从请求头获取终端信息
 			UserID:         uId,
-			UserIP:         "127.0.0.1", // TODO: from context
-			Status:         0,           // Unpaid
+			UserIP:         getClientIP(ctx),                 // 从请求获取用户 IP
+			Status:         trade.TradeOrderStatusUnpaid,     // 待支付
 			ProductCount:   len(reqVO.Items),
 			Remark:         reqVO.Remark,
 			PayStatus:      false,
@@ -166,17 +183,26 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 			DeliveryType:   reqVO.DeliveryType,
 			ReceiverName:   reqVO.ReceiverName,
 			ReceiverMobile: reqVO.ReceiverMobile,
-			// Add address info...
 		}
 
+		// 如果提供了地址 ID，则从地址服务获取详细信息
 		if reqVO.AddressID != nil {
-			addr, _ := s.addressSvc.GetAddress(ctx, uId, *reqVO.AddressID)
-			if addr != nil {
+			addr, err := s.addressSvc.GetAddress(ctx, uId, *reqVO.AddressID)
+			if err == nil && addr != nil {
 				order.ReceiverName = addr.Name
 				order.ReceiverMobile = addr.Mobile
 				order.ReceiverAreaID = int(addr.AreaID)
 				order.ReceiverDetailAddress = addr.DetailAddress
 			}
+		}
+
+		// 如果是自提订单，设置自提门店 ID 和核销码
+		if reqVO.DeliveryType == trade.DeliveryTypePickUp {
+			if reqVO.PickUpStoreID != nil {
+				order.PickUpStoreID = *reqVO.PickUpStoreID
+			}
+			// 生成随机核销码（对齐 Java RandomUtil.randomNumbers(8)）
+			order.PickUpVerifyCode = generateRandomNumbers(trade.PickUpVerifyCodeLength)
 		}
 
 		if err := tx.TradeOrder.WithContext(ctx).Create(order); err != nil {
@@ -190,6 +216,7 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 				UserID:      uId,
 				OrderID:     order.ID,
 				SpuID:       item.SpuID,
+				SpuName:     item.SpuName, // 从价格计算结果获取 SpuName
 				SkuID:       item.SkuID,
 				Count:       item.Count,
 				Price:       item.Price,
@@ -236,7 +263,7 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 		}
 
 		// 2.6 Log
-		if err := s.createOrderLog(ctx, order, "Create Order", 10); err != nil {
+		if err := s.createOrderLog(ctx, order, "Create Order", trade.OrderOperateTypeCreate); err != nil {
 			return err
 		}
 
@@ -247,32 +274,34 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 
 // DeliveryOrder 订单发货
 func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *req.TradeOrderDeliveryReq) error {
-	// 1. Check Order Exists
-	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(reqVO.ID)).First()
-	if err != nil {
-		return err
-	}
-	if order.Status != 10 { // Assume 10 is Paid/Undelivered. In real app use constants.
-		// return fmt.Errorf("order status error")
-	}
+	// 使用 GORM 事务包装（对齐 Java @Transactional）
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 1. Check Order Exists
+		order, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(reqVO.ID)).First()
+		if err != nil {
+			return err
+		}
+		if order.Status != trade.TradeOrderStatusUndelivered { // 待发货
+			// return fmt.Errorf("order status error")
+		}
 
-	now := time.Now()
-	// 2. Update Order
-	_, err = s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(reqVO.ID)).Updates(trade.TradeOrder{
-		Status:       20, // Delivered
-		LogisticsID:  reqVO.LogisticsID,
-		LogisticsNo:  reqVO.LogisticsNo,
-		DeliveryTime: &now,
+		now := time.Now()
+		// 2. Update Order (in transaction)
+		_, err = tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(reqVO.ID)).Updates(trade.TradeOrder{
+			Status:       trade.TradeOrderStatusDelivered, // 已发货
+			LogisticsID:  reqVO.LogisticsID,
+			LogisticsNo:  reqVO.LogisticsNo,
+			DeliveryTime: &now,
+		})
+		if err != nil {
+			return err
+		}
+
+		// 3. Log (in transaction)
+		logOrder := *order
+		logOrder.Status = trade.TradeOrderStatusDelivered
+		return s.createOrderLog(ctx, &logOrder, "Order Delivered", trade.OrderOperateTypeDelivery)
 	})
-	if err != nil {
-		return err
-	}
-
-	// 3. Log
-	logOrder := *order
-	logOrder.Status = 20
-	// OperateType 30 for Delivery (Example)
-	return s.createOrderLog(ctx, &logOrder, "Order Delivered", 30)
 }
 
 // UpdateOrderPaid 更新订单为已支付
@@ -282,7 +311,7 @@ func (s *TradeOrderUpdateService) UpdateOrderPaid(ctx context.Context, id int64,
 	if err != nil {
 		return err
 	}
-	if order.Status != 0 { // 0: Unpaid
+	if order.Status != trade.TradeOrderStatusUnpaid { // 待支付
 		return fmt.Errorf("order status is not unpaid")
 	}
 	if order.PayStatus {
@@ -294,7 +323,7 @@ func (s *TradeOrderUpdateService) UpdateOrderPaid(ctx context.Context, id int64,
 	err = s.q.Transaction(func(tx *query.Query) error {
 		// Update Order
 		updateMap := map[string]interface{}{
-			"status":       10, // Undelivered
+			"status":       trade.TradeOrderStatusUndelivered, // 待发货
 			"pay_status":   true,
 			"pay_time":     &now,
 			"pay_order_id": payOrderId,
@@ -305,8 +334,8 @@ func (s *TradeOrderUpdateService) UpdateOrderPaid(ctx context.Context, id int64,
 
 		// Log
 		logOrder := *order
-		logOrder.Status = 10
-		if err := s.createOrderLog(ctx, &logOrder, "Order Paid", 20); err != nil { // 20: Pay
+		logOrder.Status = trade.TradeOrderStatusUndelivered
+		if err := s.createOrderLog(ctx, &logOrder, "Order Paid", trade.OrderOperateTypePay); err != nil {
 			return err
 		}
 		return nil
@@ -322,7 +351,7 @@ func (s *TradeOrderUpdateService) createOrderLog(ctx context.Context, order *tra
 
 	log := &trade.TradeOrderLog{
 		UserID:       uid,
-		UserType:     1, // Member
+		UserType:     trade.TradeOrderLogUserTypeMember, // 会员用户
 		OrderID:      order.ID,
 		BeforeStatus: 0, // Simplified, ideally pass old status
 		AfterStatus:  order.Status,
@@ -342,7 +371,7 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, uId int64, id
 		}
 		return err
 	}
-	if order.Status != 0 { // 0: Unpaid. If we allow cancelling Paid orders, we need Refund logic.
+	if order.Status != trade.TradeOrderStatusUnpaid { // 待支付，只允许未支付订单取消
 		// For now, restrict to Unpaid.
 		return errors.New("订单状态不允许取消")
 	}
@@ -352,9 +381,9 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, uId int64, id
 		// 2.1 Update Order Status
 		now := time.Now()
 		if _, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(id)).Updates(trade.TradeOrder{
-			Status:     40, // Cancelled (Closed)
+			Status:     trade.TradeOrderStatusCanceled, // 已取消
 			CancelTime: &now,
-			CancelType: 1, // User Cancelled
+			CancelType: trade.OrderCancelTypeUser, // 用户取消
 		}); err != nil {
 			return err
 		}
@@ -384,8 +413,8 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, uId int64, id
 
 		// 2.4 Log
 		logOrder := *order
-		logOrder.Status = 40
-		if err := s.createOrderLog(ctx, &logOrder, "User Cancelled Order", 40); err != nil {
+		logOrder.Status = trade.TradeOrderStatusCanceled
+		if err := s.createOrderLog(ctx, &logOrder, "User Cancelled Order", trade.OrderOperateTypeCancel); err != nil {
 			return err
 		}
 
@@ -407,7 +436,7 @@ func (s *TradeOrderUpdateService) DeleteOrder(ctx context.Context, uId int64, id
 	}
 	// Java: Check status (Cancelled or Completed can be deleted?)
 	// Usually only Cancelled or Completed.
-	if order.Status != 40 && order.Status != 30 { // 40: Cancelled, 30: Completed
+	if order.Status != trade.TradeOrderStatusCanceled && order.Status != trade.TradeOrderStatusCompleted {
 		return errors.New("只有取消或完成的订单可以删除")
 	}
 
@@ -418,43 +447,52 @@ func (s *TradeOrderUpdateService) DeleteOrder(ctx context.Context, uId int64, id
 
 // UpdateOrderRemark 订单备注
 func (s *TradeOrderUpdateService) UpdateOrderRemark(ctx context.Context, req *req.TradeOrderRemarkReq) error {
-	_, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(req.ID)).Update(s.q.TradeOrder.Remark, req.Remark)
-	return err
+	// 使用 GORM 事务包装（对齐 Java @Transactional）
+	return s.q.Transaction(func(tx *query.Query) error {
+		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(req.ID)).Update(tx.TradeOrder.Remark, req.Remark)
+		return err
+	})
 }
 
 // UpdateOrderPrice 订单调价
 func (s *TradeOrderUpdateService) UpdateOrderPrice(ctx context.Context, req *req.TradeOrderUpdatePriceReq) error {
-	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(req.ID)).First()
-	if err != nil {
+	// 使用 GORM 事务包装（对齐 Java @Transactional）
+	return s.q.Transaction(func(tx *query.Query) error {
+		order, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(req.ID)).First()
+		if err != nil {
+			return err
+		}
+		if order.PayStatus {
+			return errors.New("已支付订单不允许改价")
+		}
+
+		// New Price Calculation
+		newPayPrice := order.PayPrice + req.AdjustPrice
+		if newPayPrice < 0 {
+			return errors.New("调价后金额不能小于 0")
+		}
+
+		_, err = tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(req.ID)).Updates(map[string]interface{}{
+			"adjust_price": order.AdjustPrice + req.AdjustPrice,
+			"pay_price":    newPayPrice,
+		})
 		return err
-	}
-	if order.PayStatus {
-		return errors.New("已支付订单不允许改价")
-	}
-
-	// New Price Calculation
-	newPayPrice := order.PayPrice + req.AdjustPrice
-	if newPayPrice < 0 {
-		return errors.New("调价后金额不能小于 0")
-	}
-
-	_, err = s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(req.ID)).Updates(map[string]interface{}{
-		"adjust_price": order.AdjustPrice + req.AdjustPrice,
-		"pay_price":    newPayPrice,
 	})
-	return err
 }
 
 // UpdateOrderAddress 修改订单收货地址
 func (s *TradeOrderUpdateService) UpdateOrderAddress(ctx context.Context, req *req.TradeOrderUpdateAddressReq) error {
-	// Check status (only undelivered?)
-	_, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(req.ID)).Updates(map[string]interface{}{
-		"receiver_name":           req.ReceiverName,
-		"receiver_mobile":         req.ReceiverMobile,
-		"receiver_area_id":        req.ReceiverAreaID,
-		"receiver_detail_address": req.ReceiverDetailAddress,
+	// 使用 GORM 事务包装（对齐 Java @Transactional）
+	return s.q.Transaction(func(tx *query.Query) error {
+		// Check status (only undelivered?)
+		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(req.ID)).Updates(map[string]interface{}{
+			"receiver_name":           req.ReceiverName,
+			"receiver_mobile":         req.ReceiverMobile,
+			"receiver_area_id":        req.ReceiverAreaID,
+			"receiver_detail_address": req.ReceiverDetailAddress,
+		})
+		return err
 	})
-	return err
 }
 
 // PickUpOrderByAdmin 核销订单 (By ID)
@@ -476,10 +514,10 @@ func (s *TradeOrderUpdateService) PickUpOrderByVerifyCode(ctx context.Context, a
 }
 
 func (s *TradeOrderUpdateService) pickUpOrder(ctx context.Context, order *trade.TradeOrder) error {
-	if order.DeliveryType != 2 { // 2: PickUp
+	if order.DeliveryType != trade.DeliveryTypePickUp { // 到店自提
 		return errors.New("非自提订单")
 	}
-	if order.Status != 10 { // 10: Undelivered/Wait PickUp
+	if order.Status != trade.TradeOrderStatusUndelivered { // 待发货/待自提
 		// Check constants
 		return errors.New("订单状态不正确")
 	}
@@ -495,14 +533,14 @@ func (s *TradeOrderUpdateService) pickUpOrder(ctx context.Context, order *trade.
 
 	err := s.q.Transaction(func(tx *query.Query) error {
 		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(order.ID)).Updates(trade.TradeOrder{
-			Status:      30, // Completed
+			Status:      trade.TradeOrderStatusCompleted, // 已完成
 			ReceiveTime: &now,
 		})
 		if err != nil {
 			return err
 		}
 		// Log
-		return s.createOrderLog(ctx, order, "Admin PickUp", 50) // 50: PickUp
+		return s.createOrderLog(ctx, order, "Admin PickUp", trade.OrderOperateTypePickUp) // 自提核销
 	})
 	return err
 }
@@ -553,7 +591,7 @@ func (s *TradeOrderUpdateService) ReceiveOrder(ctx context.Context, uId int64, o
 	}
 
 	// 2. Validate Status - 只有已发货状态才能确认收货
-	if order.Status != 20 { // 20: Delivered
+	if order.Status != trade.TradeOrderStatusDelivered { // 已发货
 		return errors.New("订单状态不正确，无法确认收货")
 	}
 
@@ -561,14 +599,14 @@ func (s *TradeOrderUpdateService) ReceiveOrder(ctx context.Context, uId int64, o
 	now := time.Now()
 	err = s.q.Transaction(func(tx *query.Query) error {
 		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(order.ID)).Updates(trade.TradeOrder{
-			Status:      30, // Completed
+			Status:      trade.TradeOrderStatusCompleted, // 已完成
 			ReceiveTime: &now,
 		})
 		if err != nil {
 			return err
 		}
 		// Log
-		return s.createOrderLog(ctx, order, "用户确认收货", 40) // 40: Receive
+		return s.createOrderLog(ctx, order, "用户确认收货", trade.OrderOperateTypeReceive) // 确认收货
 	})
 	return err
 }
@@ -589,17 +627,69 @@ func (s *TradeOrderUpdateService) UpdatePaidOrderRefunded(ctx context.Context, o
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(orderId)).Updates(map[string]interface{}{
-			"refund_status": 30, // All Refunded
+			"refund_status": trade.OrderRefundStatusRefunded, // 已退款
 			// "pay_refund_id": payRefundId, // No field
 		})
 		if err != nil {
 			return err
 		}
 		// Log
-		return s.createOrderLog(ctx, order, "Order Refunded (Pay Callback)", 40)
+		return s.createOrderLog(ctx, order, "Order Refunded (Pay Callback)", trade.OrderOperateTypeRefund)
 	})
 }
 
-func generateOrderNo() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano()) // Simplified
+// getTerminal 从上下文获取终端类型 (对齐 Java WebFrameworkUtils.getTerminal())
+// 终端类型：0=未知, 10=微信小程序, 11=微信公众号, 20=H5网页, 31=手机App
+func getTerminal(ctx context.Context) int {
+	// 从 context 中获取 gin.Context（中间件注入）
+	if ginCtx, ok := ctx.Value(pkgContext.CtxGinContextKey).(*gin.Context); ok {
+		// 尝试从请求头读取终端类型（Terminal 标准头）
+		if terminal := ginCtx.GetHeader("Terminal"); terminal != "" {
+			// 可在此处添加终端值的解析逻辑
+			return 0
+		}
+		// 尝试从查询参数读取 terminal
+		if terminal := ginCtx.Query("terminal"); terminal != "" {
+			// 可在此处添加终端值的解析逻辑
+			return 0
+		}
+	}
+	// 默认返回未知
+	return 0 // TerminalEnum.UNKNOWN
+}
+
+// getClientIP 从上下文获取用户 IP (对齐 Java ServletUtils.getClientIP())
+func getClientIP(ctx context.Context) string {
+	// 从 context 中获取 gin.Context（中间件注入）
+	if ginCtx, ok := ctx.Value(pkgContext.CtxGinContextKey).(*gin.Context); ok {
+		// 1. 检查 X-Forwarded-For 头（来自代理）
+		if forwardedFor := ginCtx.GetHeader("X-Forwarded-For"); forwardedFor != "" {
+			// X-Forwarded-For 可能包含多个IP，取第一个（真实用户IP）
+			ips := strings.Split(forwardedFor, ",")
+			if len(ips) > 0 {
+				return strings.TrimSpace(ips[0])
+			}
+		}
+
+		// 2. 检查 X-Real-IP 头（单级代理）
+		if realIP := ginCtx.GetHeader("X-Real-IP"); realIP != "" {
+			return strings.TrimSpace(realIP)
+		}
+
+		// 3. 使用 Gin 的 ClientIP() 方法（自动处理代理）
+		return ginCtx.ClientIP()
+	}
+
+	// 非 Gin context 时返回默认值
+	return "127.0.0.1"
+}
+
+// generateRandomNumbers 生成指定位数的随机数字字符串 (对齐 Java RandomUtil.randomNumbers(n))
+func generateRandomNumbers(n int) string {
+	const digits = "0123456789"
+	result := make([]byte, n)
+	for i := 0; i < n; i++ {
+		result[i] = digits[rand.Intn(10)]
+	}
+	return string(result)
 }

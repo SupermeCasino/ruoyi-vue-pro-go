@@ -26,6 +26,8 @@ type CombinationRecordService interface {
 	CreateCombinationRecord(ctx context.Context, record *promotion.PromotionCombinationRecord) (int64, error)
 	GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error)
 	GetCombinationRecordSummaryAdmin(ctx context.Context) (*resp.CombinationRecordSummaryVO, error)
+	GetCombinationRecord(ctx context.Context, id int64) (*promotion.PromotionCombinationRecord, error)
+	GetCombinationRecordByOrderId(ctx context.Context, userID int64, orderID int64) (*promotion.PromotionCombinationRecord, error)
 }
 
 type combinationRecordService struct {
@@ -284,4 +286,15 @@ func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.
 		SuccessCount:      successCount,
 		VirtualGroupCount: virtualGroupCount,
 	}, nil
+}
+
+func (s *combinationRecordService) GetCombinationRecord(ctx context.Context, id int64) (*promotion.PromotionCombinationRecord, error) {
+	return s.q.PromotionCombinationRecord.WithContext(ctx).Where(s.q.PromotionCombinationRecord.ID.Eq(id)).First()
+}
+
+func (s *combinationRecordService) GetCombinationRecordByOrderId(ctx context.Context, userID int64, orderID int64) (*promotion.PromotionCombinationRecord, error) {
+	return s.q.PromotionCombinationRecord.WithContext(ctx).Where(
+		s.q.PromotionCombinationRecord.UserID.Eq(userID),
+		s.q.PromotionCombinationRecord.OrderID.Eq(orderID),
+	).First()
 }
