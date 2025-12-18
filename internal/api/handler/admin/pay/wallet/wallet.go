@@ -45,13 +45,14 @@ func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
 
 // GetWallet 获得会员钱包
 func (h *PayWalletHandler) GetWallet(c *gin.Context) {
-	idStr := c.Query("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	userIdStr := c.Query("userId")
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
 	if err != nil {
 		c.JSON(200, errors.ErrParam)
 		return
 	}
-	wallet, err := h.svc.GetWallet(c, id)
+	// 对齐 Java: payWalletService.getOrCreateWallet(reqVO.getUserId(), MEMBER.getValue())
+	wallet, err := h.svc.GetOrCreateWallet(c, userId, 1) // 1: Member
 	if err != nil {
 		c.Error(err)
 		return

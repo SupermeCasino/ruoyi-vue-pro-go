@@ -54,6 +54,7 @@ func RegisterPayRoutes(engine *gin.Engine,
 			payOrder.GET("/get", casbinMiddleware.RequirePermission("pay:order:query"), payOrderHandler.GetOrder)
 			payOrder.GET("/get-detail", casbinMiddleware.RequirePermission("pay:order:query"), payOrderHandler.GetOrderDetail)
 			payOrder.GET("/page", casbinMiddleware.RequirePermission("pay:order:query"), payOrderHandler.GetOrderPage)
+			payOrder.GET("/export-excel", casbinMiddleware.RequirePermission("pay:order:export"), payOrderHandler.ExportOrderExcel)
 			payOrder.POST("/submit", payOrderHandler.SubmitPayOrder)
 		}
 
@@ -62,6 +63,7 @@ func RegisterPayRoutes(engine *gin.Engine,
 		{
 			payRefund.GET("/get", casbinMiddleware.RequirePermission("pay:refund:query"), payRefundHandler.GetRefund)
 			payRefund.GET("/page", casbinMiddleware.RequirePermission("pay:refund:query"), payRefundHandler.GetRefundPage)
+			payRefund.GET("/export-excel", casbinMiddleware.RequirePermission("pay:refund:export"), payRefundHandler.ExportRefundExcel)
 		}
 
 		// Pay Notify 管理接口 - 需要认证
@@ -89,7 +91,10 @@ func RegisterPayRoutes(engine *gin.Engine,
 		// Pay Wallet Recharge
 		payWalletRecharge := payGroup.Group("/wallet-recharge")
 		{
-			payWalletRecharge.GET("/page", payWalletRechargeHandler.GetWalletRechargePage)
+			payWalletRecharge.GET("/page", casbinMiddleware.RequirePermission("pay:wallet-recharge:query"), payWalletRechargeHandler.GetWalletRechargePage)
+			payWalletRecharge.PUT("/update-paid", casbinMiddleware.RequirePermission("pay:wallet-recharge:update"), payWalletRechargeHandler.UpdateWalletRechargePaid)
+			payWalletRecharge.POST("/refund", casbinMiddleware.RequirePermission("pay:wallet-recharge:refund"), payWalletRechargeHandler.RefundWalletRecharge)
+			payWalletRecharge.PUT("/update-refunded", casbinMiddleware.RequirePermission("pay:wallet-recharge:update"), payWalletRechargeHandler.UpdateWalletRechargeRefunded)
 		}
 
 		// Pay Wallet Transaction

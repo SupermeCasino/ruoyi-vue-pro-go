@@ -109,21 +109,6 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 	c.JSON(200, response.Success(res))
 }
 
-// GetAppPage 获得支付应用分页
-func (h *PayAppHandler) GetAppPage(c *gin.Context) {
-	var r req.PayAppPageReq
-	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
-		return
-	}
-	res, err := h.svc.GetAppPage(c, &r)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	c.JSON(200, response.Success(res))
-}
-
 // GetAppList 获得支付应用列表
 func (h *PayAppHandler) GetAppList(c *gin.Context) {
 	list, err := h.svc.GetAppList(c)
@@ -148,4 +133,19 @@ func (h *PayAppHandler) GetAppList(c *gin.Context) {
 		})
 	}
 	c.JSON(200, response.Success(resList))
+}
+
+// GetAppPage 获得支付应用分页
+func (h *PayAppHandler) GetAppPage(c *gin.Context) {
+	var r req.PayAppPageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+	res, err := h.svc.GetAppPage(c, &r)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, response.Success(res))
 }

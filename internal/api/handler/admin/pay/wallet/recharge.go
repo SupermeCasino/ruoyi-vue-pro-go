@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
@@ -39,6 +41,73 @@ func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
 		newRes.List = append(newRes.List, convertRechargeResp(item))
 	}
 	c.JSON(200, response.Success(newRes))
+}
+
+// UpdateWalletRechargePaid 更新钱包充值为已支付
+func (h *PayWalletRechargeHandler) UpdateWalletRechargePaid(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+	payOrderIdStr := c.Query("payOrderId")
+	payOrderId, err := strconv.ParseInt(payOrderIdStr, 10, 64)
+	if err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+
+	if err := h.svc.UpdateWalletRechargerPaid(c, id, payOrderId); err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, response.Success(true))
+}
+
+// RefundWalletRecharge 发起钱包充值退款
+func (h *PayWalletRechargeHandler) RefundWalletRecharge(c *gin.Context) {
+	/*
+		// Java: @RequestParam("id") Long id. So it is form/query param.
+		// Check gin bind: ShouldBindQuery or ShouldBindJSON.
+	*/
+	idStr := c.Query("id")
+	if idStr == "" {
+		idStr = c.PostForm("id")
+	}
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+
+	if err := h.svc.RefundWalletRecharge(c, id, c.ClientIP()); err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, response.Success(true))
+}
+
+// UpdateWalletRechargeRefunded 更新钱包充值为已退款
+func (h *PayWalletRechargeHandler) UpdateWalletRechargeRefunded(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+	payRefundIdStr := c.Query("payRefundId")
+	payRefundId, err := strconv.ParseInt(payRefundIdStr, 10, 64)
+	if err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+
+	if err := h.svc.UpdateWalletRechargeRefunded(c, id, payRefundId); err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, response.Success(true))
 }
 
 func convertRechargeResp(item *pay.PayWalletRecharge) *resp.PayWalletRechargeResp {

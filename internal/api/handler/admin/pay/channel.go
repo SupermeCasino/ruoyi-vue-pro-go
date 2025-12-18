@@ -138,7 +138,7 @@ func convertChannelResp(channel *payModel.PayChannel) *resp.PayChannelResp {
 		FeeRate:    channel.FeeRate,
 		Remark:     channel.Remark,
 		AppID:      channel.AppID,
-		Config:     channel.Config,
+		Config:     channel.Config.ToJSON(),
 		CreateTime: channel.CreatedAt,
 	}
 }
