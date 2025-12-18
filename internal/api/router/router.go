@@ -11,6 +11,7 @@ import (
 	tradeAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
 	tradeBrokerageAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade/brokerage"
 	memberHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
+	payApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
 	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
 	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
 	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
@@ -152,6 +153,12 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appBrokerageUserHandler *appBrokerage.AppBrokerageUserHandler,
 	appBrokerageRecordHandler *appBrokerage.AppBrokerageRecordHandler,
 	appBrokerageWithdrawHandler *appBrokerage.AppBrokerageWithdrawHandler,
+	appPayOrderHandler *payApp.AppPayOrderHandler,
+	appPayWalletHandler *payApp.AppPayWalletHandler,
+	appPayChannelHandler *payApp.AppPayChannelHandler,
+	appPayTransferHandler *payApp.AppPayTransferHandler,
+	appPayWalletTransactionHandler *payApp.AppPayWalletTransactionHandler,
+	appPayWalletRechargePackageHandler *payApp.AppPayWalletRechargePackageHandler,
 	webSocketHandler *handler.WebSocketHandler,
 	casbinMiddleware *middleware.CasbinMiddleware,
 ) *gin.Engine {
@@ -262,10 +269,16 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		appKefuHandler,
 		appCombinationActivityHandler, appCombinationRecordHandler,
 		appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler,
-		appSeckillActivityHandler, appSeckillConfigHandler, // 新增
+		appSeckillActivityHandler, appSeckillConfigHandler,
 		appBrokerageUserHandler,
 		appBrokerageRecordHandler,
 		appBrokerageWithdrawHandler,
+		appPayOrderHandler,
+		appPayWalletHandler,
+		appPayChannelHandler,
+		appPayTransferHandler,
+		appPayWalletTransactionHandler,
+		appPayWalletRechargePackageHandler,
 	)
 
 	// Statistics 模块

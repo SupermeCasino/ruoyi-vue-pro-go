@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
 	memberApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
+	payApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
 	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
 	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
 	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
@@ -54,6 +55,13 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appBrokerageUserHandler *appBrokerage.AppBrokerageUserHandler,
 	appBrokerageRecordHandler *appBrokerage.AppBrokerageRecordHandler,
 	appBrokerageWithdrawHandler *appBrokerage.AppBrokerageWithdrawHandler,
+	// Pay
+	appPayOrderHandler *payApp.AppPayOrderHandler,
+	appPayWalletHandler *payApp.AppPayWalletHandler,
+	appPayChannelHandler *payApp.AppPayChannelHandler,
+	appPayTransferHandler *payApp.AppPayTransferHandler,
+	appPayWalletTransactionHandler *payApp.AppPayWalletTransactionHandler,
+	appPayWalletRechargePackageHandler *payApp.AppPayWalletRechargePackageHandler,
 ) {
 	appGroup := engine.Group("/app-api")
 	{
@@ -354,10 +362,53 @@ func RegisterAppRoutes(engine *gin.Engine,
 				seckillActivityGroup.GET("/list-by-ids", appSeckillActivityHandler.GetSeckillActivityListByIds)
 			}
 
-			// Seckill Config (Public - 对齐 Java @PermitAll)
 			seckillConfigGroup := promotionGroup.Group("/seckill-config")
 			{
 				seckillConfigGroup.GET("/list", appSeckillConfigHandler.GetSeckillConfigList)
+			}
+		}
+
+		// ========== Pay ==========
+		payGroup := appGroup.Group("/pay")
+		payGroup.Use(middleware.Auth())
+		{
+			// Order
+			orderGroup := payGroup.Group("/order")
+			{
+				orderGroup.GET("/get", appPayOrderHandler.GetOrder)
+				orderGroup.POST("/submit", appPayOrderHandler.Submit)
+			}
+			// Wallet
+			walletGroup := payGroup.Group("/wallet")
+			{
+				walletGroup.GET("/get", appPayWalletHandler.GetWallet)
+			}
+			// Wallet Transaction
+			walletTransactionGroup := payGroup.Group("/wallet-transaction")
+			{
+				walletTransactionGroup.GET("/page", appPayWalletTransactionHandler.GetWalletTransactionPage)
+				walletTransactionGroup.GET("/get-summary", appPayWalletTransactionHandler.GetWalletTransactionSummary)
+			}
+			// Wallet Recharge
+			rechargeGroup := payGroup.Group("/wallet-recharge")
+			{
+				rechargeGroup.POST("/create", appPayWalletHandler.CreateRecharge)
+				rechargeGroup.GET("/page", appPayWalletHandler.GetRechargePage)
+			}
+			// Wallet Recharge Package
+			rechargePackageGroup := payGroup.Group("/wallet-recharge-package")
+			{
+				rechargePackageGroup.GET("/list", appPayWalletRechargePackageHandler.GetWalletRechargePackageList)
+			}
+			// Channel
+			channelGroup := payGroup.Group("/channel")
+			{
+				channelGroup.GET("/get-enable-code-list", appPayChannelHandler.GetEnableChannelCodeList)
+			}
+			// Transfer
+			transferGroup := payGroup.Group("/transfer")
+			{
+				transferGroup.GET("/sync", appPayTransferHandler.SyncTransfer)
 			}
 		}
 	}

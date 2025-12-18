@@ -14,6 +14,7 @@ import (
 	tradeAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
 	brokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade/brokerage"
 	memberHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
+	payApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
 	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
 	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
 	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
@@ -322,6 +323,12 @@ func InitApp() (*gin.Engine, error) {
 		payWallet.NewPayWalletRechargeHandler,
 		payWallet.NewPayWalletRechargePackageHandler,
 		payWallet.NewPayWalletTransactionHandler,
+		payApp.NewAppPayOrderHandler,
+		payApp.NewAppPayWalletHandler,
+		payApp.NewAppPayChannelHandler,
+		payApp.NewAppPayTransferHandler,
+		payApp.NewAppPayWalletTransactionHandler,
+		payApp.NewAppPayWalletRechargePackageHandler,
 
 		// Router
 		router.InitRouter,
