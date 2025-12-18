@@ -51,6 +51,8 @@ func main() {
 		model.SocialClient{},
 		model.SystemLoginLog{},
 		model.SystemOperateLog{},
+		&model.SystemNotifyMessage{},
+		&model.SystemNotifyTemplate{},
 		model.InfraJob{},
 		model.InfraJobLog{},
 		model.InfraApiAccessLog{},

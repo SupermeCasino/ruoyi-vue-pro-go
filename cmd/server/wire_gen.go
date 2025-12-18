@@ -237,7 +237,7 @@ func InitApp() (*gin.Engine, error) {
 	sensitiveWordHandler := handler.NewSensitiveWordHandler(sensitiveWordService)
 	mailService := service.NewMailService(db)
 	mailHandler := handler.NewMailHandler(mailService)
-	notifyService := service.NewNotifyService(db)
+	notifyService := service.NewNotifyService(query)
 	notifyHandler := handler.NewNotifyHandler(notifyService)
 	oAuth2ClientService := service.NewOAuth2ClientService(db)
 	oAuth2ClientHandler := handler.NewOAuth2ClientHandler(oAuth2ClientService)

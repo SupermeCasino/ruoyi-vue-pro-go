@@ -28,6 +28,13 @@ func NewJobService(q *query.Query, scheduler *Scheduler) *JobService {
 
 // CreateJob 创建定时任务
 func (s *JobService) CreateJob(ctx context.Context, r *req.JobSaveReq) (int64, error) {
+	// 为 MonitorTimeout 提供默认值
+	monitorTimeout := r.MonitorTimeout
+	if monitorTimeout == nil {
+		defaultTimeout := 0
+		monitorTimeout = &defaultTimeout
+	}
+
 	job := &model.InfraJob{
 		Name:           r.Name,
 		Status:         JobStatusInit,
@@ -36,7 +43,7 @@ func (s *JobService) CreateJob(ctx context.Context, r *req.JobSaveReq) (int64, e
 		CronExpression: r.CronExpression,
 		RetryCount:     r.RetryCount,
 		RetryInterval:  r.RetryInterval,
-		MonitorTimeout: r.MonitorTimeout,
+		MonitorTimeout: monitorTimeout,
 	}
 	if err := s.q.InfraJob.WithContext(ctx).Create(job); err != nil {
 		return 0, err
@@ -49,6 +56,13 @@ func (s *JobService) UpdateJob(ctx context.Context, r *req.JobSaveReq) error {
 	if r.ID == nil {
 		return errors.New("任务 ID 不能为空")
 	}
+	// 为 MonitorTimeout 提供默认值
+	monitorTimeout := r.MonitorTimeout
+	if monitorTimeout == nil {
+		defaultTimeout := 0
+		monitorTimeout = &defaultTimeout
+	}
+
 	_, err := s.q.InfraJob.WithContext(ctx).Where(s.q.InfraJob.ID.Eq(*r.ID)).Updates(map[string]interface{}{
 		"name":            r.Name,
 		"handler_name":    r.HandlerName,
@@ -56,7 +70,7 @@ func (s *JobService) UpdateJob(ctx context.Context, r *req.JobSaveReq) error {
 		"cron_expression": r.CronExpression,
 		"retry_count":     r.RetryCount,
 		"retry_interval":  r.RetryInterval,
-		"monitor_timeout": r.MonitorTimeout,
+		"monitor_timeout": monitorTimeout,
 	})
 	if err != nil {
 		return err
