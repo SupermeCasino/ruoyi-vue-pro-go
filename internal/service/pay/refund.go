@@ -274,24 +274,27 @@ func (s *PayRefundService) NotifyRefund(ctx context.Context, channelID int64, no
 		return err
 	}
 
-	// 情况一：退款成功
-	if notify.Status == payModel.PayRefundStatusSuccess {
-		return s.notifyRefundSuccess(ctx, channel, notify)
-	}
+	// 使用事务包装（对齐 Java @Transactional）
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 情况一：退款成功
+		if notify.Status == payModel.PayRefundStatusSuccess {
+			return s.notifyRefundSuccessTx(ctx, tx, channel, notify)
+		}
 
-	// 情况二：退款失败
-	if notify.Status == payModel.PayRefundStatusFailure {
-		return s.notifyRefundFailure(ctx, channel, notify)
-	}
+		// 情况二：退款失败
+		if notify.Status == payModel.PayRefundStatusFailure {
+			return s.notifyRefundFailureTx(ctx, tx, channel, notify)
+		}
 
-	return nil
+		return nil
+	})
 }
 
-// notifyRefundSuccess 处理退款成功
-func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *payModel.PayChannel, notify *client.RefundResp) error {
+// notifyRefundSuccessTx 在事务内处理退款成功
+func (s *PayRefundService) notifyRefundSuccessTx(ctx context.Context, tx *query.Query, channel *payModel.PayChannel, notify *client.RefundResp) error {
 	// 1.1 查询 PayRefund
-	refund, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.AppID.Eq(channel.AppID), s.q.PayRefund.No.Eq(notify.OutRefundNo)).
+	refund, err := tx.PayRefund.WithContext(ctx).
+		Where(tx.PayRefund.AppID.Eq(channel.AppID), tx.PayRefund.No.Eq(notify.OutRefundNo)).
 		First()
 	if err != nil {
 		return fmt.Errorf("退款订单不存在")
@@ -309,8 +312,8 @@ func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *pay
 
 	// 1.2 更新 PayRefund (使用乐观锁)
 	notifyDataJSON, _ := json.Marshal(notify)
-	result, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.ID.Eq(refund.ID), s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+	result, err := tx.PayRefund.WithContext(ctx).
+		Where(tx.PayRefund.ID.Eq(refund.ID), tx.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
 		Updates(map[string]interface{}{
 			"status":              payModel.PayRefundStatusSuccess,
 			"success_time":        notify.SuccessTime,
@@ -333,11 +336,11 @@ func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *pay
 	return nil
 }
 
-// notifyRefundFailure 处理退款失败
-func (s *PayRefundService) notifyRefundFailure(ctx context.Context, channel *payModel.PayChannel, notify *client.RefundResp) error {
+// notifyRefundFailureTx 在事务内处理退款失败
+func (s *PayRefundService) notifyRefundFailureTx(ctx context.Context, tx *query.Query, channel *payModel.PayChannel, notify *client.RefundResp) error {
 	// 1.1 查询 PayRefund
-	refund, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.AppID.Eq(channel.AppID), s.q.PayRefund.No.Eq(notify.OutRefundNo)).
+	refund, err := tx.PayRefund.WithContext(ctx).
+		Where(tx.PayRefund.AppID.Eq(channel.AppID), tx.PayRefund.No.Eq(notify.OutRefundNo)).
 		First()
 	if err != nil {
 		return fmt.Errorf("退款订单不存在")
@@ -355,8 +358,8 @@ func (s *PayRefundService) notifyRefundFailure(ctx context.Context, channel *pay
 
 	// 1.2 更新 PayRefund (使用乐观锁)
 	notifyDataJSON, _ := json.Marshal(notify)
-	result, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.ID.Eq(refund.ID), s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+	result, err := tx.PayRefund.WithContext(ctx).
+		Where(tx.PayRefund.ID.Eq(refund.ID), tx.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
 		Updates(map[string]interface{}{
 			"status":              payModel.PayRefundStatusFailure,
 			"channel_refund_no":   notify.ChannelRefundNo,

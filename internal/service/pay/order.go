@@ -39,9 +39,23 @@ func NewPayOrderService(q *query.Query, appSvc *PayAppService, channelSvc *PayCh
 	}
 }
 
-// GetOrder 获得支付订单
 func (s *PayOrderService) GetOrder(ctx context.Context, id int64) (*pay.PayOrder, error) {
 	return s.q.PayOrder.WithContext(ctx).Where(s.q.PayOrder.ID.Eq(id)).First()
+}
+
+func (s *PayOrderService) GetOrderMap(ctx context.Context, ids []int64) (map[int64]*pay.PayOrder, error) {
+	if len(ids) == 0 {
+		return make(map[int64]*pay.PayOrder), nil
+	}
+	list, err := s.q.PayOrder.WithContext(ctx).Where(s.q.PayOrder.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	res := make(map[int64]*pay.PayOrder, len(list))
+	for _, item := range list {
+		res[item.ID] = item
+	}
+	return res, nil
 }
 
 // GetOrderPage 获得支付订单分页
@@ -87,7 +101,7 @@ func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *req.PayOrderC
 		return 0, err
 	}
 	if app == nil || app.Status != 0 {
-		return 0, errors.New("App disabled or not found")
+		return 0, errors.New("app disabled or not found")
 	}
 
 	existOrder, _ := s.q.PayOrder.WithContext(ctx).
@@ -163,12 +177,12 @@ func (s *PayOrderService) SubmitOrder(ctx context.Context, reqVO *req.PayOrderSu
 
 	// Call UnifiedOrder (对齐 Java: 使用渠道特定的回调 URL)
 	unifiedReq := &client.UnifiedOrderReq{
-		UserIP:     userIP,
-		OutTradeNo: no,
-		Subject:    order.Subject,
-		Body:       order.Body,
-		NotifyURL:  s.genChannelOrderNotifyUrl(channel), // 对齐 Java: 渠道回调 URL
-		// ReturnURL:   reqVO.ReturnUrl,
+		UserIP:      userIP,
+		OutTradeNo:  no,
+		Subject:     order.Subject,
+		Body:        order.Body,
+		NotifyURL:   s.genChannelOrderNotifyUrl(channel), // 对齐 Java: 渠道回调 URL
+		ReturnURL:   reqVO.ReturnUrl,
 		Price:       order.Price,
 		ExpireTime:  order.ExpireTime,
 		DisplayMode: reqVO.DisplayMode,
@@ -176,6 +190,30 @@ func (s *PayOrderService) SubmitOrder(ctx context.Context, reqVO *req.PayOrderSu
 	unifiedResp, err := payClient.UnifiedOrder(ctx, unifiedReq)
 	if err != nil {
 		return nil, err
+	}
+
+	// ✅ 新增：处理直接支付成功的场景（对应 Java 163-180 行）
+	if unifiedResp != nil {
+		// 7.1 尝试异步处理支付结果（兼容并发）
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// 记录日志但不中断主流程
+					fmt.Printf("[NotifyOrder Panic] order(%d) channel(%d): %v\n", order.ID, channel.ID, r)
+				}
+			}()
+			// 发起通知处理
+			s.NotifyOrder(ctx, channel.ID, unifiedResp)
+		}()
+
+		// 7.2 检查渠道错误码并抛出异常
+		if unifiedResp.ChannelErrorCode != "" {
+			return nil, fmt.Errorf("支付渠道错误 [%s]: %s",
+				unifiedResp.ChannelErrorCode, unifiedResp.ChannelErrorMsg)
+		}
+
+		// 7.3 重新查询最新订单状态（对齐 Java，确保返回给前端的是最新状态）
+		order, _ = s.GetOrder(ctx, order.ID)
 	}
 
 	// Return response
@@ -192,13 +230,13 @@ func (s *PayOrderService) validateOrderCanSubmit(ctx context.Context, id int64) 
 		return nil, gorm.ErrRecordNotFound
 	}
 	if order.Status == PayOrderStatusSuccess {
-		return nil, errors.New("Order already paid")
+		return nil, errors.New("order already paid")
 	}
 	if order.Status != PayOrderStatusWaiting {
-		return nil, errors.New("Order status not waiting")
+		return nil, errors.New("order status not waiting")
 	}
 	if order.ExpireTime.Before(time.Now()) {
-		return nil, errors.New("Order expired")
+		return nil, errors.New("order expired")
 	}
 	return order, nil
 }
@@ -491,7 +529,7 @@ func (s *PayOrderService) updateOrderSuccessTx(ctx context.Context, tx *query.Qu
 	}
 
 	// 2. 更新 PayOrder (使用乐观锁)
-	channelFeePrice := int(float64(order.Price) * channel.FeeRate / 100)
+	channelFeePrice := int(float64(order.Price) * channel.FeeRate / 100.0)
 	now := time.Now()
 
 	result, err := tx.PayOrder.WithContext(ctx).
@@ -531,6 +569,11 @@ func (s *PayOrderService) notifyOrderClosedTx(ctx context.Context, tx *query.Que
 		return nil
 	}
 
+	// 如果已经是成功，不更新为关闭（避免状态冲突）
+	if orderExtension.Status == PayOrderStatusSuccess {
+		return nil
+	}
+
 	// 校验状态，必须是待支付
 	if orderExtension.Status != PayOrderStatusWaiting {
 		return fmt.Errorf("支付订单拓展状态不是待支付")
@@ -540,7 +583,9 @@ func (s *PayOrderService) notifyOrderClosedTx(ctx context.Context, tx *query.Que
 	result, err := tx.PayOrderExtension.WithContext(ctx).
 		Where(tx.PayOrderExtension.ID.Eq(orderExtension.ID), tx.PayOrderExtension.Status.Eq(PayOrderStatusWaiting)).
 		Updates(map[string]interface{}{
-			"status": PayOrderStatusClosed,
+			"status":             PayOrderStatusClosed,
+			"channel_error_code": notify.ChannelErrorCode,
+			"channel_error_msg":  notify.ChannelErrorMsg,
 		})
 	if err != nil || result.RowsAffected == 0 {
 		return fmt.Errorf("支付订单拓展状态已改变")
