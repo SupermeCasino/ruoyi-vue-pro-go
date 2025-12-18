@@ -238,6 +238,10 @@ func InitApp() (*gin.Engine, error) {
 		adminHandler.NewProductStatisticsHandler,
 		adminHandler.NewMemberStatisticsHandler,
 		service.NewPayTransferSyncJob, // Added PayTransferSyncJob
+		service.NewPayNotifyJob,       // Added PayNotifyJob
+		service.NewPayOrderSyncJob,    // Added PayOrderSyncJob
+		service.NewPayOrderExpireJob,  // Added PayOrderExpireJob
+		service.NewPayRefundSyncJob,   // Added PayRefundSyncJob
 		adminHandler.NewPayStatisticsHandler,
 
 		// Promotion
@@ -321,6 +325,9 @@ func InitApp() (*gin.Engine, error) {
 
 		// Router
 		router.InitRouter,
+
+		// Job Handlers (Slice Injection for Scheduler)
+		service.ProvideJobHandlers,
 	)
 	return &gin.Engine{}, nil
 }

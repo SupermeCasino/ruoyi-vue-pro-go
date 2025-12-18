@@ -44,9 +44,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+)
 
+import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
-
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -57,7 +58,6 @@ func InitApp() (*gin.Engine, error) {
 	redisClient := cache.InitRedis()
 	zapLogger := logger.NewLogger()
 	query := repo.NewQuery(db)
-	tradeConfigService := trade.NewTradeConfigService(query)
 	roleService := service.NewRoleService(query)
 	permissionService := service.NewPermissionService(query, roleService)
 	deptService := service.NewDeptService(query)
@@ -156,6 +156,7 @@ func InitApp() (*gin.Engine, error) {
 	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService)
 	afterSaleLogRepository := repo.NewAfterSaleLogRepository(query)
 	afterSaleLogService := trade.NewAfterSaleLogService(afterSaleLogRepository)
+	tradeConfigService := trade.NewTradeConfigService(query)
 	tradeAfterSaleService := trade.NewTradeAfterSaleService(query, tradeOrderUpdateService, tradeOrderQueryService, deliveryExpressService, tradeNoRedisDAO, payRefundService, combinationRecordService, memberUserService, afterSaleLogService, tradeOrderLogService, tradeConfigService, payAppService)
 	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService, tradePriceService)
 	tradeAfterSaleHandler := trade4.NewTradeAfterSaleHandler(tradeAfterSaleService)
@@ -218,7 +219,12 @@ func InitApp() (*gin.Engine, error) {
 	operateLogService := service.NewOperateLogService(query)
 	operateLogHandler := handler.NewOperateLogHandler(operateLogService)
 	payTransferSyncJob := service.NewPayTransferSyncJob(payTransferService, zapLogger)
-	scheduler, err := service.NewScheduler(query, zapLogger, payTransferSyncJob)
+	payNotifyJob := service.NewPayNotifyJob(payNotifyService)
+	payOrderSyncJob := service.NewPayOrderSyncJob(payOrderService)
+	payOrderExpireJob := service.NewPayOrderExpireJob(payOrderService)
+	payRefundSyncJob := service.NewPayRefundSyncJob(payRefundService)
+	v := service.ProvideJobHandlers(payTransferSyncJob, payNotifyJob, payOrderSyncJob, payOrderExpireJob, payRefundSyncJob)
+	scheduler, err := service.NewScheduler(query, zapLogger, v)
 	if err != nil {
 		return nil, err
 	}

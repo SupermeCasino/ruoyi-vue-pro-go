@@ -28,3 +28,7 @@ func (j *PayTransferSyncJob) Execute(ctx context.Context, param string) error {
 	j.logger.Info("同步转账单完成", zap.Int("count", count))
 	return nil
 }
+
+func (j *PayTransferSyncJob) GetHandlerName() string {
+	return "payTransferSyncJob"
+}
