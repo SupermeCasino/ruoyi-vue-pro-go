@@ -3,38 +3,199 @@ package pay
 import (
 	"context"
 	"encoding/json"
+	stdErrors "errors"
 	"fmt"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
+	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+
+	"gorm.io/gorm"
 )
 
 type PayRefundService struct {
 	q          *query.Query
+	appSvc     *PayAppService
 	channelSvc *PayChannelService
 	orderSvc   *PayOrderService
 	notifySvc  *PayNotifyService
 }
 
-func NewPayRefundService(q *query.Query, channelSvc *PayChannelService, orderSvc *PayOrderService, notifySvc *PayNotifyService) *PayRefundService {
+func NewPayRefundService(q *query.Query, appSvc *PayAppService, channelSvc *PayChannelService, orderSvc *PayOrderService, notifySvc *PayNotifyService) *PayRefundService {
 	return &PayRefundService{
 		q:          q,
+		appSvc:     appSvc,
 		channelSvc: channelSvc,
 		orderSvc:   orderSvc,
 		notifySvc:  notifySvc,
 	}
 }
 
+// CreateRefund 创建退款单
+func (s *PayRefundService) CreateRefund(ctx context.Context, reqDTO *req.PayRefundCreateReq) (int64, error) {
+	// 1.1 校验 App
+	app, err := s.appSvc.GetAppByAppKey(ctx, reqDTO.AppKey)
+	if err != nil {
+		return 0, err
+	}
+	if app == nil {
+		return 0, errors.NewBizError(1006000000, "支付应用不存在") // PAY_APP_NOT_FOUND
+	}
+	app, err = s.appSvc.ValidPayApp(ctx, app.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	// 1.2 校验支付订单
+	payOrder, err := s.validatePayOrderCanRefund(ctx, app.ID, reqDTO)
+	if err != nil {
+		return 0, err
+	}
+
+	// 1.3 校验支付渠道是否有效
+	channel, err := s.channelSvc.ValidPayChannel(ctx, payOrder.ChannelID)
+	if err != nil {
+		return 0, err
+	}
+	payClient := s.channelSvc.GetPayClient(channel.ID)
+	if payClient == nil {
+		return 0, errors.NewBizError(1006002000, "支付渠道找不到对应的支付客户端") // PAY_CHANNEL_CLIENT_NOT_FOUND
+	}
+
+	// 1.4 校验退款订单是否已存在
+	if err := s.validatePayRefundExist(ctx, app.ID, reqDTO.MerchantRefundId); err != nil {
+		return 0, err
+	}
+
+	// 2.1 创建退款单
+	// Generate Refund No (R + time + 6 digits)
+	no := "R" + time.Now().Format("20060102150405") + "000000" // TODO: 对齐 Java PayNoRedisDAO
+
+	refund := &payModel.PayRefund{
+		No:               no,
+		AppID:            app.ID,
+		OrderID:          payOrder.ID,
+		OrderNo:          payOrder.No,
+		MerchantOrderId:  reqDTO.MerchantOrderId,
+		MerchantRefundId: reqDTO.MerchantRefundId,
+		NotifyURL:        app.RefundNotifyURL,
+		Status:           payModel.PayRefundStatusWaiting,
+		PayPrice:         payOrder.Price,
+		RefundPrice:      reqDTO.Price,
+		Reason:           reqDTO.Reason,
+		UserIP:           reqDTO.UserIP,
+		ChannelID:        payOrder.ChannelID,
+		ChannelCode:      payOrder.ChannelCode,
+		ChannelOrderNo:   payOrder.ChannelOrderNo,
+	}
+	if err := s.q.PayRefund.WithContext(ctx).Create(refund); err != nil {
+		return 0, err
+	}
+
+	// 2.2 向渠道发起退款申请
+	unifiedReqDTO := &client.UnifiedRefundReq{
+		OutTradeNo:  payOrder.No,
+		OutRefundNo: refund.No,
+		Reason:      reqDTO.Reason,
+		PayPrice:    payOrder.Price,
+		RefundPrice: reqDTO.Price,
+		NotifyURL:   s.genChannelRefundNotifyUrl(channel),
+	}
+	refundRespDTO, err := payClient.UnifiedRefund(ctx, unifiedReqDTO)
+	if err != nil {
+		// 注意：这里仅打印异常，不进行抛出。
+		// 原因是：虽然调用支付渠道进行退款发生异常（网络请求超时），实际退款成功。这个结果，后续通过退款回调、或者退款轮询补偿可以拿到。
+		fmt.Printf("[createPayRefund][退款 id(%d) requestDTO(%+v) 发生异常: %v]\n", refund.ID, reqDTO, err)
+	} else {
+		// 2.3 处理退款返回
+		s.NotifyRefund(ctx, channel.ID, refundRespDTO)
+	}
+
+	return refund.ID, nil
+}
+
+func (s *PayRefundService) validatePayOrderCanRefund(ctx context.Context, appId int64, reqDTO *req.PayRefundCreateReq) (*payModel.PayOrder, error) {
+	// Query PayOrder
+	payOrder, err := s.q.PayOrder.WithContext(ctx).
+		Where(s.q.PayOrder.AppID.Eq(appId), s.q.PayOrder.MerchantOrderId.Eq(reqDTO.MerchantOrderId)).
+		First()
+	if err != nil {
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.NewBizError(1006001000, "支付订单不存在") // PAY_ORDER_NOT_FOUND
+		}
+		return nil, err
+	}
+
+	// Check Status
+	if payOrder.Status != PayOrderStatusSuccess && payOrder.Status != PayOrderStatusRefund {
+		return nil, errors.NewBizError(1006001001, "支付订单状态不对") // PAY_ORDER_STATUS_IS_NOT_SUCCESS
+	}
+
+	// Check Refund Price
+	if payOrder.RefundPrice+reqDTO.Price > payOrder.Price {
+		return nil, errors.NewBizError(1006010003, "退款金额超过支付金额") // PAY_REFUND_PRICE_EXCEED
+	}
+
+	// 是否有退款中的订单
+	if err := s.validateNoRefundingOrder(ctx, appId, payOrder.ID); err != nil {
+		return nil, err
+	}
+
+	return payOrder, nil
+}
+
+func (s *PayRefundService) validateNoRefundingOrder(ctx context.Context, appId int64, orderId int64) error {
+	count, err := s.q.PayRefund.WithContext(ctx).
+		Where(s.q.PayRefund.AppID.Eq(appId), s.q.PayRefund.OrderID.Eq(orderId),
+			s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+		Count()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.NewBizError(1006010005, "该订单还有退款等待处理") // REFUND_HAS_REFUNDING
+	}
+	return nil
+}
+
+func (s *PayRefundService) genChannelRefundNotifyUrl(channel *payModel.PayChannel) string {
+	// 暂时简单实现，
+	// TODO：实际应从统一配置获取
+	return "http://your-domain/api/pay/refund/notify/" + fmt.Sprintf("%d", channel.ID)
+}
+
+func (s *PayRefundService) validatePayRefundExist(ctx context.Context, appId int64, merchantRefundId string) error {
+	count, err := s.q.PayRefund.WithContext(ctx).
+		Where(s.q.PayRefund.AppID.Eq(appId), s.q.PayRefund.MerchantRefundId.Eq(merchantRefundId)).
+		Count()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.NewBizError(1006010002, "退款订单已存在") // PAY_REFUND_EXISTS
+	}
+	return nil
+}
+
 // GetRefund 获得退款订单
-func (s *PayRefundService) GetRefund(ctx context.Context, id int64) (*pay.PayRefund, error) {
+func (s *PayRefundService) GetRefund(ctx context.Context, id int64) (*payModel.PayRefund, error) {
 	return s.q.PayRefund.WithContext(ctx).Where(s.q.PayRefund.ID.Eq(id)).First()
 }
 
+func (s *PayRefundService) GetRefundByNo(ctx context.Context, no string) (*payModel.PayRefund, error) {
+	return s.q.PayRefund.WithContext(ctx).Where(s.q.PayRefund.No.Eq(no)).First()
+}
+
+func (s *PayRefundService) GetRefundCountByAppId(ctx context.Context, appId int64) (int64, error) {
+	return s.q.PayRefund.WithContext(ctx).Where(s.q.PayRefund.AppID.Eq(appId)).Count()
+}
+
 // GetRefundPage 获得退款订单分页
-func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefundPageReq) (*pagination.PageResult[*pay.PayRefund], error) {
+func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefundPageReq) (*pagination.PageResult[*payModel.PayRefund], error) {
 	q := s.q.PayRefund.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayRefund.AppID.Eq(req.AppID))
@@ -66,14 +227,14 @@ func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefund
 	if err != nil {
 		return nil, err
 	}
-	return &pagination.PageResult[*pay.PayRefund]{
+	return &pagination.PageResult[*payModel.PayRefund]{
 		List:  list,
 		Total: total,
 	}, nil
 }
 
 // GetRefundList 获得退款订单列表 (Export)
-func (s *PayRefundService) GetRefundList(ctx context.Context, req *req.PayRefundExportReq) ([]*pay.PayRefund, error) {
+func (s *PayRefundService) GetRefundList(ctx context.Context, req *req.PayRefundExportReq) ([]*payModel.PayRefund, error) {
 	q := s.q.PayRefund.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayRefund.AppID.Eq(req.AppID))
@@ -109,12 +270,12 @@ func (s *PayRefundService) NotifyRefund(ctx context.Context, channelID int64, no
 	}
 
 	// 情况一：退款成功
-	if notify.Status == PayRefundStatusSuccess {
+	if notify.Status == payModel.PayRefundStatusSuccess {
 		return s.notifyRefundSuccess(ctx, channel, notify)
 	}
 
 	// 情况二：退款失败
-	if notify.Status == PayRefundStatusFailure {
+	if notify.Status == payModel.PayRefundStatusFailure {
 		return s.notifyRefundFailure(ctx, channel, notify)
 	}
 
@@ -122,7 +283,7 @@ func (s *PayRefundService) NotifyRefund(ctx context.Context, channelID int64, no
 }
 
 // notifyRefundSuccess 处理退款成功
-func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *pay.PayChannel, notify *client.RefundResp) error {
+func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *payModel.PayChannel, notify *client.RefundResp) error {
 	// 1.1 查询 PayRefund
 	refund, err := s.q.PayRefund.WithContext(ctx).
 		Where(s.q.PayRefund.AppID.Eq(channel.AppID), s.q.PayRefund.No.Eq(notify.OutRefundNo)).
@@ -132,21 +293,21 @@ func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *pay
 	}
 
 	// 如果已经是成功，直接返回
-	if refund.Status == PayRefundStatusSuccess {
+	if refund.Status == payModel.PayRefundStatusSuccess {
 		return nil
 	}
 
 	// 校验状态，必须是等待状态
-	if refund.Status != PayRefundStatusWaiting {
+	if refund.Status != payModel.PayRefundStatusWaiting {
 		return fmt.Errorf("退款订单状态不是待退款")
 	}
 
 	// 1.2 更新 PayRefund (使用乐观锁)
 	notifyDataJSON, _ := json.Marshal(notify)
 	result, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.ID.Eq(refund.ID), s.q.PayRefund.Status.Eq(PayRefundStatusWaiting)).
+		Where(s.q.PayRefund.ID.Eq(refund.ID), s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
 		Updates(map[string]interface{}{
-			"status":              PayRefundStatusSuccess,
+			"status":              payModel.PayRefundStatusSuccess,
 			"success_time":        notify.SuccessTime,
 			"channel_refund_no":   notify.ChannelRefundNo,
 			"channel_notify_data": string(notifyDataJSON),
@@ -168,7 +329,7 @@ func (s *PayRefundService) notifyRefundSuccess(ctx context.Context, channel *pay
 }
 
 // notifyRefundFailure 处理退款失败
-func (s *PayRefundService) notifyRefundFailure(ctx context.Context, channel *pay.PayChannel, notify *client.RefundResp) error {
+func (s *PayRefundService) notifyRefundFailure(ctx context.Context, channel *payModel.PayChannel, notify *client.RefundResp) error {
 	// 1.1 查询 PayRefund
 	refund, err := s.q.PayRefund.WithContext(ctx).
 		Where(s.q.PayRefund.AppID.Eq(channel.AppID), s.q.PayRefund.No.Eq(notify.OutRefundNo)).
@@ -178,21 +339,21 @@ func (s *PayRefundService) notifyRefundFailure(ctx context.Context, channel *pay
 	}
 
 	// 如果已经是失败，直接返回
-	if refund.Status == PayRefundStatusFailure {
+	if refund.Status == payModel.PayRefundStatusFailure {
 		return nil
 	}
 
 	// 校验状态，必须是等待状态
-	if refund.Status != PayRefundStatusWaiting {
+	if refund.Status != payModel.PayRefundStatusWaiting {
 		return fmt.Errorf("退款订单状态不是待退款")
 	}
 
 	// 1.2 更新 PayRefund (使用乐观锁)
 	notifyDataJSON, _ := json.Marshal(notify)
 	result, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.ID.Eq(refund.ID), s.q.PayRefund.Status.Eq(PayRefundStatusWaiting)).
+		Where(s.q.PayRefund.ID.Eq(refund.ID), s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
 		Updates(map[string]interface{}{
-			"status":              PayRefundStatusFailure,
+			"status":              payModel.PayRefundStatusFailure,
 			"channel_refund_no":   notify.ChannelRefundNo,
 			"channel_notify_data": string(notifyDataJSON),
 			"channel_error_code":  notify.ChannelErrorCode,
@@ -207,4 +368,53 @@ func (s *PayRefundService) notifyRefundFailure(ctx context.Context, channel *pay
 	s.notifySvc.CreatePayNotifyTask(ctx, PayNotifyTypeRefund, refund.ID)
 
 	return nil
+}
+
+// SyncRefund 同步渠道退款的退款状态
+func (s *PayRefundService) SyncRefund(ctx context.Context) (int, error) {
+	// 1. 查询指定创建时间内的待退款订单
+	refunds, err := s.q.PayRefund.WithContext(ctx).
+		Where(s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+		Find()
+	if err != nil {
+		return 0, err
+	}
+	if len(refunds) == 0 {
+		return 0, nil
+	}
+
+	// 2. 遍历执行
+	count := 0
+	for _, refund := range refunds {
+		synced, err := s.syncRefund(ctx, refund)
+		if err != nil {
+			fmt.Printf("[SyncRefund][退款订单(%d) 同步失败: %v]\n", refund.ID, err)
+			continue
+		}
+		if synced {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (s *PayRefundService) syncRefund(ctx context.Context, refund *payModel.PayRefund) (bool, error) {
+	// 1.1 查询退款订单信息
+	payClient := s.channelSvc.GetPayClient(refund.ChannelID)
+	if payClient == nil {
+		return false, fmt.Errorf("渠道编号(%d) 找不到对应的支付客户端", refund.ChannelID)
+	}
+
+	respDTO, err := payClient.GetRefund(ctx, refund.OrderNo, refund.No)
+	if err != nil {
+		return false, err
+	}
+
+	// 1.2 回调退款结果
+	if err := s.NotifyRefund(ctx, refund.ChannelID, respDTO); err != nil {
+		return false, err
+	}
+
+	// 2. 如果同步到，则返回 true
+	return respDTO.Status == payModel.PayRefundStatusSuccess || respDTO.Status == payModel.PayRefundStatusFailure, nil
 }
