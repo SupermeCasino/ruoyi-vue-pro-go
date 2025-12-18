@@ -68,3 +68,36 @@ func (s *PayWalletTransactionService) CreateWalletTransaction(ctx context.Contex
 	}
 	return trx, nil
 }
+
+// GetWalletTransactionSummary 获得钱包流水统计
+func (s *PayWalletTransactionService) GetWalletTransactionSummary(ctx context.Context, userId int64, userType int, createTime []time.Time) (totalIncome int, totalExpense int, err error) {
+	// 1. 先查询钱包 ID
+	wallet, err := s.q.PayWallet.WithContext(ctx).Where(s.q.PayWallet.UserID.Eq(userId), s.q.PayWallet.UserType.Eq(userType)).First()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	q := s.q.PayWalletTransaction.WithContext(ctx).Where(s.q.PayWalletTransaction.WalletID.Eq(wallet.ID))
+
+	if len(createTime) == 2 {
+		q = q.Where(s.q.PayWalletTransaction.CreatedAt.Between(createTime[0], createTime[1]))
+	}
+
+	// 统计支出 (Price < 0)
+	err = q.Where(s.q.PayWalletTransaction.Price.Lt(0)).Select(s.q.PayWalletTransaction.Price.Sum()).Scan(&totalExpense)
+	if err != nil {
+		return 0, 0, err
+	}
+	// 统计收入 (Price > 0)
+	err = q.Where(s.q.PayWalletTransaction.Price.Gt(0)).Select(s.q.PayWalletTransaction.Price.Sum()).Scan(&totalIncome)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// 支出取绝对值（对齐 Java，Java 返回的是正数支出）
+	if totalExpense < 0 {
+		totalExpense = -totalExpense
+	}
+
+	return totalIncome, totalExpense, nil
+}
