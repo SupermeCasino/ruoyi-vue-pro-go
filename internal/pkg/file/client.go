@@ -80,7 +80,7 @@ func NewFileClient(storage int32, config json.RawMessage) (FileClient, error) {
 	case 10: // Local
 		return NewLocalFileClient(config)
 	case 20: // S3
-		return nil, errors.New("S3 storage not implemented yet")
+		return NewS3FileClient(config)
 	default:
 		return nil, errors.New("unknown storage type")
 	}
