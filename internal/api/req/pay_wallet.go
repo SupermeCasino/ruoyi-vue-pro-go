@@ -46,11 +46,13 @@ type PayWalletRechargePageReq struct {
 // PayWalletTransactionPageReq
 type PayWalletTransactionPageReq struct {
 	pagination.PageParam
-	WalletID int64  `form:"walletId"`
-	BizType  int    `form:"bizType"`
-	BizID    string `form:"bizId"`
-	No       string `form:"no"`
-	Title    string `form:"title"`
+	WalletID   int64    `form:"walletId"`
+	BizType    int      `form:"bizType"`
+	BizID      string   `form:"bizId"`
+	No         string   `form:"no"`
+	Title      string   `form:"title"`
+	Type       int      `form:"type"`         // 1: 收入, 2: 支出
+	CreateTime []string `form:"createTime[]"` // [startTime, endTime]
 }
 
 // PayWalletPageReq
