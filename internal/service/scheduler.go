@@ -17,6 +17,7 @@ import (
 // JobHandler 定时任务处理器接口
 type JobHandler interface {
 	Execute(ctx context.Context, param string) error
+	GetHandlerName() string
 }
 
 // Scheduler 使用 gocron/v2 管理定时任务调度器
@@ -30,7 +31,7 @@ type Scheduler struct {
 }
 
 // NewScheduler 创建新的调度器实例
-func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransferSyncJob) (*Scheduler, error) {
+func NewScheduler(q *query.Query, log *zap.Logger, handlers []JobHandler) (*Scheduler, error) {
 	s, err := gocron.NewScheduler()
 	if err != nil {
 		return nil, err
@@ -43,8 +44,10 @@ func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransf
 		jobMap:    make(map[int64]gocron.Job),
 	}
 
-	// 注册特定任务处理器
-	scheduler.RegisterHandler("payTransferSyncJob", payTransferSyncJob)
+	// 自动注册所有传入的任务处理器
+	for _, handler := range handlers {
+		scheduler.RegisterHandler(handler.GetHandlerName(), handler)
+	}
 
 	// 在后台自动启动调度器
 	go func() {
@@ -56,11 +59,41 @@ func NewScheduler(q *query.Query, log *zap.Logger, payTransferSyncJob *PayTransf
 	return scheduler, nil
 }
 
+// ProvideJobHandlers 聚合所有定时任务处理器，供 Wire 使用
+func ProvideJobHandlers(
+	h1 *PayTransferSyncJob,
+	h2 *PayNotifyJob,
+	h3 *PayOrderSyncJob,
+	h4 *PayOrderExpireJob,
+	h5 *PayRefundSyncJob,
+) []JobHandler {
+	return []JobHandler{h1, h2, h3, h4, h5}
+}
+
 // RegisterHandler 按名称注册任务处理器
 func (s *Scheduler) RegisterHandler(name string, handler JobHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.handlers[name] = handler
+}
+
+// HasHandler 检查指定名称的 Handler 是否已注册
+func (s *Scheduler) HasHandler(name string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	_, ok := s.handlers[name]
+	return ok
+}
+
+// GetRegisteredHandlers 获取所有已注册的 Handler 名称
+func (s *Scheduler) GetRegisteredHandlers() []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	names := make([]string, 0, len(s.handlers))
+	for name := range s.handlers {
+		names = append(names, name)
+	}
+	return names
 }
 
 // Start 从数据库加载所有启用的任务并启动调度器
@@ -206,10 +239,22 @@ func (s *Scheduler) TriggerJob(ctx context.Context, jobID int64) error {
 	return nil
 }
 
+// ValidateCronExpression 校验 cron 表达式是否合法
+func (s *Scheduler) ValidateCronExpression(cronExpression string) error {
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+	_, err := parser.Parse(cronExpression)
+	if err != nil {
+		return fmt.Errorf("无效的 cron 表达式: %w", err)
+	}
+	return nil
+}
+
 // GetNextTimes 计算 cron 表达式的下 n 次执行时间
+// 支持标准 5 字段格式 (分 时 日 月 周) 和 Quartz 6 字段格式 (秒 分 时 日 月 周)
 func (s *Scheduler) GetNextTimes(cronExpression string, count int) ([]string, error) {
 	// 使用 robfig/cron 解析 cron 表达式
-	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+	// 添加 Second 字段以支持 6 字段的 Quartz 格式
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 	schedule, err := parser.Parse(cronExpression)
 	if err != nil {
 		return nil, fmt.Errorf("无效的 cron 表达式: %w", err)
