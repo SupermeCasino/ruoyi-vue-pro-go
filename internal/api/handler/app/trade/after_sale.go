@@ -35,15 +35,12 @@ func (h *AppTradeAfterSaleHandler) CreateAfterSale(c *gin.Context) {
 
 // GetAfterSalePage 获得售后分页
 func (h *AppTradeAfterSaleHandler) GetAfterSalePage(c *gin.Context) {
-	var r req.TradeAfterSalePageReq
+	var r req.AppAfterSalePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
 	}
-	uid := context.GetUserId(c)
-	r.UserID = &uid
-
-	res, err := h.svc.GetAfterSalePage(c, &r)
+	res, err := h.svc.GetUserAfterSalePage(c, context.GetUserId(c), &r)
 	if err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
@@ -64,12 +61,12 @@ func (h *AppTradeAfterSaleHandler) GetAfterSale(c *gin.Context) {
 
 // CancelAfterSale 取消售后
 func (h *AppTradeAfterSaleHandler) CancelAfterSale(c *gin.Context) {
-	var r req.AppAfterSaleCancelReq
-	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+	id := utils.ParseInt64(c.Query("id"))
+	if id == 0 {
+		response.WriteError(c, 400, "id is required")
 		return
 	}
-	if err := h.svc.CancelAfterSale(c, context.GetUserId(c), r.ID); err != nil {
+	if err := h.svc.CancelAfterSale(c, context.GetUserId(c), id); err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
 	}

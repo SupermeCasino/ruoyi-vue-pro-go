@@ -10,14 +10,14 @@ type AppTradeOrderCreateResp struct {
 
 // AppTradeOrderSettlementResp 交易订单结算信息 Response
 type AppTradeOrderSettlementResp struct {
-	Type       int                             `json:"type"`
-	Items      []AppTradeOrderSettlementItem   `json:"items"`
-	Coupons    []AppTradeOrderSettlementCoupon `json:"coupons"`
-	Price      AppTradeOrderSettlementPrice    `json:"price"`
-	Address    *AppTradeOrderSettlementAddress `json:"address"`
-	UsePoint   int                             `json:"usePoint"`
-	TotalPoint int                             `json:"totalPoint"`
-	Promotions []interface{}                   `json:"promotions"` // simplify for now, or define if needed
+	Type       int                              `json:"type"`
+	Items      []AppTradeOrderSettlementItem    `json:"items"`
+	Coupons    []AppTradeOrderSettlementCoupon  `json:"coupons"`
+	Price      AppTradeOrderSettlementPrice     `json:"price"`
+	Address    *AppTradeOrderSettlementAddress  `json:"address"`
+	UsePoint   int                              `json:"usePoint"`
+	TotalPoint int                              `json:"totalPoint"`
+	Promotions []AppTradeOrderSettlementPromotion `json:"promotions"`
 }
 
 type AppTradeOrderSettlementItem struct {
@@ -64,6 +64,14 @@ type AppTradeOrderSettlementAddress struct {
 	AreaName      string `json:"areaName"`
 	DetailAddress string `json:"detailAddress"`
 	DefaultStatus bool   `json:"defaultStatus"`
+}
+
+// AppTradeOrderSettlementPromotion 交易订单结算 - 促销活动信息
+type AppTradeOrderSettlementPromotion struct {
+	ID            int64  `json:"id"`
+	Name          string `json:"name"`
+	Type          int    `json:"type"`          // 活动类型
+	DiscountPrice int    `json:"discountPrice"` // 折扣金额
 }
 
 // AppTradeOrderDetailResp 交易订单详情 Response
@@ -180,7 +188,7 @@ type TradeOrderBase struct {
 	PayPrice              int        `json:"payPrice"`
 	DeliveryType          int        `json:"deliveryType"`
 	PickUpStoreID         int64      `json:"pickUpStoreId"`
-	PickUpVerifyCode      int64      `json:"pickUpVerifyCode"`
+	PickUpVerifyCode      string     `json:"pickUpVerifyCode"`
 	DeliveryTemplateID    int64      `json:"deliveryTemplateId"`
 	LogisticsID           int64      `json:"logisticsId"`
 	LogisticsNo           string     `json:"logisticsNo"`

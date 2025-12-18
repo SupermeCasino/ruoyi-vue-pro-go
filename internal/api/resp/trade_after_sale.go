@@ -3,22 +3,34 @@ package resp
 import "time"
 
 type AppAfterSaleResp struct {
-	ID               int64     `json:"id"`
-	No               string    `json:"no"`
-	Status           int       `json:"status"`
-	Way              int       `json:"way"`
-	Type             int       `json:"type"`
-	ApplyReason      string    `json:"applyReason"`
-	ApplyDescription string    `json:"applyDescription"`
-	ApplyPicURLs     []string  `json:"applyPicUrls"`
-	OrderNo          string    `json:"orderNo"`
-	SpuName          string    `json:"spuName"`
-	PicURL           string    `json:"picUrl"`
-	Count            int       `json:"count"`
-	RefundPrice      int       `json:"refundPrice"`
-	AuditTime        time.Time `json:"auditTime"`
-	AuditReason      string    `json:"auditReason"`
-	CreateTime       time.Time `json:"createTime"`
+	ID               int64                            `json:"id"`
+	No               string                           `json:"no"`
+	Status           int                              `json:"status"`
+	Way              int                              `json:"way"`
+	Type             int                              `json:"type"`
+	ApplyReason      string                           `json:"applyReason"`
+	ApplyDescription string                           `json:"applyDescription"`
+	ApplyPicURLs     []string                         `json:"applyPicUrls"`
+	CreateTime       time.Time                        `json:"createTime"`
+	UpdateTime       time.Time                        `json:"updateTime"`
+	OrderID          int64                            `json:"orderId"`
+	OrderNo          string                           `json:"orderNo"`
+	OrderItemID      int64                            `json:"orderItemId"`
+	SpuID            int64                            `json:"spuId"`
+	SpuName          string                           `json:"spuName"`
+	SkuID            int64                            `json:"skuId"`
+	Properties       []ProductPropertyValueDetailResp `json:"properties"`
+	PicURL           string                           `json:"picUrl"`
+	Count            int                              `json:"count"`
+	AuditReason      string                           `json:"auditReason"`
+	RefundPrice      int                              `json:"refundPrice"`
+	RefundTime       *time.Time                       `json:"refundTime"`
+	LogisticsID      int64                            `json:"logisticsId"`
+	LogisticsNo      string                           `json:"logisticsNo"`
+	DeliveryTime     *time.Time                       `json:"deliveryTime"`
+	ReceiveTime      *time.Time                       `json:"receiveTime"`
+	ReceiveReason    string                           `json:"receiveReason"`
+	AuditTime        *time.Time                       `json:"auditTime"`
 }
 
 type AppAfterSaleLogResp struct {
@@ -74,11 +86,15 @@ type AfterSaleOrderItem struct {
 
 // AfterSaleLogResp 售后日志
 type AfterSaleLogResp struct {
-	ID         int64     `json:"id"`
-	UserType   int       `json:"userType"`
-	UserID     int64     `json:"userId"`
-	Content    string    `json:"content"`
-	CreateTime time.Time `json:"createTime"`
+	ID           int64     `json:"id"`
+	AfterSaleID  int64     `json:"afterSaleId"`
+	BeforeStatus int       `json:"beforeStatus"`
+	AfterStatus  int       `json:"afterStatus"`
+	OperateType  int       `json:"operateType"`
+	UserType     int       `json:"userType"`
+	UserID       int64     `json:"userId"`
+	Content      string    `json:"content"`
+	CreateTime   time.Time `json:"createTime"`
 }
 
 // ProductPropertyValueDetailResp 商品属性值详情

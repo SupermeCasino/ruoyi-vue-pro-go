@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func (h *TradeAfterSaleHandler) AgreeAfterSale(c *gin.Context) {
 		response.WriteError(c, 400, err.Error())
 		return
 	}
-	if err := h.svc.AgreeAfterSale(c, r.ID); err != nil {
+	if err := h.svc.AgreeAfterSale(c, context.GetUserId(c), r.ID); err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
 	}
@@ -54,7 +55,7 @@ func (h *TradeAfterSaleHandler) DisagreeAfterSale(c *gin.Context) {
 		response.WriteError(c, 400, err.Error())
 		return
 	}
-	if err := h.svc.DisagreeAfterSale(c, &r); err != nil {
+	if err := h.svc.DisagreeAfterSale(c, context.GetUserId(c), &r); err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
 	}
@@ -68,7 +69,7 @@ func (h *TradeAfterSaleHandler) RefundAfterSale(c *gin.Context) {
 		response.WriteError(c, 400, err.Error())
 		return
 	}
-	if err := h.svc.RefundAfterSale(c, r.ID); err != nil {
+	if err := h.svc.RefundAfterSale(c, context.GetUserId(c), c.ClientIP(), r.ID); err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
 	}
@@ -107,7 +108,21 @@ func (h *TradeAfterSaleHandler) ReceiveAfterSale(c *gin.Context) {
 		response.WriteError(c, 400, "invalid id")
 		return
 	}
-	if err := h.svc.ReceiveAfterSale(c, id); err != nil {
+	if err := h.svc.ReceiveAfterSale(c, context.GetUserId(c), id); err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
+// RefuseAfterSale 拒绝收货
+func (h *TradeAfterSaleHandler) RefuseAfterSale(c *gin.Context) {
+	var r req.TradeAfterSaleRefuseReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		response.WriteError(c, 400, err.Error())
+		return
+	}
+	if err := h.svc.RefuseAfterSale(c, context.GetUserId(c), &r); err != nil {
 		response.WriteError(c, 500, err.Error())
 		return
 	}

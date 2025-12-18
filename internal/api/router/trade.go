@@ -47,6 +47,7 @@ func RegisterTradeRoutes(engine *gin.Engine,
 		afterSaleGroup.PUT("/agree", tradeAfterSaleHandler.AgreeAfterSale)
 		afterSaleGroup.PUT("/disagree", tradeAfterSaleHandler.DisagreeAfterSale)
 		afterSaleGroup.PUT("/receive", tradeAfterSaleHandler.ReceiveAfterSale)
+		afterSaleGroup.PUT("/refuse", tradeAfterSaleHandler.RefuseAfterSale)
 		afterSaleGroup.PUT("/refund", tradeAfterSaleHandler.RefundAfterSale)
 	}
 

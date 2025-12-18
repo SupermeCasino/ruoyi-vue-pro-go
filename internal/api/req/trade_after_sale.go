@@ -19,6 +19,11 @@ type AppAfterSaleCancelReq struct {
 	ID int64 `json:"id" binding:"required"`
 }
 
+type AppAfterSalePageReq struct {
+	pagination.PageParam
+	Status *int `form:"status"`
+}
+
 type AppAfterSaleDeliveryReq struct {
 	ID          int64  `json:"id" binding:"required"`
 	LogisticsId int64  `json:"logisticsId" binding:"required"`
@@ -47,4 +52,9 @@ type TradeAfterSaleDisagreeReq struct {
 
 type TradeAfterSaleRefundReq struct {
 	ID int64 `json:"id" binding:"required"`
+}
+
+type TradeAfterSaleRefuseReq struct {
+	ID         int64  `json:"id" binding:"required"`
+	RefuseMemo string `json:"refuseMemo" binding:"required"`
 }
