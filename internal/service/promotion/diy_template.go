@@ -87,6 +87,9 @@ func (s *diyTemplateService) DeleteDiyTemplate(ctx context.Context, id int64) er
 	}
 
 	_, err = s.q.PromotionDiyTemplate.WithContext(ctx).Where(s.q.PromotionDiyTemplate.ID.Eq(id)).Delete()
+	if err != nil {
+		return err
+	}
 	// Logic to delete pages associated?
 	// Java deletes pages too? Yes, usually cascade or manual delete.
 	// Java doesn't show explicit page delete in controller snippet but usually Service has it.

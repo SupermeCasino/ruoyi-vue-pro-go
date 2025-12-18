@@ -348,3 +348,229 @@ func (s *BrokerageRecordService) GetUserRankByPrice(ctx context.Context, userId 
 	// 3. 返回排名 (比自己高的人数 + 1)
 	return int(greaterCount) + 1, nil
 }
+
+// BrokerageAddReqBO 分佣请求参数
+// 对齐 Java: cn.iocoder.yudao.module.trade.service.brokerage.bo.BrokerageAddReqBO
+type BrokerageAddReqBO struct {
+	BizID            string // 业务编号
+	BasePrice        int    // 分佣基础价格
+	FirstFixedPrice  int    // 一级固定佣金
+	SecondFixedPrice int    // 二级固定佣金
+	Title            string // 标题
+	SourceUserId     int64  // 来源用户编号（下单用户）
+}
+
+// AddBrokerageMultiLevel 添加多级分佣（一级/二级推广人分佣）
+// 对齐 Java: BrokerageRecordServiceImpl.addBrokerage(userId, bizType, list)
+func (s *BrokerageRecordService) AddBrokerageMultiLevel(ctx context.Context, sourceUserID int64, bizType int, list []*BrokerageAddReqBO, brokerageUserSvc *BrokerageUserService) error {
+	// 0. 校验分销功能是否启用
+	config, err := s.tradeConfigSvc.GetTradeConfig(ctx)
+	if err != nil || config == nil || !config.BrokerageEnabled {
+		s.logger.Warn("[AddBrokerageMultiLevel] 分销功能未开启")
+		return nil
+	}
+
+	// 1.1 获得一级推广人
+	firstUser, err := brokerageUserSvc.GetBindBrokerageUser(ctx, sourceUserID)
+	if err != nil || firstUser == nil || !firstUser.BrokerageEnabled {
+		return nil
+	}
+
+	// 1.2 计算一级分佣
+	if err := s.addBrokerageForLevel(ctx, firstUser, list, config.BrokerageFrozenDays, config.BrokerageFirstPercent, bizType, 1, sourceUserID, brokerageUserSvc); err != nil {
+		s.logger.Error("[AddBrokerageMultiLevel] 一级分佣失败", zap.Error(err))
+	}
+
+	// 2.1 获得二级推广员
+	if firstUser.BindUserID == 0 {
+		return nil
+	}
+	secondUser, err := brokerageUserSvc.GetBrokerageUser(ctx, firstUser.BindUserID)
+	if err != nil || secondUser == nil || !secondUser.BrokerageEnabled {
+		return nil
+	}
+
+	// 2.2 计算二级分佣
+	if err := s.addBrokerageForLevel(ctx, secondUser, list, config.BrokerageFrozenDays, config.BrokerageSecondPercent, bizType, 2, sourceUserID, brokerageUserSvc); err != nil {
+		s.logger.Error("[AddBrokerageMultiLevel] 二级分佣失败", zap.Error(err))
+	}
+
+	return nil
+}
+
+// addBrokerageForLevel 为指定级别用户添加佣金
+func (s *BrokerageRecordService) addBrokerageForLevel(ctx context.Context, user *brokerage.BrokerageUser, list []*BrokerageAddReqBO, frozenDays int, percent int, bizType int, level int, sourceUserID int64, brokerageUserSvc *BrokerageUserService) error {
+	// 计算解冻时间
+	var unfreezeTime *time.Time
+	if frozenDays > 0 {
+		t := time.Now().AddDate(0, 0, frozenDays)
+		unfreezeTime = &t
+	}
+
+	totalBrokerage := 0
+	var records []*brokerage.BrokerageRecord
+
+	for _, item := range list {
+		// 计算佣金金额
+		var fixedPrice int
+		if level == 1 {
+			fixedPrice = item.FirstFixedPrice
+		} else {
+			fixedPrice = item.SecondFixedPrice
+		}
+
+		brokeragePrice := s.calculatePrice(item.BasePrice, percent, fixedPrice)
+		if brokeragePrice <= 0 {
+			continue
+		}
+		totalBrokerage += brokeragePrice
+
+		// 确定状态
+		status := tradeModel.BrokerageRecordStatusSettlement
+		if frozenDays > 0 {
+			status = tradeModel.BrokerageRecordStatusWait
+		}
+
+		records = append(records, &brokerage.BrokerageRecord{
+			UserID:          user.ID,
+			BizType:         bizType,
+			BizID:           item.BizID,
+			Price:           brokeragePrice,
+			TotalPrice:      brokeragePrice,
+			Title:           item.Title,
+			Description:     item.Title,
+			Status:          status,
+			FrozenDays:      frozenDays,
+			UnfreezeTime:    unfreezeTime,
+			SourceUserLevel: level,
+			SourceUserID:    item.SourceUserId, // 对齐 Java: 使用 item 中的 sourceUserId
+		})
+	}
+
+	if len(records) == 0 {
+		return nil
+	}
+
+	// 批量插入记录
+	if err := s.q.BrokerageRecord.WithContext(ctx).CreateInBatches(records, 100); err != nil {
+		return err
+	}
+
+	// 更新用户佣金（冻结或可用）
+	if frozenDays > 0 {
+		return brokerageUserSvc.UpdateUserFrozenPrice(ctx, user.ID, totalBrokerage)
+	}
+	return brokerageUserSvc.UpdateUserPrice(ctx, user.ID, totalBrokerage)
+}
+
+// calculatePrice 计算佣金价格
+func (s *BrokerageRecordService) calculatePrice(basePrice int, percent int, fixedPrice int) int {
+	if fixedPrice > 0 {
+		return fixedPrice
+	}
+	return basePrice * percent / 100
+}
+
+// CancelBrokerage 取消佣金（用于退款/订单取消）
+// 对齐 Java: BrokerageRecordServiceImpl.cancelBrokerage
+func (s *BrokerageRecordService) CancelBrokerage(ctx context.Context, bizType int, bizID string, brokerageUserSvc *BrokerageUserService) error {
+	// 1. 查询佣金记录
+	records, err := s.q.BrokerageRecord.WithContext(ctx).
+		Where(s.q.BrokerageRecord.BizType.Eq(bizType)).
+		Where(s.q.BrokerageRecord.BizID.Eq(bizID)).
+		Find()
+	if err != nil {
+		return err
+	}
+	if len(records) == 0 {
+		s.logger.Warn("[CancelBrokerage] 记录不存在", zap.Int("bizType", bizType), zap.String("bizID", bizID))
+		return nil
+	}
+
+	// 2. 遍历更新
+	for _, record := range records {
+		// 2.1 更新记录状态为已失效
+		info, err := s.q.BrokerageRecord.WithContext(ctx).
+			Where(s.q.BrokerageRecord.ID.Eq(record.ID)).
+			Where(s.q.BrokerageRecord.Status.Eq(record.Status)).
+			Update(s.q.BrokerageRecord.Status, tradeModel.BrokerageRecordStatusCancel)
+		if err != nil {
+			s.logger.Error("[CancelBrokerage] 更新记录失败", zap.Int64("id", record.ID), zap.Error(err))
+			continue
+		}
+		if info.RowsAffected == 0 {
+			s.logger.Warn("[CancelBrokerage] 更新记录失败（乐观锁）", zap.Int64("id", record.ID))
+			continue
+		}
+
+		// 2.2 更新用户佣金（回滚）
+		if record.Status == tradeModel.BrokerageRecordStatusWait {
+			// 待结算状态：减少冻结佣金
+			_ = brokerageUserSvc.UpdateUserFrozenPrice(ctx, record.UserID, -record.Price)
+		} else if record.Status == tradeModel.BrokerageRecordStatusSettlement {
+			// 已结算状态：减少可用佣金
+			_ = brokerageUserSvc.UpdateUserPrice(ctx, record.UserID, -record.Price)
+		}
+	}
+	return nil
+}
+
+// UnfreezeRecord 解冻佣金（定时任务调用）
+// 对齐 Java: BrokerageRecordServiceImpl.unfreezeRecord
+func (s *BrokerageRecordService) UnfreezeRecord(ctx context.Context, brokerageUserSvc *BrokerageUserService) (int, error) {
+	// 1. 查询待结算且已到解冻时间的记录
+	now := time.Now()
+	records, err := s.q.BrokerageRecord.WithContext(ctx).
+		Where(s.q.BrokerageRecord.Status.Eq(tradeModel.BrokerageRecordStatusWait)).
+		Where(s.q.BrokerageRecord.UnfreezeTime.Lt(now)).
+		Find()
+	if err != nil {
+		return 0, err
+	}
+	if len(records) == 0 {
+		return 0, nil
+	}
+
+	// 2. 遍历执行解冻
+	count := 0
+	for _, record := range records {
+		success, err := s.unfreezeSingleRecord(ctx, record, brokerageUserSvc)
+		if err != nil {
+			s.logger.Error("[UnfreezeRecord] 解冻失败", zap.Int64("id", record.ID), zap.Error(err))
+			continue
+		}
+		if success {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// unfreezeSingleRecord 解冻单条记录
+func (s *BrokerageRecordService) unfreezeSingleRecord(ctx context.Context, record *brokerage.BrokerageRecord, brokerageUserSvc *BrokerageUserService) (bool, error) {
+	// 1. 更新记录状态为已结算
+	now := time.Now()
+	info, err := s.q.BrokerageRecord.WithContext(ctx).
+		Where(s.q.BrokerageRecord.ID.Eq(record.ID)).
+		Where(s.q.BrokerageRecord.Status.Eq(record.Status)).
+		Updates(map[string]interface{}{
+			"status":        tradeModel.BrokerageRecordStatusSettlement,
+			"unfreeze_time": now,
+		})
+	if err != nil {
+		return false, err
+	}
+	if info.RowsAffected == 0 {
+		s.logger.Warn("[unfreezeSingleRecord] 更新失败（乐观锁）", zap.Int64("id", record.ID))
+		return false, nil
+	}
+
+	// 2. 更新用户冻结佣金减少，可用佣金增加
+	if err := brokerageUserSvc.UpdateFrozenPriceDecrAndPriceIncr(ctx, record.UserID, -record.Price); err != nil {
+		s.logger.Error("[unfreezeSingleRecord] 更新用户佣金失败", zap.Int64("userId", record.UserID), zap.Error(err))
+		return false, err
+	}
+
+	s.logger.Info("[unfreezeSingleRecord] 解冻成功", zap.Int64("id", record.ID))
+	return true, nil
+}

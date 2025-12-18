@@ -37,6 +37,57 @@ func (s *BrokerageUserService) GetBrokerageUser(ctx context.Context, id int64) (
 	return s.q.BrokerageUser.WithContext(ctx).Where(s.q.BrokerageUser.ID.Eq(id)).First()
 }
 
+// GetBindBrokerageUser 获得用户的推广人
+// 对齐 Java: BrokerageUserServiceImpl.getBindBrokerageUser
+func (s *BrokerageUserService) GetBindBrokerageUser(ctx context.Context, id int64) (*brokerage.BrokerageUser, error) {
+	user, err := s.GetBrokerageUser(ctx, id)
+	if err != nil || user == nil {
+		return nil, err
+	}
+	if user.BindUserID == 0 {
+		return nil, nil
+	}
+	return s.GetBrokerageUser(ctx, user.BindUserID)
+}
+
+// GetUserBrokerageEnabled 获得用户分销资格
+// 对齐 Java: BrokerageUserServiceImpl.getUserBrokerageEnabled
+func (s *BrokerageUserService) GetUserBrokerageEnabled(ctx context.Context, userId int64) (bool, error) {
+	user, err := s.GetBrokerageUser(ctx, userId)
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.BrokerageEnabled, nil
+}
+
+// UpdateUserPrice 更新用户可用佣金
+// 对齐 Java: BrokerageUserServiceImpl.updateUserPrice
+func (s *BrokerageUserService) UpdateUserPrice(ctx context.Context, id int64, price int) error {
+	u := s.q.BrokerageUser
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).UpdateSimple(u.BrokeragePrice.Add(price))
+	return err
+}
+
+// UpdateUserFrozenPrice 更新用户冻结佣金
+// 对齐 Java: BrokerageUserServiceImpl.updateUserFrozenPrice
+func (s *BrokerageUserService) UpdateUserFrozenPrice(ctx context.Context, id int64, frozenPrice int) error {
+	u := s.q.BrokerageUser
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).UpdateSimple(u.FrozenPrice.Add(frozenPrice))
+	return err
+}
+
+// UpdateFrozenPriceDecrAndPriceIncr 冻结佣金减少，可用佣金增加
+// 对齐 Java: BrokerageUserServiceImpl.updateFrozenPriceDecrAndPriceIncr
+func (s *BrokerageUserService) UpdateFrozenPriceDecrAndPriceIncr(ctx context.Context, id int64, frozenPrice int) error {
+	u := s.q.BrokerageUser
+	// frozenPrice 是负数（减少冻结），所以可用佣金增加的是 -frozenPrice
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).UpdateSimple(
+		u.FrozenPrice.Add(frozenPrice),
+		u.BrokeragePrice.Add(-frozenPrice),
+	)
+	return err
+}
+
 func parseTime(t string) time.Time {
 	res, _ := time.ParseInLocation(time.DateTime, t, time.Local)
 	return res

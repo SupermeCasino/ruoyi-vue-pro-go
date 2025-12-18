@@ -36,6 +36,14 @@ func GetUserId(c *gin.Context) int64 {
 	return GetLoginUserID(c)
 }
 
+func GetUserType(c *gin.Context) int {
+	user := GetLoginUser(c)
+	if user == nil {
+		return 0 // Default to Member
+	}
+	return user.UserType
+}
+
 // GetLoginUser 获取完整的登录用户信息
 func GetLoginUser(c *gin.Context) *LoginUser {
 	v, exists := c.Get(CtxLoginUserKey)
