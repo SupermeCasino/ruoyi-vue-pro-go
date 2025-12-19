@@ -2,6 +2,7 @@ package promotion
 
 import (
 	"context"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -230,4 +231,16 @@ func (s *BargainActivityService) validateBargainConflict(ctx context.Context, sp
 		return errors.NewBizError(1001004002, "该商品已参加其它砍价活动")
 	}
 	return nil
+}
+
+// GetMatchBargainActivityBySpuId 获取指定 SPU 的进行中的砍价活动
+func (s *BargainActivityService) GetMatchBargainActivityBySpuId(ctx context.Context, spuId int64) (*promotion.PromotionBargainActivity, error) {
+	now := time.Now()
+	q := s.q.PromotionBargainActivity
+	return q.WithContext(ctx).
+		Where(q.SpuID.Eq(spuId)).
+		Where(q.Status.Eq(1)). // 1 = Enable
+		Where(q.StartTime.Lt(now)).
+		Where(q.EndTime.Gt(now)).
+		First()
 }

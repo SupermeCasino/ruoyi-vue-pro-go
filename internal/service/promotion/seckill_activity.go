@@ -443,3 +443,15 @@ func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activi
 
 	return act, prod, nil
 }
+
+// GetMatchSeckillActivityBySpuId 获取指定 SPU 的进行中的秒杀活动
+func (s *SeckillActivityService) GetMatchSeckillActivityBySpuId(ctx context.Context, spuId int64) (*promotion.PromotionSeckillActivity, error) {
+	now := time.Now()
+	q := s.q.PromotionSeckillActivity
+	return q.WithContext(ctx).
+		Where(q.SpuID.Eq(spuId)).
+		Where(q.Status.Eq(1)). // 1 = Enable
+		Where(q.StartTime.Lt(now)).
+		Where(q.EndTime.Gt(now)).
+		First()
+}

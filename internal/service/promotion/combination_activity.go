@@ -29,6 +29,8 @@ type CombinationActivityService interface {
 	GetCombinationActivityPageForApp(ctx context.Context, req pagination.PageParam) (*pagination.PageResult[*resp.AppCombinationActivityRespVO], error)
 	GetCombinationActivityDetail(ctx context.Context, id int64) (*resp.AppCombinationActivityDetailRespVO, error)
 	ValidateCombinationActivityCanJoin(ctx context.Context, activityID int64) (*promotion.PromotionCombinationActivity, error)
+	// GetMatchCombinationActivityBySpuId 获取指定 SPU 的进行中的拼团活动
+	GetMatchCombinationActivityBySpuId(ctx context.Context, spuId int64) (*promotion.PromotionCombinationActivity, error)
 }
 
 type combinationActivityService struct {
@@ -488,6 +490,17 @@ func (s *combinationActivityService) ValidateCombinationActivityCanJoin(ctx cont
 		return nil, errors.NewBizError(1001006003, "拼团活动已结束")
 	}
 	return activity, nil
+}
+
+func (s *combinationActivityService) GetMatchCombinationActivityBySpuId(ctx context.Context, spuId int64) (*promotion.PromotionCombinationActivity, error) {
+	now := time.Now()
+	q := s.q.PromotionCombinationActivity
+	return q.WithContext(ctx).
+		Where(q.SpuID.Eq(spuId)).
+		Where(q.Status.Eq(1)). // 1 = Enable
+		Where(q.StartTime.Lt(now)).
+		Where(q.EndTime.Gt(now)).
+		First()
 }
 
 func (s *combinationActivityService) validateProducts(ctx context.Context, products []req.CombinationProductBaseVO) error {

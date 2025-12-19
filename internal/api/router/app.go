@@ -62,6 +62,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appPayTransferHandler *payApp.AppPayTransferHandler,
 	appPayWalletTransactionHandler *payApp.AppPayWalletTransactionHandler,
 	appPayWalletRechargePackageHandler *payApp.AppPayWalletRechargePackageHandler,
+	appActivityHandler *promotionApp.AppActivityHandler,
 ) {
 	appGroup := engine.Group("/app-api")
 	{
@@ -309,6 +310,12 @@ func RegisterAppRoutes(engine *gin.Engine,
 				kefuMessageGroup.POST("/send", appKefuHandler.SendMessage)
 				kefuMessageGroup.PUT("/update-read-status", appKefuHandler.UpdateMessageReadStatus)
 				kefuMessageGroup.GET("/list", appKefuHandler.GetMessageList)
+			}
+
+			// Activity
+			activityGroup := promotionGroup.Group("/activity")
+			{
+				activityGroup.GET("/list-by-spu-id", appActivityHandler.GetActivityListBySpuId)
 			}
 
 			// Combination Activity

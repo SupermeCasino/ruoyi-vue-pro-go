@@ -159,6 +159,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appPayTransferHandler *payApp.AppPayTransferHandler,
 	appPayWalletTransactionHandler *payApp.AppPayWalletTransactionHandler,
 	appPayWalletRechargePackageHandler *payApp.AppPayWalletRechargePackageHandler,
+	appActivityHandler *promotionApp.AppActivityHandler,
 	webSocketHandler *handler.WebSocketHandler,
 	casbinMiddleware *middleware.CasbinMiddleware,
 ) *gin.Engine {
@@ -279,6 +280,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		appPayTransferHandler,
 		appPayWalletTransactionHandler,
 		appPayWalletRechargePackageHandler,
+		appActivityHandler,
 	)
 
 	// Statistics 模块
