@@ -15,10 +15,6 @@ const (
 	// Redis Key 前缀：访问令牌，与 Java 保持一致
 	RedisKeyOAuth2AccessToken = "oauth2_access_token:%s"
 
-	// 用户类型常量，与 Java UserTypeEnum 保持一致
-	UserTypeMember = 1 // 会员
-	UserTypeAdmin  = 2 // 管理员
-
 	// 默认过期时间
 	DefaultAccessTokenExpireSeconds  = 30 * 24 * 3600 // 30 天
 	DefaultRefreshTokenExpireSeconds = 60 * 24 * 3600 // 60 天

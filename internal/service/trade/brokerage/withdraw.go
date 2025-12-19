@@ -10,6 +10,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
@@ -21,10 +22,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"go.uber.org/zap"
-)
-
-const (
-	userTypeMember = 1 // 会员用户类型
 )
 
 type BrokerageWithdrawService struct {
@@ -166,7 +163,7 @@ func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdr
 		channelCode = "wallet"
 		transferType = modelPay.PayTransferTypeWallet
 		// 调用钱包 API 获取钱包 ID
-		walletInfo, err := s.payWalletSvc.GetOrCreateWallet(ctx, withdraw.UserID, userTypeMember)
+		walletInfo, err := s.payWalletSvc.GetOrCreateWallet(ctx, withdraw.UserID, model.UserTypeMember)
 		if err != nil {
 			s.logger.Error("[createPayTransfer][获取钱包失败]",
 				zap.Int64("userId", withdraw.UserID),

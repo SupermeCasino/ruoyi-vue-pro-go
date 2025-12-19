@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
@@ -149,7 +150,7 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 		}
 		userID := context.GetLoginUserID(c)
 		user := context.GetLoginUser(c)
-		userType := 0
+		userType := model.UserTypeUnknown // 默认未知用户类型
 		if user != nil {
 			userType = user.UserType
 		}
@@ -277,7 +278,7 @@ func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
 		Subject:         order.Subject,
 		Body:            order.Body,
 		NotifyURL:       order.NotifyURL,
-		Price:           int64(order.Price),           // 转换为 int64
+		Price:           int64(order.Price), // 转换为 int64
 		ChannelFeeRate:  order.ChannelFeeRate,
 		ChannelFeePrice: order.ChannelFeePrice,
 		Status:          order.Status,
@@ -286,7 +287,7 @@ func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
 		SuccessTime:     order.SuccessTime,
 		ExtensionID:     order.ExtensionID,
 		No:              order.No,
-		RefundPrice:     int64(order.RefundPrice),     // 转换为 int64
+		RefundPrice:     int64(order.RefundPrice), // 转换为 int64
 		ChannelUserID:   order.ChannelUserID,
 		ChannelOrderNo:  order.ChannelOrderNo,
 		CreateTime:      order.CreatedAt,

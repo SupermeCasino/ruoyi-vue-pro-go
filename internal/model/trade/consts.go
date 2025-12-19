@@ -63,13 +63,6 @@ const (
 )
 
 const (
-	// TradeOrderLogUserTypeMember 会员用户
-	TradeOrderLogUserTypeMember = 1
-	// TradeOrderLogUserTypeAdmin 管理员
-	TradeOrderLogUserTypeAdmin = 2
-)
-
-const (
 	// PickUpVerifyCodeLength 核销码长度
 	PickUpVerifyCodeLength = 8
 )

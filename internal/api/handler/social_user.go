@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -36,7 +37,7 @@ func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 	// 从上下文获取当前用户信息 (假设已通过认证中间件)
 	// 从上下文获取当前用户信息
 	userID := context.GetLoginUserID(c)
-	userType := 2 // 2=System/Admin
+	userType := model.UserTypeAdmin // 管理员用户类型
 
 	if err := h.socialUserService.BindSocialUser(c.Request.Context(), userID, userType, &req); err != nil {
 		h.logger.Error("绑定社交用户失败", zap.Error(err))
@@ -58,7 +59,7 @@ func (h *SocialUserHandler) UnbindSocialUser(c *gin.Context) {
 	// 从上下文获取当前用户信息
 	// 从上下文获取当前用户信息
 	userID := context.GetLoginUserID(c)
-	userType := 2 // 2=System/Admin
+	userType := model.UserTypeAdmin // 管理员用户类型
 
 	if err := h.socialUserService.UnbindSocialUser(c.Request.Context(), userID, userType, req.Type, req.Openid); err != nil {
 		h.logger.Error("解绑社交用户失败", zap.Error(err))
@@ -74,7 +75,7 @@ func (h *SocialUserHandler) GetSocialUserList(c *gin.Context) {
 	// 从上下文获取当前用户信息
 	// 从上下文获取当前用户信息
 	userID := context.GetLoginUserID(c)
-	userType := 2 // 2=System/Admin
+	userType := model.UserTypeAdmin // 管理员用户类型
 
 	list, err := h.socialUserService.GetSocialUserList(c.Request.Context(), userID, userType)
 	if err != nil {

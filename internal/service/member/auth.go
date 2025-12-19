@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
@@ -210,7 +211,7 @@ func (s *MemberAuthService) createToken(ctx context.Context, user *member.Member
 	}
 
 	// 创建访问令牌（UserType=1 表示会员，TenantID=0 表示默认租户）
-	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, service.UserTypeMember, 0, userInfo)
+	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, model.UserTypeMember, 0, userInfo)
 	if err != nil {
 		return nil, errors.ErrUnknown
 	}

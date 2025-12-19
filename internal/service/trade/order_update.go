@@ -9,17 +9,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
-	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 
 	"gorm.io/gorm"
 )
@@ -167,11 +167,11 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 		// 取消：40 = CANCELED (已取消)
 		order = &trade.TradeOrder{
 			No:             orderNo,
-			Type:           trade.OrderTypeNormal,           // 普通订单
-			Terminal:       getTerminal(ctx),                 // 从请求头获取终端信息
+			Type:           trade.OrderTypeNormal, // 普通订单
+			Terminal:       getTerminal(ctx),      // 从请求头获取终端信息
 			UserID:         uId,
-			UserIP:         getClientIP(ctx),                 // 从请求获取用户 IP
-			Status:         trade.TradeOrderStatusUnpaid,     // 待支付
+			UserIP:         getClientIP(ctx),             // 从请求获取用户 IP
+			Status:         trade.TradeOrderStatusUnpaid, // 待支付
 			ProductCount:   len(reqVO.Items),
 			Remark:         reqVO.Remark,
 			PayStatus:      false,
@@ -351,7 +351,7 @@ func (s *TradeOrderUpdateService) createOrderLog(ctx context.Context, order *tra
 
 	log := &trade.TradeOrderLog{
 		UserID:       uid,
-		UserType:     trade.TradeOrderLogUserTypeMember, // 会员用户
+		UserType:     model.UserTypeMember, // 会员用户
 		OrderID:      order.ID,
 		BeforeStatus: 0, // Simplified, ideally pass old status
 		AfterStatus:  order.Status,
