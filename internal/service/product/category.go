@@ -138,6 +138,28 @@ func (s *ProductCategoryService) GetEnableCategoryListByIds(ctx context.Context,
 	return u.WithContext(ctx).Where(u.ID.In(ids...), u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
 }
 
+// GetCategoryAndChildrenIds 获得分类及其所有子分类的编号
+func (s *ProductCategoryService) GetCategoryAndChildrenIds(ctx context.Context, categoryID int64) ([]int64, error) {
+	if categoryID == 0 {
+		return []int64{}, nil
+	}
+
+	categoryIds := []int64{categoryID}
+
+	// 获取该分类的所有子分类
+	u := s.q.ProductCategory
+	children, err := u.WithContext(ctx).Where(u.ParentID.Eq(categoryID), u.Status.Eq(0)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, child := range children {
+		categoryIds = append(categoryIds, child.ID)
+	}
+
+	return categoryIds, nil
+}
+
 func (s *ProductCategoryService) validateParentCategory(ctx context.Context, parentId int64) error {
 	if parentId == 0 {
 		return nil
@@ -165,6 +187,20 @@ func (s *ProductCategoryService) ValidateCategory(ctx context.Context, id int64)
 	}
 	if count == 0 {
 		return errors.NewBizError(1006001000, "分类不存在")
+	}
+	return nil
+}
+
+// ValidateCategoryLevel 校验分类层级（只允许二级分类绑定商品）
+func (s *ProductCategoryService) ValidateCategoryLevel(ctx context.Context, id int64) error {
+	u := s.q.ProductCategory
+	category, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
+	if err != nil {
+		return errors.NewBizError(1006001000, "分类不存在")
+	}
+	// 只有二级分类（ParentID != 0）才能绑定商品
+	if category.ParentID == 0 {
+		return errors.NewBizError(1006001005, "只能在二级分类下创建商品")
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"strings"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
@@ -38,6 +39,10 @@ func (s *ProductSpuService) CreateSpu(ctx context.Context, req *req.ProductSpuSa
 	if err := s.categorySvc.ValidateCategory(ctx, req.CategoryID); err != nil {
 		return 0, err
 	}
+	// 校验分类层级（只允许二级分类）
+	if err := s.categorySvc.ValidateCategoryLevel(ctx, req.CategoryID); err != nil {
+		return 0, err
+	}
 	// 校验品牌
 	if err := s.brandSvc.ValidateProductBrand(ctx, req.BrandID); err != nil {
 		return 0, err
@@ -63,7 +68,9 @@ func (s *ProductSpuService) CreateSpu(ctx context.Context, req *req.ProductSpuSa
 		GiveIntegral:       req.GiveIntegral,
 		SubCommissionType:  model.BitBool(*req.SubCommissionType),
 		VirtualSalesCount:  req.VirtualSalesCount,
-		Status:             0, // Default to 0? Or from req? Java defaults to ENABLE if not set, logic is in initSpuFromSkus
+		Status:             1, // ✅ 对齐 Java: 默认上架 (ENABLE=1)
+		SalesCount:         0, // ✅ 对齐 Java: 默认销量为0
+		BrowseCount:        0, // ✅ 对齐 Java: 默认浏览量为0
 	}
 
 	// 初始化 SPU 信息 (价格、库存等)
@@ -155,8 +162,10 @@ func (s *ProductSpuService) UpdateSpuStatus(ctx context.Context, req *req.Produc
 	if _, err := s.validateSpuExists(ctx, req.ID); err != nil {
 		return err
 	}
-	_, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(req.ID)).Update(s.q.ProductSpu.Status, req.Status)
-	return err
+	return s.q.Transaction(func(tx *query.Query) error {
+		_, err := tx.ProductSpu.WithContext(ctx).Where(tx.ProductSpu.ID.Eq(req.ID)).Update(tx.ProductSpu.Status, req.Status)
+		return err
+	})
 }
 
 // UpdateBrowseCount 更新浏览量
@@ -231,16 +240,15 @@ func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuP
 // GetTabsCount 获得 SPU Tab 统计
 func (s *ProductSpuService) GetTabsCount(ctx context.Context) (map[int]int64, error) {
 	u := s.q.ProductSpu
-	// Simple count implementation
-	// 0: For Sale
+	// 0: For Sale (Status = 0)
 	count0, _ := u.WithContext(ctx).Where(u.Status.Eq(0)).Count()
-	// 1: In Warehouse
+	// 1: In Warehouse (Status = 1)
 	count1, _ := u.WithContext(ctx).Where(u.Status.Eq(1)).Count()
-	// 2: Sold Out
+	// 2: Sold Out (Stock = 0)
 	count2, _ := u.WithContext(ctx).Where(u.Stock.Eq(0)).Count()
-	// 3: Alert
-	count3, _ := u.WithContext(ctx).Where(u.Stock.Lt(10)).Count() // Mock alert
-	// 4: Recycle
+	// 3: Alert Stock (Stock <= 10，对齐 Java)
+	count3, _ := u.WithContext(ctx).Where(u.Stock.Lte(10)).Count()
+	// 4: Recycle (Status = -1)
 	count4, _ := u.WithContext(ctx).Where(u.Status.Eq(-1)).Count()
 
 	return map[int]int64{
@@ -257,8 +265,15 @@ func (s *ProductSpuService) GetSpuPageForApp(ctx context.Context, req *req.AppPr
 	u := s.q.ProductSpu
 	q := u.WithContext(ctx).Where(u.Status.Eq(1)) // 上架状态 Status=1
 
+	// 处理分类查询：如果指定了分类ID，则包含其子分类
 	if req.CategoryID != nil && *req.CategoryID > 0 {
-		q = q.Where(u.CategoryID.Eq(*req.CategoryID))
+		categoryIds, err := s.categorySvc.GetCategoryAndChildrenIds(ctx, *req.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		if len(categoryIds) > 0 {
+			q = q.Where(u.CategoryID.In(categoryIds...))
+		}
 	}
 	if req.Keyword != nil && *req.Keyword != "" {
 		q = q.Where(u.Name.Like("%" + *req.Keyword + "%"))
@@ -438,8 +453,29 @@ func (s *ProductSpuService) convertSkuResp(sku *product.ProductSku) *resp.Produc
 			ValueName:    p.ValueName,
 		}
 	}
+
+	// 生成 SKU 名称：从属性拼接，例如 "黑色 - CH510"
+	// 如果没有属性，使用默认名称
+	var skuName string
+	if len(sku.Properties) > 0 {
+		var names []string
+		for _, p := range sku.Properties {
+			if p.ValueName != "" {
+				names = append(names, p.ValueName)
+			}
+		}
+		if len(names) > 0 {
+			skuName = strings.Join(names, " - ")
+		} else {
+			skuName = "默认规格"
+		}
+	} else {
+		skuName = "默认规格"
+	}
+
 	return &resp.ProductSkuResp{
 		ID:                   sku.ID,
+		Name:                 skuName, // ✅ 对齐 Java: 生成 SKU 名称
 		SpuID:                sku.SpuID,
 		Properties:           properties,
 		Price:                sku.Price,

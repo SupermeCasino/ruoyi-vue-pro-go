@@ -34,6 +34,7 @@ type ProductSpuResp struct {
 // ProductSkuResp 商品 SKU Response
 type ProductSkuResp struct {
 	ID                   int64                    `json:"id"`
+	Name                 string                   `json:"name"` // ✅ 对齐 Java: 商品 SKU 名字
 	SpuID                int64                    `json:"spuId"`
 	Properties           []ProductSkuPropertyResp `json:"properties"`
 	Price                int                      `json:"price"`
@@ -47,7 +48,7 @@ type ProductSkuResp struct {
 	FirstBrokeragePrice  int                      `json:"firstBrokeragePrice"`
 	SecondBrokeragePrice int                      `json:"secondBrokeragePrice"`
 	SalesCount           int                      `json:"salesCount"`
-	VipPrice             int                      `json:"vipPrice"` // Added VipPrice
+	VipPrice             int                      `json:"vipPrice"`
 }
 
 type ProductSkuPropertyResp struct {
