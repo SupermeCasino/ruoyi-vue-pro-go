@@ -265,6 +265,8 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
 		AreaID:        store.AreaID,
 		DetailAddress: store.DetailAddress,
 		Logo:          store.Logo,
+		OpeningTime:   store.OpeningTime,
+		ClosingTime:   store.ClosingTime,
 		Latitude:      store.Latitude,
 		Longitude:     store.Longitude,
 		Status:        store.Status,
@@ -298,6 +300,8 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 			AreaID:        item.AreaID,
 			DetailAddress: item.DetailAddress,
 			Logo:          item.Logo,
+			OpeningTime:   item.OpeningTime,
+			ClosingTime:   item.ClosingTime,
 			Latitude:      item.Latitude,
 			Longitude:     item.Longitude,
 			Status:        item.Status,
@@ -331,6 +335,8 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 			AreaID:        item.AreaID,
 			DetailAddress: item.DetailAddress,
 			Logo:          item.Logo,
+			OpeningTime:   item.OpeningTime,
+			ClosingTime:   item.ClosingTime,
 			Latitude:      item.Latitude,
 			Longitude:     item.Longitude,
 			Status:        item.Status,
@@ -339,6 +345,23 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 		}
 	}
 	response.WriteSuccess(c, res)
+}
+
+// BindDeliveryPickUpStore 绑定自提门店核销员工
+func (h *DeliveryPickUpStoreHandler) BindDeliveryPickUpStore(c *gin.Context) {
+	var r req.DeliveryPickUpBindReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		response.WriteError(c, 400, err.Error())
+		return
+	}
+
+	if err := h.svc.BindDeliveryPickUpStore(c.Request.Context(), &r); err != nil {
+		h.logger.Error("绑定自提门店核销员工失败", zap.Error(err))
+		response.WriteError(c, 500, "绑定失败")
+		return
+	}
+
+	response.WriteSuccess(c, true)
 }
 
 type DeliveryExpressTemplateHandler struct {

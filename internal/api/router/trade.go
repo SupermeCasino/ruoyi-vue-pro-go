@@ -76,6 +76,7 @@ func RegisterTradeRoutes(engine *gin.Engine,
 			pickUpStoreGroup.GET("/get", deliveryPickUpStoreHandler.GetDeliveryPickUpStore)
 			pickUpStoreGroup.GET("/page", deliveryPickUpStoreHandler.GetDeliveryPickUpStorePage)
 			pickUpStoreGroup.GET("/simple-list", deliveryPickUpStoreHandler.GetSimpleDeliveryPickUpStoreList)
+			pickUpStoreGroup.POST("/bind", deliveryPickUpStoreHandler.BindDeliveryPickUpStore)
 		}
 
 		// Express Template (运费模板) - 对齐 Java 路径
