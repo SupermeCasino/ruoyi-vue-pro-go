@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -276,7 +277,7 @@ func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.
 	}
 
 	// 3. 获取虚拟成团记录数量 (VirtualGroup=true, HeadID=0)
-	virtualGroupCount, err := q.WithContext(ctx).Where(q.VirtualGroup.Is(true), q.HeadID.Eq(0)).Count()
+	virtualGroupCount, err := q.WithContext(ctx).Where(q.VirtualGroup.Eq(model.BitBool(true)), q.HeadID.Eq(0)).Count()
 	if err != nil {
 		return nil, err
 	}

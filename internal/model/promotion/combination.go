@@ -62,26 +62,26 @@ func (PromotionCombinationProduct) TableName() string {
 // PromotionCombinationRecord 拼团记录 DO
 // Maps to promotion_combination_record
 type PromotionCombinationRecord struct {
-	ID               int64     `gorm:"primaryKey;autoIncrement;column:id;comment:编号" json:"id"`
-	ActivityID       int64     `gorm:"column:activity_id;not null;comment:活动编号" json:"activityId"`
-	CombinationPrice int       `gorm:"column:combination_price;not null;comment:拼团单价" json:"combinationPrice"`
-	SpuID            int64     `gorm:"column:spu_id;not null;comment:SPU编号" json:"spuId"`
-	SpuName          string    `gorm:"column:spu_name;type:varchar(255);comment:商品名字" json:"spuName"`
-	PicUrl           string    `gorm:"column:pic_url;type:varchar(255);comment:商品图片" json:"picUrl"`
-	SkuID            int64     `gorm:"column:sku_id;not null;comment:SKU编号" json:"skuId"`
-	Count            int       `gorm:"column:count;not null;comment:购买数量" json:"count"`
-	UserID           int64     `gorm:"column:user_id;not null;comment:用户编号" json:"userId"`
-	Nickname         string    `gorm:"column:nickname;type:varchar(64);comment:用户昵称" json:"nickname"`
-	Avatar           string    `gorm:"column:avatar;type:varchar(255);comment:用户头像" json:"avatar"`
-	HeadID           int64     `gorm:"column:head_id;not null;comment:团长编号" json:"headId"`
-	Status           int       `gorm:"column:status;not null;comment:拼团状态" json:"status"`
-	OrderID          int64     `gorm:"column:order_id;not null;comment:订单编号" json:"orderId"`
-	UserSize         int       `gorm:"column:user_size;not null;comment:成团人数" json:"userSize"`
-	UserCount        int       `gorm:"column:user_count;not null;comment:已入团人数" json:"userCount"`
-	VirtualGroup     bool      `gorm:"column:virtual_group;not null;default:false;comment:是否虚拟成团" json:"virtualGroup"`
-	ExpireTime       time.Time `gorm:"column:expire_time;comment:过期时间" json:"expireTime"`
-	StartTime        time.Time `gorm:"column:start_time;comment:开始时间" json:"startTime"`
-	EndTime          time.Time `gorm:"column:end_time;comment:结束时间" json:"endTime"`
+	ID               int64         `gorm:"primaryKey;autoIncrement;column:id;comment:编号" json:"id"`
+	ActivityID       int64         `gorm:"column:activity_id;not null;comment:活动编号" json:"activityId"`
+	CombinationPrice int           `gorm:"column:combination_price;not null;comment:拼团单价" json:"combinationPrice"`
+	SpuID            int64         `gorm:"column:spu_id;not null;comment:SPU编号" json:"spuId"`
+	SpuName          string        `gorm:"column:spu_name;type:varchar(255);comment:商品名字" json:"spuName"`
+	PicUrl           string        `gorm:"column:pic_url;type:varchar(255);comment:商品图片" json:"picUrl"`
+	SkuID            int64         `gorm:"column:sku_id;not null;comment:SKU编号" json:"skuId"`
+	Count            int           `gorm:"column:count;not null;comment:购买数量" json:"count"`
+	UserID           int64         `gorm:"column:user_id;not null;comment:用户编号" json:"userId"`
+	Nickname         string        `gorm:"column:nickname;type:varchar(64);comment:用户昵称" json:"nickname"`
+	Avatar           string        `gorm:"column:avatar;type:varchar(255);comment:用户头像" json:"avatar"`
+	HeadID           int64         `gorm:"column:head_id;not null;comment:团长编号" json:"headId"`
+	Status           int           `gorm:"column:status;not null;comment:拼团状态" json:"status"`
+	OrderID          int64         `gorm:"column:order_id;not null;comment:订单编号" json:"orderId"`
+	UserSize         int           `gorm:"column:user_size;not null;comment:成团人数" json:"userSize"`
+	UserCount        int           `gorm:"column:user_count;not null;comment:已入团人数" json:"userCount"`
+	VirtualGroup     model.BitBool `gorm:"column:virtual_group;comment:是否虚拟成团" json:"virtualGroup"`
+	ExpireTime       time.Time     `gorm:"column:expire_time;comment:过期时间" json:"expireTime"`
+	StartTime        time.Time     `gorm:"column:start_time;comment:开始时间" json:"startTime"`
+	EndTime          time.Time     `gorm:"column:end_time;comment:结束时间" json:"endTime"`
 
 	Creator   string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
 	Updater   string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
