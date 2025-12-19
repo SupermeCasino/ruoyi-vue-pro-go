@@ -6,10 +6,9 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
-
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -79,7 +78,7 @@ func (s *SmsCodeService) SendSmsCode(ctx context.Context, mobile string, scene i
 func (s *SmsCodeService) ValidateSmsCode(ctx context.Context, mobile string, scene int, code string) error {
 	key := s.getCacheKey(mobile, scene)
 	val, err := s.rdb.Get(ctx, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return errors.NewBizError(1004003003, "验证码已过期或不存在")
 	}
 	if err != nil {

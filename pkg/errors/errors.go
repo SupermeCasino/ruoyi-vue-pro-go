@@ -1,6 +1,11 @@
 package errors
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+var Is = errors.Is
 
 // Global Error Codes - 与 Java GlobalErrorCodeConstants 对齐
 const (
