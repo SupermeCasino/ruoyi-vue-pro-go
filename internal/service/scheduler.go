@@ -130,7 +130,7 @@ func (s *Scheduler) scheduleJob(ctx context.Context, job *model.InfraJob) error 
 	}
 
 	gocronJob, err := s.scheduler.NewJob(
-		gocron.CronJob(job.CronExpression, false),
+		gocron.CronJob(job.CronExpression, true),
 		gocron.NewTask(func() {
 			s.executeJob(ctx, job, handler)
 		}),
