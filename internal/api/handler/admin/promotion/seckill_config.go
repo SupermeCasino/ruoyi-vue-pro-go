@@ -55,7 +55,7 @@ func (h *SeckillConfigHandler) UpdateSeckillConfigStatus(c *gin.Context) {
 		response.WriteError(c, 400, err.Error())
 		return
 	}
-	if err := h.svc.UpdateSeckillConfigStatus(c.Request.Context(), r.ID, r.Status); err != nil {
+	if err := h.svc.UpdateSeckillConfigStatus(c.Request.Context(), r.ID, *r.Status); err != nil {
 		response.WriteBizError(c, err)
 		return
 	}

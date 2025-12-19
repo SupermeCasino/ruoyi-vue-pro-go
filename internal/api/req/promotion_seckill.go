@@ -31,7 +31,7 @@ type SeckillConfigUpdateReq struct {
 // SeckillConfigUpdateStatusReq 更新秒杀时段状态 Request
 type SeckillConfigUpdateStatusReq struct {
 	ID     int64 `json:"id" binding:"required"`
-	Status int   `json:"status" binding:"required"`
+	Status *int  `json:"status" binding:"required"`
 }
 
 // SeckillConfigPageReq 分页 Request
