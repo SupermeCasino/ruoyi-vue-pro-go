@@ -17,3 +17,27 @@ CREATE TABLE `system_sensitive_word` (
   KEY `idx_name` (`name`),
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统敏感词';
+
+-- ----------------------------
+-- Migration: Add business hours and employee binding fields to trade_delivery_pick_up_store
+-- Purpose: Align with Java version for pickup store management
+-- Date: 2025-12-19
+-- ----------------------------
+
+-- Step 1: Add business hours fields (opening_time and closing_time)
+ALTER TABLE `trade_delivery_pick_up_store`
+ADD COLUMN `opening_time` TIME NULL COMMENT '营业开始时间' AFTER `logo`,
+ADD COLUMN `closing_time` TIME NULL COMMENT '营业结束时间' AFTER `opening_time`;
+
+-- Step 2: Add employee binding field (verify_user_ids)
+-- Note: This field stores employee IDs as JSON array (e.g., [10,11,12])
+ALTER TABLE `trade_delivery_pick_up_store`
+ADD COLUMN `verify_user_ids` VARCHAR(500) NULL COMMENT '核销员工用户编号数组' AFTER `closing_time`;
+
+-- Step 3: Add index for status field (optional performance optimization)
+ALTER TABLE `trade_delivery_pick_up_store`
+ADD INDEX `idx_status` (`status`);
+
+-- ----------------------------
+-- End of Migration
+-- ----------------------------
