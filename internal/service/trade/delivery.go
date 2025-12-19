@@ -122,6 +122,8 @@ func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Conte
 		AreaID:        r.AreaID,
 		DetailAddress: r.DetailAddress,
 		Logo:          r.Logo,
+		OpeningTime:   r.OpeningTime,
+		ClosingTime:   r.ClosingTime,
 		Latitude:      r.Latitude,
 		Longitude:     r.Longitude,
 		Status:        r.Status,
@@ -136,16 +138,18 @@ func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Conte
 // UpdateDeliveryPickUpStore 更新自提门店
 func (s *DeliveryPickUpStoreService) UpdateDeliveryPickUpStore(ctx context.Context, r *req.DeliveryPickUpStoreSaveReq) error {
 	_, err := s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.ID.Eq(*r.ID)).Updates(map[string]interface{}{
-		"name":           r.Name,
-		"introduction":   r.Introduction,
-		"phone":          r.Phone,
-		"area_id":        r.AreaID,
-		"detail_address": r.DetailAddress,
-		"logo":           r.Logo,
-		"latitude":       r.Latitude,
-		"longitude":      r.Longitude,
-		"status":         r.Status,
-		"sort":           r.Sort,
+		"name":            r.Name,
+		"introduction":    r.Introduction,
+		"phone":           r.Phone,
+		"area_id":         r.AreaID,
+		"detail_address":  r.DetailAddress,
+		"logo":            r.Logo,
+		"opening_time":    r.OpeningTime,
+		"closing_time":    r.ClosingTime,
+		"latitude":        r.Latitude,
+		"longitude":       r.Longitude,
+		"status":          r.Status,
+		"sort":            r.Sort,
 	})
 	return err
 }
@@ -203,6 +207,25 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 // GetSimpleDeliveryPickUpStoreList 获取自提门店精简列表
 func (s *DeliveryPickUpStoreService) GetSimpleDeliveryPickUpStoreList(ctx context.Context) ([]*trade.TradeDeliveryPickUpStore, error) {
 	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(trade.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryPickUpStore.Sort.Asc()).Find()
+}
+
+// BindDeliveryPickUpStore 绑定自提门店核销员工
+// 对齐 Java: DeliveryPickUpStoreServiceImpl.bindDeliveryPickUpStore
+func (s *DeliveryPickUpStoreService) BindDeliveryPickUpStore(ctx context.Context, bindReq *req.DeliveryPickUpBindReq) error {
+	// 1. 校验门店存在
+	store, err := s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.ID.Eq(bindReq.ID)).First()
+	if err != nil {
+		return err
+	}
+	if store == nil {
+		return errors.New("自提门店不存在")
+	}
+
+	// 2. 更新核销员工ID列表
+	_, err = s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.ID.Eq(bindReq.ID)).Updates(map[string]any{
+		"verify_user_ids": bindReq.VerifyUserIds,
+	})
+	return err
 }
 
 type DeliveryExpressTemplateService struct {
