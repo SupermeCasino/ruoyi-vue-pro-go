@@ -9,6 +9,7 @@ import (
 type MemberUser struct {
 	ID               int64      `gorm:"primaryKey;autoIncrement;comment:用户ID" json:"id"`
 	Mobile           string     `gorm:"size:11;comment:手机" json:"mobile"`
+	Email            string     `gorm:"size:50;default:'';comment:电子邮箱" json:"email"`
 	Password         string     `gorm:"size:100;default:'';comment:密码" json:"-"`
 	Status           int32      `gorm:"default:0;comment:状态" json:"status"` // 参见 CommonStatusEnum
 	RegisterIP       string     `gorm:"column:register_ip;size:32;default:'';comment:注册IP" json:"registerIp"`
