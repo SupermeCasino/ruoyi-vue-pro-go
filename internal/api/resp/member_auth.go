@@ -8,4 +8,5 @@ type AppAuthLoginResp struct {
 	AccessToken  string    `json:"accessToken"`
 	RefreshToken string    `json:"refreshToken"`
 	ExpiresTime  time.Time `json:"expiresTime"`
+	OpenID       string    `json:"openid"`
 }
