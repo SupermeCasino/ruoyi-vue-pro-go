@@ -42,6 +42,7 @@ func main() {
 		model.SystemSmsChannel{},
 		model.SystemSmsTemplate{},
 		model.SystemSmsLog{},
+		model.SystemSmsCode{},
 		model.InfraFileConfig{},
 		model.InfraFile{},
 		model.InfraFileConfig{},
