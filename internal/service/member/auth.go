@@ -82,34 +82,58 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 		return nil, err
 	}
 
-	// 2. 查询用户，不存在则注册
-	user, err := s.userSvc.CreateUserIfAbsent(ctx, r.Mobile, ip, terminal)
+	// 2-5. 使用事务处理用户创建和社交绑定
+	var result *resp.AppAuthLoginResp
+	err := s.repo.Transaction(func(tx *query.Query) error {
+		// 2. 查询用户，不存在则注册
+		u := tx.MemberUser
+		user, err := u.WithContext(ctx).Where(u.Mobile.Eq(r.Mobile)).First()
+		if err != nil {
+			// 用户不存在，创建新用户
+			user = &member.MemberUser{
+				Mobile:           r.Mobile,
+				Nickname:         "手机用户" + r.Mobile[len(r.Mobile)-4:],
+				RegisterIP:       ip,
+				RegisterTerminal: terminal,
+				Status:           0, // Enabled
+				Point:            0,
+				Experience:       0,
+			}
+			if err := tx.MemberUser.WithContext(ctx).Create(user); err != nil {
+				return err
+			}
+		}
+
+		// 3. 校验状态
+		if user.Status != 0 {
+			return member.ErrAuthLoginUserDisabled
+		}
+
+		// 4. Bind Social if needed
+		var openid string
+		if r.SocialType != 0 {
+			bindReq := &req.SocialUserBindReq{
+				Type:  r.SocialType,
+				Code:  r.SocialCode,
+				State: r.SocialState,
+			}
+			var err error
+			openid, err = s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 5. 生成 Token（使用 OAuth2TokenService）
+		var err2 error
+		result, err2 = s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSms, openid, ip, userAgent)
+		return err2
+	})
+
 	if err != nil {
 		return nil, err
 	}
-
-	// 3. 校验状态
-	if user.Status != 0 {
-		return nil, member.ErrAuthLoginUserDisabled
-	}
-
-	// 4. Bind Social if needed
-	var openid string
-	if r.SocialType != 0 {
-		bindReq := &req.SocialUserBindReq{
-			Type:  r.SocialType,
-			Code:  r.SocialCode,
-			State: r.SocialState,
-		}
-		var err error
-		openid, err = s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 5. 生成 Token（使用 OAuth2TokenService）
-	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSms, openid, ip, userAgent)
+	return result, nil
 }
 
 // SocialLogin 社交快捷登录
@@ -123,39 +147,61 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 		return nil, member.ErrAuthSocialUserNotFound
 	}
 
-	var user *member.MemberUser
-	if bindUserId != 0 {
-		// Case 1: Already bound
-		user, err = s.userSvc.GetUser(ctx, bindUserId)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// Case 2: Not bound -> Auto Register + Bind
-		// Create User
-		user, err = s.userSvc.CreateUser(ctx, socialUser.Nickname, socialUser.Avatar, ip, terminal)
-		if err != nil {
-			return nil, err
-		}
-		// Bind
-		bindReq := &req.SocialUserBindReq{
-			Type:  int(r.Type),
-			Code:  r.Code,
-			State: r.State,
-		}
-		openid, err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
-		if err != nil {
-			return nil, err
-		}
-		socialUser.Openid = openid
-	}
+	// 2-4. 使用事务处理用户创建和社交绑定
+	var result *resp.AppAuthLoginResp
+	err = s.repo.Transaction(func(tx *query.Query) error {
+		var user *member.MemberUser
+		if bindUserId != 0 {
+			// Case 1: Already bound
+			u := tx.MemberUser
+			var err error
+			user, err = u.WithContext(ctx).Where(u.ID.Eq(bindUserId)).First()
+			if err != nil {
+				return err
+			}
+		} else {
+			// Case 2: Not bound -> Auto Register + Bind
+			// Create User
+			user = &member.MemberUser{
+				Nickname:         socialUser.Nickname,
+				Avatar:           socialUser.Avatar,
+				RegisterIP:       ip,
+				RegisterTerminal: terminal,
+				Status:           0, // Enabled
+				Point:            0,
+				Experience:       0,
+			}
+			if err := tx.MemberUser.WithContext(ctx).Create(user); err != nil {
+				return err
+			}
 
-	if user == nil {
-		return nil, member.ErrAuthUserNotFound
-	}
+			// Bind
+			bindReq := &req.SocialUserBindReq{
+				Type:  int(r.Type),
+				Code:  r.Code,
+				State: r.State,
+			}
+			openid, err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
+			if err != nil {
+				return err
+			}
+			socialUser.Openid = openid
+		}
 
-	// Create Token（使用 OAuth2TokenService）
-	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSocial, socialUser.Openid, ip, userAgent)
+		if user == nil {
+			return member.ErrAuthUserNotFound
+		}
+
+		// Create Token（使用 OAuth2TokenService）
+		var err error
+		result, err = s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSocial, socialUser.Openid, ip, userAgent)
+		return err
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // SendSmsCode 发送验证码

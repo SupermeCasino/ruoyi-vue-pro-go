@@ -1,6 +1,8 @@
 package member
 
 import (
+	"regexp"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -67,6 +69,16 @@ func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 		return
 	}
 
+	// 额外的参数验证
+	if !regexp.MustCompile(`^\d{4,6}$`).MatchString(r.Code) {
+		response.WriteBizError(c, errors.NewBizError(40001, "手机验证码长度为 4-6 位"))
+		return
+	}
+	if r.OldCode != "" && !regexp.MustCompile(`^\d{4,6}$`).MatchString(r.OldCode) {
+		response.WriteBizError(c, errors.NewBizError(40001, "原手机验证码长度为 4-6 位"))
+		return
+	}
+
 	userId := c.GetInt64(context.CtxUserIDKey)
 	if err := h.svc.UpdateUserMobile(c, userId, &r); err != nil {
 		c.Error(err)
@@ -83,6 +95,13 @@ func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 		c.JSON(200, errors.ErrParam)
 		return
 	}
+
+	// 额外的参数验证
+	if !regexp.MustCompile(`^\d{4,6}$`).MatchString(r.Code) {
+		response.WriteBizError(c, errors.NewBizError(40001, "手机验证码长度为 4-6 位"))
+		return
+	}
+
 	if err := h.svc.UpdateUserPassword(c, c.GetInt64(context.CtxUserIDKey), &r); err != nil {
 		c.Error(err)
 		return
