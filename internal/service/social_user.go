@@ -42,24 +42,26 @@ func (s *SocialUserService) GetAuthorizeUrl(ctx context.Context, socialType int,
 }
 
 // BindSocialUser 绑定社交用户
-func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, userType int, r *req.SocialUserBindReq) error {
+func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, userType int, r *req.SocialUserBindReq) (string, error) {
 	// 1. 获得社交平台客户端
 	platform, err := s.factory.GetPlatform(ctx, r.Type, userType)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// 2. 获得社交用户信息
 	authUser, err := platform.GetAuthUser(ctx, r.Code, r.State)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// 3. 查找或创建社交用户
 	socialUser, err := s.authSocialUser(ctx, r.Type, authUser)
 	if err != nil {
-		return err
+		return "", err
 	}
+
+	// ...
 
 	// 4. 绑定
 	// 检查是否已经绑定了该账号
@@ -72,7 +74,7 @@ func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, us
 		// 但为了健壮性，我们可以检查是否已经绑定了这个特定的 SocialUser
 	).Count()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// 此外，还要检查该 സോഷ്യ셜用户是否已经被 *其他* 用户绑定
@@ -81,10 +83,10 @@ func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, us
 		s.q.SocialUserBind.SocialUserID.Eq(socialUser.ID),
 	).Count()
 	if err != nil {
-		return err
+		return "", err
 	}
 	if bindCount > 0 {
-		return pkgErrors.NewBizError(1002004005, "该社交账号已被绑定")
+		return "", pkgErrors.NewBizError(1002004005, "该社交账号已被绑定")
 	}
 
 	if count == 0 {
@@ -95,12 +97,12 @@ func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, us
 			SocialUserID: socialUser.ID,
 		}
 		if err := s.q.SocialUserBind.WithContext(ctx).Create(bind); err != nil {
-			return err
+			return "", err
 		}
 	}
 	// 如果已经绑定，是否更新？不需要。
 
-	return nil
+	return socialUser.Openid, nil
 }
 
 // UnbindSocialUser 解绑社交用户
