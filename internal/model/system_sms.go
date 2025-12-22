@@ -91,3 +91,27 @@ type SystemSmsLog struct {
 func (SystemSmsLog) TableName() string {
 	return "system_sms_log"
 }
+
+// SystemSmsCode 短信验证码表
+type SystemSmsCode struct {
+	ID         int64      `gorm:"primaryKey;autoIncrement;comment:自增编号" json:"id"`
+	Mobile     string     `gorm:"size:11;not null;index;comment:手机号" json:"mobile"`
+	Code       string     `gorm:"size:6;not null;comment:验证码" json:"code"`
+	Scene      int32      `gorm:"not null;comment:发送场景" json:"scene"`
+	Used       bool       `gorm:"not null;default:false;comment:是否使用" json:"used"`
+	UsedTime   *time.Time `gorm:"comment:使用时间" json:"usedTime"`
+	TodayIndex int32      `gorm:"not null;default:1;comment:今日发送的第几条" json:"todayIndex"`
+	CreateIp   string     `gorm:"size:30;comment:创建 IP" json:"createIp"`
+	UsedIp     string     `gorm:"size:30;comment:使用 IP" json:"usedIp"`
+
+	// Base fields
+	Creator   string    `gorm:"column:creator;size:64;comment:创建者" json:"creator"`
+	Updater   string    `gorm:"column:updater;size:64;comment:更新者" json:"updater"`
+	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+}
+
+func (SystemSmsCode) TableName() string {
+	return "system_sms_code"
+}
