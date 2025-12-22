@@ -104,3 +104,21 @@ func (h *AppMemberUserHandler) ResetUserPassword(c *gin.Context) {
 	}
 	c.JSON(200, response.Success(true))
 }
+
+// UpdateUserMobileByWeixin 微信小程序更新手机号
+// @Router /member/user/update-mobile-by-weixin [put]
+func (h *AppMemberUserHandler) UpdateUserMobileByWeixin(c *gin.Context) {
+	var r struct {
+		Code string `json:"code" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&r); err != nil {
+		c.JSON(200, errors.ErrParam)
+		return
+	}
+	userId := c.GetInt64(context.CtxUserIDKey)
+	if err := h.svc.UpdateUserMobileByWeixin(c, userId, r.Code); err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, response.Success(true))
+}

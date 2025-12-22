@@ -13,8 +13,7 @@ type AppAuthLoginReq struct {
 // AppAuthSmsLoginReq 手机+验证码登录
 type AppAuthSmsLoginReq struct {
 	Mobile string `json:"mobile" binding:"required,len=11"`
-	Code   string `json:"code" binding:"required"`
-	Scene  int    `json:"scene" binding:"required"`
+	Code   string `json:"code" binding:"required,min=4,max=6"`
 	// Social
 	SocialType  int    `json:"socialType"`
 	SocialCode  string `json:"socialCode"`
@@ -39,4 +38,11 @@ type AppAuthSocialLoginReq struct {
 	Type  int32  `json:"type" binding:"required"`
 	Code  string `json:"code" binding:"required"`
 	State string `json:"state" binding:"required"`
+}
+
+// AppAuthWeixinMiniAppLoginReq 微信小程序登录
+type AppAuthWeixinMiniAppLoginReq struct {
+	PhoneCode string `json:"phoneCode" binding:"required"`
+	LoginCode string `json:"loginCode" binding:"required"`
+	State     string `json:"state" binding:"required"`
 }

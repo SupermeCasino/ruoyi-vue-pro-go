@@ -18,40 +18,42 @@ import (
 var _ = utils.CheckPasswordHash
 
 type MemberAuthService struct {
-	repo       *query.Query
-	smsCodeSvc *service.SmsCodeService
-	userSvc    *MemberUserService
-	socialSvc  *service.SocialUserService
-	tokenSvc   *service.OAuth2TokenService
+	repo        *query.Query
+	smsCodeSvc  *service.SmsCodeService
+	userSvc     *MemberUserService
+	socialSvc   *service.SocialUserService
+	tokenSvc    *service.OAuth2TokenService
+	loginLogSvc *service.LoginLogService
 }
 
-func NewMemberAuthService(repo *query.Query, smsCodeSvc *service.SmsCodeService, userSvc *MemberUserService, socialSvc *service.SocialUserService, tokenSvc *service.OAuth2TokenService) *MemberAuthService {
+func NewMemberAuthService(repo *query.Query, smsCodeSvc *service.SmsCodeService, userSvc *MemberUserService, socialSvc *service.SocialUserService, tokenSvc *service.OAuth2TokenService, loginLogSvc *service.LoginLogService) *MemberAuthService {
 	return &MemberAuthService{
-		repo:       repo,
-		smsCodeSvc: smsCodeSvc,
-		userSvc:    userSvc,
-		socialSvc:  socialSvc,
-		tokenSvc:   tokenSvc,
+		repo:        repo,
+		smsCodeSvc:  smsCodeSvc,
+		userSvc:     userSvc,
+		socialSvc:   socialSvc,
+		tokenSvc:    tokenSvc,
+		loginLogSvc: loginLogSvc,
 	}
 }
 
 // Login 手机+密码登录
-func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
 	// 1. 查询用户
 	userRepo := s.repo.MemberUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.Mobile.Eq(r.Mobile)).First()
 	if err != nil {
-		return nil, errors.NewBizError(1004003002, "账号或密码不正确") // 参考 Java MemberErrorCodeConstants
+		return nil, member.ErrAuthLoginBadCredentials
 	}
 
 	// 2. 校验状态. 0:开启, 1:关闭
 	if user.Status != 0 {
-		return nil, errors.NewBizError(1004003001, "用户已被禁用")
+		return nil, member.ErrAuthLoginUserDisabled
 	}
 
 	// 3. 校验密码
 	if !utils.CheckPasswordHash(r.Password, user.Password) {
-		return nil, errors.NewBizError(1004003002, "账号或密码不正确")
+		return nil, member.ErrAuthLoginBadCredentials
 	}
 
 	// 4. Check Social Bind need?
@@ -70,31 +72,25 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq) (
 	}
 
 	// 5. 生成 Token（使用 OAuth2TokenService，UserType=1 表示会员）
-	return s.createToken(ctx, user, openid)
+	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeUsername, openid, ip, userAgent)
 }
 
 // SmsLogin 手机+验证码登录
-func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLoginReq) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
 	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, int32(r.Scene), r.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, 1, r.Code); err != nil { // 1 = SmsSceneMemberLogin
 		return nil, err
 	}
 
 	// 2. 查询用户，不存在则注册
-	userRepo := s.repo.MemberUser
-	user, err := userRepo.WithContext(ctx).Where(userRepo.Mobile.Eq(r.Mobile)).First()
+	user, err := s.userSvc.CreateUserIfAbsent(ctx, r.Mobile, ip, terminal)
 	if err != nil {
-		// Auto Register
-		createdUser, err := s.userSvc.CreateUser(ctx, "手机用户"+r.Mobile[len(r.Mobile)-4:], "", "", 0)
-		if err != nil {
-			return nil, err
-		}
-		user = createdUser
+		return nil, err
 	}
 
 	// 3. 校验状态
 	if user.Status != 0 {
-		return nil, errors.NewBizError(1004003001, "用户已被禁用")
+		return nil, member.ErrAuthLoginUserDisabled
 	}
 
 	// 4. Bind Social if needed
@@ -113,18 +109,18 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 	}
 
 	// 5. 生成 Token（使用 OAuth2TokenService）
-	return s.createToken(ctx, user, openid)
+	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSms, openid, ip, userAgent)
 }
 
 // SocialLogin 社交快捷登录
-func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocialLoginReq) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocialLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
 	// 1. 获得社交用户
 	socialUser, bindUserId, err := s.socialSvc.GetSocialUserByCode(ctx, 1, int(r.Type), r.Code, r.State) // 1=Member
 	if err != nil {
 		return nil, err
 	}
 	if socialUser == nil {
-		return nil, errors.NewBizError(1002002000, "社交账号不存在") // AUTH_SOCIAL_USER_NOT_FOUND
+		return nil, member.ErrAuthSocialUserNotFound
 	}
 
 	var user *member.MemberUser
@@ -137,7 +133,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 	} else {
 		// Case 2: Not bound -> Auto Register + Bind
 		// Create User
-		user, err = s.userSvc.CreateUser(ctx, socialUser.Nickname, socialUser.Avatar, "", 0)
+		user, err = s.userSvc.CreateUser(ctx, socialUser.Nickname, socialUser.Avatar, ip, terminal)
 		if err != nil {
 			return nil, err
 		}
@@ -155,11 +151,11 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 	}
 
 	if user == nil {
-		return nil, errors.NewBizError(1004003005, "用户不存在")
+		return nil, member.ErrAuthUserNotFound
 	}
 
 	// Create Token（使用 OAuth2TokenService）
-	return s.createToken(ctx, user, socialUser.Openid)
+	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSocial, socialUser.Openid, ip, userAgent)
 }
 
 // SendSmsCode 发送验证码
@@ -173,23 +169,23 @@ func (s *MemberAuthService) ValidateSmsCode(ctx context.Context, r *req.AppAuthS
 }
 
 // RefreshToken 刷新访问令牌
-func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken string) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken, ip, userAgent string) (*resp.AppAuthLoginResp, error) {
 	// 1. 验证 refreshToken（从 Redis 获取原令牌信息）
 	oldToken, err := s.tokenSvc.GetAccessToken(ctx, refreshToken)
 	if err != nil || oldToken == nil {
-		return nil, errors.NewBizError(401, "Token无效或已过期")
+		return nil, member.ErrAuthUserNotTokenValid
 	}
 
 	// 2. 获取用户信息
 	userRepo := s.repo.MemberUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.ID.Eq(oldToken.UserID)).First()
 	if err != nil {
-		return nil, errors.NewBizError(401, "用户不存在")
+		return nil, member.ErrAuthUserNotTokenValid // 对应 Java 处理，当用户不存在时也返回 Token 无效
 	}
 
 	// 3. 校验状态
 	if user.Status != 0 {
-		return nil, errors.NewBizError(1004003001, "用户已被禁用")
+		return nil, member.ErrAuthLoginUserDisabled
 	}
 
 	// 4. 创建新的访问令牌
@@ -197,7 +193,7 @@ func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken strin
 }
 
 // Logout 退出登录
-func (s *MemberAuthService) Logout(ctx context.Context, token string) error {
+func (s *MemberAuthService) Logout(ctx context.Context, token, ip, userAgent string) error {
 	// 1. 处理 token，移除 Bearer 前缀
 	if strings.HasPrefix(strings.ToUpper(token), "BEARER ") {
 		token = token[7:]
@@ -209,6 +205,18 @@ func (s *MemberAuthService) Logout(ctx context.Context, token string) error {
 	// 2. 使用 OAuth2TokenService 删除访问令牌
 	_, _ = s.tokenSvc.RemoveAccessToken(ctx, token)
 	return nil
+}
+
+// createTokenAfterLoginSuccess 创建令牌并记录登录成功日志
+func (s *MemberAuthService) createTokenAfterLoginSuccess(ctx context.Context, user *member.MemberUser,
+	logType int, openid, ip, userAgent string) (*resp.AppAuthLoginResp, error) {
+	// 1. 记录登录日志
+	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeMember, user.Mobile, ip, userAgent, logType, model.LoginResultSuccess)
+	// 2. 更新最后登录时间
+	_ = s.userSvc.UpdateUserLogin(ctx, user.ID, ip)
+
+	// 3. 创建 Token
+	return s.createToken(ctx, user, openid)
 }
 
 // createToken 创建访问令牌（使用 OAuth2TokenService，与 Java 对齐）
@@ -230,5 +238,54 @@ func (s *MemberAuthService) createToken(ctx context.Context, user *member.Member
 		RefreshToken: tokenDO.RefreshToken,
 		ExpiresTime:  tokenDO.ExpiresTime,
 		OpenID:       openid,
+	}, nil
+}
+
+// GetSocialAuthorizeUrl 获取社交授权链接
+func (s *MemberAuthService) GetSocialAuthorizeUrl(ctx context.Context, socialType int, redirectUri string) (string, error) {
+	return s.socialSvc.GetAuthorizeUrl(ctx, socialType, 1, redirectUri) // 1=Member
+}
+
+// WeixinMiniAppLogin 微信小程序登录
+func (s *MemberAuthService) WeixinMiniAppLogin(ctx context.Context, r *req.AppAuthWeixinMiniAppLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
+	// 1. 获得社交用户
+	mobile, err := s.socialSvc.GetMobile(ctx, 1, 31, r.PhoneCode) // 1=Member, 31=Mini App
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 获得注册用户
+	user, err := s.userSvc.CreateUserIfAbsent(ctx, mobile, ip, terminal) // 使用传入的 terminal
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 绑定社交用户
+	bindReq := &req.SocialUserBindReq{
+		Type:  31,
+		Code:  r.LoginCode,
+		State: r.State,
+	}
+	openid, err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. 创建 Token
+	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSocial, openid, ip, userAgent)
+}
+
+// CreateWeixinMpJsapiSignature 创建微信 MP JSAPI 签名
+func (s *MemberAuthService) CreateWeixinMpJsapiSignature(ctx context.Context, url string) (*resp.AppAuthWeixinJsapiSignatureResp, error) {
+	signature, err := s.socialSvc.CreateWxMpJsapiSignature(ctx, 1, url) // 1 = Member
+	if err != nil {
+		return nil, err
+	}
+	return &resp.AppAuthWeixinJsapiSignatureResp{
+		AppID:     signature.AppID,
+		NonceStr:  signature.NonceStr,
+		Timestamp: signature.Timestamp,
+		URL:       signature.URL,
+		Signature: signature.Signature,
 	}, nil
 }

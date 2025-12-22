@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
@@ -14,16 +16,18 @@ import (
 )
 
 type MemberUserService struct {
-	q          *query.Query
-	smsCodeSvc *service.SmsCodeService
-	levelSvc   *MemberLevelService // Injection
+	q             *query.Query
+	smsCodeSvc    *service.SmsCodeService
+	levelSvc      *MemberLevelService // Injection
+	socialUserSvc *service.SocialUserService
 }
 
-func NewMemberUserService(q *query.Query, smsCodeSvc *service.SmsCodeService, levelSvc *MemberLevelService) *MemberUserService {
+func NewMemberUserService(q *query.Query, smsCodeSvc *service.SmsCodeService, levelSvc *MemberLevelService, socialUserSvc *service.SocialUserService) *MemberUserService {
 	return &MemberUserService{
-		q:          q,
-		smsCodeSvc: smsCodeSvc,
-		levelSvc:   levelSvc,
+		q:             q,
+		smsCodeSvc:    smsCodeSvc,
+		levelSvc:      levelSvc,
+		socialUserSvc: socialUserSvc,
 	}
 }
 
@@ -82,6 +86,17 @@ func (s *MemberUserService) CreateUser(ctx context.Context, nickname, avatar, re
 		return nil, err
 	}
 	return user, nil
+}
+
+// CreateUserIfAbsent 如果用户不存在则创建
+func (s *MemberUserService) CreateUserIfAbsent(ctx context.Context, mobile, regIp string, terminal int32) (*member.MemberUser, error) {
+	u := s.q.MemberUser
+	user, err := u.WithContext(ctx).Where(u.Mobile.Eq(mobile)).First()
+	if err == nil {
+		return user, nil
+	}
+	// Need to check if error is RecordNotFound
+	return s.CreateUser(ctx, "手机用户"+mobile[len(mobile)-4:], "", regIp, terminal)
 }
 
 // GetUser 获得用户信息 (Internal)
@@ -215,6 +230,38 @@ func (s *MemberUserService) UpdateUserPoint(ctx context.Context, id int64, point
 		return false
 	}
 	return info.RowsAffected > 0
+}
+
+// UpdateUserLogin 更新用户登录信息
+func (s *MemberUserService) UpdateUserLogin(ctx context.Context, id int64, ip string) error {
+	u := s.q.MemberUser
+	now := time.Now()
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).Updates(&member.MemberUser{
+		LoginIP:   ip,
+		LoginDate: &now,
+	})
+	return err
+}
+
+// UpdateUserMobileByWeixin 微信小程序更新手机号
+func (s *MemberUserService) UpdateUserMobileByWeixin(ctx context.Context, userId int64, code string) error {
+	// 1. 获得手机号
+	mobile, err := s.socialUserSvc.GetMobile(ctx, 1, 31, code) // 1=Member, 31=WECHAT_MINI_APP
+	if err != nil {
+		return err
+	}
+	if mobile == "" {
+		return errors.New("获取手机号失败")
+	}
+
+	// 2. 更新手机号
+	return s.updateUserMobile(ctx, userId, mobile)
+}
+
+func (s *MemberUserService) updateUserMobile(ctx context.Context, id int64, mobile string) error {
+	u := s.q.MemberUser
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).Update(u.Mobile, mobile)
+	return err
 }
 
 func (s *MemberUserService) GetUserListByNickname(ctx context.Context, nickname string) ([]*member.MemberUser, error) {

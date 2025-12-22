@@ -1,6 +1,9 @@
 package member
 
 import (
+	"regexp"
+	"strconv"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -25,7 +28,7 @@ func (h *AppAuthHandler) Login(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	res, err := h.svc.Login(c, &r)
+	res, err := h.svc.Login(c, &r, c.ClientIP(), c.Request.UserAgent(), h.getTerminal(c))
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -41,7 +44,13 @@ func (h *AppAuthHandler) SmsLogin(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	res, err := h.svc.SmsLogin(c, &r)
+
+	// 额外的验证码格式校验
+	if !regexp.MustCompile(`^\d+$`).MatchString(r.Code) {
+		response.WriteBizError(c, errors.NewBizError(40001, "验证码必须为数字"))
+		return
+	}
+	res, err := h.svc.SmsLogin(c, &r, c.ClientIP(), c.Request.UserAgent(), h.getTerminal(c))
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -57,7 +66,7 @@ func (h *AppAuthHandler) SocialLogin(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	res, err := h.svc.SocialLogin(c, &r)
+	res, err := h.svc.SocialLogin(c, &r, c.ClientIP(), c.Request.UserAgent(), h.getTerminal(c))
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -103,7 +112,7 @@ func (h *AppAuthHandler) RefreshToken(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	res, err := h.svc.RefreshToken(c, refreshToken)
+	res, err := h.svc.RefreshToken(c, refreshToken, c.ClientIP(), c.Request.UserAgent())
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -115,9 +124,68 @@ func (h *AppAuthHandler) RefreshToken(c *gin.Context) {
 // @Router /member/auth/logout [post]
 func (h *AppAuthHandler) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if err := h.svc.Logout(c, token); err != nil {
+	if err := h.svc.Logout(c, token, c.ClientIP(), c.Request.UserAgent()); err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
+}
+
+// SocialAuthRedirect 社交授权跳转
+// @Router /member/auth/social-auth-redirect [get]
+func (h *AppAuthHandler) SocialAuthRedirect(c *gin.Context) {
+	socialType := c.Query("type")
+	redirectUri := c.Query("redirectUri")
+	if socialType == "" {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	typeInt, _ := strconv.Atoi(socialType)
+	url, err := h.svc.GetSocialAuthorizeUrl(c, typeInt, redirectUri)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, url)
+}
+
+// WeixinMiniAppLogin 微信小程序登录
+// @Router /member/auth/weixin-mini-app-login [post]
+func (h *AppAuthHandler) WeixinMiniAppLogin(c *gin.Context) {
+	var r req.AppAuthWeixinMiniAppLoginReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	res, err := h.svc.WeixinMiniAppLogin(c, &r, c.ClientIP(), c.Request.UserAgent(), h.getTerminal(c))
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, res)
+}
+
+// CreateWeixinMpJsapiSignature 创建微信 JS SDK 初始化所需的签名
+// @Router /member/auth/create-weixin-jsapi-signature [post]
+func (h *AppAuthHandler) CreateWeixinMpJsapiSignature(c *gin.Context) {
+	url := c.Query("url")
+	if url == "" {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	res, err := h.svc.CreateWeixinMpJsapiSignature(c, url)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, res)
+}
+
+func (h *AppAuthHandler) getTerminal(c *gin.Context) int32 {
+	terminal := c.GetHeader("terminal")
+	if terminal == "" {
+		return 0 // UNKNOWN
+	}
+	t, _ := strconv.Atoi(terminal)
+	return int32(t)
 }

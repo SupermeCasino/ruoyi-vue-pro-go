@@ -23,6 +23,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appMemberAddressHandler *memberApp.AppMemberAddressHandler,
 	appMemberPointRecordHandler *memberApp.AppMemberPointRecordHandler,
 	appMemberSignInRecordHandler *memberApp.AppMemberSignInRecordHandler,
+	appSocialUserHandler *memberApp.AppSocialUserHandler,
 	// Product
 	appProductCategoryHandler *productApp.AppCategoryHandler,
 	appProductFavoriteHandler *productApp.AppProductFavoriteHandler,
@@ -89,6 +90,9 @@ func RegisterAppRoutes(engine *gin.Engine,
 				authGroup.POST("/validate-sms-code", appAuthHandler.ValidateSmsCode)
 				authGroup.POST("/logout", appAuthHandler.Logout)
 				authGroup.POST("/refresh-token", appAuthHandler.RefreshToken)
+				authGroup.GET("/social-auth-redirect", appAuthHandler.SocialAuthRedirect)
+				authGroup.POST("/weixin-mini-app-login", appAuthHandler.WeixinMiniAppLogin)
+				authGroup.POST("/create-weixin-jsapi-signature", appAuthHandler.CreateWeixinMpJsapiSignature)
 			}
 
 			// User (Auth Required)
@@ -99,6 +103,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 				userGroup.PUT("/update", appMemberUserHandler.UpdateUser)
 				userGroup.PUT("/update-mobile", appMemberUserHandler.UpdateUserMobile)
 				userGroup.PUT("/update-password", appMemberUserHandler.UpdateUserPassword)
+				userGroup.PUT("/update-mobile-by-weixin", appMemberUserHandler.UpdateUserMobileByWeixin)
 			}
 
 			// User (Public)
@@ -132,6 +137,17 @@ func RegisterAppRoutes(engine *gin.Engine,
 				signInGroup.GET("/get-summary", appMemberSignInRecordHandler.GetSignInRecordSummary)
 				signInGroup.POST("/create", appMemberSignInRecordHandler.CreateSignInRecord)
 				signInGroup.GET("/page", appMemberSignInRecordHandler.GetSignInRecordPage)
+			}
+
+			// Social User
+			socialUserGroup := memberGroup.Group("/social-user")
+			socialUserGroup.Use(middleware.Auth())
+			{
+				socialUserGroup.POST("/bind", appSocialUserHandler.Bind)
+				socialUserGroup.DELETE("/unbind", appSocialUserHandler.Unbind)
+				socialUserGroup.GET("/get", appSocialUserHandler.Get)
+				socialUserGroup.POST("/wxa-qrcode", appSocialUserHandler.GetWxaQrcode)
+				socialUserGroup.GET("/get-subscribe-template-list", appSocialUserHandler.GetSubscribeTemplateList)
 			}
 		}
 

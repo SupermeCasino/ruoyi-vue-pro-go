@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -63,7 +62,7 @@ func (s *AuthService) SocialAuthRedirect(ctx context.Context, socialType int, re
 // SocialLogin 社交登录
 func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginReq) (*resp.AuthLoginResp, error) {
 	// 1. 获取社交用户及绑定用户ID
-	socialUser, userId, err := s.socialUserSvc.GetSocialUserByCode(ctx, model.UserTypeAdmin, req.Type, req.Code, req.State)
+	_, userId, err := s.socialUserSvc.GetSocialUserByCode(ctx, model.UserTypeAdmin, req.Type, req.Code, req.State)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +96,7 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 	}
 
 	// 7. 记录登录日志
-	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeAdmin, user.TenantID, user.Username, user.LoginIP, "社交登录", fmt.Sprintf("社交类型:%d, 昵称:%s", req.Type, socialUser.Nickname))
+	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeAdmin, user.Username, user.LoginIP, "", model.LoginLogTypeSocial, model.LoginResultSuccess)
 
 	return &resp.AuthLoginResp{
 		UserId:       user.ID,
@@ -270,7 +269,7 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 
 	// 3. 记录登出日志
 	if tokenDO != nil {
-		s.loginLogSvc.CreateLogoutLog(ctx, tokenDO.UserID, tokenDO.UserType, tokenDO.TenantID, token)
+		s.loginLogSvc.CreateLogoutLog(ctx, tokenDO.UserID, tokenDO.UserType, "", "", "")
 	}
 	return nil
 }
@@ -345,8 +344,8 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 		return nil, errors.ErrUnknown
 	}
 
-	// 6. 记录登录日志 (TODO: 异步?)
-	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeAdmin, user.TenantID, user.Username, user.LoginIP, "1", "短信登录成功")
+	// 6. 记录登录日志
+	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeAdmin, user.Username, user.LoginIP, "", model.LoginLogTypeSms, model.LoginResultSuccess)
 
 	return &resp.AuthLoginResp{
 		UserId:       user.ID,
