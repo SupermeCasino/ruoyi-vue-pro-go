@@ -73,7 +73,7 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq) (
 // SmsLogin 手机+验证码登录
 func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLoginReq) (*resp.AppAuthLoginResp, error) {
 	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, r.Scene, r.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, int32(r.Scene), r.Code); err != nil {
 		return nil, err
 	}
 
@@ -155,13 +155,13 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 }
 
 // SendSmsCode 发送验证码
-func (s *MemberAuthService) SendSmsCode(ctx context.Context, r *req.AppAuthSmsSendReq) error {
-	return s.smsCodeSvc.SendSmsCode(ctx, r.Mobile, r.Scene)
+func (s *MemberAuthService) SendSmsCode(ctx context.Context, r *req.AppAuthSmsSendReq, createIp string) error {
+	return s.smsCodeSvc.SendSmsCode(ctx, r.Mobile, int32(r.Scene), createIp)
 }
 
 // ValidateSmsCode 校验验证码
 func (s *MemberAuthService) ValidateSmsCode(ctx context.Context, r *req.AppAuthSmsValidateReq) error {
-	return s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, r.Scene, r.Code)
+	return s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, int32(r.Scene), r.Code)
 }
 
 // RefreshToken 刷新访问令牌

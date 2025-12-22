@@ -357,8 +357,8 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 }
 
 // SendSmsCode 发送短信验证码
-func (s *AuthService) SendSmsCode(ctx context.Context, req *req.AuthSmsSendReq) error {
-	return s.smsCodeSvc.SendSmsCode(ctx, req.Mobile, req.Scene)
+func (s *AuthService) SendSmsCode(ctx context.Context, req *req.AuthSmsSendReq, createIp string) error {
+	return s.smsCodeSvc.SendSmsCode(ctx, req.Mobile, int32(req.Scene), createIp)
 }
 
 // Register 注册

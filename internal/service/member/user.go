@@ -119,7 +119,7 @@ func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.A
 // UpdateUserMobile 修改用户手机
 func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req *req.AppMemberUserUpdateMobileReq) error {
 	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, req.Scene, req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(req.Scene), req.Code); err != nil {
 		return err
 	}
 
@@ -141,7 +141,7 @@ func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req 
 func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppMemberUserResetPasswordReq) error {
 	// 1. 校验验证码 (场景: 重置密码)
 	// TODO: Replace magic number with Enum. MEMBER_RESET_PASSWORD = 4
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, 4, req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(4), req.Code); err != nil {
 		return err
 	}
 
@@ -166,7 +166,7 @@ func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppM
 // UpdateUserPassword 修改用户密码
 func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, req *req.AppMemberUserUpdatePasswordReq) error {
 	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, req.Scene, req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(req.Scene), req.Code); err != nil {
 		return err
 	}
 

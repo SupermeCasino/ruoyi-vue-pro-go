@@ -108,7 +108,7 @@ func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 		return
 	}
 
-	err := h.svc.SendSmsCode(c.Request.Context(), &r)
+	err := h.svc.SendSmsCode(c.Request.Context(), &r, c.ClientIP())
 	if err != nil {
 		c.Error(err)
 		return

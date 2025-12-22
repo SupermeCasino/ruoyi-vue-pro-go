@@ -73,7 +73,7 @@ func (h *AppAuthHandler) SendSmsCode(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	if err := h.svc.SendSmsCode(c, &r); err != nil {
+	if err := h.svc.SendSmsCode(c, &r, c.ClientIP()); err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
