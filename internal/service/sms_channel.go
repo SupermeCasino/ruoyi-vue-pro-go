@@ -25,10 +25,11 @@ func NewSmsChannelService(q *query.Query) *SmsChannelService {
 
 // CreateSmsChannel 创建短信渠道
 func (s *SmsChannelService) CreateSmsChannel(ctx context.Context, req *req.SmsChannelSaveReq) (int64, error) {
+
 	channel := &model.SystemSmsChannel{
 		Signature:   req.Signature,
 		Code:        req.Code,
-		Status:      req.Status,
+		Status:      *req.Status,
 		Remark:      req.Remark,
 		ApiKey:      req.ApiKey,
 		ApiSecret:   req.ApiSecret,
@@ -46,15 +47,17 @@ func (s *SmsChannelService) UpdateSmsChannel(ctx context.Context, req *req.SmsCh
 		return errors.New("短信渠道不存在")
 	}
 
-	_, err = c.WithContext(ctx).Where(c.ID.Eq(req.ID)).Updates(&model.SystemSmsChannel{
-		Signature:   req.Signature,
-		Code:        req.Code,
-		Status:      req.Status,
-		Remark:      req.Remark,
-		ApiKey:      req.ApiKey,
-		ApiSecret:   req.ApiSecret,
-		CallbackUrl: req.CallbackUrl,
-	})
+	// 使用 map 更新确保零值能被正确处理（如 Status = 0 时）
+	updates := map[string]any{
+		"signature":    req.Signature,
+		"code":         req.Code,
+		"status":       *req.Status,
+		"remark":       req.Remark,
+		"api_key":      req.ApiKey,
+		"api_secret":   req.ApiSecret,
+		"callback_url": req.CallbackUrl,
+	}
+	_, err = c.WithContext(ctx).Where(c.ID.Eq(req.ID)).Updates(updates)
 	return err
 }
 

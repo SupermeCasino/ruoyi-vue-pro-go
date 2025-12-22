@@ -2,38 +2,62 @@ package aliyun
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
 )
 
 type SmsClient struct {
-	id        int64
-	apiKey    string
-	apiSecret string
-	signature string
+	channel   *model.SystemSmsChannel
+	apiClient *dysmsapi.Client
 }
 
-func NewSmsClient(channel *model.SystemSmsChannel) *SmsClient {
-	return &SmsClient{
-		id:        channel.ID,
-		apiKey:    channel.ApiKey,
-		apiSecret: channel.ApiSecret,
-		signature: channel.Signature,
+func NewSmsClient(channel *model.SystemSmsChannel) (client.SmsClient, error) {
+	// 阿里云通常不需要指定 region，或者默认为 cn-hangzhou
+	apiClient, err := dysmsapi.NewClientWithAccessKey("cn-hangzhou", channel.ApiKey, channel.ApiSecret)
+	if err != nil {
+		return nil, err
 	}
+	return &SmsClient{
+		channel:   channel,
+		apiClient: apiClient,
+	}, nil
 }
 
-func (c *SmsClient) GetId() int64 {
-	return c.id
+func (c *SmsClient) GetCode() string {
+	return model.SMSChannelCodeAliyun
 }
 
-func (c *SmsClient) SendSms(ctx context.Context, sendLogId int64, mobile string, apiTemplateId string, templateParams map[string]interface{}) (*client.SmsSendResp, error) {
-	// TODO: Integrate Aliyun SDK
-	// For now, return mock success or error to avoid compilation failure if SDK missing
+func (c *SmsClient) SendSms(ctx context.Context, mobile string, apiTemplateId string, templateParams []client.KeyValue) (*client.SmsSendResp, error) {
+	request := dysmsapi.CreateSendSmsRequest()
+	request.PhoneNumbers = mobile
+	request.SignName = c.channel.Signature
+	request.TemplateCode = apiTemplateId
+
+	// 将 KeyValue 切片转换为 map 以供阿里云 SDK 使用
+	paramsMap := make(map[string]any)
+	for _, kv := range templateParams {
+		paramsMap[kv.Key] = kv.Value
+	}
+
+	paramBytes, err := json.Marshal(paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("序列化短信参数失败: %w", err)
+	}
+	request.TemplateParam = string(paramBytes)
+
+	response, err := c.apiClient.SendSms(request)
+	if err != nil {
+		return nil, err
+	}
+
 	return &client.SmsSendResp{
-		ApiSendCode:  "SUCCESS",
-		ApiSendMsg:   "Aliyun Mock Success",
-		ApiRequestId: "ALIYUN_MOCK_ID",
-		ApiSerialNo:  "ALIYUN_MOCK_SERIAL",
+		ApiSendCode:  response.Code,
+		ApiSendMsg:   response.Message,
+		ApiRequestId: response.RequestId,
+		ApiSerialNo:  response.BizId,
 	}, nil
 }

@@ -16,22 +16,21 @@ type SmsClient struct {
 	signature string
 }
 
-func NewSmsClient(channel *model.SystemSmsChannel) *SmsClient {
+func NewSmsClient(channel *model.SystemSmsChannel) (client.SmsClient, error) {
 	return &SmsClient{
 		id:        channel.ID,
 		apiKey:    channel.ApiKey,
 		apiSecret: channel.ApiSecret,
 		signature: channel.Signature,
-	}
+	}, nil
 }
 
-func (c *SmsClient) GetId() int64 {
-	return c.id
+func (c *SmsClient) GetCode() string {
+	return model.SMSChannelCodeDebug
 }
 
-func (c *SmsClient) SendSms(ctx context.Context, sendLogId int64, mobile string, apiTemplateId string, templateParams map[string]interface{}) (*client.SmsSendResp, error) {
+func (c *SmsClient) SendSms(ctx context.Context, mobile string, apiTemplateId string, templateParams []client.KeyValue) (*client.SmsSendResp, error) {
 	zap.L().Info("Debug Sms Client Send Sms",
-		zap.Int64("sendLogId", sendLogId),
 		zap.String("mobile", mobile),
 		zap.String("apiTemplateId", apiTemplateId),
 		zap.Any("params", templateParams),

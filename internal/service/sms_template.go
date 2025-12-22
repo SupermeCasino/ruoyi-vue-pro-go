@@ -73,7 +73,7 @@ func (s *SmsTemplateService) UpdateSmsTemplate(ctx context.Context, req *req.Sms
 	params := s.parseTemplateContentParams(req.Content)
 	paramsBytes, _ := json.Marshal(params)
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"type":            req.Type,
 		"code":            req.Code,
 		"name":            req.Name,

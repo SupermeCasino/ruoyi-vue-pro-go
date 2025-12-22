@@ -10,10 +10,16 @@ type SmsSendResp struct {
 	ApiSerialNo  string
 }
 
+// KeyValue 键值对
+type KeyValue struct {
+	Key   string
+	Value any
+}
+
 // SmsClient 短信客户端接口
 type SmsClient interface {
-	// GetId 获得渠道编号
-	GetId() int64
+	// GetCode 获得渠道编码
+	GetCode() string
 	// SendSms 发送消息
-	SendSms(ctx context.Context, sendLogId int64, mobile string, apiTemplateId string, templateParams map[string]interface{}) (*SmsSendResp, error)
+	SendSms(ctx context.Context, mobile string, apiTemplateId string, templateParams []KeyValue) (*SmsSendResp, error)
 }

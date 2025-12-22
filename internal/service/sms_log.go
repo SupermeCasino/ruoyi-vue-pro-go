@@ -28,9 +28,45 @@ func (s *SmsLogService) CreateSmsLog(ctx context.Context, item *model.SystemSmsL
 	return item.ID, err
 }
 
+// CreateSmsLogWithStatus 创建短信日志（根据 isSend 参数设置不同的状态）
+func (s *SmsLogService) CreateSmsLogWithStatus(ctx context.Context, mobile string, userId int64, userType int32, isSend bool,
+	template *model.SystemSmsTemplate, content string, templateParams map[string]interface{}) (int64, error) {
+
+	// 根据是否需要发送设置不同的状态
+	sendStatus := model.SmsSendStatusInit
+	if !isSend {
+		sendStatus = model.SmsSendStatusIgnore
+	}
+
+	log := &model.SystemSmsLog{
+		ChannelId:       template.ChannelId,
+		ChannelCode:     template.ChannelCode,
+		TemplateId:      template.ID,
+		TemplateCode:    template.Code,
+		TemplateType:    template.Type,
+		TemplateContent: content,
+		TemplateParams:  templateParams,
+		ApiTemplateId:   template.ApiTemplateId,
+		Mobile:          mobile,
+		UserId:          userId,
+		UserType:        userType,
+		SendStatus:      sendStatus,
+		SendTime:        nil,
+		ReceiveStatus:   model.SmsReceiveStatusInit,
+	}
+	err := s.q.SystemSmsLog.WithContext(ctx).Create(log)
+	return log.ID, err
+}
+
 // UpdateSmsLog 更新短信日志
 func (s *SmsLogService) UpdateSmsLog(ctx context.Context, item *model.SystemSmsLog) error {
 	_, err := s.q.SystemSmsLog.WithContext(ctx).Where(s.q.SystemSmsLog.ID.Eq(item.ID)).Updates(item)
+	return err
+}
+
+// UpdateSmsLogFields 更新短信日志指定字段
+func (s *SmsLogService) UpdateSmsLogFields(ctx context.Context, logId int64, updates map[string]interface{}) error {
+	_, err := s.q.SystemSmsLog.WithContext(ctx).Where(s.q.SystemSmsLog.ID.Eq(logId)).Updates(updates)
 	return err
 }
 
