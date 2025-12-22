@@ -131,8 +131,8 @@ func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.A
 
 // UpdateUserMobile 修改用户手机
 func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req *req.AppMemberUserUpdateMobileReq) error {
-	// 使用固定的 Scene 值（对应 Java 中的 MEMBER_UPDATE_MOBILE）
-	const scene = 3 // SmsSceneMemberUpdateMobile
+	// 使用定义的场景值（对应 Java 中的 MEMBER_UPDATE_MOBILE）
+	scene := service.SmsSceneMemberUpdateMob.Scene
 
 	// 1. 校验验证码
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
@@ -157,7 +157,7 @@ func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req 
 func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppMemberUserResetPasswordReq) error {
 	// 1. 校验验证码 (场景: 重置密码)
 	// TODO: Replace magic number with Enum. MEMBER_RESET_PASSWORD = 4
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(4), req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, service.SmsSceneMemberResetPwd.Scene, req.Code); err != nil {
 		return err
 	}
 
@@ -181,8 +181,8 @@ func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppM
 
 // UpdateUserPassword 修改用户密码
 func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, req *req.AppMemberUserUpdatePasswordReq) error {
-	// 使用固定的 Scene 值（对应 Java 中的 MEMBER_UPDATE_PASSWORD）
-	const scene = 5 // SmsSceneMemberUpdatePassword
+	// 使用定义的场景值（对应 Java 中的 MEMBER_UPDATE_PASSWORD）
+	scene := service.SmsSceneMemberUpdatePwd.Scene
 
 	// 1. 校验验证码
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
@@ -341,6 +341,7 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 	// 构建更新对象，支持所有字段
 	updateUser := &member.MemberUser{
 		Mobile:   r.Mobile,
+		Email:    r.Email,
 		Status:   r.Status,
 		Nickname: r.Nickname,
 		Avatar:   r.Avatar,
@@ -359,7 +360,7 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 	}
 
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(r.ID)).
-		Select(u.Mobile, u.Status, u.Nickname, u.Avatar, u.Name, u.Sex, u.AreaID, u.Birthday, u.Mark, u.TagIds, u.LevelID, u.GroupID).
+		Select(u.Mobile, u.Email, u.Status, u.Nickname, u.Avatar, u.Name, u.Sex, u.AreaID, u.Birthday, u.Mark, u.TagIds, u.LevelID, u.GroupID).
 		Updates(updateUser)
 	return err
 }
