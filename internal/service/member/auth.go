@@ -55,19 +55,22 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq) (
 	}
 
 	// 4. Check Social Bind need?
+	var openid string
 	if r.SocialType != 0 {
 		bindReq := &req.SocialUserBindReq{
 			Type:  r.SocialType,
 			Code:  r.SocialCode,
 			State: r.SocialState,
 		}
-		if err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq); err != nil { // 1=Member
+		var err error
+		openid, err = s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq) // 1=Member
+		if err != nil {
 			return nil, err
 		}
 	}
 
 	// 5. 生成 Token（使用 OAuth2TokenService，UserType=1 表示会员）
-	return s.createToken(ctx, user)
+	return s.createToken(ctx, user, openid)
 }
 
 // SmsLogin 手机+验证码登录
@@ -95,19 +98,22 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 	}
 
 	// 4. Bind Social if needed
+	var openid string
 	if r.SocialType != 0 {
 		bindReq := &req.SocialUserBindReq{
 			Type:  r.SocialType,
 			Code:  r.SocialCode,
 			State: r.SocialState,
 		}
-		if err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq); err != nil {
+		var err error
+		openid, err = s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
+		if err != nil {
 			return nil, err
 		}
 	}
 
 	// 5. 生成 Token（使用 OAuth2TokenService）
-	return s.createToken(ctx, user)
+	return s.createToken(ctx, user, openid)
 }
 
 // SocialLogin 社交快捷登录
@@ -141,9 +147,11 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 			Code:  r.Code,
 			State: r.State,
 		}
-		if err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq); err != nil {
+		openid, err := s.socialSvc.BindSocialUser(ctx, user.ID, 1, bindReq)
+		if err != nil {
 			return nil, err
 		}
+		socialUser.Openid = openid
 	}
 
 	if user == nil {
@@ -151,7 +159,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 	}
 
 	// Create Token（使用 OAuth2TokenService）
-	return s.createToken(ctx, user)
+	return s.createToken(ctx, user, socialUser.Openid)
 }
 
 // SendSmsCode 发送验证码
@@ -185,7 +193,7 @@ func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken strin
 	}
 
 	// 4. 创建新的访问令牌
-	return s.createToken(ctx, user)
+	return s.createToken(ctx, user, "")
 }
 
 // Logout 退出登录
@@ -204,7 +212,7 @@ func (s *MemberAuthService) Logout(ctx context.Context, token string) error {
 }
 
 // createToken 创建访问令牌（使用 OAuth2TokenService，与 Java 对齐）
-func (s *MemberAuthService) createToken(ctx context.Context, user *member.MemberUser) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) createToken(ctx context.Context, user *member.MemberUser, openid string) (*resp.AppAuthLoginResp, error) {
 	// 构建用户信息
 	userInfo := map[string]string{
 		"nickname": user.Nickname,
@@ -221,5 +229,6 @@ func (s *MemberAuthService) createToken(ctx context.Context, user *member.Member
 		AccessToken:  tokenDO.AccessToken,
 		RefreshToken: tokenDO.RefreshToken,
 		ExpiresTime:  tokenDO.ExpiresTime,
+		OpenID:       openid,
 	}, nil
 }
