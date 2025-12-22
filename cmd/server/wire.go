@@ -157,6 +157,7 @@ func InitApp() (*gin.Engine, error) {
 		memberHandler.NewAppMemberAddressHandler,      // Added AppMemberAddressHandler
 		memberHandler.NewAppMemberPointRecordHandler,  // Added AppMemberPointRecordHandler
 		memberHandler.NewAppMemberSignInRecordHandler, // Added AppMemberSignInRecordHandler
+		memberHandler.NewAppSocialUserHandler,         // Added AppSocialUserHandler
 		productHandler.NewProductCategoryHandler,      // Added ProductCategoryHandler
 		productHandler.NewProductPropertyHandler,      // Added ProductPropertyHandler
 		productHandler.NewProductBrandHandler,         // Added ProductBrandHandler
