@@ -16,7 +16,6 @@ type AppMemberUserUpdateMobileReq struct {
 	Mobile  string `json:"mobile" binding:"required,len=11"`
 	Code    string `json:"code" binding:"required"`
 	OldCode string `json:"oldCode"` // 旧手机验证码，可选
-	Scene   int    `json:"scene" binding:"required"`
 }
 
 // AppMemberUserUpdatePasswordReq 修改密码请求
@@ -24,7 +23,6 @@ type AppMemberUserUpdatePasswordReq struct {
 	Password string `json:"password" binding:"required,min=4,max=16"`
 	Code     string `json:"code" binding:"required"` // 验证码
 	Mobile   string `json:"mobile"`                  // Mobile usually needed for verification context if not from token
-	Scene    int    `json:"scene" binding:"required"`
 }
 
 // AppMemberUserResetPasswordReq 重置密码请求
@@ -38,11 +36,19 @@ type AppMemberUserResetPasswordReq struct {
 
 // MemberUserUpdateReq Admin 更新会员用户请求
 type MemberUserUpdateReq struct {
-	ID      int64   `json:"id" binding:"required"`
-	Name    string  `json:"name"`
-	TagIDs  []int64 `json:"tagIds"`
-	GroupID *int64  `json:"groupId"`
-	Mark    string  `json:"mark"`
+	ID       int64      `json:"id" binding:"required"`
+	Mobile   string     `json:"mobile"`
+	Status   int32      `json:"status"`
+	Nickname string     `json:"nickname"`
+	Avatar   string     `json:"avatar"`
+	Name     string     `json:"name"`
+	Sex      int32      `json:"sex"`
+	AreaID   int64      `json:"areaId"`
+	Birthday *time.Time `json:"birthday"`
+	Mark     string     `json:"mark"`
+	TagIDs   []int64    `json:"tagIds"`
+	LevelID  *int64     `json:"levelId"`
+	GroupID  *int64     `json:"groupId"`
 }
 
 // MemberUserUpdateLevelReq 更新会员等级请求

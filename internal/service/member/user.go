@@ -130,11 +130,12 @@ func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.A
 }
 
 // UpdateUserMobile 修改用户手机
-// TODO: Implement SMS Code Verification
-// UpdateUserMobile 修改用户手机
 func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req *req.AppMemberUserUpdateMobileReq) error {
+	// 使用固定的 Scene 值（对应 Java 中的 MEMBER_UPDATE_MOBILE）
+	const scene = 3 // SmsSceneMemberUpdateMobile
+
 	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(req.Scene), req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
 		return err
 	}
 
@@ -180,13 +181,16 @@ func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppM
 
 // UpdateUserPassword 修改用户密码
 func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, req *req.AppMemberUserUpdatePasswordReq) error {
+	// 使用固定的 Scene 值（对应 Java 中的 MEMBER_UPDATE_PASSWORD）
+	const scene = 5 // SmsSceneMemberUpdatePassword
+
 	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(req.Scene), req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
 		return err
 	}
 
 	// 2. Hash Password
-	hashedPwd, err := utils.HashPassword(req.Password) // Use utils package directly or maybe better to define alias if utils not imported in this file? Utils is usually common.
+	hashedPwd, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return err
 	}
@@ -334,17 +338,28 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 		tagIds[i] = int(v)
 	}
 
+	// 构建更新对象，支持所有字段
 	updateUser := &member.MemberUser{
-		Nickname: r.Name,
+		Mobile:   r.Mobile,
+		Status:   r.Status,
+		Nickname: r.Nickname,
+		Avatar:   r.Avatar,
+		Name:     r.Name,
+		Sex:      r.Sex,
+		AreaID:   int32(r.AreaID),
+		Birthday: r.Birthday,
 		Mark:     r.Mark,
 		TagIds:   tagIds,
+	}
+	if r.LevelID != nil {
+		updateUser.LevelID = *r.LevelID
 	}
 	if r.GroupID != nil {
 		updateUser.GroupID = *r.GroupID
 	}
 
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(r.ID)).
-		Select(u.Nickname, u.Mark, u.TagIds, u.GroupID).
+		Select(u.Mobile, u.Status, u.Nickname, u.Avatar, u.Name, u.Sex, u.AreaID, u.Birthday, u.Mark, u.TagIds, u.LevelID, u.GroupID).
 		Updates(updateUser)
 	return err
 }
