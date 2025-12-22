@@ -362,12 +362,14 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			smsTemplateGroup.GET("/get", casbinMiddleware.RequirePermission("system:sms-template:query"), smsTemplateHandler.GetSmsTemplate)
 			smsTemplateGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-template:query"), smsTemplateHandler.GetSmsTemplatePage)
 			smsTemplateGroup.POST("/send-sms", casbinMiddleware.RequirePermission("system:sms-template:send-sms"), smsTemplateHandler.SendSms)
+			smsTemplateGroup.GET("/export-excel", casbinMiddleware.RequirePermission("system:sms-template:export"), smsTemplateHandler.ExportSmsTemplateExcel)
 		}
 
 		smsLogGroup := api.Group("/system/sms-log", middleware.Auth())
 		{
 			smsLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-log:query"), smsLogHandler.GetSmsLogPage)
-		}
+			smsLogGroup.GET("/export-excel", casbinMiddleware.RequirePermission("system:sms-log:export"), smsLogHandler.ExportSmsLogExcel)
+			}
 
 		// ====== Infra Routes (Public) ======
 		infraPublicGroup := api.Group("/infra")

@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"fmt"
+	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 )
 
 type SmsTemplateHandler struct {
@@ -97,6 +101,80 @@ func (h *SmsTemplateHandler) GetSmsTemplatePage(c *gin.Context) {
 	c.JSON(200, response.Success(res))
 }
 
+// ExportSmsTemplateExcel 导出短信模板 Excel
+func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
+	var req req.SmsTemplatePageReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(400, response.Error(400, err.Error()))
+		return
+	}
+
+	// 设置分页大小为 -1（获取所有数据）
+	req.PageSize = -1
+
+	// 获取所有数据
+	pageResult, err := h.smsTemplateSvc.GetSmsTemplatePage(c, &req)
+	if err != nil {
+		c.JSON(500, response.Error(500, err.Error()))
+		return
+	}
+
+	// 创建 Excel 文件
+	f := excelize.NewFile()
+	defer f.Close()
+
+	sheetName := "短信模板"
+	index, err := f.NewSheet(sheetName)
+	if err != nil {
+		c.JSON(500, response.Error(500, err.Error()))
+		return
+	}
+	f.SetActiveSheet(index)
+
+	// 设置列头
+	headers := []string{"编号", "短信类型", "开启状态", "模板编码", "模板名称", "模板内容", "参数数组", "备注", "短信 API 的模板编号", "短信渠道编号", "短信渠道编码", "创建时间"}
+	for i, header := range headers {
+		f.SetCellValue(sheetName, fmt.Sprintf("%c1", 'A'+i), header)
+	}
+
+	// 填充数据行
+	for i, item := range pageResult.List {
+		row := i + 2 // 从第2行开始
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), item.ID)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.Type)
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), item.Status)
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), item.Code)
+		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), item.Name)
+		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), item.Content)
+		f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), fmt.Sprintf("%v", item.Params))
+		f.SetCellValue(sheetName, fmt.Sprintf("H%d", row), item.Remark)
+		f.SetCellValue(sheetName, fmt.Sprintf("I%d", row), item.ApiTemplateId)
+		f.SetCellValue(sheetName, fmt.Sprintf("J%d", row), item.ChannelId)
+		f.SetCellValue(sheetName, fmt.Sprintf("K%d", row), item.ChannelCode)
+		f.SetCellValue(sheetName, fmt.Sprintf("L%d", row), item.CreateTime.Format("2006-01-02 15:04:05"))
+	}
+
+	// 设置列宽
+	columnWidths := map[string]float64{
+		"A": 10, "B": 12, "C": 12, "D": 15, "E": 15, "F": 20,
+		"G": 20, "H": 15, "I": 20, "J": 15, "K": 15, "L": 20,
+	}
+	for col, width := range columnWidths {
+		f.SetColWidth(sheetName, col, col, width)
+	}
+
+	// 设置下载响应头
+	filename := fmt.Sprintf("短信模板_%d.xlsx", time.Now().Unix())
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", url.QueryEscape(filename)))
+
+	// 写入 Excel 到响应
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(500, response.Error(500, err.Error()))
+		return
+	}
+}
+
 // SendSms 发送短信
 func (h *SmsTemplateHandler) SendSms(c *gin.Context) {
 	var req req.SmsTemplateSendReq
@@ -104,13 +182,27 @@ func (h *SmsTemplateHandler) SendSms(c *gin.Context) {
 		c.JSON(400, response.Error(400, err.Error()))
 		return
 	}
-	// userId 暂传 0，或从 context 获取当前 Admin 登录用户
-	userId := int64(0)
-	// TODO: 获取当前登录用户ID
-	logId, err := h.smsSendSvc.SendSingleSmsToAdmin(c, req.Mobile, userId, req.TemplateCode, req.TemplateParams)
+
+	// 从 Context 获取当前登录用户 ID
+	ctx := c.Request.Context()
+	userId := getLoginUserID(c)
+
+	logId, err := h.smsSendSvc.SendSingleSmsToAdmin(ctx, req.Mobile, userId, req.TemplateCode, req.TemplateParams)
 	if err != nil {
 		c.JSON(500, response.Error(500, err.Error()))
 		return
 	}
 	c.JSON(200, response.Success(logId))
+}
+
+// getLoginUserID 从 Context 获取当前登录用户 ID
+func getLoginUserID(c *gin.Context) int64 {
+	// 首先尝试从 Gin Context 中获取
+	if v, exists := c.Get("userID"); exists {
+		if id, ok := v.(int64); ok {
+			return id
+		}
+	}
+	// 如果没有找到，返回 0（表示未登录或取不到用户ID）
+	return 0
 }

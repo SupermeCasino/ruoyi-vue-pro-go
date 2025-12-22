@@ -9,7 +9,7 @@ type SmsChannelSaveReq struct {
 	ID          int64  `json:"id"`
 	Signature   string `json:"signature" binding:"required"`
 	Code        string `json:"code" binding:"required"`
-	Status      int32  `json:"status" binding:"required"`
+	Status      *int32 `json:"status" binding:"required"`
 	Remark      string `json:"remark"`
 	ApiKey      string `json:"apiKey" binding:"required"`
 	ApiSecret   string `json:"apiSecret"`
