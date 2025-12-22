@@ -39,7 +39,7 @@ func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 	userID := context.GetLoginUserID(c)
 	userType := model.UserTypeAdmin // 管理员用户类型
 
-	if err := h.socialUserService.BindSocialUser(c.Request.Context(), userID, userType, &req); err != nil {
+	if _, err := h.socialUserService.BindSocialUser(c.Request.Context(), userID, userType, &req); err != nil {
 		h.logger.Error("绑定社交用户失败", zap.Error(err))
 		response.WriteError(c, 500, err.Error())
 		return

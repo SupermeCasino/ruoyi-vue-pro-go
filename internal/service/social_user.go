@@ -268,3 +268,51 @@ func (s *SocialUserService) authSocialUser(ctx context.Context, socialType int, 
 
 	return socialUser, nil
 }
+
+// GetMobile 获取手机号
+func (s *SocialUserService) GetMobile(ctx context.Context, userType int, socialType int, code string) (string, error) {
+	// 1. 获得社交平台客户端
+	platform, err := s.factory.GetPlatform(ctx, socialType, userType)
+	if err != nil {
+		return "", err
+	}
+
+	// 2. 获得手机号
+	return platform.GetMobile(ctx, code)
+}
+
+// CreateWxMpJsapiSignature 创建微信 JSAPI 签名
+func (s *SocialUserService) CreateWxMpJsapiSignature(ctx context.Context, userType int, url string) (*client.JsapiSignature, error) {
+	// 1. 获得社交平台客户端 (WeChat Official Account type is 32)
+	platform, err := s.factory.GetPlatform(ctx, 32, userType)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 创建签名
+	return platform.CreateJsapiSignature(ctx, url)
+}
+
+// GetWxaQrcode 获得微信小程序码
+func (s *SocialUserService) GetWxaQrcode(ctx context.Context, userType int, path string, width int) ([]byte, error) {
+	// 1. 获得社交平台客户端 (WeChat Mini App type is 31)
+	platform, err := s.factory.GetPlatform(ctx, 31, userType)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 获得小程序码
+	return platform.GetWxaQrcode(ctx, path, width)
+}
+
+// GetSubscribeTemplateList 获得订阅模板列表
+func (s *SocialUserService) GetSubscribeTemplateList(ctx context.Context, userType int) ([]any, error) {
+	// 1. 获得社交平台客户端 (WeChat Mini App type is 31)
+	platform, err := s.factory.GetPlatform(ctx, 31, userType)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 获得模板列表
+	return platform.GetSubscribeTemplateList(ctx)
+}
