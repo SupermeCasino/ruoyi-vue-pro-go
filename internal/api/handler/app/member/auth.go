@@ -5,7 +5,8 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
+	memberService "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -13,10 +14,10 @@ import (
 )
 
 type AppAuthHandler struct {
-	svc *member.MemberAuthService
+	svc *memberService.MemberAuthService
 }
 
-func NewAppAuthHandler(svc *member.MemberAuthService) *AppAuthHandler {
+func NewAppAuthHandler(svc *memberService.MemberAuthService) *AppAuthHandler {
 	return &AppAuthHandler{svc: svc}
 }
 
@@ -28,6 +29,13 @@ func (h *AppAuthHandler) Login(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
+
+	// 手机号格式验证
+	if !regexp.MustCompile(`^1[3-9]\d{9}$`).MatchString(r.Mobile) {
+		response.WriteBizError(c, memberModel.ErrMobileFormatInvalid)
+		return
+	}
+
 	res, err := h.svc.Login(c, &r, c.ClientIP(), c.Request.UserAgent(), h.getTerminal(c))
 	if err != nil {
 		response.WriteBizError(c, err)
@@ -47,7 +55,7 @@ func (h *AppAuthHandler) SmsLogin(c *gin.Context) {
 
 	// 额外的验证码格式校验
 	if !regexp.MustCompile(`^\d+$`).MatchString(r.Code) {
-		response.WriteBizError(c, errors.NewBizError(40001, "验证码必须为数字"))
+		response.WriteBizError(c, memberModel.ErrSmsCodeFormatInvalid)
 		return
 	}
 	res, err := h.svc.SmsLogin(c, &r, c.ClientIP(), c.Request.UserAgent(), h.getTerminal(c))
