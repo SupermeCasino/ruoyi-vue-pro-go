@@ -10,6 +10,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
@@ -91,7 +92,7 @@ func (s *TradeAfterSaleService) CreateAfterSale(ctx context.Context, userId int6
 		// 2.3 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       userId,
-			UserType:     1, // Member. TODO: Use constant if available
+			UserType:     model.UserTypeMember,
 			AfterSaleID:  afterSale.ID,
 			BeforeStatus: trade.AfterSaleStatusNone,
 			AfterStatus:  trade.AfterSaleStatusApply,
@@ -369,7 +370,7 @@ func (s *TradeAfterSaleService) CancelAfterSale(ctx context.Context, userId int6
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       userId,
-			UserType:     1, // Member
+			UserType:     model.UserTypeMember,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  trade.AfterSaleStatusBuyerCancel,
@@ -417,7 +418,7 @@ func (s *TradeAfterSaleService) AgreeAfterSale(ctx context.Context, adminUserId 
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     2, // Admin
+			UserType:     model.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
@@ -460,7 +461,7 @@ func (s *TradeAfterSaleService) DisagreeAfterSale(ctx context.Context, adminUser
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     2, // Admin
+			UserType:     model.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
@@ -682,7 +683,7 @@ func (s *TradeAfterSaleService) ReceiveAfterSale(ctx context.Context, adminUserI
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     2, // Admin
+			UserType:     model.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
@@ -727,7 +728,7 @@ func (s *TradeAfterSaleService) DeliveryAfterSale(ctx context.Context, userId in
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       userId,
-			UserType:     1, // Member
+			UserType:     model.UserTypeMember,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
@@ -770,7 +771,7 @@ func (s *TradeAfterSaleService) UpdateAfterSaleRefunded(ctx context.Context, aft
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       0, // System
-			UserType:     2, // Admin/System
+			UserType:     model.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
@@ -843,7 +844,7 @@ func (s *TradeAfterSaleService) RefuseAfterSale(ctx context.Context, adminUserId
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     2, // Admin
+			UserType:     model.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: trade.AfterSaleStatusBuyerDelivery,
 			AfterStatus:  trade.AfterSaleStatusSellerRefuse,
