@@ -6,6 +6,7 @@ import (
 
 	pkgcontext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -60,6 +61,14 @@ func (p *Plugin) beforeQuery(db *gorm.DB) {
 	loginUser := pkgcontext.GetLoginUserFromContext(ctx)
 	if loginUser == nil {
 		// 没有登录用户,不应用数据权限(可能是公开API)
+		return
+	}
+
+	// 3. 数据权限只对管理员（UserType=2）生效，用户端（UserType=1）不需要数据权限过滤
+	if loginUser.UserType != model.UserTypeAdmin {
+		p.logger.Debug("Skipping data scope check (not admin user)",
+			zap.Int64("user_id", loginUser.UserID),
+			zap.Int("user_type", loginUser.UserType))
 		return
 	}
 
