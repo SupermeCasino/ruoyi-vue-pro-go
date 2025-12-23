@@ -23,17 +23,7 @@ func NewAppMemberUserHandler(svc *member.MemberUserService) *AppMemberUserHandle
 // GetUserInfo 获得基本信息
 // @Router /member/user/get [get]
 func (h *AppMemberUserHandler) GetUserInfo(c *gin.Context) {
-	// TODO: Get userId from context after middleware implementation
-	// For now, let's assume middleware or manual testing sets it, or extract from generic Auth
-	// Logic to be refined: how to get 'loginUserId' in this clean architecture?
-	// Usually middleware sets a key. Let's assume "userId".
-	userId := c.GetInt64("userId")
-	if userId == 0 {
-		// Fallback for testing or error if no middleware
-		// c.JSON(401, response.Error(401, "Unauthorized"))
-		// return
-		// For verification purposes without middleware, we might mock it or expect 0 and fail.
-	}
+	userId := c.GetInt64(context.CtxUserIDKey)
 
 	res, err := h.svc.GetUserInfo(c, userId)
 	if err != nil {
@@ -52,7 +42,7 @@ func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	userId := c.GetInt64("userId")
+	userId := c.GetInt64(context.CtxUserIDKey)
 	if err := h.svc.UpdateUser(c, userId, &r); err != nil {
 		c.Error(err)
 		return

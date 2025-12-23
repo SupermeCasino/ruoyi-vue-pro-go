@@ -3,7 +3,6 @@ package member
 import (
 	"context"
 	"errors"
-
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -12,13 +11,13 @@ import (
 	query "github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
-	"github.com/wxlbd/ruoyi-mall-go/pkg/utils" // Added utils
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type MemberUserService struct {
 	q             *query.Query
 	smsCodeSvc    *service.SmsCodeService
-	levelSvc      *MemberLevelService // Injection
+	levelSvc      *MemberLevelService
 	socialUserSvc *service.SocialUserService
 }
 
@@ -52,6 +51,13 @@ func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*resp.Ap
 		}
 	}
 
+	// 获取分销资格（对齐 Java: BrokerageUserService.getUserBrokerageEnabled）
+	// 直接查询 trade_brokerage_user 表以避免循环依赖
+	brokerageEnabled := false
+	if brokerageUser, err := s.q.BrokerageUser.WithContext(ctx).Where(s.q.BrokerageUser.ID.Eq(id)).First(); err == nil && brokerageUser != nil {
+		brokerageEnabled = brokerageUser.BrokerageEnabled
+	}
+
 	return &resp.AppMemberUserInfoResp{
 		ID:               user.ID,
 		Nickname:         user.Nickname,
@@ -61,30 +67,43 @@ func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*resp.Ap
 		Point:            user.Point,
 		Experience:       user.Experience,
 		Level:            levelResp,
-		BrokerageEnabled: bool(user.BrokerageEnabled),
+		BrokerageEnabled: brokerageEnabled,
 	}, nil
 }
 
-// CreateUser 创建会员用户
+// CreateUser 创建会员用户（对齐 Java: MemberUserServiceImpl.createUser）
 func (s *MemberUserService) CreateUser(ctx context.Context, nickname, avatar, regIp string, terminal int32) (*member.MemberUser, error) {
-	// TODO: Handle TenantID if needed
+	// 生成随机密码（对齐 Java: IdUtil.fastSimpleUUID()）
+	password := utils.GenerateRandomString(32)
+	hashedPwd, err := utils.HashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建用户
 	user := &member.MemberUser{
 		Nickname:         nickname,
 		Avatar:           avatar,
+		Password:         hashedPwd,
 		RegisterIP:       regIp,
 		RegisterTerminal: terminal,
-		Status:           0, // Enabled
+		Status:           0, // CommonStatusEnum.ENABLE = 0
 		Point:            0,
 		Experience:       0,
 	}
-	// Generate random name if nickname empty?
+
+	// 昵称为空时，随机生成（对齐 Java: "用户" + RandomUtil.randomNumbers(6)）
 	if user.Nickname == "" {
-		user.Nickname = "user_" + utils.GenerateRandomString(6)
+		user.Nickname = "用户" + utils.GenerateRandomString(6)
 	}
 
 	if err := s.q.MemberUser.WithContext(ctx).Create(user); err != nil {
 		return nil, err
 	}
+
+	// TODO: 发送 MQ 消息：用户创建（对齐 Java: memberUserProducer.sendUserCreateMessage）
+	// 需要在事务提交后发送，避免事务回滚导致消息已发送
+
 	return user, nil
 }
 
@@ -118,13 +137,11 @@ func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.A
 
 	// 更新字段
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(id)).
-		Select(u.Nickname, u.Avatar, u.Sex, u.Birthday, u.AreaID).
+		Select(u.Nickname, u.Avatar, u.Sex).
 		Updates(&member.MemberUser{
 			Nickname: req.Nickname,
 			Avatar:   req.Avatar,
 			Sex:      req.Sex,
-			Birthday: req.Birthday,
-			AreaID:   req.AreaID,
 		})
 	return err
 }
@@ -154,9 +171,9 @@ func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req 
 }
 
 // ResetUserPassword 重置用户密码 (忘记密码)
+// 对齐 Java: MemberUserServiceImpl.resetUserPassword
 func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppMemberUserResetPasswordReq) error {
-	// 1. 校验验证码 (场景: 重置密码)
-	// TODO: Replace magic number with Enum. MEMBER_RESET_PASSWORD = 4
+	// 1. 校验验证码 (场景: 重置密码 = SmsSceneEnum.MEMBER_RESET_PASSWORD)
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, service.SmsSceneMemberResetPwd.Scene, req.Code); err != nil {
 		return err
 	}
@@ -313,7 +330,6 @@ func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (ma
 			LevelID:   user.LevelID,
 			GroupID:   user.GroupID,
 			CreatedAt: user.CreatedAt,
-			Point:     user.Point,
 		}
 	}
 	return userMap, nil

@@ -82,12 +82,14 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 		return nil, err
 	}
 
-	// 2-5. 使用事务处理用户创建和社交绑定
-	var result *resp.AppAuthLoginResp
+	// 2-4. 使用事务处理用户创建和社交绑定
+	var user *member.MemberUser
+	var openid string
 	err := s.repo.Transaction(func(tx *query.Query) error {
 		// 2. 查询用户，不存在则注册
 		u := tx.MemberUser
-		user, err := u.WithContext(ctx).Where(u.Mobile.Eq(r.Mobile)).First()
+		var err error
+		user, err = u.WithContext(ctx).Where(u.Mobile.Eq(r.Mobile)).First()
 		if err != nil {
 			// 用户不存在，创建新用户
 			user = &member.MemberUser{
@@ -110,7 +112,6 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 		}
 
 		// 4. Bind Social if needed
-		var openid string
 		if r.SocialType != 0 {
 			bindReq := &req.SocialUserBindReq{
 				Type:  r.SocialType,
@@ -123,13 +124,15 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 				return err
 			}
 		}
-
-		// 5. 生成 Token（使用 OAuth2TokenService）
-		var err2 error
-		result, err2 = s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSms, openid, ip, userAgent)
-		return err2
+		return nil
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. 在事务外记录登录日志和更新登录信息，避免锁冲突
+	result, err := s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSms, openid, ip, userAgent)
 	if err != nil {
 		return nil, err
 	}

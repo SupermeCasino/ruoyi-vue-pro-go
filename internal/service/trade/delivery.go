@@ -127,7 +127,6 @@ func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Conte
 		Latitude:      r.Latitude,
 		Longitude:     r.Longitude,
 		Status:        r.Status,
-		Sort:          r.Sort,
 	}
 	if err := s.q.TradeDeliveryPickUpStore.WithContext(ctx).Create(store); err != nil {
 		return 0, err
@@ -138,18 +137,17 @@ func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Conte
 // UpdateDeliveryPickUpStore 更新自提门店
 func (s *DeliveryPickUpStoreService) UpdateDeliveryPickUpStore(ctx context.Context, r *req.DeliveryPickUpStoreSaveReq) error {
 	_, err := s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.ID.Eq(*r.ID)).Updates(map[string]interface{}{
-		"name":            r.Name,
-		"introduction":    r.Introduction,
-		"phone":           r.Phone,
-		"area_id":         r.AreaID,
-		"detail_address":  r.DetailAddress,
-		"logo":            r.Logo,
-		"opening_time":    r.OpeningTime,
-		"closing_time":    r.ClosingTime,
-		"latitude":        r.Latitude,
-		"longitude":       r.Longitude,
-		"status":          r.Status,
-		"sort":            r.Sort,
+		"name":           r.Name,
+		"introduction":   r.Introduction,
+		"phone":          r.Phone,
+		"area_id":        r.AreaID,
+		"detail_address": r.DetailAddress,
+		"logo":           r.Logo,
+		"opening_time":   r.OpeningTime,
+		"closing_time":   r.ClosingTime,
+		"latitude":       r.Latitude,
+		"longitude":      r.Longitude,
+		"status":         r.Status,
 	})
 	return err
 }
@@ -193,7 +191,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 		return nil, err
 	}
 
-	list, err := q.Order(s.q.TradeDeliveryPickUpStore.Sort.Asc()).Offset(offset).Limit(pageSize).Find()
+	list, err := q.Offset(offset).Limit(pageSize).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +204,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 
 // GetSimpleDeliveryPickUpStoreList 获取自提门店精简列表
 func (s *DeliveryPickUpStoreService) GetSimpleDeliveryPickUpStoreList(ctx context.Context) ([]*trade.TradeDeliveryPickUpStore, error) {
-	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(trade.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryPickUpStore.Sort.Asc()).Find()
+	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(trade.DeliveryStatusEnabled)).Find()
 }
 
 // BindDeliveryPickUpStore 绑定自提门店核销员工

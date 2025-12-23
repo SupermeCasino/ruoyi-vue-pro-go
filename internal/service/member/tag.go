@@ -31,8 +31,7 @@ func (s *MemberTagService) CreateTag(ctx context.Context, r *req.MemberTagCreate
 		return 0, err
 	}
 	tag := &member.MemberTag{
-		Name:   r.Name,
-		Remark: r.Remark,
+		Name: r.Name,
 	}
 	err := s.q.MemberTag.WithContext(ctx).Create(tag)
 	if err != nil {
@@ -58,8 +57,7 @@ func (s *MemberTagService) UpdateTag(ctx context.Context, r *req.MemberTagUpdate
 
 	// Update
 	_, err = s.q.MemberTag.WithContext(ctx).Where(s.q.MemberTag.ID.Eq(r.ID)).Updates(&member.MemberTag{
-		Name:   r.Name,
-		Remark: r.Remark,
+		Name: r.Name,
 	})
 	return err
 }

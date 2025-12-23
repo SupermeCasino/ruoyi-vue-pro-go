@@ -270,7 +270,6 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
 		Latitude:      store.Latitude,
 		Longitude:     store.Longitude,
 		Status:        store.Status,
-		Sort:          store.Sort,
 		CreateTime:    store.CreatedAt,
 	})
 }
@@ -305,7 +304,6 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 			Latitude:      item.Latitude,
 			Longitude:     item.Longitude,
 			Status:        item.Status,
-			Sort:          item.Sort,
 			CreateTime:    item.CreatedAt,
 		}
 	}
@@ -340,7 +338,6 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 			Latitude:      item.Latitude,
 			Longitude:     item.Longitude,
 			Status:        item.Status,
-			Sort:          item.Sort,
 			CreateTime:    item.CreatedAt,
 		}
 	}

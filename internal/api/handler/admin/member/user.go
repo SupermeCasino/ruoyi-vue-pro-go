@@ -209,7 +209,6 @@ func (h *MemberUserHandler) convertRespWithExt(user *memberModel.MemberUser, tag
 		LoginDate:  user.LoginDate,
 		CreatedAt:  user.CreatedAt,
 		Point:      user.Point,
-		TotalPoint: user.TotalPoint,
 		Experience: user.Experience,
 		TagNames:   tagNames,
 		LevelName:  levelName,

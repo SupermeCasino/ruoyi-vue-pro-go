@@ -48,7 +48,6 @@ func (s *MemberLevelService) CreateLevel(ctx context.Context, r *req.MemberLevel
 		Icon:            r.Icon,
 		BackgroundURL:   r.BackgroundURL,
 		Status:          r.Status,
-		Remark:          r.Remark,
 	}
 	err = s.q.MemberLevel.WithContext(ctx).Create(level)
 	return level.ID, err
@@ -93,7 +92,6 @@ func (s *MemberLevelService) UpdateLevel(ctx context.Context, r *req.MemberLevel
 		Icon:            r.Icon,
 		BackgroundURL:   r.BackgroundURL,
 		Status:          r.Status,
-		Remark:          r.Remark,
 	})
 	return err
 }
