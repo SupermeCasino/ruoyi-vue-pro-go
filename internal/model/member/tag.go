@@ -11,7 +11,6 @@ import (
 type MemberTag struct {
 	ID        int64         `gorm:"primaryKey;autoIncrement;comment:编号" json:"id"`
 	Name      string        `gorm:"column:name;type:varchar(30);not null;default:'';comment:标签名称" json:"name"`
-	Remark    string        `gorm:"column:remark;type:varchar(500);default:'';comment:备注" json:"remark"`
 	Creator   string        `gorm:"column:creator;size:64;default:'';comment:创建者"`
 	Updater   string        `gorm:"column:updater;size:64;default:'';comment:更新者"`
 	CreatedAt time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`

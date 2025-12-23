@@ -9,7 +9,6 @@ import (
 type MemberUser struct {
 	ID               int64      `gorm:"primaryKey;autoIncrement;comment:用户ID" json:"id"`
 	Mobile           string     `gorm:"size:11;comment:手机" json:"mobile"`
-	Email            string     `gorm:"size:50;default:'';comment:电子邮箱" json:"email"`
 	Password         string     `gorm:"size:100;default:'';comment:密码" json:"-"`
 	Status           int32      `gorm:"default:0;comment:状态" json:"status"` // 参见 CommonStatusEnum
 	RegisterIP       string     `gorm:"column:register_ip;size:32;default:'';comment:注册IP" json:"registerIp"`
@@ -26,19 +25,17 @@ type MemberUser struct {
 	Mark     string     `gorm:"size:255;default:'';comment:备注" json:"mark"`
 
 	Point      int32                `gorm:"default:0;comment:积分" json:"point"`
-	TotalPoint int32                `gorm:"default:0;comment:总积分" json:"totalPoint"`
 	TagIds     model.IntListFromCSV `gorm:"type:varchar(255);comment:标签编号数组" json:"tagIds"`
 	LevelID    int64                `gorm:"column:level_id;comment:等级编号" json:"levelId"`
 	Experience int32                `gorm:"default:0;comment:经验" json:"experience"`
 	GroupID    int64                `gorm:"column:group_id;comment:分组编号" json:"groupId"`
 
-	TenantID         int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
-	Creator          string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater          string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
-	CreatedAt        time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt        time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted          model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	BrokerageEnabled model.BitBool `gorm:"column:brokerage_enabled;default:0;comment:是否成为推广员" json:"brokerageEnabled"`
+	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	Creator   string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
+	Updater   string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
+	CreatedAt time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdatedAt time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	Deleted   model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
 }
 
 func (MemberUser) TableName() string {

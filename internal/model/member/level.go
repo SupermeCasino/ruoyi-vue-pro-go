@@ -18,7 +18,6 @@ type MemberLevel struct {
 	BackgroundURL   string        `gorm:"column:background_url;type:varchar(255);default:'';comment:等级背景图" json:"backgroundUrl"`
 	Status          int           `gorm:"column:status;type:int;not null;default:0;comment:状态" json:"status"` // 0: 开启, 1: 关闭
 	Result          string        `gorm:"-" json:"result"`                                                    // Ignore
-	Remark          string        `gorm:"column:remark;type:varchar(255);default:'';comment:备注"`              // BaseDO usually has remark? Java DO didn't show it but BaseDO might.
 	Creator         string        `gorm:"column:creator;size:64;default:'';comment:创建者"`
 	Updater         string        `gorm:"column:updater;size:64;default:'';comment:更新者"`
 	CreatedAt       time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
