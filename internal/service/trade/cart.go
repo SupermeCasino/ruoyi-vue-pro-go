@@ -195,7 +195,7 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 		item := resp.AppCartItem{
 			ID:       cart.ID,
 			Count:    cart.Count,
-			Selected: cart.Selected,
+			Selected: bool(cart.Selected),
 		}
 
 		// 判断有效性
