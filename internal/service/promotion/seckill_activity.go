@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product" // Import Product services
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
+	"github.com/samber/lo"
 	"gorm.io/gen"
 )
 
@@ -39,23 +41,29 @@ func (s *SeckillActivityService) CreateSeckillActivity(ctx context.Context, r *r
 	if err := s.validateProductConflict(ctx, r.ConfigIds, r.SpuID, 0); err != nil {
 		return 0, err
 	}
-	// TODO: Validate Product Exists (Spu + Sku)
-	// assuming spuSvc and skuSvc has methods.
+	// 1.3 校验商品是否存在
+	if _, err := s.spuSvc.GetSpu(ctx, r.SpuID); err != nil {
+		return 0, err
+	}
+	for _, p := range r.Products {
+		if _, err := s.skuSvc.GetSku(ctx, p.SkuID); err != nil {
+			return 0, err
+		}
+	}
 
 	// 2. Transaction
 	var activityID int64
 	err := s.q.Transaction(func(tx *query.Query) error {
 		// Calculate Stock
-		totalStock := 0
-		for _, p := range r.Products {
-			totalStock += p.Stock
-		}
+		totalStock := lo.SumBy(r.Products, func(p req.SeckillProductBaseVO) int {
+			return p.Stock
+		})
 
 		// Insert Activity
 		activity := &promotion.PromotionSeckillActivity{
 			SpuID:            r.SpuID,
 			Name:             r.Name,
-			Status:           1, // Enable by default? Java says CommonStatusEnum.ENABLE
+			Status:           model.CommonStatusEnable,
 			Remark:           r.Remark,
 			StartTime:        r.StartTime,
 			EndTime:          r.EndTime,
@@ -101,19 +109,27 @@ func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *r
 	if err != nil {
 		return errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
-	if oldActivity.Status == 2 { // Disable?
+	if oldActivity.Status == model.CommonStatusDisable {
 		return errors.NewBizError(1001002003, "秒杀活动已关闭，不能修改")
 	}
 
 	if err := s.validateProductConflict(ctx, r.ConfigIds, r.SpuID, r.ID); err != nil {
 		return err
 	}
+	// 校验商品是否存在
+	if _, err := s.spuSvc.GetSpu(ctx, r.SpuID); err != nil {
+		return err
+	}
+	for _, p := range r.Products {
+		if _, err := s.skuSvc.GetSku(ctx, p.SkuID); err != nil {
+			return err
+		}
+	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
-		totalStock := 0
-		for _, p := range r.Products {
-			totalStock += p.Stock
-		}
+		totalStock := lo.SumBy(r.Products, func(p req.SeckillProductBaseVO) int {
+			return p.Stock
+		})
 
 		upd := &promotion.PromotionSeckillActivity{
 			SpuID:            r.SpuID,
@@ -137,21 +153,10 @@ func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *r
 			return err
 		}
 
-		// Update products: Full Replace strategy or Diff?
-		// Java does Diff. For simplicity, delete and recreate?
-		// Or try to match SKU.
-		// Deleting and Recreating is safer for logic correctness but loses ID?
-		// Java logic is "Diff".
-		// I'll use Delete + Create for simplicity unless IDs must be preserved for orders?
-		// Orders link to ActivityID + SkuID? OR SeckillProductId?
-		// SeckillProductDO has ID.
-		// If orders reference SeckillProductID, then we MUST preserve it.
-		// Java: SeckillProductDO logic:
-		// "Orders usually store activity_id + item_id".
-		// TradeOrderItem stores "PromotionActivityId".
-		// Whatever. I'll Delete and Recreate for now. Simpler.
-
-		tx.PromotionSeckillProduct.WithContext(ctx).Where(tx.PromotionSeckillProduct.ActivityID.Eq(r.ID)).Delete()
+		// Update products
+		if _, err := tx.PromotionSeckillProduct.WithContext(ctx).Where(tx.PromotionSeckillProduct.ActivityID.Eq(r.ID)).Delete(); err != nil {
+			return err
+		}
 
 		products := make([]*promotion.PromotionSeckillProduct, len(r.Products))
 		for i, p := range r.Products {
@@ -178,7 +183,7 @@ func (s *SeckillActivityService) DeleteSeckillActivity(ctx context.Context, id i
 	if err != nil {
 		return errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
-	if act.Status == 1 { // Enable
+	if act.Status == model.CommonStatusEnable {
 		return errors.NewBizError(1001002004, "活动未关闭，不能删除")
 	}
 	// Delete Activity and Products
@@ -192,7 +197,7 @@ func (s *SeckillActivityService) DeleteSeckillActivity(ctx context.Context, id i
 // CloseSeckillActivity 关闭秒杀活动
 func (s *SeckillActivityService) CloseSeckillActivity(ctx context.Context, id int64) error {
 	q := s.q.PromotionSeckillActivity
-	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, 2) // 2=Disable
+	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, model.CommonStatusDisable)
 	return err
 }
 
@@ -252,7 +257,7 @@ func (s *SeckillActivityService) GetSeckillActivityListByConfigId(ctx context.Co
 	q := s.q.PromotionSeckillActivity
 	now := time.Now()
 	list, err := q.WithContext(ctx).Where(
-		q.Status.Eq(1),
+		q.Status.Eq(model.CommonStatusEnable),
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Order(q.Sort.Desc()).Find()
@@ -261,17 +266,11 @@ func (s *SeckillActivityService) GetSeckillActivityListByConfigId(ctx context.Co
 	}
 
 	// 过滤包含此时段的活动
-	var filtered []*promotion.PromotionSeckillActivity
-	for _, item := range list {
-		for _, cid := range item.ConfigIds {
-			if cid == configId {
-				filtered = append(filtered, item)
-				break
-			}
-		}
-		if len(filtered) >= limit {
-			break
-		}
+	filtered := lo.Filter(list, func(item *promotion.PromotionSeckillActivity, _ int) bool {
+		return lo.Contains(item.ConfigIds, configId)
+	})
+	if len(filtered) > limit {
+		filtered = filtered[:limit]
 	}
 	return filtered, nil
 }
@@ -292,14 +291,9 @@ func (s *SeckillActivityService) GetSeckillActivityPageForApp(ctx context.Contex
 	// 如果指定了 configId，过滤
 	var filtered []*promotion.PromotionSeckillActivity
 	if configId != nil {
-		for _, item := range list {
-			for _, cid := range item.ConfigIds {
-				if cid == *configId {
-					filtered = append(filtered, item)
-					break
-				}
-			}
-		}
+		filtered = lo.Filter(list, func(item *promotion.PromotionSeckillActivity, _ int) bool {
+			return lo.Contains(item.ConfigIds, *configId)
+		})
 	} else {
 		filtered = list
 	}
@@ -327,7 +321,7 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 	// Find all ENABLED activities for this SPU
 	conds := []gen.Condition{
 		q.SpuID.Eq(spuID),
-		q.Status.Eq(1), // Enable
+		q.Status.Eq(model.CommonStatusEnable), // Enable
 	}
 	if activityID > 0 {
 		conds = append(conds, q.ID.Neq(activityID))
@@ -340,19 +334,7 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 
 	for _, act := range list {
 		// Check config overlap
-		hasConfigOverlap := false
-		for _, id := range act.ConfigIds {
-			for _, reqId := range configIds {
-				if id == reqId {
-					hasConfigOverlap = true
-					break
-				}
-			}
-			if hasConfigOverlap {
-				break
-			}
-		}
-		if hasConfigOverlap {
+		if len(lo.Intersect(act.ConfigIds, configIds)) > 0 {
 			return errors.NewBizError(1001002002, "该商品已参加其它秒杀活动")
 		}
 	}
@@ -363,12 +345,6 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, pageNo, pageSize int, configId int64) (*pagination.PageResult[*promotion.PromotionSeckillActivity], error) {
 	// Java logic: filter by configId, status=ENABLE, now between startTime/endTime
 	q := s.q.PromotionSeckillActivity
-
-	// How to filter JSON configIds contains configId?
-	// Use LIKE? `configIds` stored as `[1,2,3]`.
-	// Simple Like "%1%" is dangerous (matches 10).
-	// Ideally GORM `datatypes.JSONOverlaps` or just fetch and filter in memory if volume is low.
-	// Given Seckill activities are usually limited, memory filter is acceptable.
 
 	// Fetch candidates (Status=Enable, Time Valid)
 	now := time.Now()
@@ -382,15 +358,9 @@ func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, 
 		return nil, err
 	}
 
-	var filtered []*promotion.PromotionSeckillActivity
-	for _, item := range list {
-		for _, cid := range item.ConfigIds {
-			if cid == configId {
-				filtered = append(filtered, item)
-				break
-			}
-		}
-	}
+	filtered := lo.Filter(list, func(item *promotion.PromotionSeckillActivity, _ int) bool {
+		return lo.Contains(item.ConfigIds, configId)
+	})
 
 	// Manual Pagination
 	total := int64(len(filtered))
@@ -416,7 +386,7 @@ func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activi
 	if err != nil || act == nil {
 		return nil, nil, errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
-	if act.Status != 1 {
+	if act.Status != model.CommonStatusEnable {
 		return nil, nil, errors.NewBizError(1001002003, "秒杀活动已关闭")
 	}
 	now := time.Now()
@@ -424,16 +394,10 @@ func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activi
 		return nil, nil, errors.NewBizError(1001002005, "秒杀活动时间不符")
 	}
 
-	// 2. Get Product
-	q := s.q.PromotionSeckillProduct
-	prod, err := q.WithContext(ctx).Where(q.ActivityID.Eq(activityId), q.SkuID.Eq(skuId)).First()
-	if err != nil {
-		return nil, nil, errors.NewBizError(1001002006, "秒杀商品不存在")
-	}
-
-	// 3. Check Stock
-	if prod.Stock < count {
-		return nil, nil, errors.NewBizError(1001002007, "秒杀库存不足")
+	// 3. Check Config (Time Segment)
+	config, err := s.configSvc.GetCurrentSeckillConfig(ctx)
+	if err != nil || config == nil || !lo.Contains(act.ConfigIds, config.ID) {
+		return nil, nil, errors.NewBizError(1001002005, "秒杀活动时间不符")
 	}
 
 	// 4. Check Single Limit
@@ -441,7 +405,76 @@ func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activi
 		return nil, nil, errors.NewBizError(1001002008, "超出单次限购数量")
 	}
 
+	// 5. Get Product
+	q := s.q.PromotionSeckillProduct
+	prod, err := q.WithContext(ctx).Where(q.ActivityID.Eq(activityId), q.SkuID.Eq(skuId)).First()
+	if err != nil {
+		return nil, nil, errors.NewBizError(1001002006, "秒杀商品不存在")
+	}
+
+	// 6. Check Stock
+	if prod.Stock < count {
+		return nil, nil, errors.NewBizError(1001002007, "秒杀库存不足")
+	}
+
 	return act, prod, nil
+}
+
+// UpdateSeckillStockDecr 扣减秒杀库存 (针对订单提交)
+func (s *SeckillActivityService) UpdateSeckillStockDecr(ctx context.Context, id int64, skuId int64, count int) error {
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 1.1 校验活动库存是否充足
+		act, err := tx.PromotionSeckillActivity.WithContext(ctx).Where(tx.PromotionSeckillActivity.ID.Eq(id)).First()
+		if err != nil || act.Stock < count {
+			return errors.NewBizError(1001002007, "秒杀库存不足")
+		}
+		// 1.2 校验商品库存是否充足
+		prod, err := tx.PromotionSeckillProduct.WithContext(ctx).Where(
+			tx.PromotionSeckillProduct.ActivityID.Eq(id),
+			tx.PromotionSeckillProduct.SkuID.Eq(skuId),
+		).First()
+		if err != nil || prod.Stock < count {
+			return errors.NewBizError(1001002007, "秒杀库存不足")
+		}
+
+		res, err := tx.PromotionSeckillProduct.WithContext(ctx).Where(
+			tx.PromotionSeckillProduct.ID.Eq(prod.ID),
+			tx.PromotionSeckillProduct.Stock.Gte(count),
+		).Update(tx.PromotionSeckillProduct.Stock, tx.PromotionSeckillProduct.Stock.Add(-count))
+		if err != nil || res.RowsAffected == 0 {
+			return errors.NewBizError(1001002007, "秒杀库存不足")
+		}
+
+		// 2.2 更新活动库存
+		res, err = tx.PromotionSeckillActivity.WithContext(ctx).Where(
+			tx.PromotionSeckillActivity.ID.Eq(id),
+			tx.PromotionSeckillActivity.Stock.Gte(count),
+		).Update(tx.PromotionSeckillActivity.Stock, tx.PromotionSeckillActivity.Stock.Add(-count))
+		if err != nil || res.RowsAffected == 0 {
+			return errors.NewBizError(1001002007, "秒杀库存不足")
+		}
+		return nil
+	})
+}
+
+// UpdateSeckillStockIncr 增加秒杀库存 (针对订单取消/退款)
+func (s *SeckillActivityService) UpdateSeckillStockIncr(ctx context.Context, id int64, skuId int64, count int) error {
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 1. 更新活动商品库存
+		_, err := tx.PromotionSeckillProduct.WithContext(ctx).Where(
+			tx.PromotionSeckillProduct.ActivityID.Eq(id),
+			tx.PromotionSeckillProduct.SkuID.Eq(skuId),
+		).Update(tx.PromotionSeckillProduct.Stock, tx.PromotionSeckillProduct.Stock.Add(count))
+		if err != nil {
+			return err
+		}
+
+		// 2. 更新活动库存
+		_, err = tx.PromotionSeckillActivity.WithContext(ctx).Where(
+			tx.PromotionSeckillActivity.ID.Eq(id),
+		).Update(tx.PromotionSeckillActivity.Stock, tx.PromotionSeckillActivity.Stock.Add(count))
+		return err
+	})
 }
 
 // GetMatchSeckillActivityBySpuId 获取指定 SPU 的进行中的秒杀活动
@@ -450,7 +483,7 @@ func (s *SeckillActivityService) GetMatchSeckillActivityBySpuId(ctx context.Cont
 	q := s.q.PromotionSeckillActivity
 	return q.WithContext(ctx).
 		Where(q.SpuID.Eq(spuId)).
-		Where(q.Status.Eq(1)). // 1 = Enable
+		Where(q.Status.Eq(model.CommonStatusEnable)).
 		Where(q.StartTime.Lt(now)).
 		Where(q.EndTime.Gt(now)).
 		First()

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -44,7 +45,7 @@ func (s *BargainActivityService) CreateBargainActivity(ctx context.Context, r *r
 		Name:      r.Name,
 		StartTime: r.StartTime,
 		EndTime:   r.EndTime,
-		Status:    1, // Default Enable (CommonStatusEnum.ENABLE) - Java logic enables on create? Or typically creates as Disabled? Java Create method usually sets common fields.
+		Status:    model.CommonStatusEnable, // Default Enable (CommonStatusEnum.ENABLE)
 		// Java Create req doesn't have status. Default might be Enable or Disable.
 		// Let's assume Enable for now or check Java.
 		// Actually typical logic sets specific status or default (0/1).
@@ -85,7 +86,7 @@ func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *r
 	if err != nil {
 		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
-	if old.Status == 1 { // Enable?
+	if old.Status == model.CommonStatusEnable { // Enable?
 		// Usually can't update if enabled? Or just simple update?
 		// Java: "can update". Logic doesn't check status for update?
 		// Check validBargainActivityExists?
@@ -132,7 +133,7 @@ func (s *BargainActivityService) DeleteBargainActivity(ctx context.Context, id i
 	if err != nil {
 		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
-	if act.Status != 2 { // Not Closed?
+	if act.Status != model.CommonStatusDisable { // Not Closed?
 		// Java: If not Closed (Enable/Disable?), can delete?
 		// Usually "If Status != Close, Cannot Delete".
 		// Let's assume Status 2 is Closed.
@@ -175,13 +176,13 @@ func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *
 // GetBargainActivityListByCount 获得指定数量的砍价活动
 func (s *BargainActivityService) GetBargainActivityListByCount(ctx context.Context, count int) ([]*promotion.PromotionBargainActivity, error) {
 	q := s.q.PromotionBargainActivity
-	return q.WithContext(ctx).Where(q.Status.Eq(1)).Order(q.Sort.Desc(), q.ID.Desc()).Limit(count).Find()
+	return q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc()).Limit(count).Find()
 }
 
 // GetBargainActivityPageForApp 获得砍价活动分页 (App端，只查询 Status=1 的活动)
 func (s *BargainActivityService) GetBargainActivityPageForApp(ctx context.Context, p *pagination.PageParam) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
 	q := s.q.PromotionBargainActivity
-	do := q.WithContext(ctx).Where(q.Status.Eq(1)).Order(q.Sort.Desc(), q.ID.Desc())
+	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc())
 	list, count, err := do.FindByPage(p.GetOffset(), p.PageSize)
 	if err != nil {
 		return nil, err
@@ -218,7 +219,7 @@ func (s *BargainActivityService) validateBargainConflict(ctx context.Context, sp
 
 	// Gorm Gen conditions handling need care with "interface{}" vs "gen.Condition"
 	// Better chain:
-	do := q.WithContext(ctx).Where(q.Status.Eq(1), q.SpuID.Eq(spuID))
+	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable), q.SpuID.Eq(spuID))
 
 	if activityID > 0 {
 		do = do.Where(q.ID.Neq(activityID))
@@ -239,7 +240,7 @@ func (s *BargainActivityService) GetMatchBargainActivityBySpuId(ctx context.Cont
 	q := s.q.PromotionBargainActivity
 	return q.WithContext(ctx).
 		Where(q.SpuID.Eq(spuId)).
-		Where(q.Status.Eq(1)). // 1 = Enable
+		Where(q.Status.Eq(model.CommonStatusEnable)).
 		Where(q.StartTime.Lt(now)).
 		Where(q.EndTime.Gt(now)).
 		First()

@@ -31,27 +31,26 @@ func NewPointActivityService(q *query.Query, spuSvc *productSvc.ProductSpuServic
 
 // CreatePointActivity 创建积分商城活动
 // 对应 Java: PointActivityServiceImpl.createPointActivity
-func (s *PointActivityService) CreatePointActivity(ctx context.Context, req *req.PointActivityCreateReq) (int64, error) {
+func (s *PointActivityService) CreatePointActivity(ctx context.Context, r *req.PointActivityCreateReq) (int64, error) {
 	// 1.1 校验商品是否存在
-	if err := s.validateProductExists(ctx, req.SpuID, req.Products); err != nil {
+	if err := s.validateProductExists(ctx, r.SpuID, r.Products); err != nil {
 		return 0, err
 	}
 	// 1.2 校验商品是否已经参加别的活动
-	if err := s.validatePointActivityProductConflicts(ctx, 0, req.SpuID); err != nil {
+	if err := s.validatePointActivityProductConflicts(ctx, 0, r.SpuID); err != nil {
 		return 0, err
 	}
 
 	// 计算总库存 (Sum of products stocks)
-	totalStock := 0
-	for _, p := range req.Products {
-		totalStock += p.Stock
-	}
+	totalStock := lo.SumBy(r.Products, func(p req.PointProductSaveReq) int {
+		return p.Stock
+	})
 
 	t := &promotion.PromotionPointActivity{
-		SpuID:      req.SpuID,
-		Status:     req.Status,
-		Remark:     req.Remark,
-		Sort:       req.Sort,
+		SpuID:      r.SpuID,
+		Status:     r.Status,
+		Remark:     r.Remark,
+		Sort:       r.Sort,
 		Stock:      totalStock,
 		TotalStock: totalStock,
 	}
@@ -62,8 +61,8 @@ func (s *PointActivityService) CreatePointActivity(ctx context.Context, req *req
 		}
 
 		// 2. 创建活动商品
-		products := make([]*promotion.PromotionPointProduct, len(req.Products))
-		for i, p := range req.Products {
+		products := make([]*promotion.PromotionPointProduct, len(r.Products))
+		for i, p := range r.Products {
 			products[i] = &promotion.PromotionPointProduct{
 				ActivityID:     t.ID,
 				SpuID:          t.SpuID,
@@ -82,49 +81,48 @@ func (s *PointActivityService) CreatePointActivity(ctx context.Context, req *req
 
 // UpdatePointActivity 更新积分商城活动
 // 对应 Java: PointActivityServiceImpl.updatePointActivity
-func (s *PointActivityService) UpdatePointActivity(ctx context.Context, req *req.PointActivityUpdateReq) error {
+func (s *PointActivityService) UpdatePointActivity(ctx context.Context, r *req.PointActivityUpdateReq) error {
 	// 1.1 校验存在
-	activity, err := s.validatePointActivityExists(ctx, req.ID)
+	activity, err := s.validatePointActivityExists(ctx, r.ID)
 	if err != nil {
 		return err
 	}
-	if activity.Status == 0 { // DISABLE
+	if activity.Status == model.CommonStatusDisable {
 		return errors.NewBizError(1006003001, "积分商城活动已关闭") // POINT_ACTIVITY_UPDATE_FAIL_STATUS_CLOSED
 	}
 
 	// 1.2 校验商品是否存在
-	if err := s.validateProductExists(ctx, req.SpuID, req.Products); err != nil {
+	if err := s.validateProductExists(ctx, r.SpuID, r.Products); err != nil {
 		return err
 	}
 	// 1.3 校验商品是否已经参加别的活动
-	if err := s.validatePointActivityProductConflicts(ctx, req.ID, req.SpuID); err != nil {
+	if err := s.validatePointActivityProductConflicts(ctx, r.ID, r.SpuID); err != nil {
 		return err
 	}
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 2.1 更新活动
 		// 计算总库存
-		newStock := 0
-		for _, p := range req.Products {
-			newStock += p.Stock
-		}
+		newStock := lo.SumBy(r.Products, func(p req.PointProductSaveReq) int {
+			return p.Stock
+		})
 
 		updateObj := map[string]interface{}{
-			"spu_id": req.SpuID,
-			"status": req.Status,
-			"remark": req.Remark,
-			"sort":   req.Sort,
+			"spu_id": r.SpuID,
+			"status": r.Status,
+			"remark": r.Remark,
+			"sort":   r.Sort,
 			"stock":  newStock,
 		}
 		if newStock > activity.TotalStock {
 			updateObj["total_stock"] = newStock
 		}
 
-		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(req.ID)).Updates(updateObj); err != nil {
+		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(r.ID)).Updates(updateObj); err != nil {
 			return err
 		}
 
 		// 2.2 更新活动商品 (Diff Logic)
-		return s.updatePointProduct(ctx, tx, req.ID, req.SpuID, req.Status, req.Products)
+		return s.updatePointProduct(ctx, tx, r.ID, r.SpuID, r.Status, r.Products)
 	})
 }
 
@@ -211,18 +209,18 @@ func (s *PointActivityService) ClosePointActivity(ctx context.Context, id int64)
 	if err != nil {
 		return err
 	}
-	if activity.Status == 0 { // already closed
+	if activity.Status == model.CommonStatusDisable {
 		return errors.NewBizError(1006003002, "积分商城活动已关闭") // POINT_ACTIVITY_CLOSE_FAIL_STATUS_CLOSED
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新活动状态
-		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(id)).Update(tx.PromotionPointActivity.Status, 0); err != nil {
+		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(id)).Update(tx.PromotionPointActivity.Status, model.CommonStatusDisable); err != nil {
 			return err
 		}
 		// 2. 更新商品状态
 		p := tx.PromotionPointProduct
-		_, err := p.WithContext(ctx).Where(p.ActivityID.Eq(id)).Update(p.ActivityStatus, 0)
+		_, err := p.WithContext(ctx).Where(p.ActivityID.Eq(id)).Update(p.ActivityStatus, model.CommonStatusDisable)
 		return err
 	})
 }
@@ -234,7 +232,7 @@ func (s *PointActivityService) DeletePointActivity(ctx context.Context, id int64
 	if err != nil {
 		return err
 	}
-	if activity.Status == 1 { // ENABLE
+	if activity.Status == model.CommonStatusEnable {
 		return errors.NewBizError(1006003003, "活动未关闭或未结束，不能删除") // POINT_ACTIVITY_DELETE_FAIL_STATUS_NOT_CLOSED_OR_END
 	}
 
@@ -269,25 +267,24 @@ func (s *PointActivityService) GetPointActivity(ctx context.Context, id int64) (
 
 // GetPointActivityPage 获得积分商城活动分页
 // 对应 Java: PointActivityServiceImpl.getPointActivityPage
-func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *req.PointActivityPageReq) (*pagination.PageResult[promotion.PromotionPointActivity], error) {
+func (s *PointActivityService) GetPointActivityPage(ctx context.Context, r *req.PointActivityPageReq) (*pagination.PageResult[promotion.PromotionPointActivity], error) {
 	q := s.q.PromotionPointActivity.WithContext(ctx)
-	if req.Status != nil {
-		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*req.Status))
+	if r.Status != nil {
+		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*r.Status))
 	}
-	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
-		q = q.Where(s.q.PromotionPointActivity.CreateTime.Between(*req.CreateTime[0], *req.CreateTime[1]))
+	if len(r.CreateTime) == 2 && r.CreateTime[0] != nil && r.CreateTime[1] != nil {
+		q = q.Where(s.q.PromotionPointActivity.CreateTime.Between(*r.CreateTime[0], *r.CreateTime[1]))
 	}
 	// TODO: 支持其他搜索条件 (Java只支持Status)
 
-	result, count, err := q.FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
+	result, count, err := q.FindByPage(int((r.PageNo-1)*r.PageSize), int(r.PageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	list := make([]promotion.PromotionPointActivity, len(result))
-	for i, v := range result {
-		list[i] = *v
-	}
+	list := lo.Map(result, func(v *promotion.PromotionPointActivity, _ int) promotion.PromotionPointActivity {
+		return *v
+	})
 
 	return &pagination.PageResult[promotion.PromotionPointActivity]{
 		List:  list,
@@ -383,7 +380,7 @@ func (s *PointActivityService) UpdatePointStockDecr(ctx context.Context, id int6
 	if activity == nil {
 		return errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
-	if activity.Status != 1 { // ENABLE
+	if activity.Status != model.CommonStatusEnable {
 		return errors.NewBizError(1006003002, "积分商城活动已关闭")
 	}
 
@@ -468,7 +465,7 @@ func (s *PointActivityService) ValidateJoinPointActivity(ctx context.Context, ac
 	if activity == nil {
 		return nil, errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
-	if activity.Status != 1 { // ENABLE
+	if activity.Status != model.CommonStatusEnable { // ENABLE
 		return nil, errors.NewBizError(1006003002, "积分商城活动已关闭")
 	}
 

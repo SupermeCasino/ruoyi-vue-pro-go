@@ -2,14 +2,16 @@ package promotion
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -17,34 +19,51 @@ import (
 
 type CombinationRecordService interface {
 	// App
-	GetCombinationRecordSummary(ctx context.Context, activityID int64) (*resp.AppCombinationRecordSummaryRespVO, error)
+	GetCombinationRecordSummary(ctx context.Context) (*resp.AppCombinationRecordSummaryRespVO, error)
 	GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*pagination.PageResult[*resp.AppCombinationRecordRespVO], error)
 	GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*resp.AppCombinationRecordDetailRespVO, error)
-	GetLatestCombinationRecordList(ctx context.Context, activityID int64, count int) ([]*promotion.PromotionCombinationRecord, error)
+	GetLatestCombinationRecordList(ctx context.Context, count int) ([]*promotion.PromotionCombinationRecord, error)
+	GetHeadCombinationRecordList(ctx context.Context, activityID int64, status int, count int) ([]*promotion.PromotionCombinationRecord, error)
 
 	// Internal (for Order)
 	ValidateCombinationRecord(ctx context.Context, userID int64, activityID int64, headID int64, skuID int64, count int) (*promotion.PromotionCombinationActivity, *promotion.PromotionCombinationProduct, error)
 	CreateCombinationRecord(ctx context.Context, record *promotion.PromotionCombinationRecord) (int64, error)
+	// Admin
 	GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error)
 	GetCombinationRecordSummaryAdmin(ctx context.Context) (*resp.CombinationRecordSummaryVO, error)
+	ExpireCombinationRecord(ctx context.Context) error
 	GetCombinationRecord(ctx context.Context, id int64) (*promotion.PromotionCombinationRecord, error)
 	GetCombinationRecordByOrderId(ctx context.Context, userID int64, orderID int64) (*promotion.PromotionCombinationRecord, error)
+}
+
+// CombinationTradeOrderService 跨模块依赖接口，用于解除循环依赖
+type CombinationTradeOrderService interface {
+	CancelPaidOrder(ctx context.Context, uId int64, id int64, cancelType int) error
+}
+
+// CombinationSocialClientService 跨模块依赖接口
+type CombinationSocialClientService interface {
+	SendWxaSubscribeMessage(ctx context.Context, r *req.SocialWxaSubscribeMessageSendReq) error
 }
 
 type combinationRecordService struct {
 	q           *query.Query
 	activitySvc CombinationActivityService
-	userSvc     *member.MemberUserService
+	userSvc     *memberSvc.MemberUserService
 	spuSvc      *prodSvc.ProductSpuService
 	skuSvc      *prodSvc.ProductSkuService
+	tradeSvc    CombinationTradeOrderService
+	socialSvc   CombinationSocialClientService
 }
 
 func NewCombinationRecordService(
 	q *query.Query,
 	activitySvc CombinationActivityService,
-	userSvc *member.MemberUserService,
+	userSvc *memberSvc.MemberUserService,
 	spuSvc *prodSvc.ProductSpuService,
 	skuSvc *prodSvc.ProductSkuService,
+	tradeSvc CombinationTradeOrderService,
+	socialSvc CombinationSocialClientService,
 ) CombinationRecordService {
 	return &combinationRecordService{
 		q:           q,
@@ -52,22 +71,23 @@ func NewCombinationRecordService(
 		userSvc:     userSvc,
 		spuSvc:      spuSvc,
 		skuSvc:      skuSvc,
+		tradeSvc:    tradeSvc,
+		socialSvc:   socialSvc,
 	}
 }
 
-func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Context, activityID int64) (*resp.AppCombinationRecordSummaryRespVO, error) {
+func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Context) (*resp.AppCombinationRecordSummaryRespVO, error) {
 	q := s.q.PromotionCombinationRecord
 
 	count, err := q.WithContext(ctx).Distinct(q.UserID).Count()
 	if err != nil {
 		return nil, err
 	}
+	if count == 0 {
+		return &resp.AppCombinationRecordSummaryRespVO{UserCount: 0, Avatars: []string{}}, nil
+	}
 
-	records, err := q.WithContext(ctx).
-		// Where(status success). MVP: All records?
-		Order(q.CreateTime.Desc()).
-		Limit(7).
-		Find()
+	records, err := s.GetLatestCombinationRecordList(ctx, model.AppCombinationRecordSummaryAvatarCount)
 	if err != nil {
 		return nil, err
 	}
@@ -118,13 +138,73 @@ func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context,
 }
 
 func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*resp.AppCombinationRecordDetailRespVO, error) {
-	// MVP Not Implemented, required by Interface
-	return nil, nil
+	// 1. 查找这条拼团记录
+	record, err := s.GetCombinationRecord(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 查找该拼团的参团记录
+	var headRecord *promotion.PromotionCombinationRecord
+	var memberRecords []*promotion.PromotionCombinationRecord
+	if record.HeadID == model.PromotionCombinationRecordHeadIDGroup { // 情况一：团长
+		headRecord = record
+		memberRecords, err = s.q.PromotionCombinationRecord.WithContext(ctx).Where(s.q.PromotionCombinationRecord.HeadID.Eq(record.ID)).Find()
+	} else { // 情况二：团员
+		headRecord, err = s.GetCombinationRecord(ctx, record.HeadID)
+		if err != nil {
+			return nil, err
+		}
+		memberRecords, err = s.q.PromotionCombinationRecord.WithContext(ctx).Where(s.q.PromotionCombinationRecord.HeadID.Eq(headRecord.ID)).Find()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// 拼接数据
+	allRecords := append([]*promotion.PromotionCombinationRecord{headRecord}, memberRecords...)
+	memberVOs := make([]resp.AppCombinationRecordRespVO, len(allRecords))
+	var userOrderId int64
+	for i, r := range allRecords {
+		memberVOs[i] = resp.AppCombinationRecordRespVO{
+			ID:               r.ID,
+			ActivityID:       r.ActivityID,
+			Nickname:         r.Nickname,
+			Avatar:           r.Avatar,
+			ExpireTime:       r.ExpireTime,
+			UserSize:         r.UserSize,
+			UserCount:        r.UserCount,
+			Status:           r.Status,
+			OrderID:          r.OrderID,
+			SpuName:          r.SpuName,
+			PicUrl:           r.PicUrl,
+			Count:            r.Count,
+			CombinationPrice: r.CombinationPrice,
+		}
+		if r.UserID == userID {
+			userOrderId = r.OrderID
+		}
+	}
+
+	return &resp.AppCombinationRecordDetailRespVO{
+		HeadRecord:    memberVOs[0],
+		MemberRecords: memberVOs,
+		OrderID:       userOrderId,
+	}, nil
 }
 
-func (s *combinationRecordService) GetLatestCombinationRecordList(ctx context.Context, activityID int64, count int) ([]*promotion.PromotionCombinationRecord, error) {
+func (s *combinationRecordService) GetLatestCombinationRecordList(ctx context.Context, count int) ([]*promotion.PromotionCombinationRecord, error) {
 	q := s.q.PromotionCombinationRecord
-	return q.WithContext(ctx).Where(q.ActivityID.Eq(activityID), q.Status.Eq(1)).Order(q.CreateTime.Desc()).Limit(count).Find()
+	return q.WithContext(ctx).Where(q.Status.Eq(model.PromotionCombinationRecordStatusSuccess)).Order(q.CreateTime.Desc()).Limit(count).Find()
+}
+
+func (s *combinationRecordService) GetHeadCombinationRecordList(ctx context.Context, activityID int64, status int, count int) ([]*promotion.PromotionCombinationRecord, error) {
+	q := s.q.PromotionCombinationRecord
+	tx := q.WithContext(ctx).Where(q.Status.Eq(status), q.HeadID.Eq(model.PromotionCombinationRecordHeadIDGroup))
+	if activityID > 0 {
+		tx = tx.Where(q.ActivityID.Eq(activityID))
+	}
+	return tx.Order(q.CreateTime.Desc()).Limit(count).Find()
 }
 
 func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context, userID int64, activityID int64, headID int64, skuID int64, count int) (*promotion.PromotionCombinationActivity, *promotion.PromotionCombinationProduct, error) {
@@ -151,11 +231,20 @@ func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context
 		if err != nil {
 			return nil, nil, errors.NewBizError(1001006005, "拼团不存在")
 		}
-		if head.Status != 0 { // 0: InProgress
+		if head.Status != model.PromotionCombinationRecordStatusInProgress {
 			return nil, nil, errors.NewBizError(1001006006, "拼团已结束")
 		}
 		if head.UserCount >= head.UserSize {
 			return nil, nil, errors.NewBizError(1001006007, "拼团人数已满")
+		}
+		// 校验拼团是否过期（有父拼团的时候只校验父拼团的过期时间）
+		if time.Now().After(head.ExpireTime) {
+			return nil, nil, errors.NewBizError(1001006003, "拼团活动已结束")
+		}
+	} else {
+		// 校验当前活动是否结束(自己是父拼团的时候才校验活动是否结束)
+		if time.Now().After(activity.EndTime) {
+			return nil, nil, errors.NewBizError(1001006003, "拼团活动已结束")
 		}
 	}
 
@@ -164,7 +253,7 @@ func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context
 	records, err := s.q.PromotionCombinationRecord.WithContext(ctx).Where(
 		s.q.PromotionCombinationRecord.UserID.Eq(userID),
 		s.q.PromotionCombinationRecord.ActivityID.Eq(activityID),
-		s.q.PromotionCombinationRecord.Status.Neq(2),
+		s.q.PromotionCombinationRecord.Status.Neq(model.PromotionCombinationRecordStatusFailed),
 	).Find()
 	if err != nil {
 		return nil, nil, err
@@ -172,7 +261,7 @@ func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context
 
 	totalCount := 0
 	for _, r := range records {
-		if r.Status == 0 { // InProgress
+		if r.Status == model.PromotionCombinationRecordStatusInProgress {
 			return nil, nil, errors.NewBizError(1001006013, "您已有该活动的拼团记录")
 		}
 		totalCount += r.Count
@@ -229,15 +318,33 @@ func (s *combinationRecordService) updateCombinationRecordWhenCreate(ctx context
 	for _, r := range updates {
 		r.UserCount = totalCount
 		if isFull {
-			r.Status = 1 // Success
+			r.Status = model.PromotionCombinationRecordStatusSuccess
 			r.EndTime = now
 		}
 		if _, err := tx.PromotionCombinationRecord.WithContext(ctx).Where(tx.PromotionCombinationRecord.ID.Eq(r.ID)).Updates(r); err != nil {
 			return err
 		}
 	}
-	// TODO: Send Success Notification if isFull
+	if isFull {
+		for _, r := range updates {
+			s.sendCombinationResultMessage(ctx, r)
+		}
+	}
 	return nil
+}
+
+func (s *combinationRecordService) sendCombinationResultMessage(ctx context.Context, record *promotion.PromotionCombinationRecord) {
+	// 构建并发送模版消息
+	_ = s.socialSvc.SendWxaSubscribeMessage(ctx, &req.SocialWxaSubscribeMessageSendReq{
+		UserID:        record.UserID,
+		UserType:      model.UserTypeMember,
+		TemplateTitle: "COMBINATION_SUCCESS",
+		Page:          "pages/order/detail?id=" + fmt.Sprintf("%d", record.OrderID),
+		Messages: map[string]interface{}{
+			"thing1": "商品拼团活动",
+			"thing2": "恭喜您拼团成功！我们将尽快为您发货。",
+		},
+	})
 }
 
 // GetCombinationRecordPageAdmin 获得拼团记录分页 (Admin)
@@ -270,14 +377,14 @@ func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.
 		return nil, err
 	}
 
-	// 2. 获取成团记录数量 (Status=1, HeadID=0 表示团长)
-	successCount, err := q.WithContext(ctx).Where(q.Status.Eq(1), q.HeadID.Eq(0)).Count()
+	// 2. 获取成团记录数量 (Status=Success, HeadID=Group 表示团长)
+	successCount, err := q.WithContext(ctx).Where(q.Status.Eq(model.PromotionCombinationRecordStatusSuccess), q.HeadID.Eq(model.PromotionCombinationRecordHeadIDGroup)).Count()
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. 获取虚拟成团记录数量 (VirtualGroup=true, HeadID=0)
-	virtualGroupCount, err := q.WithContext(ctx).Where(q.VirtualGroup.Eq(model.BitBool(true)), q.HeadID.Eq(0)).Count()
+	// 3. 获取虚拟成团记录数量 (VirtualGroup=true, HeadID=Group)
+	virtualGroupCount, err := q.WithContext(ctx).Where(q.VirtualGroup.Eq(model.BitBool(true)), q.HeadID.Eq(model.PromotionCombinationRecordHeadIDGroup)).Count()
 	if err != nil {
 		return nil, err
 	}
@@ -298,4 +405,125 @@ func (s *combinationRecordService) GetCombinationRecordByOrderId(ctx context.Con
 		s.q.PromotionCombinationRecord.UserID.Eq(userID),
 		s.q.PromotionCombinationRecord.OrderID.Eq(orderID),
 	).First()
+}
+func (s *combinationRecordService) ExpireCombinationRecord(ctx context.Context) error {
+	q := s.q.PromotionCombinationRecord
+	// 1. 查找所有过期的、进行中的团长记录
+	heads, err := q.WithContext(ctx).Where(q.HeadID.Eq(0), q.Status.Eq(model.PromotionCombinationRecordStatusInProgress), q.ExpireTime.Lt(time.Now())).Find()
+	if err != nil {
+		return err
+	}
+	if len(heads) == 0 {
+		return nil
+	}
+
+	for _, head := range heads {
+		// 校验活动是否支持虚拟成团
+		activity, err := s.activitySvc.GetCombinationActivity(ctx, head.ActivityID)
+		if err != nil {
+			continue
+		}
+		if activity.VirtualGroup {
+			if err := s.handleVirtualGroupRecord(ctx, head); err != nil {
+				// Log error?
+				continue
+			}
+		} else {
+			if err := s.handleExpireRecord(ctx, head); err != nil {
+				// Log error?
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+func (s *combinationRecordService) handleExpireRecord(ctx context.Context, head *promotion.PromotionCombinationRecord) error {
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 1. 获取所有相关的记录
+		records, err := tx.PromotionCombinationRecord.WithContext(ctx).Where(
+			tx.PromotionCombinationRecord.ID.Eq(head.ID),
+		).Or(tx.PromotionCombinationRecord.HeadID.Eq(head.ID)).Find()
+		if err != nil {
+			return err
+		}
+
+		// 2. 更新状态为已失败
+		ids := make([]int64, len(records))
+		for i, r := range records {
+			ids[i] = r.ID
+		}
+		if _, err := tx.PromotionCombinationRecord.WithContext(ctx).Where(tx.PromotionCombinationRecord.ID.In(ids...)).Update(tx.PromotionCombinationRecord.Status, model.PromotionCombinationRecordStatusFailed); err != nil {
+			return err
+		}
+
+		// 3. 取消订单并退款 (对齐 Java: tradeOrderApi.cancelPaidOrder)
+		for _, r := range records {
+			if err := s.tradeSvc.CancelPaidOrder(ctx, r.UserID, r.OrderID, trade.OrderCancelTypeCombinationClose); err != nil {
+				// 记录错误但不阻断其余订单处理
+				continue
+			}
+		}
+		return nil
+	})
+}
+
+func (s *combinationRecordService) handleVirtualGroupRecord(ctx context.Context, head *promotion.PromotionCombinationRecord) error {
+	return s.q.Transaction(func(tx *query.Query) error {
+		// 1. 获取所有相关的记录
+		records, err := tx.PromotionCombinationRecord.WithContext(ctx).Where(
+			tx.PromotionCombinationRecord.ID.Eq(head.ID),
+		).Or(tx.PromotionCombinationRecord.HeadID.Eq(head.ID)).Find()
+		if err != nil {
+			return err
+		}
+
+		// 2. 更新状态为成功
+		ids := make([]int64, len(records))
+		for i, r := range records {
+			ids[i] = r.ID
+		}
+		now := time.Now()
+		if _, err := tx.PromotionCombinationRecord.WithContext(ctx).Where(tx.PromotionCombinationRecord.ID.In(ids...)).Updates(map[string]interface{}{
+			"status":        model.PromotionCombinationRecordStatusSuccess,
+			"end_time":      &now,
+			"user_count":    head.UserSize,
+			"virtual_group": model.BitBool(true),
+		}); err != nil {
+			return err
+		}
+
+		// 3. 补全虚拟记录 (对齐 Java: CombinationActivityConvert.INSTANCE.convertVirtualRecordList)
+		lackCount := head.UserSize - len(records)
+		if lackCount > 0 {
+			virtualRecords := make([]*promotion.PromotionCombinationRecord, lackCount)
+			for i := 0; i < lackCount; i++ {
+				virtualRecords[i] = &promotion.PromotionCombinationRecord{
+					ActivityID:       head.ActivityID,
+					CombinationPrice: head.CombinationPrice,
+					SpuID:            head.SpuID,
+					SpuName:          head.SpuName,
+					PicUrl:           head.PicUrl,
+					SkuID:            head.SkuID,
+					Count:            0, // 虚拟成员不占购销量
+					UserID:           0, // 虚拟成员
+					Nickname:         "虚拟用户",
+					Avatar:           "",
+					HeadID:           head.ID,
+					Status:           model.PromotionCombinationRecordStatusSuccess,
+					OrderID:          0,
+					UserSize:         head.UserSize,
+					UserCount:        head.UserSize,
+					VirtualGroup:     model.BitBool(true),
+					StartTime:        head.StartTime,
+					EndTime:          now,
+					ExpireTime:       head.ExpireTime,
+				}
+			}
+			if err := tx.PromotionCombinationRecord.WithContext(ctx).Create(virtualRecords...); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
