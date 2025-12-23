@@ -45,9 +45,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+)
 
+import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
-
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -153,7 +154,8 @@ func InitApp() (*gin.Engine, error) {
 	payOrderService := pay.NewPayOrderService(query, payAppService, payChannelService, payClientFactory, payNotifyService, payNoRedisDAO)
 	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService, payNoRedisDAO)
 	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
-	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService)
+	socialClientService := service.NewSocialClientService(query)
+	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService, tradeOrderUpdateService, socialClientService)
 	afterSaleLogRepository := repo.NewAfterSaleLogRepository(query)
 	afterSaleLogService := trade.NewAfterSaleLogService(afterSaleLogRepository)
 	tradeConfigService := trade.NewTradeConfigService(query)
@@ -237,7 +239,6 @@ func InitApp() (*gin.Engine, error) {
 	apiAccessLogHandler := handler.NewApiAccessLogHandler(apiAccessLogService)
 	apiErrorLogService := service.NewApiErrorLogService(query)
 	apiErrorLogHandler := handler.NewApiErrorLogHandler(apiErrorLogService)
-	socialClientService := service.NewSocialClientService(query)
 	socialClientHandler := handler.NewSocialClientHandler(socialClientService, zapLogger)
 	socialUserHandler := handler.NewSocialUserHandler(socialUserService, zapLogger)
 	sensitiveWordService := service.NewSensitiveWordService(db)

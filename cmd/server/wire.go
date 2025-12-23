@@ -315,6 +315,9 @@ func InitApp() (*gin.Engine, error) {
 		deliveryClient.NewExpressClientFactory, // Added ExpressClientFactory
 		wire.Bind(new(deliveryClient.ExpressClientFactory), new(*deliveryClient.ExpressClientFactoryImpl)),
 
+		wire.Bind(new(promotionSvc.CombinationTradeOrderService), new(*tradeSvc.TradeOrderUpdateService)),
+		wire.Bind(new(promotionSvc.CombinationSocialClientService), new(*service.SocialClientService)),
+
 		payAdmin.NewPayAppHandler,
 		payAdmin.NewPayChannelHandler,
 		payAdmin.NewPayOrderHandler,
