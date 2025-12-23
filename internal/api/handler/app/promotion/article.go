@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -48,22 +49,30 @@ func (h *AppArticleHandler) GetArticlePage(c *gin.Context) {
 // GetArticle 获得文章详情
 func (h *AppArticleHandler) GetArticle(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
-	if id == 0 {
+	title := c.Query("title")
+
+	if id == 0 && title == "" {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 1. Get Detail
-	res, err := h.articleSvc.GetArticle(c, id)
+	var res *resp.ArticleRespVO
+	var err error
+	if id > 0 {
+		res, err = h.articleSvc.GetArticle(c, id)
+	} else {
+		res, err = h.articleSvc.GetLastArticleByTitle(c, title)
+	}
+
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
 
-	// 2. Increment Browse Count (Async or Sync? Sync for now as per plan/Java usually)
-	// Ignore error for view count update to avoid blocking read? Or log it?
-	// Java: articleService.addArticleBrowseCount(id);
-	_ = h.articleSvc.AddArticleBrowseCount(c, id)
+	// 2. Increment Browse Count
+	// If it was queried by title, we need the actual ID for browse count update
+	_ = h.articleSvc.AddArticleBrowseCount(c, res.ID)
 
 	response.WriteSuccess(c, res)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -18,6 +19,7 @@ type ArticleService interface {
 	GetArticle(ctx context.Context, id int64) (*resp.ArticleRespVO, error)
 	GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error)
 	GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error)
+	GetLastArticleByTitle(ctx context.Context, title string) (*resp.ArticleRespVO, error)
 	AddArticleBrowseCount(ctx context.Context, id int64) error
 }
 
@@ -44,8 +46,8 @@ func (s *articleService) CreateArticle(ctx context.Context, req req.ArticleCreat
 		BrowseCount:     req.BrowseCount, // Can set initial browse count
 		Sort:            req.Sort,
 		Status:          req.Status,
-		RecommendHot:    req.RecommendHot,
-		RecommendBanner: req.RecommendBanner,
+		RecommendHot:    model.BitBool(req.RecommendHot),
+		RecommendBanner: model.BitBool(req.RecommendBanner),
 		Content:         req.Content,
 	}
 	err := s.q.PromotionArticle.WithContext(ctx).Create(article)
@@ -71,8 +73,8 @@ func (s *articleService) UpdateArticle(ctx context.Context, req req.ArticleUpdat
 		BrowseCount:     req.BrowseCount,
 		Sort:            req.Sort,
 		Status:          req.Status,
-		RecommendHot:    req.RecommendHot,
-		RecommendBanner: req.RecommendBanner,
+		RecommendHot:    model.BitBool(req.RecommendHot),
+		RecommendBanner: model.BitBool(req.RecommendBanner),
 		Content:         req.Content,
 	})
 	return err
@@ -90,6 +92,18 @@ func (s *articleService) GetArticle(ctx context.Context, id int64) (*resp.Articl
 	article, err := s.validateArticleExists(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	return s.convertArticleToResp(article), nil
+}
+
+func (s *articleService) GetLastArticleByTitle(ctx context.Context, title string) (*resp.ArticleRespVO, error) {
+	q := s.q.PromotionArticle
+	article, err := q.WithContext(ctx).Where(q.Title.Eq(title)).Order(q.ID.Desc()).First()
+	if err != nil {
+		return nil, err
+	}
+	if article == nil {
+		return nil, errors.NewBizError(404, "文章不存在")
 	}
 	return s.convertArticleToResp(article), nil
 }
@@ -181,8 +195,8 @@ func (s *articleService) convertArticleToResp(item *promotion.PromotionArticle) 
 		BrowseCount:     item.BrowseCount,
 		Sort:            item.Sort,
 		Status:          item.Status,
-		RecommendHot:    item.RecommendHot,
-		RecommendBanner: item.RecommendBanner,
+		RecommendHot:    bool(item.RecommendHot),
+		RecommendBanner: bool(item.RecommendBanner),
 		Content:         item.Content,
 		CreateTime:      item.CreateTime,
 	}
