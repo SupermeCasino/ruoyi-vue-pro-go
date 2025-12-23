@@ -294,6 +294,7 @@ func InitApp() (*gin.Engine, error) {
 		promotionApp.NewAppDiyPageHandler,             // Added Diy Page
 		promotionApp.NewAppDiyTemplateHandler,
 		promotionApp.NewAppActivityHandler,
+		promotionApp.NewAppPointActivityHandler,
 		// WebSocket
 		ws.ProviderSet,
 		handler.NewWebSocketHandler,

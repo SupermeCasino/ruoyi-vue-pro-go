@@ -32,3 +32,14 @@ type PointProductRespVO struct {
 	Stock          int   `json:"stock"`
 	ActivityStatus int   `json:"activityStatus"`
 }
+
+// AppPointActivityRespVO 积分商城活动 Response (App)
+type AppPointActivityRespVO struct {
+	ID          int64  `json:"id"`
+	SpuID       int64  `json:"spuId"`
+	SpuName     string `json:"spuName"`
+	PicUrl      string `json:"picUrl"`
+	MarketPrice int    `json:"marketPrice"`
+	Point       int    `json:"point"`
+	Price       int    `json:"price"`
+}

@@ -64,6 +64,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appPayWalletTransactionHandler *payApp.AppPayWalletTransactionHandler,
 	appPayWalletRechargePackageHandler *payApp.AppPayWalletRechargePackageHandler,
 	appActivityHandler *promotionApp.AppActivityHandler,
+	appPointActivityHandler *promotionApp.AppPointActivityHandler,
 ) {
 	appGroup := engine.Group("/app-api")
 	{
@@ -388,6 +389,12 @@ func RegisterAppRoutes(engine *gin.Engine,
 			seckillConfigGroup := promotionGroup.Group("/seckill-config")
 			{
 				seckillConfigGroup.GET("/list", appSeckillConfigHandler.GetSeckillConfigList)
+			}
+
+			// Point Activity (Public)
+			pointActivityGroup := promotionGroup.Group("/point-activity")
+			{
+				pointActivityGroup.GET("/list-by-ids", appPointActivityHandler.GetPointActivityListByIds)
 			}
 		}
 
