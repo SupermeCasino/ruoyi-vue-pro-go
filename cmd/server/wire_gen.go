@@ -45,10 +45,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
-)
 
-import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
+
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -79,7 +78,7 @@ func InitApp() (*gin.Engine, error) {
 	authService := service.NewAuthService(query, permissionService, roleService, menuService, oAuth2TokenService, smsCodeService, loginLogService, userService, socialUserService)
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
-	tenantService := service.NewTenantService(query)
+	tenantService := service.NewTenantService(query, roleService, permissionService)
 	tenantHandler := handler.NewTenantHandler(tenantService)
 	dictService := service.NewDictService(query)
 	dictHandler := handler.NewDictHandler(dictService)

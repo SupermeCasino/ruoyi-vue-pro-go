@@ -12,6 +12,7 @@ type TenantSimpleResp struct {
 type TenantRespVO struct {
 	ID            int64     `json:"id"`
 	Name          string    `json:"name"`
+	ContactUserID int64     `json:"contactUserId"`
 	ContactName   string    `json:"contactName"`
 	ContactMobile string    `json:"contactMobile"`
 	Status        int       `json:"status"`

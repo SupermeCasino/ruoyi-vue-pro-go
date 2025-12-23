@@ -19,11 +19,17 @@ import (
 )
 
 type TenantService struct {
-	q *query.Query
+	q             *query.Query
+	roleSvc       *RoleService
+	permissionSvc *PermissionService
 }
 
-func NewTenantService(q *query.Query) *TenantService {
-	return &TenantService{q: q}
+func NewTenantService(q *query.Query, roleSvc *RoleService, permissionSvc *PermissionService) *TenantService {
+	return &TenantService{
+		q:             q,
+		roleSvc:       roleSvc,
+		permissionSvc: permissionSvc,
+	}
 }
 
 // CreateTenant 创建租户
@@ -52,18 +58,13 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 		}
 		tenantId = tenant.ID
 
-		// 2.2 创建租户管理员 (需要切换到该租户上下文或显式设置 TenantID)
-		// 注意: 直接使用 model 进行插入，绕过 Service 的 Context Tenant 检查 (如果有)
-		// 但通常 SystemUser表有 tenant_id 字段。
-		// 这里我们需要生成一个管理员用户
-
-		// Role
+		// 角色
 		role := &model.SystemRole{
 			Name:   "租户管理员",
 			Code:   "tenant_admin",
 			Sort:   0,
-			Status: 0, // Enabled
-			Type:   2, // Built-in or specific type
+			Status: 0, // 启用
+			Type:   2, // 自定义角色
 			Remark: "系统自动生成",
 		}
 		role.TenantID = tenantId
@@ -71,7 +72,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			return err
 		}
 
-		// User
+		// 用户
 		hashedPwd, err := utils.HashPassword(req.Password)
 		if err != nil {
 			return err
@@ -81,44 +82,16 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			Password: hashedPwd,
 			Nickname: req.ContactName,
 			Mobile:   req.ContactMobile,
-			Status:   0, // Enabled
+			Status:   0, // 启用
 		}
 		user.TenantID = tenantId
 		if err := tx.SystemUser.WithContext(ctx).Create(user); err != nil {
 			return err
 		}
 
-		// UserRole
-		userRole := &model.SystemUserRole{
-			UserID: user.ID,
-			RoleID: role.ID,
-		}
-		userRole.TenantID = tenantId
-		// check if UserRole has TenantID
-		// Assume yes for now, usually multi-tenant systems propagate it.
-		// If not, remove it.
-		// Let's assume standard GORM model without explicit tenant_id in struct if plugin handles it?
-		// But here we are admin creating for other tenant.
-		// We should use `tx.SystemUserRole.WithContext(ctx)` but we might need to be careful if ctx has current admin's tenant id.
-		// Usually creating tenant is done by Platform Admin (TenantID=0 or 1).
-		// The new records must have New Tenant ID.
-
-		// If using GORM MultiTenant plugin, we usually need `SetTenantId` in context or disable hooks.
-		// Since we are setting fields manually, if plugin overwrites them, it's bad.
-		// Assuming we populate fields manually and simple Create works.
-		if err := tx.SystemUserRole.WithContext(ctx).Create(userRole); err != nil {
-			return err
-		}
-
-		// Assign all menus from package to this role?
-		// Java: assignRoleMenu(tenantId, roleId, packageId)
-		// We need to query package menus and insert into RoleMenu (SystemRoleMenu)
-
-		// Get Package Menus
+		// 赋予套餐中的菜单权限
+		// 获取套餐信息
 		var pkg model.SystemTenantPackage
-		// Use generic GORM query via existing model's DO or generic DB access
-		// Assume any model DO has UnderlyingDB or use s.q.Db if accessible (it is not exposed directly usually)
-		// Use tx.SystemTenant.WithContext(ctx).UnderlyingDB()
 		if err := tx.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", req.PackageID).First(&pkg).Error; err != nil {
 			return err
 		}
@@ -141,6 +114,11 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			}
 		}
 
+		// 2.3 更新租户的联系人用户ID (ContactUserID)
+		if _, err := tx.SystemTenant.WithContext(ctx).Where(tx.SystemTenant.ID.Eq(tenantId)).Update(tx.SystemTenant.ContactUserID, user.ID); err != nil {
+			return err
+		}
+
 		return nil
 	})
 
@@ -151,7 +129,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateReq) error {
 	// 1. 校验存在
 	t := s.q.SystemTenant
-	_, err := t.WithContext(ctx).Where(t.ID.Eq(req.ID)).First()
+	tenant, err := t.WithContext(ctx).Where(t.ID.Eq(req.ID)).First()
 	if err != nil {
 		return errors.New("租户不存在")
 	}
@@ -162,13 +140,7 @@ func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateR
 	}
 
 	// 3. 更新
-	// Check package change? If package changed, might need to update role menus?
-	// Java: updateTenantRoleMenu(id, packageId) if package changed.
-	// For MVP strict alignment, let's just update fields first. Logic for menu sync is complex.
-	// But User requested strict alignment.
-	// Let's implement basic update. Menu sync can be a separate method or strictly added if time permits.
-
-	_, err = t.WithContext(ctx).Where(t.ID.Eq(req.ID)).Updates(&model.SystemTenant{
+	tenantObj := &model.SystemTenant{
 		Name:          req.Name,
 		ContactName:   req.ContactName,
 		ContactMobile: req.ContactMobile,
@@ -177,15 +149,34 @@ func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateR
 		AccountCount:  int32(req.AccountCount),
 		ExpireDate:    time.Unix(req.ExpireDate, 0),
 		Websites:      req.Domain,
-	})
-	return err
+	}
+	_, err = t.WithContext(ctx).Where(t.ID.Eq(req.ID)).Updates(tenantObj)
+	if err != nil {
+		return err
+	}
+
+	// 4. 如果套餐发生变化，则修改其角色的权限
+	if tenant.PackageID != req.PackageID {
+		// 获得套餐菜单
+		var pkg model.SystemTenantPackage
+		if err := s.q.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", req.PackageID).First(&pkg).Error; err != nil {
+			return err
+		}
+		var menuIds []int64
+		if len(pkg.MenuIDs) > 0 {
+			_ = json.Unmarshal([]byte(pkg.MenuIDs), &menuIds)
+		}
+		if err := s.updateTenantRoleMenu(ctx, req.ID, menuIds); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // DeleteTenant 删除租户
 func (s *TenantService) DeleteTenant(ctx context.Context, id int64) error {
 	t := s.q.SystemTenant
-	// 1. Check if built-in or reserved?
-	// 2. Delete
 	_, err := t.WithContext(ctx).Where(t.ID.Eq(id)).Delete()
 	return err
 }
@@ -200,6 +191,7 @@ func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRe
 	return &resp.TenantRespVO{
 		ID:            tenant.ID,
 		Name:          tenant.Name,
+		ContactUserID: tenant.ContactUserID,
 		ContactName:   tenant.ContactName,
 		ContactMobile: tenant.ContactMobile,
 		Status:        int(tenant.Status),
@@ -250,6 +242,7 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 		data = append(data, &resp.TenantRespVO{
 			ID:            item.ID,
 			Name:          item.Name,
+			ContactUserID: item.ContactUserID,
 			ContactName:   item.ContactName,
 			ContactMobile: item.ContactMobile,
 			Status:        int(item.Status),
@@ -301,12 +294,13 @@ func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExport
 		data = append(data, &resp.TenantRespVO{
 			ID:            item.ID,
 			Name:          item.Name,
+			ContactUserID: item.ContactUserID,
 			ContactName:   item.ContactName,
 			ContactMobile: item.ContactMobile,
 			Status:        int(item.Status),
-			Domain:        item.Domain,
+			Domain:        item.Websites,
 			PackageID:     item.PackageID,
-			ExpireDate:    item.ExpireDate.UnixMilli(),
+			ExpireDate:    item.ExpireDate.UnixMilli(), // 毫秒级时间戳
 			AccountCount:  int(item.AccountCount),
 			CreateTime:    item.CreateTime,
 		})
@@ -350,15 +344,13 @@ func (s *TenantService) GetTenantSimpleList(ctx context.Context) ([]resp.TenantS
 
 // GetTenantByWebsite 根据域名查询租户
 func (s *TenantService) GetTenantByWebsite(ctx context.Context, website string) (*resp.TenantSimpleResp, error) {
-	// 注意：数据库中可能没有 websites 列，需要优雅降级
-	// 如果数据库不支持此查询，直接返回 nil（表示未找到）
 	tenantRepo := s.q.SystemTenant
 	list, err := tenantRepo.WithContext(ctx).Find()
 	if err != nil {
-		return nil, nil // 查询失败，返回 nil，不报错
+		return nil, nil
 	}
 
-	// 在应用层进行过滤（兼容没有 websites 列的情况）
+	// 应用层过滤
 	for _, t := range list {
 		if t.Status == 0 && strings.Contains(t.Websites, website) {
 			return &resp.TenantSimpleResp{
@@ -367,7 +359,7 @@ func (s *TenantService) GetTenantByWebsite(ctx context.Context, website string) 
 			}, nil
 		}
 	}
-	return nil, nil // 未找到返回 nil，不报错
+	return nil, nil // 未找到返回空
 }
 
 // GetTenantIdByName 根据租户名获取租户ID
@@ -413,19 +405,18 @@ func (s *TenantService) HandleTenantMenu(ctx context.Context, handler func(allow
 		return err
 	}
 
-	// 3. 如果是系统租户 (PackageID=0), 允许所有菜单 (传入 nil)
-	// Java: isSystemTenant(tenant) => packageId == 0
+	// 3. 如果是系统租户 (PackageID=0), 允许所有菜单
 	if tenant.PackageID == 0 {
-		handler(nil) // nil means all allowed
+		handler(nil) // nil 表示允许所有
 		return nil
 	}
 
 	// 4. 读取租户套餐
 	var pkg model.SystemTenantPackage
 	if err := s.q.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", tenant.PackageID).First(&pkg).Error; err != nil {
-		// 如果套餐不存在，当作无权限，传入空数组
+		// 如果套餐不存在，当作无权限处理
 		handler([]int64{})
-		return nil // 这里不返回错误，而是当作空权限处理，或者也可以返回 err
+		return nil
 	}
 
 	// 5. 解析菜单ID列表
@@ -438,5 +429,38 @@ func (s *TenantService) HandleTenantMenu(ctx context.Context, handler func(allow
 
 	// 6. 执行处理
 	handler(allowedMenuIds)
+	return nil
+}
+
+// updateTenantRoleMenu 更新租户下所有角色的菜单权限
+func (s *TenantService) updateTenantRoleMenu(ctx context.Context, tenantId int64, menuIds []int64) error {
+	// 通过 Q 的 Where 条件保证租户隔离
+	r := s.q.SystemRole
+	roles, err := r.WithContext(ctx).Where(r.TenantID.Eq(tenantId)).Find()
+	if err != nil {
+		return err
+	}
+
+	for _, role := range roles {
+		if role.Code == "tenant_admin" {
+			// 超级管理员：直接分配套餐的所有功能
+			if err := s.permissionSvc.AssignRoleMenu(ctx, role.ID, menuIds); err != nil {
+				return err
+			}
+		} else {
+			// 普通用户：裁剪掉超出套餐功能的权限 (交集)
+			// 1. 获取角色当前拥有的菜单
+			roleMenuIds, err := s.permissionSvc.GetRoleMenuListByRoleId(ctx, []int64{role.ID})
+			if err != nil {
+				return err
+			}
+			// 2. 取交集
+			newRoleMenuIds := utils.Intersect(roleMenuIds, menuIds)
+			// 3. 重新分配
+			if err := s.permissionSvc.AssignRoleMenu(ctx, role.ID, newRoleMenuIds); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
