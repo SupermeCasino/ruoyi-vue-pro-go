@@ -49,6 +49,8 @@ const (
 	OrderCancelTypeAdmin = 2
 	// OrderCancelTypeSystem 系统取消
 	OrderCancelTypeSystem = 3
+	// OrderCancelTypeCombinationClose 拼团关闭取消
+	OrderCancelTypeCombinationClose = 4
 )
 
 const (
