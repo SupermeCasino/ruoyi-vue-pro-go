@@ -36,6 +36,7 @@ type TradeOrderUpdateService struct {
 }
 
 func NewTradeOrderUpdateService(
+	q *query.Query,
 	skuSvc *product.ProductSkuService,
 	cartSvc *CartService,
 	priceSvc *TradePriceService,
@@ -45,7 +46,7 @@ func NewTradeOrderUpdateService(
 	noDAO *tradeRepo.TradeNoRedisDAO,
 ) *TradeOrderUpdateService {
 	return &TradeOrderUpdateService{
-		q:          query.Q,
+		q:          q,
 		skuSvc:     skuSvc,
 		cartSvc:    cartSvc,
 		priceSvc:   priceSvc,

@@ -17,9 +17,9 @@ type CouponUserService struct {
 	q *query.Query
 }
 
-func NewCouponUserService() *CouponUserService {
+func NewCouponUserService(q *query.Query) *CouponUserService {
 	return &CouponUserService{
-		q: query.Q,
+		q: q,
 	}
 }
 

@@ -341,7 +341,6 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 	// 构建更新对象，支持所有字段
 	updateUser := &member.MemberUser{
 		Mobile:   r.Mobile,
-		Email:    r.Email,
 		Status:   r.Status,
 		Nickname: r.Nickname,
 		Avatar:   r.Avatar,
@@ -360,7 +359,7 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 	}
 
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(r.ID)).
-		Select(u.Mobile, u.Email, u.Status, u.Nickname, u.Avatar, u.Name, u.Sex, u.AreaID, u.Birthday, u.Mark, u.TagIds, u.LevelID, u.GroupID).
+		Select(u.Mobile, u.Status, u.Nickname, u.Avatar, u.Name, u.Sex, u.AreaID, u.Birthday, u.Mark, u.TagIds, u.LevelID, u.GroupID).
 		Updates(updateUser)
 	return err
 }

@@ -21,9 +21,9 @@ type PointActivityService struct {
 	skuSvc *productSvc.ProductSkuService
 }
 
-func NewPointActivityService(spuSvc *productSvc.ProductSpuService, skuSvc *productSvc.ProductSkuService) *PointActivityService {
+func NewPointActivityService(q *query.Query, spuSvc *productSvc.ProductSpuService, skuSvc *productSvc.ProductSkuService) *PointActivityService {
 	return &PointActivityService{
-		q:      query.Q,
+		q:      q,
 		spuSvc: spuSvc,
 		skuSvc: skuSvc,
 	}
