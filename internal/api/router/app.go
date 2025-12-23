@@ -17,6 +17,7 @@ import (
 func RegisterAppRoutes(engine *gin.Engine,
 	// System
 	tenantHandler *handler.TenantHandler,
+	areaHandler *handler.AreaHandler,
 	// Member
 	appAuthHandler *memberApp.AppAuthHandler,
 	appMemberUserHandler *memberApp.AppMemberUserHandler,
@@ -75,6 +76,13 @@ func RegisterAppRoutes(engine *gin.Engine,
 			tenantGroup := systemGroup.Group("/tenant")
 			{
 				tenantGroup.GET("/get-by-website", tenantHandler.GetTenantByWebsite)
+			}
+
+			// Area (Public - 对齐 Java)
+			areaGroup := systemGroup.Group("/area")
+			{
+				areaGroup.GET("/tree", areaHandler.GetAreaTree)
+				areaGroup.GET("/get-by-ip", areaHandler.GetAreaByIP)
 			}
 		}
 

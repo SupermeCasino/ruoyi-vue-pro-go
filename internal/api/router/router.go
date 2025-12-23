@@ -252,9 +252,11 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	)
 
 	// App 模块 (移动端)
+	areaHandler := handler.NewAreaHandler() // 创建 AreaHandler
 	RegisterAppRoutes(r,
 		// System
 		tenantHandler,
+		areaHandler,
 		// Member
 		appAuthHandler, appMemberUserHandler, appMemberAddressHandler,
 		appMemberPointRecordHandler, appMemberSignInRecordHandler,
