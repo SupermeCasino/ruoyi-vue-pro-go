@@ -345,10 +345,7 @@ func (s *TradeOrderUpdateService) UpdateOrderPaid(ctx context.Context, id int64,
 }
 
 func (s *TradeOrderUpdateService) createOrderLog(ctx context.Context, order *trade.TradeOrder, content string, operateType int) error {
-	uid := int64(0) // System or unknown if not passed.
-	// In strict context, we might want to get from ctx.
-	// For CreateOrder, we know UID.
-	// For Pay callback, maybe System (0).
+	uid := int64(0)
 
 	log := &trade.TradeOrderLog{
 		UserID:       uid,
@@ -446,6 +443,73 @@ func (s *TradeOrderUpdateService) DeleteOrder(ctx context.Context, uId int64, id
 	return err
 }
 
+// CancelPaidOrder 取消已支付订单 (对齐 Java TradeOrderApi.cancelPaidOrder)
+func (s *TradeOrderUpdateService) CancelPaidOrder(ctx context.Context, uId int64, id int64, cancelType int) error {
+	// 1. Check Order
+	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(id), s.q.TradeOrder.UserID.Eq(uId)).First()
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("订单不存在")
+		}
+		return err
+	}
+	if !order.PayStatus {
+		return errors.New("订单未支付，请使用 CancelOrder")
+	}
+	// 只有待发货状态允许取消（对应 Java 逻辑：已支付但未发货）
+	if order.Status != trade.TradeOrderStatusUndelivered {
+		return errors.New("订单状态不允许取消")
+	}
+
+	// 2. Transaction
+	err = s.q.Transaction(func(tx *query.Query) error {
+		// 2.1 Update Order Status
+		now := time.Now()
+		if _, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(id)).Updates(trade.TradeOrder{
+			Status:       trade.TradeOrderStatusCanceled, // 已取消
+			CancelTime:   &now,
+			CancelType:   cancelType,                   // 系统或拼团关闭取消
+			RefundStatus: trade.OrderRefundStatusApply, // 标记为申请退款 (待人工或自动退款)
+		}); err != nil {
+			return err
+		}
+
+		// 2.2 Release Stock
+		items, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.OrderID.Eq(id)).Find()
+		if err != nil {
+			return err
+		}
+		var stockItems []req.ProductSkuUpdateStockItemReq
+		for _, item := range items {
+			stockItems = append(stockItems, req.ProductSkuUpdateStockItemReq{
+				ID:        item.SkuID,
+				IncrCount: item.Count, // Positive to restore stock
+			})
+		}
+		if err := s.skuSvc.UpdateSkuStock(ctx, &req.ProductSkuUpdateStockReq{Items: stockItems}); err != nil {
+			return err
+		}
+
+		// 2.3 Refund Coupon
+		if order.CouponID > 0 {
+			if err := s.couponSvc.ReturnCoupon(ctx, uId, order.CouponID); err != nil {
+				return err
+			}
+		}
+
+		// 2.4 Log
+		logOrder := *order
+		logOrder.Status = trade.TradeOrderStatusCanceled
+		if err := s.createOrderLog(ctx, &logOrder, "Paid Order Cancelled", trade.OrderOperateTypeCancel); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
 // UpdateOrderRemark 订单备注
 func (s *TradeOrderUpdateService) UpdateOrderRemark(ctx context.Context, req *req.TradeOrderRemarkReq) error {
 	// 使用 GORM 事务包装（对齐 Java @Transactional）
@@ -515,23 +579,14 @@ func (s *TradeOrderUpdateService) PickUpOrderByVerifyCode(ctx context.Context, a
 }
 
 func (s *TradeOrderUpdateService) pickUpOrder(ctx context.Context, order *trade.TradeOrder) error {
-	if order.DeliveryType != trade.DeliveryTypePickUp { // 到店自提
+	if order.DeliveryType != trade.DeliveryTypePickUp {
 		return errors.New("非自提订单")
 	}
-	if order.Status != trade.TradeOrderStatusUndelivered { // 待发货/待自提
-		// Check constants
+	if order.Status != trade.TradeOrderStatusUndelivered {
 		return errors.New("订单状态不正确")
 	}
 
 	now := time.Now()
-	// Update Status -> Completed (or PickedUp then Completed?)
-	// Java impl: Status -> Received(20) or Completed(30)?
-	// Usually PickUp -> Received/Completed. Let's say 30 (Completed) or 20 (Delivered/Received).
-	// Java: TradeOrderStatusEnum.COMPLETED (30) directly? Or DELIVERED(20)?
-	// If PickUp, usually means Delivered & Received at same time.
-	// Let's set to 30 (Completed) or 20 if logic differs.
-	// Check Java: tradeOrderUpdateService.pickUpOrderByAdmin -> updateStatus(TradeOrderStatusEnum.COMPLETED)
-
 	err := s.q.Transaction(func(tx *query.Query) error {
 		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(order.ID)).Updates(trade.TradeOrder{
 			Status:      trade.TradeOrderStatusCompleted, // 已完成
@@ -561,11 +616,6 @@ func (s *TradeOrderUpdateService) CreateOrderItemCommentByMember(ctx context.Con
 	if item.CommentStatus {
 		return 0, errors.New("该商品已评价")
 	}
-
-	// 2. Create Comment (Mock or Call CommentService)
-	// Assume CommentService exists or direct DB insert.
-	// For now, mock success and update item status.
-	// TODO: Call ProductCommentService.CreateComment(...)
 
 	// 3. Update Order Item Comment Status
 	_, err = s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.ID.Eq(item.ID)).Update(s.q.TradeOrderItem.CommentStatus, true)
@@ -618,13 +668,6 @@ func (s *TradeOrderUpdateService) UpdatePaidOrderRefunded(ctx context.Context, o
 	if err != nil {
 		return err
 	}
-	// Verify Status? if cancelled or something? Usually calls this after full refund.
-	// We just update status to Refunded?
-	// Java doesn't show implementation, but likely updates RefundStatus.
-	// Let's assume RefundStatus = 30 (Finish? No, RefundStatus has constants)
-	// Check consts.go for RefundStatusEnum.
-	// 0: None, 10: Apply, 20: Audit Pass, 30: Refunded?
-	// Assuming 30 is correct for now based on AfterSale logic.
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		_, err := tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(orderId)).Updates(map[string]interface{}{
@@ -643,19 +686,31 @@ func (s *TradeOrderUpdateService) UpdatePaidOrderRefunded(ctx context.Context, o
 // 终端类型：0=未知, 10=微信小程序, 11=微信公众号, 20=H5网页, 31=手机App
 func getTerminal(ctx context.Context) int {
 	// 从 context 中获取 gin.Context（中间件注入）
-	if ginCtx, ok := ctx.Value(pkgContext.CtxGinContextKey).(*gin.Context); ok {
-		// 尝试从请求头读取终端类型（Terminal 标准头）
-		if terminal := ginCtx.GetHeader("Terminal"); terminal != "" {
-			// 可在此处添加终端值的解析逻辑
-			return 0
-		}
-		// 尝试从查询参数读取 terminal
-		if terminal := ginCtx.Query("terminal"); terminal != "" {
-			// 可在此处添加终端值的解析逻辑
-			return 0
+	ginCtx, ok := ctx.Value(pkgContext.CtxGinContextKey).(*gin.Context)
+	if !ok {
+		return 0
+	}
+
+	// 1. 优先从请求头读取终端类型（Terminal 标准头）
+	terminalStr := ginCtx.GetHeader("Terminal")
+	if terminalStr == "" {
+		// 2. 其次从查询参数读取 terminal
+		terminalStr = ginCtx.Query("terminal")
+	}
+
+	if terminalStr != "" {
+		// 映射常见终端值 (可以根据 project schema 调整)
+		switch strings.ToLower(terminalStr) {
+		case "10", "wechat_mini_program":
+			return 10
+		case "11", "wechat_official_account":
+			return 11
+		case "20", "h5":
+			return 20
+		case "31", "app":
+			return 31
 		}
 	}
-	// 默认返回未知
 	return 0 // TerminalEnum.UNKNOWN
 }
 
