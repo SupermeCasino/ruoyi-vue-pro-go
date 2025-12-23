@@ -33,7 +33,7 @@ SystemUser (用户表)
 ├── Mobile: 手机号
 ├── Status: 状态 (0=启用, 1=禁用)
 ├── TenantID: 租户ID
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 SystemRole (角色表)
 ├── ID: 角色ID
@@ -222,7 +222,7 @@ MemberUser (会员用户表)
 ├── Points: 积分
 ├── Balance: 余额
 ├── Status: 状态
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 MemberLevel (会员等级表)
 ├── ID: 等级ID
@@ -409,7 +409,7 @@ ProductSPU (商品SPU表 - 标准产品单元)
 ├── Pictures: 图片列表 (JSON)
 ├── Price: 价格
 ├── Status: 状态
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 ProductSKU (商品SKU表 - 库存单位)
 ├── ID: SKUID
@@ -600,7 +600,7 @@ TradeCart (购物车表)
 ├── SKUID: SKUID
 ├── Quantity: 数量
 ├── Selected: 是否选中
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 TradeOrder (订单表)
 ├── ID: 订单ID
@@ -614,7 +614,7 @@ TradeOrder (订单表)
 ├── ReceiveTime: 收货时间
 ├── CancelTime: 取消时间
 ├── CancelReason: 取消原因
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 TradeOrderItem (订单项表)
 ├── ID: 项ID
@@ -634,7 +634,7 @@ TradeAfterSale (售后表)
 ├── Reason: 原因
 ├── Status: 状态 (1=待审核, 2=已同意, 3=待退货, 4=已收货, 5=已完成, 6=已拒绝)
 ├── RefundAmount: 退款金额
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 DeliveryExpress (快递公司表)
 ├── ID: 快递ID
@@ -876,7 +876,7 @@ PayOrder (支付订单表)
 ├── Status: 状态 (1=待支付, 2=已支付, 3=支付失败, 4=已关闭)
 ├── PaymentTime: 支付时间
 ├── ChannelOrderNo: 渠道订单号
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 PayRefund (退款表)
 ├── ID: 退款ID
@@ -886,7 +886,7 @@ PayRefund (退款表)
 ├── Reason: 退款原因
 ├── Status: 状态 (1=待退款, 2=已退款, 3=退款失败)
 ├── RefundTime: 退款时间
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 PayNotify (支付回调表)
 ├── ID: 回调ID
@@ -1275,7 +1275,7 @@ BrokerageUser (分销商表)
 ├── AvailableBrokerage: 可用佣金
 ├── WithdrawnBrokerage: 已提现佣金
 ├── Status: 状态
-└── CreatedAt/UpdatedAt: 时间戳
+└── CreatedAt/UpdateTime: 时间戳
 
 BrokerageRecord (佣金记录表)
 ├── ID: 记录ID

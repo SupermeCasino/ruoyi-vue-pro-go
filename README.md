@@ -692,7 +692,7 @@ type User struct {
     Username  string `gorm:"column:username;type:varchar(100)"`     // 用户名
     Email     string `gorm:"column:email;type:varchar(100)"`        // 邮箱
     CreatedAt time.Time `gorm:"column:created_at;type:datetime"`   // 创建时间
-    UpdatedAt time.Time `gorm:"column:updated_at;type:datetime"`   // 更新时间
+    UpdateTime time.Time `gorm:"column:updated_at;type:datetime"`   // 更新时间
 }
 ```
 

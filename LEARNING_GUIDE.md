@@ -1030,7 +1030,7 @@ type MyEntity struct {
     Name      string    `gorm:"column:name;type:varchar(100)"`
     Status    int32     `gorm:"column:status;type:int"`
     CreatedAt time.Time `gorm:"column:created_at;type:datetime"`
-    UpdatedAt time.Time `gorm:"column:updated_at;type:datetime"`
+    UpdateTime time.Time `gorm:"column:updated_at;type:datetime"`
 }
 
 func (MyEntity) TableName() string {
