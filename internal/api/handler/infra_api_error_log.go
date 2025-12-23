@@ -58,7 +58,7 @@ func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
 			ProcessStatus:             log.ProcessStatus,
 			ProcessTime:               log.ProcessTime,
 			ProcessUserID:             log.ProcessUserID,
-			CreateTime:                log.CreatedAt,
+			CreateTime:                log.CreateTime,
 		}
 	}
 

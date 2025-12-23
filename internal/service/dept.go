@@ -109,7 +109,7 @@ func (s *DeptService) GetDept(ctx context.Context, id int64) (*resp.DeptRespVO, 
 		Phone:        item.Phone,
 		Email:        item.Email,
 		Status:       item.Status,
-		CreateTime:   item.CreatedAt,
+		CreateTime:   item.CreateTime,
 	}, nil
 }
 
@@ -140,7 +140,7 @@ func (s *DeptService) GetDeptList(ctx context.Context, req *req.DeptListReq) ([]
 			Phone:        item.Phone,
 			Email:        item.Email,
 			Status:       item.Status,
-			CreateTime:   item.CreatedAt,
+			CreateTime:   item.CreateTime,
 		})
 	}
 	return res, nil

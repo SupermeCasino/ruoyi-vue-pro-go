@@ -438,7 +438,7 @@ func (s *ProductSpuService) convertResp(spu *product.ProductSpu, skus []*product
 		SalesCount:         spu.SalesCount,
 		VirtualSalesCount:  spu.VirtualSalesCount,
 		BrowseCount:        spu.BrowseCount,
-		CreatedAt:          spu.CreatedAt,
+		CreateTime:          spu.CreateTime,
 		Skus:               skuResps,
 	}
 }

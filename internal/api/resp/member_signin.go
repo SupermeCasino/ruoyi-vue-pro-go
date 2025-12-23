@@ -20,7 +20,7 @@ type MemberSignInRecordResp struct {
 	Day        int       `json:"day"`
 	Point      int       `json:"point"`
 	Experience int       `json:"experience"`
-	CreatedAt  time.Time `json:"createTime"`
+	CreateTime  time.Time `json:"createTime"`
 }
 
 // AppMemberSignInRecordResp App签到记录响应
@@ -29,7 +29,7 @@ type AppMemberSignInRecordResp struct {
 	Day        int       `json:"day"`
 	Point      int       `json:"point"`
 	Experience int       `json:"experience"`
-	CreatedAt  time.Time `json:"createTime"`
+	CreateTime  time.Time `json:"createTime"`
 }
 
 // AppMemberSignInRecordSummaryResp App签到统计响应

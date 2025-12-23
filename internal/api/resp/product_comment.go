@@ -26,7 +26,7 @@ type ProductCommentResp struct {
 	ReplyUserID       int64                    `json:"replyUserId"`
 	ReplyContent      string                   `json:"replyContent"`
 	ReplyTime         *time.Time               `json:"replyTime"`
-	CreatedAt         time.Time                `json:"createTime"`
+	CreateTime         time.Time                `json:"createTime"`
 }
 
 // AppProductCommentResp 商品评价 App Response
@@ -39,5 +39,5 @@ type AppProductCommentResp struct {
 	PicURLs       []string                 `json:"picUrls"`
 	ReplyContent  string                   `json:"replyContent"`
 	SkuProperties []ProductSkuPropertyResp `json:"skuProperties"`
-	CreatedAt     time.Time                `json:"createTime"`
+	CreateTime     time.Time                `json:"createTime"`
 }

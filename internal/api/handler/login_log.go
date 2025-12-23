@@ -45,7 +45,7 @@ func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
 			Result:     log.Result,
 			UserIP:     log.UserIP,
 			UserAgent:  log.UserAgent,
-			CreateTime: log.CreatedAt,
+			CreateTime: log.CreateTime,
 		}
 	}
 

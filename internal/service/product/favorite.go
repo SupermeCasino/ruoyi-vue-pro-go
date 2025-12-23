@@ -95,7 +95,7 @@ func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.Pro
 			ID:        item.ID,
 			UserID:    item.UserID,
 			SpuID:     item.SpuID,
-			CreatedAt: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
 			r.Name = spu.Name
@@ -154,7 +154,7 @@ func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId 
 		r := resp.AppFavoriteResp{
 			ID:        item.ID,
 			SpuID:     item.SpuID,
-			CreatedAt: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
 			r.SpuName = spu.Name

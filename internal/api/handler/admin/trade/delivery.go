@@ -89,7 +89,7 @@ func (h *DeliveryExpressHandler) GetDeliveryExpress(c *gin.Context) {
 		Logo:       express.Logo,
 		Sort:       express.Sort,
 		Status:     express.Status,
-		CreateTime: express.CreatedAt,
+		CreateTime: express.CreateTime,
 	})
 }
 
@@ -117,7 +117,7 @@ func (h *DeliveryExpressHandler) GetDeliveryExpressPage(c *gin.Context) {
 			Logo:       item.Logo,
 			Sort:       item.Sort,
 			Status:     item.Status,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 	}
 
@@ -145,7 +145,7 @@ func (h *DeliveryExpressHandler) GetSimpleDeliveryExpressList(c *gin.Context) {
 			Logo:       item.Logo,
 			Sort:       item.Sort,
 			Status:     item.Status,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 	}
 	response.WriteSuccess(c, res)
@@ -178,7 +178,7 @@ func (h *DeliveryExpressHandler) ExportDeliveryExpress(c *gin.Context) {
 			Logo:       item.Logo,
 			Sort:       item.Sort,
 			Status:     item.Status,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 	}
 
@@ -270,7 +270,7 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
 		Latitude:      store.Latitude,
 		Longitude:     store.Longitude,
 		Status:        store.Status,
-		CreateTime:    store.CreatedAt,
+		CreateTime:    store.CreateTime,
 	})
 }
 
@@ -304,7 +304,7 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 			Latitude:      item.Latitude,
 			Longitude:     item.Longitude,
 			Status:        item.Status,
-			CreateTime:    item.CreatedAt,
+			CreateTime:    item.CreateTime,
 		}
 	}
 
@@ -338,7 +338,7 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 			Latitude:      item.Latitude,
 			Longitude:     item.Longitude,
 			Status:        item.Status,
-			CreateTime:    item.CreatedAt,
+			CreateTime:    item.CreateTime,
 		}
 	}
 	response.WriteSuccess(c, res)
@@ -455,7 +455,7 @@ func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.C
 			Name:       item.Name,
 			ChargeMode: item.ChargeMode,
 			Sort:       item.Sort,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 	}
 

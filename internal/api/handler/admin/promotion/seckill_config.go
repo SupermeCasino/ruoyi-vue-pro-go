@@ -116,7 +116,7 @@ func (h *SeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
 			EndTime:       v.EndTime,
 			SliderPicUrls: v.SliderPicUrls,
 			Status:        v.Status,
-			CreateTime:    v.CreatedAt,
+			CreateTime:    v.CreateTime,
 		})
 	}
 	response.WriteSuccess(c, respList)

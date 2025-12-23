@@ -54,6 +54,6 @@ func convertTransactionResp(item *pay.PayWalletTransaction) *resp.PayWalletTrans
 		Title:      item.Title,
 		Price:      item.Price,
 		Balance:    item.Balance,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

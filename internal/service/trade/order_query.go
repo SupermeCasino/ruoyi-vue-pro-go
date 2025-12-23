@@ -224,5 +224,5 @@ func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.Tra
 
 // GetOrderLogListByOrderId 获得交易订单日志列表
 func (s *TradeOrderQueryService) GetOrderLogListByOrderId(ctx context.Context, orderId int64) ([]*trade.TradeOrderLog, error) {
-	return s.q.TradeOrderLog.WithContext(ctx).Where(s.q.TradeOrderLog.OrderID.Eq(orderId)).Order(s.q.TradeOrderLog.CreatedAt.Desc()).Find()
+	return s.q.TradeOrderLog.WithContext(ctx).Where(s.q.TradeOrderLog.OrderID.Eq(orderId)).Order(s.q.TradeOrderLog.CreateTime.Desc()).Find()
 }

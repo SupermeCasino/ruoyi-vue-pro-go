@@ -52,7 +52,7 @@ func (h *MemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 			Day:        item.Day,
 			Point:      item.Point,
 			Experience: item.Experience,
-			CreatedAt:  item.CreatedAt,
+			CreateTime:  item.CreateTime,
 		}
 	})
 

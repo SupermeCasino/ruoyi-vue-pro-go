@@ -16,7 +16,7 @@ type AppBrokerageWithdrawRespVO struct {
 	AuditReason string     `json:"auditReason"`
 	AuditTime   *time.Time `json:"auditTime"`
 	Remark      string     `json:"remark"`
-	CreatedAt   time.Time  `json:"createTime"`
+	CreateTime   time.Time  `json:"createTime"`
 	TypeName    string     `json:"typeName"`
 	StatusName  string     `json:"statusName"`
 

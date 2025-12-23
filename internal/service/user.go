@@ -312,7 +312,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 			Avatar:     user.Avatar,
 			Status:     user.Status,
 			LoginIP:    user.LoginIP,
-			CreateTime: user.CreatedAt,
+			CreateTime: user.CreateTime,
 		},
 		Roles: roles,
 		Posts: posts,
@@ -343,10 +343,10 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 		qb = qb.Where(u.DeptID.In(deptIds...))
 	}
 	if req.CreateTimeGe != nil {
-		qb = qb.Where(u.CreatedAt.Gte(*req.CreateTimeGe))
+		qb = qb.Where(u.CreateTime.Gte(*req.CreateTimeGe))
 	}
 	if req.CreateTimeLe != nil {
-		qb = qb.Where(u.CreatedAt.Lte(*req.CreateTimeLe))
+		qb = qb.Where(u.CreateTime.Lte(*req.CreateTimeLe))
 	}
 
 	total, err := qb.Count()
@@ -372,7 +372,7 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 			Avatar:     item.Avatar,
 			Status:     item.Status,
 			LoginIP:    item.LoginIP,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		})
 	}
 
@@ -429,10 +429,10 @@ func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) (
 		qb = qb.Where(u.DeptID.Eq(req.DeptID))
 	}
 	if req.CreateTimeGe != nil {
-		qb = qb.Where(u.CreatedAt.Gte(*req.CreateTimeGe))
+		qb = qb.Where(u.CreateTime.Gte(*req.CreateTimeGe))
 	}
 	if req.CreateTimeLe != nil {
-		qb = qb.Where(u.CreatedAt.Lte(*req.CreateTimeLe))
+		qb = qb.Where(u.CreateTime.Lte(*req.CreateTimeLe))
 	}
 
 	list, err := qb.Order(u.ID).Find()
@@ -453,7 +453,7 @@ func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) (
 			Avatar:     item.Avatar,
 			Status:     item.Status,
 			LoginIP:    item.LoginIP,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		})
 	}
 	return data, nil

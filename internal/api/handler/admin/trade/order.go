@@ -117,7 +117,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 				TradeOrderBase: resp.TradeOrderBase{
 					ID:                    o.ID,
 					No:                    o.No,
-					CreateTime:            o.CreatedAt,
+					CreateTime:            o.CreateTime,
 					Type:                  o.Type,
 					Terminal:              o.Terminal,
 					UserID:                o.UserID,
@@ -239,7 +239,7 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 	for i, l := range logs {
 		logResps[i] = resp.TradeOrderLogResp{
 			Content:    l.Content,
-			CreateTime: l.CreatedAt,
+			CreateTime: l.CreateTime,
 			UserType:   l.UserType,
 		}
 	}

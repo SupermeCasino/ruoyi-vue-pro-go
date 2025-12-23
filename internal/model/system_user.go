@@ -21,13 +21,8 @@ type SystemUser struct {
 	LoginIP   string     `gorm:"column:login_ip" json:"loginIp"`
 	LoginDate *time.Time `gorm:"column:login_date" json:"loginDate"`
 
-	// TenantBaseDO 字段
-	TenantID  int64     `gorm:"column:tenant_id" json:"tenantId"`
-	Creator   string    `gorm:"column:creator" json:"creator"`
-	Updater   string    `gorm:"column:updater" json:"updater"`
-	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"` // Map create_time to CreatedAt
-	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime" json:"updateTime"` // Map update_time to UpdatedAt
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag" json:"-"`             // Use soft_delete plugin
+	// 基础字段
+	TenantBaseDO
 }
 
 // TableName 指定表名

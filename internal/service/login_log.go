@@ -37,7 +37,7 @@ func (s *LoginLogService) GetLoginLogPage(ctx context.Context, r *req.LoginLogPa
 		}
 	}
 	if len(r.CreateTime) == 2 {
-		q = q.Where(s.q.SystemLoginLog.CreatedAt.Between(r.CreateTime[0], r.CreateTime[1]))
+		q = q.Where(s.q.SystemLoginLog.CreateTime.Between(r.CreateTime[0], r.CreateTime[1]))
 	}
 
 	// 分页

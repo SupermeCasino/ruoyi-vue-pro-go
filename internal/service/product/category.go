@@ -214,6 +214,6 @@ func (s *ProductCategoryService) convertResp(item *product.ProductCategory) *res
 		Sort:        item.Sort,
 		Status:      item.Status,
 		Description: item.Description,
-		CreatedAt:   item.CreatedAt,
+		CreateTime:   item.CreateTime,
 	}
 }

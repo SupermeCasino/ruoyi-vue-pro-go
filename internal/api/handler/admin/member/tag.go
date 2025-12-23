@@ -117,6 +117,6 @@ func (h *MemberTagHandler) convertResp(item *memberModel.MemberTag) *resp.Member
 	return &resp.MemberTagResp{
 		ID:        item.ID,
 		Name:      item.Name,
-		CreatedAt: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

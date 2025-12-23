@@ -14,8 +14,8 @@ type MemberGroup struct {
 	Status    int           `gorm:"column:status;comment:状态" json:"status"` // 状态
 	Creator   string        `gorm:"column:creator;size:64;default:'';comment:创建者"`
 	Updater   string        `gorm:"column:updater;size:64;default:'';comment:更新者"`
-	CreatedAt time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
-	UpdatedAt time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
+	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间"`
 	Deleted   model.BitBool `gorm:"column:deleted;type:tinyint(1);not null;default:0;comment:是否删除"`
 	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }

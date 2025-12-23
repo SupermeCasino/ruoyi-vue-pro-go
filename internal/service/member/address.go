@@ -143,6 +143,6 @@ func (s *MemberAddressService) convertResp(item *member.MemberAddress) *resp.App
 		AreaID:        item.AreaID,
 		DetailAddress: item.DetailAddress,
 		DefaultStatus: bool(item.DefaultStatus),
-		CreateTime:    item.CreatedAt,
+		CreateTime:    item.CreateTime,
 	}
 }

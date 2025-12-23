@@ -22,7 +22,7 @@ type BargainActivityResp struct {
 	Status            int       `json:"status"`
 	Sort              int       `json:"sort"`
 	Remark            string    `json:"remark"`
-	CreatedAt         time.Time `json:"createTime"`
+	CreateTime         time.Time `json:"createTime"`
 }
 
 // BargainActivityPageItemResp 砍价活动分页 Response (Admin)
@@ -51,7 +51,7 @@ type BargainRecordResp struct {
 	Status            int       `json:"status"`
 	EndTime           time.Time `json:"endTime"`
 	OrderID           int64     `json:"orderId"`
-	CreatedAt         time.Time `json:"createTime"`
+	CreateTime         time.Time `json:"createTime"`
 }
 
 // BargainHelpResp 砍价助力 Response (Admin)
@@ -63,7 +63,7 @@ type BargainHelpResp struct {
 	ActivityID   int64     `json:"activityId"`
 	RecordID     int64     `json:"recordId"`
 	ReducePrice  int       `json:"reducePrice"`
-	CreatedAt    time.Time `json:"createTime"`
+	CreateTime    time.Time `json:"createTime"`
 }
 
 // ========== App 端 Response ==========

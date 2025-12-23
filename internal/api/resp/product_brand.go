@@ -10,7 +10,7 @@ type ProductBrandResp struct {
 	Sort        int       `json:"sort"`
 	Description string    `json:"description"`
 	Status      int       `json:"status"`
-	CreatedAt   time.Time `json:"createTime"`
+	CreateTime   time.Time `json:"createTime"`
 }
 
 // ProductBrandSimpleResp 精简品牌 Response

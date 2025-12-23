@@ -104,7 +104,7 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 		OrderNotifyURL:    app.OrderNotifyURL,
 		RefundNotifyURL:   app.RefundNotifyURL,
 		TransferNotifyURL: app.TransferNotifyURL,
-		CreateTime:        app.CreatedAt,
+		CreateTime:        app.CreateTime,
 	}
 	c.JSON(200, response.Success(res))
 }
@@ -129,7 +129,7 @@ func (h *PayAppHandler) GetAppList(c *gin.Context) {
 			OrderNotifyURL:    app.OrderNotifyURL,
 			RefundNotifyURL:   app.RefundNotifyURL,
 			TransferNotifyURL: app.TransferNotifyURL,
-			CreateTime:        app.CreatedAt,
+			CreateTime:        app.CreateTime,
 		})
 	}
 	c.JSON(200, response.Success(resList))

@@ -139,6 +139,6 @@ func convertChannelResp(channel *payModel.PayChannel) *resp.PayChannelResp {
 		Remark:     channel.Remark,
 		AppID:      channel.AppID,
 		Config:     channel.Config.ToJSON(),
-		CreateTime: channel.CreatedAt,
+		CreateTime: channel.CreateTime,
 	}
 }

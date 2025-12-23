@@ -59,14 +59,14 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 
 		// Role
 		role := &model.SystemRole{
-			Name:     "租户管理员",
-			Code:     "tenant_admin",
-			Sort:     0,
-			Status:   0, // Enabled
-			Type:     2, // Built-in or specific type
-			Remark:   "系统自动生成",
-			TenantID: tenantId,
+			Name:   "租户管理员",
+			Code:   "tenant_admin",
+			Sort:   0,
+			Status: 0, // Enabled
+			Type:   2, // Built-in or specific type
+			Remark: "系统自动生成",
 		}
+		role.TenantID = tenantId
 		if err := tx.SystemRole.WithContext(ctx).Create(role); err != nil {
 			return err
 		}
@@ -82,18 +82,18 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			Nickname: req.ContactName,
 			Mobile:   req.ContactMobile,
 			Status:   0, // Enabled
-			TenantID: tenantId,
 		}
+		user.TenantID = tenantId
 		if err := tx.SystemUser.WithContext(ctx).Create(user); err != nil {
 			return err
 		}
 
 		// UserRole
 		userRole := &model.SystemUserRole{
-			UserID:   user.ID,
-			RoleID:   role.ID,
-			TenantID: tenantId, // If UserRole has tenant_id
+			UserID: user.ID,
+			RoleID: role.ID,
 		}
+		userRole.TenantID = tenantId
 		// check if UserRole has TenantID
 		// Assume yes for now, usually multi-tenant systems propagate it.
 		// If not, remove it.
@@ -131,10 +131,10 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			roleMenus := make([]*model.SystemRoleMenu, len(menuIds))
 			for i, mid := range menuIds {
 				roleMenus[i] = &model.SystemRoleMenu{
-					RoleID:   role.ID,
-					MenuID:   mid,
-					TenantID: tenantId,
+					RoleID: role.ID,
+					MenuID: mid,
 				}
+				roleMenus[i].TenantID = tenantId
 			}
 			if err := tx.SystemRoleMenu.WithContext(ctx).Create(roleMenus...); err != nil {
 				return err
@@ -207,7 +207,7 @@ func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRe
 		PackageID:     tenant.PackageID,
 		AccountCount:  int(tenant.AccountCount),
 		ExpireDate:    tenant.ExpireDate.Unix(),
-		CreateTime:    tenant.CreatedAt,
+		CreateTime:    tenant.CreateTime,
 	}, nil
 }
 
@@ -229,10 +229,10 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 		qb = qb.Where(t.Status.Eq(int32(*req.Status)))
 	}
 	if req.CreateTimeGe != nil {
-		qb = qb.Where(t.CreatedAt.Gte(*req.CreateTimeGe))
+		qb = qb.Where(t.CreateTime.Gte(*req.CreateTimeGe))
 	}
 	if req.CreateTimeLe != nil {
-		qb = qb.Where(t.CreatedAt.Lte(*req.CreateTimeLe))
+		qb = qb.Where(t.CreateTime.Lte(*req.CreateTimeLe))
 	}
 
 	total, err := qb.Count()
@@ -257,7 +257,7 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 			PackageID:     item.PackageID,
 			AccountCount:  int(item.AccountCount),
 			ExpireDate:    item.ExpireDate.Unix(),
-			CreateTime:    item.CreatedAt,
+			CreateTime:    item.CreateTime,
 		})
 	}
 
@@ -285,10 +285,10 @@ func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExport
 		qb = qb.Where(t.Status.Eq(int32(*req.Status)))
 	}
 	if req.CreateTimeGe != nil {
-		qb = qb.Where(t.CreatedAt.Gte(*req.CreateTimeGe))
+		qb = qb.Where(t.CreateTime.Gte(*req.CreateTimeGe))
 	}
 	if req.CreateTimeLe != nil {
-		qb = qb.Where(t.CreatedAt.Lte(*req.CreateTimeLe))
+		qb = qb.Where(t.CreateTime.Lte(*req.CreateTimeLe))
 	}
 
 	list, err := qb.Order(t.ID.Desc()).Find()
@@ -308,7 +308,7 @@ func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExport
 			PackageID:     item.PackageID,
 			ExpireDate:    item.ExpireDate.UnixMilli(),
 			AccountCount:  int(item.AccountCount),
-			CreateTime:    item.CreatedAt,
+			CreateTime:    item.CreateTime,
 		})
 	}
 	return data, nil

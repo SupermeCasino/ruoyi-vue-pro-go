@@ -12,7 +12,7 @@ type MemberPointRecordResp struct {
 	Description string    `json:"description"`
 	Point       int       `json:"point"`
 	TotalPoint  int       `json:"totalPoint"`
-	CreatedAt   time.Time `json:"createTime"`
+	CreateTime   time.Time `json:"createTime"`
 }
 
 type AppMemberPointRecordResp struct {
@@ -20,5 +20,5 @@ type AppMemberPointRecordResp struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	Point       int       `json:"point"`
-	CreatedAt   time.Time `json:"createTime"`
+	CreateTime   time.Time `json:"createTime"`
 }

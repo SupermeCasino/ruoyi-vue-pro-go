@@ -51,7 +51,7 @@ func (s *BargainHelpService) GetBargainHelpUserCountMapByActivity(ctx context.Co
 // GetBargainHelpList 获得砍价助力列表 (按 recordId)
 func (s *BargainHelpService) GetBargainHelpList(ctx context.Context, recordID int64) ([]*promotion.PromotionBargainHelp, error) {
 	q := s.q.PromotionBargainHelp
-	return q.WithContext(ctx).Where(q.RecordID.Eq(recordID)).Order(q.CreatedAt.Desc()).Find()
+	return q.WithContext(ctx).Where(q.RecordID.Eq(recordID)).Order(q.CreateTime.Desc()).Find()
 }
 
 // GetBargainHelp 获得指定记录和用户的助力记录
@@ -185,7 +185,7 @@ func (s *BargainHelpService) GetBargainHelpPage(ctx context.Context, req *req.Ba
 		do = do.Where(q.RecordID.Eq(req.RecordID))
 	}
 
-	list, total, err := do.Order(q.CreatedAt.Desc()).FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
+	list, total, err := do.Order(q.CreateTime.Desc()).FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
 	if err != nil {
 		return nil, err
 	}

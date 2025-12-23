@@ -153,7 +153,7 @@ func (s *FileConfigService) convertResp(item *model.InfraFileConfig) *resp.FileC
 		Master:     bool(item.Master),
 		Config:     &item.Config,
 		Remark:     item.Remark,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }
 

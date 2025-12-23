@@ -87,7 +87,7 @@ func (s *PostService) GetPost(ctx context.Context, id int64) (*resp.PostRespVO, 
 		Sort:       item.Sort,
 		Status:     item.Status,
 		Remark:     item.Remark,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}, nil
 }
 
@@ -124,7 +124,7 @@ func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*p
 			Sort:       item.Sort,
 			Status:     item.Status,
 			Remark:     item.Remark,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		})
 	}
 

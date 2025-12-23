@@ -106,6 +106,6 @@ func toConfigResp(config *memberModel.MemberSignInConfig) resp.MemberSignInConfi
 		Point:      config.Point,
 		Experience: config.Experience,
 		Status:     config.Status,
-		CreateTime: config.CreatedAt,
+		CreateTime: config.CreateTime,
 	}
 }

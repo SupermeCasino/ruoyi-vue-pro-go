@@ -147,7 +147,7 @@ func (h *PayRefundHandler) ExportRefundExcel(c *gin.Context) {
 		}
 
 		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), item.ID)
-		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.CreatedAt.Format("2006-01-02 15:04:05"))
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.CreateTime.Format("2006-01-02 15:04:05"))
 		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), float64(item.PayPrice)/100.0) // MoneyConvert
 		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), float64(item.RefundPrice)/100.0)
 		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), item.MerchantRefundId)

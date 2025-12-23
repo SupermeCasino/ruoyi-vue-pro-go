@@ -92,7 +92,7 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 		RetryCount:     job.RetryCount,
 		RetryInterval:  job.RetryInterval,
 		MonitorTimeout: job.MonitorTimeout,
-		CreateTime:     job.CreatedAt,
+		CreateTime:     job.CreateTime,
 	})
 }
 
@@ -121,7 +121,7 @@ func (h *JobHandler) GetJobPage(c *gin.Context) {
 			RetryCount:     job.RetryCount,
 			RetryInterval:  job.RetryInterval,
 			MonitorTimeout: job.MonitorTimeout,
-			CreateTime:     job.CreatedAt,
+			CreateTime:     job.CreateTime,
 		}
 	}
 
@@ -177,7 +177,7 @@ func (h *JobHandler) ExportJobExcel(c *gin.Context) {
 			RetryCount:     job.RetryCount,
 			RetryInterval:  job.RetryInterval,
 			MonitorTimeout: job.MonitorTimeout,
-			CreateTime:     job.CreatedAt,
+			CreateTime:     job.CreateTime,
 		}
 	}
 

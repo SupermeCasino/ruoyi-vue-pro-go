@@ -131,6 +131,6 @@ func (s *SmsLogService) convertResp(item *model.SystemSmsLog) *resp.SmsLogRespVO
 		ReceiveTime:     item.ReceiveTime,
 		ApiReceiveCode:  item.ApiReceiveCode,
 		ApiReceiveMsg:   item.ApiReceiveMsg,
-		CreateTime:      item.CreatedAt,
+		CreateTime:      item.CreateTime,
 	}
 }

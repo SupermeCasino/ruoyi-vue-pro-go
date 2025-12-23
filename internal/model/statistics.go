@@ -12,8 +12,8 @@ type TradeStatistics struct {
 	AfterSaleCount   int64     `gorm:"column:after_sale_count" json:"afterSaleCount"`     // 售后数
 	AfterSalePrice   int64     `gorm:"column:after_sale_price" json:"afterSalePrice"`     // 售后金额
 	BrokeragePrice   int64     `gorm:"column:brokerage_price" json:"brokeragePrice"`      // 佣金金额
-	CreatedAt        time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
-	UpdatedAt        time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
+	CreateTime        time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
+	UpdateTime        time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
 }
 
 // ProductStatistics 商品统计数据对象
@@ -26,8 +26,8 @@ type ProductStatistics struct {
 	BrowseCount    int64     `gorm:"column:browse_count" json:"browseCount"`     // 浏览数
 	FavoriteCount  int64     `gorm:"column:favorite_count" json:"favoriteCount"` // 收藏数
 	CommentCount   int64     `gorm:"column:comment_count" json:"commentCount"`   // 评价数
-	CreatedAt      time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
-	UpdatedAt      time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
+	CreateTime      time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
+	UpdateTime      time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
 }
 
 // MemberStatistics 会员统计数据对象
@@ -40,8 +40,8 @@ type MemberStatistics struct {
 	PayUserCount    int64     `gorm:"column:pay_user_count" json:"payUserCount"`       // 支付用户数
 	TotalUserCount  int64     `gorm:"column:total_user_count" json:"totalUserCount"`   // 总用户数
 	ActiveUserCount int64     `gorm:"column:active_user_count" json:"activeUserCount"` // 活跃用户数
-	CreatedAt       time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
-	UpdatedAt       time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
+	CreateTime       time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
+	UpdateTime       time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
 }
 
 // PayStatistics 支付统计数据对象
@@ -49,6 +49,6 @@ type PayStatistics struct {
 	ID             int64     `gorm:"primaryKey;column:id" json:"id"`
 	StatisticsTime time.Time `gorm:"column:statistics_time;index" json:"statisticsTime"`
 	RechargePrice  int64     `gorm:"column:recharge_price" json:"rechargePrice"` // 充值金额
-	CreatedAt      time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
-	UpdatedAt      time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
+	CreateTime      time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
+	UpdateTime      time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
 }

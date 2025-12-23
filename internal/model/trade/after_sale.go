@@ -11,8 +11,8 @@ type AfterSale struct {
 	ID               int64         `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
 	Creator          string        `gorm:"column:creator" json:"creator"`
 	Updater          string        `gorm:"column:updater" json:"updater"`
-	CreatedAt        time.Time     `gorm:"column:create_time" json:"createTime"`
-	UpdatedAt        time.Time     `gorm:"column:update_time" json:"updateTime"`
+	CreateTime        time.Time     `gorm:"column:create_time" json:"createTime"`
+	UpdateTime        time.Time     `gorm:"column:update_time" json:"updateTime"`
 	Deleted          model.BitBool `gorm:"column:deleted" json:"deleted"`
 	TenantID         int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 	No               string        `gorm:"column:no" json:"no"`

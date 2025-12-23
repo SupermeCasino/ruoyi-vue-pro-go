@@ -8,21 +8,15 @@ import (
 
 // PayTransfer 转账单
 type PayTransfer struct {
-	// core.BaseDO (Replaced with explicit fields)
-	Creator            string        `gorm:"column:creator;default:''" json:"creator"`
-	Updater            string        `gorm:"column:updater;default:''" json:"updater"`
-	CreatedAt          time.Time     `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	UpdatedAt          time.Time     `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
-	Deleted            model.BitBool `gorm:"column:deleted;softDelete:flag" json:"-"`
-	TenantID           int64         `gorm:"column:tenant_id;default:0" json:"tenantId"`
-	ID                 int64         `gorm:"primaryKey;autoIncrement;comment:编号"`
-	No                 string        `gorm:"size:64;not null;comment:转账单号"`
-	AppID              int64         `gorm:"not null;comment:应用编号"`
-	ChannelID          int64         `gorm:"not null;comment:转账渠道编号"`
-	ChannelCode        string        `gorm:"size:32;not null;comment:转账渠道编码"`
-	MerchantTransferID string        `gorm:"size:64;comment:商户转账单编号"`
-	Subject            string        `gorm:"size:512;not null;comment:转账标题"`
-	Price              int           `gorm:"not null;comment:转账金额，单位：分"`
+	ID int64 `gorm:"primaryKey;autoIncrement;comment:编号"`
+	model.TenantBaseDO
+	No                 string `gorm:"size:64;not null;comment:转账单号"`
+	AppID              int64  `gorm:"not null;comment:应用编号"`
+	ChannelID          int64  `gorm:"not null;comment:转账渠道编号"`
+	ChannelCode        string `gorm:"size:32;not null;comment:转账渠道编码"`
+	MerchantTransferID string `gorm:"size:64;comment:商户转账单编号"`
+	Subject            string `gorm:"size:512;not null;comment:转账标题"`
+	Price              int    `gorm:"not null;comment:转账金额，单位：分"`
 	// Type 转账类型
 	// 枚举：PayTransferType
 	Type               int               `gorm:"column:type;type:int(11);comment:转账类型" json:"type"`

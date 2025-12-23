@@ -386,7 +386,7 @@ func (s *BrokerageWithdrawService) GetBrokerageWithdrawPage(ctx context.Context,
 		q = q.Where(s.q.BrokerageWithdraw.BankName.Like("%" + r.BankName + "%"))
 	}
 	if len(r.CreateTime) == 2 {
-		q = q.Where(s.q.BrokerageWithdraw.CreatedAt.Between(parseTime(r.CreateTime[0]), parseTime(r.CreateTime[1])))
+		q = q.Where(s.q.BrokerageWithdraw.CreateTime.Between(parseTime(r.CreateTime[0]), parseTime(r.CreateTime[1])))
 	}
 
 	q = q.Order(s.q.BrokerageWithdraw.ID.Desc())

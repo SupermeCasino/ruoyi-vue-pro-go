@@ -131,6 +131,6 @@ func convertRechargeResp(item *pay.PayWalletRecharge) *resp.PayWalletRechargeRes
 		RefundPayPrice:   item.RefundPayPrice,
 		RefundBonusPrice: item.RefundBonusPrice,
 		RefundTime:       item.RefundTime,
-		CreateTime:       item.CreatedAt,
+		CreateTime:       item.CreateTime,
 	}
 }

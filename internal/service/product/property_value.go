@@ -153,6 +153,6 @@ func (s *ProductPropertyValueService) convertResp(item *product.ProductPropertyV
 		PropertyID: item.PropertyID,
 		Name:       item.Name,
 		Remark:     item.Remark,
-		CreatedAt:  item.CreatedAt,
+		CreateTime:  item.CreateTime,
 	}
 }

@@ -162,7 +162,7 @@ func (s *SmsTemplateService) convertResp(item *model.SystemSmsTemplate) *resp.Sm
 		ApiTemplateId: item.ApiTemplateId,
 		ChannelId:     item.ChannelId,
 		ChannelCode:   item.ChannelCode,
-		CreateTime:    item.CreatedAt,
+		CreateTime:    item.CreateTime,
 	}
 }
 

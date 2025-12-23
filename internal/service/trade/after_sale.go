@@ -226,8 +226,8 @@ func (s *TradeAfterSaleService) convertToAppAfterSaleResp(as *trade.AfterSale) *
 		Type:             as.Type,
 		ApplyReason:      as.ApplyReason,
 		ApplyDescription: as.ApplyDescription,
-		CreateTime:       as.CreatedAt,
-		UpdateTime:       as.UpdatedAt,
+		CreateTime:       as.CreateTime,
+		UpdateTime:       as.UpdateTime,
 		OrderID:          as.OrderID,
 		OrderNo:          as.OrderNo,
 		OrderItemID:      as.OrderItemID,
@@ -337,7 +337,7 @@ func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.Tra
 			PicURL:      as.PicURL,
 			Count:       as.Count,
 			RefundPrice: as.RefundPrice,
-			CreateTime:  as.CreatedAt,
+			CreateTime:  as.CreateTime,
 		}
 		if userMap != nil {
 			item.User = userMap[as.UserID]
@@ -567,7 +567,7 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 		LogisticsID:      as.LogisticsID,
 		LogisticsNo:      as.LogisticsNo,
 		ReceiveReason:    as.ReceiveReason,
-		CreateTime:       as.CreatedAt,
+		CreateTime:       as.CreateTime,
 	}
 
 	// 1. JSON 转换
@@ -598,7 +598,7 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 			No:         order.No,
 			UserID:     order.UserID,
 			Status:     order.Status,
-			CreateTime: order.CreatedAt,
+			CreateTime: order.CreateTime,
 			PayPrice:   order.PayPrice,
 		}
 	}
@@ -650,7 +650,7 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 				UserType:     l.UserType,
 				UserID:       l.UserID,
 				Content:      l.Content,
-				CreateTime:   l.CreatedAt,
+				CreateTime:   l.CreateTime,
 			}
 		}
 	}

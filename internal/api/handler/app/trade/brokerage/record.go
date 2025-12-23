@@ -69,7 +69,7 @@ func (h *AppBrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 				Description: item.Description,
 				Status:      item.Status,
 				Total:       item.TotalPrice,
-				CreatedAt:   item.CreatedAt,
+				CreateTime:   item.CreateTime,
 				// StatusName: item.Status // TODO: Dict lookup
 			}
 		}),

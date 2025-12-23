@@ -146,10 +146,10 @@ func (s *RoleService) GetRolePage(ctx context.Context, req *req.RolePageReq) (*p
 		qb = qb.Where(r.Status.Eq(int32(*req.Status)))
 	}
 	if req.CreateTimeGe != nil {
-		qb = qb.Where(r.CreatedAt.Gte(*req.CreateTimeGe))
+		qb = qb.Where(r.CreateTime.Gte(*req.CreateTimeGe))
 	}
 	if req.CreateTimeLe != nil {
-		qb = qb.Where(r.CreatedAt.Lte(*req.CreateTimeLe))
+		qb = qb.Where(r.CreateTime.Lte(*req.CreateTimeLe))
 	}
 
 	total, err := qb.Count()
@@ -229,7 +229,7 @@ func (s *RoleService) convertResp(item *model.SystemRole) *resp.RoleRespVO {
 		Remark:           item.Remark,
 		DataScope:        item.DataScope,
 		DataScopeDeptIDs: item.DataScopeDeptIds,
-		CreateTime:       item.CreatedAt,
+		CreateTime:       item.CreateTime,
 	}
 }
 

@@ -113,7 +113,7 @@ func (h *PointActivityHandler) GetPointActivity(c *gin.Context) {
 		Sort:       activity.Sort,
 		Stock:      activity.Stock,
 		TotalStock: activity.TotalStock,
-		CreateTime: activity.CreatedAt,
+		CreateTime: activity.CreateTime,
 	}
 
 	productVOs := make([]resp.PointProductRespVO, len(products))
@@ -228,7 +228,7 @@ func (h *PointActivityHandler) buildPointActivityRespVOList(c *gin.Context, acti
 			Sort:       activity.Sort,
 			Stock:      activity.Stock,
 			TotalStock: activity.TotalStock,
-			CreateTime: activity.CreatedAt,
+			CreateTime: activity.CreateTime,
 		}
 
 		// 设置 Product 信息 (Min Point/Price)

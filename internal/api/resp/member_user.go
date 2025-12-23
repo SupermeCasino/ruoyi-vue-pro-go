@@ -43,7 +43,7 @@ type MemberUserResp struct {
 	RegisterIP string     `json:"registerIp"`
 	LoginIP    string     `json:"loginIp"`
 	LoginDate  *time.Time `json:"loginDate"`
-	CreatedAt  time.Time  `json:"createTime"`
+	CreateTime  time.Time  `json:"createTime"`
 	// 扩展字段
 	Point      int32    `json:"point"`
 	TagNames   []string `json:"tagNames"`

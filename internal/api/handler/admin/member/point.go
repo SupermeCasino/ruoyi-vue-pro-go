@@ -60,7 +60,7 @@ func (h *MemberPointRecordHandler) GetPointRecordPage(c *gin.Context) {
 			Description: item.Description,
 			Point:       item.Point,
 			TotalPoint:  item.TotalPoint,
-			CreatedAt:   item.CreatedAt,
+			CreateTime:   item.CreateTime,
 		}
 	}), pageResult.Total))
 }

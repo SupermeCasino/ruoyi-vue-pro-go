@@ -201,7 +201,7 @@ func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyM
 	}
 	if r.StartDate != "" && r.EndDate != "" {
 		// 使用 Between 查询时间范围
-		qb = qb.Where(m.CreatedAt.Between(parseTime(r.StartDate), parseTime(r.EndDate)))
+		qb = qb.Where(m.CreateTime.Between(parseTime(r.StartDate), parseTime(r.EndDate)))
 	}
 
 	total, err := qb.Count()

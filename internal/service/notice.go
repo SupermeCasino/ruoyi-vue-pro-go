@@ -114,6 +114,6 @@ func (s *NoticeService) convertResp(item *model.SystemNotice) *resp.NoticeRespVO
 		Type:       item.Type,
 		Content:    item.Content,
 		Status:     item.Status,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

@@ -233,7 +233,7 @@ func (h *PayOrderHandler) ExportOrderExcel(c *gin.Context) {
 		}
 
 		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), item.ID)
-		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.CreatedAt.Format("2006-01-02 15:04:05"))
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.CreateTime.Format("2006-01-02 15:04:05"))
 		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), float64(item.Price)/100.0)
 		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), float64(item.RefundPrice)/100.0)
 		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), float64(item.ChannelFeePrice)/100.0)
@@ -290,8 +290,8 @@ func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
 		RefundPrice:     int64(order.RefundPrice), // 转换为 int64
 		ChannelUserID:   order.ChannelUserID,
 		ChannelOrderNo:  order.ChannelOrderNo,
-		CreateTime:      order.CreatedAt,
-		UpdateTime:      order.UpdatedAt,
+		CreateTime:      order.CreateTime,
+		UpdateTime:      order.UpdateTime,
 		Creator:         order.Creator,
 		Updater:         order.Updater,
 	}
@@ -313,7 +313,7 @@ func convertExtensionResp(ext *pay.PayOrderExtension) *resp.PayOrderExtensionRes
 		ChannelErrorCode:  ext.ChannelErrorCode,
 		ChannelErrorMsg:   ext.ChannelErrorMsg,
 		ChannelNotifyData: ext.ChannelNotifyData,
-		CreateTime:        ext.CreatedAt,
+		CreateTime:        ext.CreateTime,
 	}
 }
 
@@ -331,6 +331,6 @@ func convertAppResp(app *pay.PayApp) *resp.PayAppResp {
 		OrderNotifyURL:    app.OrderNotifyURL,
 		RefundNotifyURL:   app.RefundNotifyURL,
 		TransferNotifyURL: app.TransferNotifyURL,
-		CreateTime:        app.CreatedAt,
+		CreateTime:        app.CreateTime,
 	}
 }

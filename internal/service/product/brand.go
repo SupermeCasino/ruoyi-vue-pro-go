@@ -154,6 +154,6 @@ func (s *ProductBrandService) convertResp(item *product.ProductBrand) *resp.Prod
 		Sort:        item.Sort,
 		Description: item.Description,
 		Status:      item.Status,
-		CreatedAt:   item.CreatedAt,
+		CreateTime:   item.CreateTime,
 	}
 }

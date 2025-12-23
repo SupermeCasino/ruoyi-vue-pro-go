@@ -225,7 +225,7 @@ func (s *combinationActivityService) GetCombinationActivity(ctx context.Context,
 		VirtualGroup:     activity.VirtualGroup,
 		LimitDuration:    activity.LimitDuration,
 		Status:           activity.Status,
-		CreateTime:       activity.CreatedAt,
+		CreateTime:       activity.CreateTime,
 		Products:         make([]resp.CombinationProductRespVO, len(prods)),
 	}
 
@@ -251,7 +251,7 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 		q = q.Where(s.q.PromotionCombinationActivity.Status.Eq(*req.Status))
 	}
 	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
-		q = q.Where(s.q.PromotionCombinationActivity.CreatedAt.Between(*req.CreateTime[0], *req.CreateTime[1]))
+		q = q.Where(s.q.PromotionCombinationActivity.CreateTime.Between(*req.CreateTime[0], *req.CreateTime[1]))
 	}
 
 	list, total, err := q.Order(s.q.PromotionCombinationActivity.ID.Desc()).FindByPage(req.GetOffset(), req.GetLimit())
@@ -273,7 +273,7 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 			VirtualGroup:     item.VirtualGroup,
 			LimitDuration:    item.LimitDuration,
 			Status:           item.Status,
-			CreateTime:       item.CreatedAt,
+			CreateTime:       item.CreateTime,
 		}
 	}
 	return &pagination.PageResult[*resp.CombinationActivityRespVO]{
@@ -375,7 +375,7 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 			VirtualGroup:     activity.VirtualGroup,
 			LimitDuration:    activity.LimitDuration,
 			Status:           activity.Status,
-			CreateTime:       activity.CreatedAt,
+			CreateTime:       activity.CreateTime,
 			Products:         productMap[activity.ID],
 		}
 	}

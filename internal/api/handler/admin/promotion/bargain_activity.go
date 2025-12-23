@@ -120,7 +120,7 @@ func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
 		RandomMaxPrice:    act.RandomMaxPrice,
 		Status:            act.Status,
 		Sort:              act.Sort,
-		CreatedAt:         act.CreatedAt,
+		CreateTime:         act.CreateTime,
 	}
 	// Note: CreateReq has Remark but DO model logic I used previously didn't output Remark.
 	// But it is there. I should ensure DO has Remark later if needed.
@@ -209,7 +209,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 				RandomMinPrice:    item.RandomMinPrice,
 				RandomMaxPrice:    item.RandomMaxPrice,
 				Sort:              item.Sort,
-				CreatedAt:         item.CreatedAt,
+				CreateTime:         item.CreateTime,
 			},
 			SpuName:                spuName,
 			PicUrl:                 picUrl,

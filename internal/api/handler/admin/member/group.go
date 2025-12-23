@@ -120,6 +120,6 @@ func (h *MemberGroupHandler) convertResp(item *memberModel.MemberGroup) *resp.Me
 	return &resp.MemberGroupResp{
 		ID:        item.ID,
 		Name:      item.Name,
-		CreatedAt: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

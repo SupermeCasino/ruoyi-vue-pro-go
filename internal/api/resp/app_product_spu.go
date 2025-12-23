@@ -18,5 +18,5 @@ type AppProductSpuResp struct {
 	DeliveryTypes []int     `json:"deliveryTypes"` // 配送方式
 	VIPPrice      int       `json:"vipPrice"`      // VIP 价格
 	Status        int       `json:"status"`
-	CreatedAt     time.Time `json:"createTime"`
+	CreateTime     time.Time `json:"createTime"`
 }

@@ -24,8 +24,8 @@ type ProductStatistics struct {
 	BrowseConvertPercent int           `gorm:"column:browse_convert_percent;default:0;comment:访客支付转化率(百分比)" json:"browseConvertPercent"`
 	Creator              string        `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
 	Updater              string        `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
-	CreatedAt            time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt            time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	CreateTime            time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdateTime            time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
 	Deleted              model.BitBool `gorm:"column:deleted;default:0;comment:是否删除" json:"deleted"`
 	TenantID             int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }

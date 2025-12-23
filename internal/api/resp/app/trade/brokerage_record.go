@@ -12,7 +12,7 @@ type AppBrokerageRecordRespVO struct {
 	Description string    `json:"description"`
 	Status      int       `json:"status"`
 	Total       int       `json:"total"` // TotalPrice in model
-	CreatedAt   time.Time `json:"createTime"`
+	CreateTime   time.Time `json:"createTime"`
 	StatusName  string    `json:"statusName"`
 }
 

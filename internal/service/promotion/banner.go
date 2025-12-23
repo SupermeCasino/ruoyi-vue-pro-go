@@ -79,7 +79,7 @@ func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.Promo
 		q = q.Where(s.q.PromotionBanner.Status.Eq(*r.Status))
 	}
 	if len(r.CreateTime) == 2 && r.CreateTime[0] != nil && r.CreateTime[1] != nil {
-		q = q.Where(s.q.PromotionBanner.CreatedAt.Between(*r.CreateTime[0], *r.CreateTime[1]))
+		q = q.Where(s.q.PromotionBanner.CreateTime.Between(*r.CreateTime[0], *r.CreateTime[1]))
 	}
 
 	list, total, err := q.Order(s.q.PromotionBanner.Sort.Desc(), s.q.PromotionBanner.ID.Desc()).FindByPage(r.GetOffset(), r.PageSize)
@@ -123,6 +123,6 @@ func (s *PromotionBannerService) convertResp(item *promotion.PromotionBanner) *r
 		Sort:      item.Sort,
 		Position:  item.Position,
 		Memo:      item.Memo,
-		CreatedAt: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

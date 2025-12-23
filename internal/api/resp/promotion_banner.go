@@ -12,5 +12,5 @@ type PromotionBannerResp struct {
 	Sort      int       `json:"sort"`
 	Position  int       `json:"position"`
 	Memo      string    `json:"memo"`
-	CreatedAt time.Time `json:"createTime"`
+	CreateTime time.Time `json:"createTime"`
 }

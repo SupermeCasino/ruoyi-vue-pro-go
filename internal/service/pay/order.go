@@ -679,7 +679,7 @@ func (s *PayOrderService) SyncOrder(ctx context.Context, minCreateTime time.Time
 	extensions, err := s.q.PayOrderExtension.WithContext(ctx).
 		Where(
 			s.q.PayOrderExtension.Status.Eq(PayOrderStatusWaiting),
-			s.q.PayOrderExtension.CreatedAt.Gte(minCreateTime),
+			s.q.PayOrderExtension.CreateTime.Gte(minCreateTime),
 		).
 		Find()
 	if err != nil {

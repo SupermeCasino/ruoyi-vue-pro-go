@@ -137,7 +137,7 @@ func (h *AppProductSpuHandler) GetSpuList(c *gin.Context) {
 			VIPPrice:    vipPrice,
 			Stock:       spu.Stock,
 			Status:      spu.Status,
-			CreatedAt:   spu.CreatedAt,
+			CreateTime:   spu.CreateTime,
 		}
 	}
 	response.WriteSuccess(c, resList)
@@ -189,7 +189,7 @@ func (h *AppProductSpuHandler) GetSpuPage(c *gin.Context) {
 			VIPPrice:    vipPrice,
 			Stock:       spu.Stock,
 			Status:      spu.Status,
-			CreatedAt:   spu.CreatedAt,
+			CreateTime:   spu.CreateTime,
 		}
 	}
 

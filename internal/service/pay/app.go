@@ -170,7 +170,7 @@ func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) 
 				OrderNotifyURL:    app.OrderNotifyURL,
 				RefundNotifyURL:   app.RefundNotifyURL,
 				TransferNotifyURL: app.TransferNotifyURL,
-				CreateTime:        app.CreatedAt,
+				CreateTime:        app.CreateTime,
 			},
 			ChannelCodes: []string{},
 		}

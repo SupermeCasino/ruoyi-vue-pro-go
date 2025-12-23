@@ -167,7 +167,7 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 			PicURLs:       item.PicURLs,
 			ReplyContent:  item.ReplyContent,
 			SkuProperties: s.convertSkuProperties(item.SkuProperties),
-			CreatedAt:     item.CreatedAt,
+			CreateTime:     item.CreateTime,
 		}
 	})
 
@@ -293,7 +293,7 @@ func (s *ProductCommentService) convertList(list []*product.ProductComment) []*r
 			ReplyUserID:       item.ReplyUserID,
 			ReplyContent:      item.ReplyContent,
 			ReplyTime:         item.ReplyTime,
-			CreatedAt:         item.CreatedAt,
+			CreateTime:         item.CreateTime,
 		}
 	})
 }

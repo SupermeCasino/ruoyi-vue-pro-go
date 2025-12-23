@@ -6,7 +6,7 @@ import "time"
 type MemberGroupResp struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createTime"`
+	CreateTime time.Time `json:"createTime"`
 }
 
 // MemberGroupSimpleResp 用户分组精简信息 Response

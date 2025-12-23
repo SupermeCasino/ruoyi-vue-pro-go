@@ -63,7 +63,7 @@ func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
 			ActivityID:  item.ActivityID,
 			RecordID:    item.RecordID,
 			ReducePrice: item.ReducePrice,
-			CreatedAt:   item.CreatedAt,
+			CreateTime:   item.CreateTime,
 		}
 		if u, ok := userMap[item.UserID]; ok {
 			vo.UserNickname = u.Nickname

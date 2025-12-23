@@ -58,7 +58,7 @@ func (h *BrokerageRecordHandler) GetBrokerageRecord(c *gin.Context) {
 		UnfreezeTime:    record.UnfreezeTime,
 		Title:           record.Title,
 		// ... copy fields
-		CreateTime: record.CreatedAt,
+		CreateTime: record.CreateTime,
 	}
 
 	response.WriteSuccess(c, res)
@@ -102,7 +102,7 @@ func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 			FrozenDays:      item.FrozenDays,
 			UnfreezeTime:    item.UnfreezeTime,
 			Title:           item.Title,
-			CreateTime:      item.CreatedAt,
+			CreateTime:      item.CreateTime,
 		}
 		if u, ok := userMap[item.UserID]; ok {
 			res.UserNickname = u.Nickname

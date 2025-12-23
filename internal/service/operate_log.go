@@ -38,7 +38,7 @@ func (s *OperateLogService) GetOperateLogPage(ctx context.Context, r *req.Operat
 		q = q.Where(s.q.SystemOperateLog.Action.Like("%" + r.Action + "%"))
 	}
 	if len(r.CreateTime) == 2 {
-		q = q.Where(s.q.SystemOperateLog.CreatedAt.Between(r.CreateTime[0], r.CreateTime[1]))
+		q = q.Where(s.q.SystemOperateLog.CreateTime.Between(r.CreateTime[0], r.CreateTime[1]))
 	}
 
 	// 分页

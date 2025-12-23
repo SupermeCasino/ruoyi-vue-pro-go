@@ -18,8 +18,8 @@ type AfterSaleLog struct {
 	Content      string        `gorm:"column:content" json:"content"`
 	Creator      string        `gorm:"column:creator" json:"creator"`
 	Updater      string        `gorm:"column:updater" json:"updater"`
-	CreatedAt    time.Time     `gorm:"column:create_time" json:"createTime"`
-	UpdatedAt    time.Time     `gorm:"column:update_time" json:"updateTime"`
+	CreateTime    time.Time     `gorm:"column:create_time" json:"createTime"`
+	UpdateTime    time.Time     `gorm:"column:update_time" json:"updateTime"`
 	Deleted      model.BitBool `gorm:"column:deleted" json:"deleted"`
 }
 

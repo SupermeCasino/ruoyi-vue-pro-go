@@ -81,7 +81,7 @@ func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.Coup
 		q = q.Where(s.q.PromotionCouponTemplate.Status.Eq(int(*req.Status)))
 	}
 	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
-		q = q.Where(s.q.PromotionCouponTemplate.CreatedAt.Between(*req.CreateTime[0], *req.CreateTime[1]))
+		q = q.Where(s.q.PromotionCouponTemplate.CreateTime.Between(*req.CreateTime[0], *req.CreateTime[1]))
 	}
 
 	result, count, err := q.FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))

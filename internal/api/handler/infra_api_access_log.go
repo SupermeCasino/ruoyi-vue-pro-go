@@ -54,7 +54,7 @@ func (h *ApiAccessLogHandler) GetApiAccessLogPage(c *gin.Context) {
 			Duration:        log.Duration,
 			ResultCode:      log.ResultCode,
 			ResultMsg:       log.ResultMsg,
-			CreateTime:      log.CreatedAt,
+			CreateTime:      log.CreateTime,
 		}
 	}
 

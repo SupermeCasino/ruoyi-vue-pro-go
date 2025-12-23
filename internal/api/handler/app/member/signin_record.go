@@ -50,7 +50,7 @@ func (h *AppMemberSignInRecordHandler) CreateSignInRecord(c *gin.Context) {
 		Day:        record.Day,
 		Point:      record.Point,
 		Experience: record.Experience,
-		CreatedAt:  record.CreatedAt,
+		CreateTime:  record.CreateTime,
 	})
 }
 
@@ -84,7 +84,7 @@ func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 			Day:        item.Day,
 			Point:      item.Point,
 			Experience: item.Experience,
-			CreatedAt:  item.CreatedAt,
+			CreateTime:  item.CreateTime,
 		}
 	})
 	response.WriteSuccess(c, pagination.NewPageResult(respList, pageResult.Total))

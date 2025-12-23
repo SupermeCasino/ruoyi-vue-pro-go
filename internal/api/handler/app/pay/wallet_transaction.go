@@ -54,7 +54,7 @@ func (h *AppPayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context
 			BizType:    item.BizType,
 			Price:      int64(item.Price),
 			Title:      item.Title,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		}
 	}
 

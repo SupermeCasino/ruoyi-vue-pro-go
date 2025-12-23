@@ -69,8 +69,8 @@ func (h *AppPayOrderHandler) GetOrder(c *gin.Context) {
 		RefundPrice:     int64(order.RefundPrice),
 		ChannelUserID:   order.ChannelUserID,
 		ChannelOrderNo:  order.ChannelOrderNo,
-		CreateTime:      order.CreatedAt,
-		UpdateTime:      order.UpdatedAt,
+		CreateTime:      order.CreateTime,
+		UpdateTime:      order.UpdateTime,
 		Creator:         order.Creator,
 		Updater:         order.Updater,
 	}

@@ -191,7 +191,7 @@ func (s *MenuService) GetMenuList(ctx context.Context, req *req.MenuListReq) ([]
 			Visible:       bool(item.Visible),
 			KeepAlive:     bool(item.KeepAlive),
 			AlwaysShow:    bool(item.AlwaysShow),
-			CreateTime:    item.CreatedAt,
+			CreateTime:    item.CreateTime,
 		})
 	}
 	return res, nil
@@ -241,7 +241,7 @@ func (s *MenuService) GetMenu(ctx context.Context, id int64) (*resp.MenuResp, er
 		Visible:       bool(item.Visible),
 		KeepAlive:     bool(item.KeepAlive),
 		AlwaysShow:    bool(item.AlwaysShow),
-		CreateTime:    item.CreatedAt,
+		CreateTime:    item.CreateTime,
 	}, nil
 }
 
@@ -363,7 +363,7 @@ func (s *MenuService) GetMenuListByIds(ctx context.Context, ids []int64) ([]*res
 			Visible:       bool(item.Visible),
 			KeepAlive:     bool(item.KeepAlive),
 			AlwaysShow:    bool(item.AlwaysShow),
-			CreateTime:    item.CreatedAt,
+			CreateTime:    item.CreateTime,
 		})
 	}
 	return res, nil

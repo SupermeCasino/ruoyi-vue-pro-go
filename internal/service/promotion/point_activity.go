@@ -2,9 +2,9 @@ package promotion
 
 import (
 	"context"
-	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -54,8 +54,6 @@ func (s *PointActivityService) CreatePointActivity(ctx context.Context, req *req
 		Sort:       req.Sort,
 		Stock:      totalStock,
 		TotalStock: totalStock,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
 	}
 	err := s.q.Transaction(func(tx *query.Query) error {
 		// 1. 创建活动
@@ -277,7 +275,7 @@ func (s *PointActivityService) GetPointActivityPage(ctx context.Context, req *re
 		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*req.Status))
 	}
 	if len(req.CreateTime) == 2 && req.CreateTime[0] != nil && req.CreateTime[1] != nil {
-		q = q.Where(s.q.PromotionPointActivity.CreatedAt.Between(*req.CreateTime[0], *req.CreateTime[1]))
+		q = q.Where(s.q.PromotionPointActivity.CreateTime.Between(*req.CreateTime[0], *req.CreateTime[1]))
 	}
 	// TODO: 支持其他搜索条件 (Java只支持Status)
 
@@ -360,7 +358,7 @@ func (s *PointActivityService) validateProductExists(ctx context.Context, spuID 
 // 校验当前 SPU 是否已经参加了其他开启的积分商城活动
 func (s *PointActivityService) validatePointActivityProductConflicts(ctx context.Context, id int64, spuID int64) error {
 	t := s.q.PromotionPointActivity
-	q := t.WithContext(ctx).Where(t.Status.Eq(1), t.SpuID.Eq(spuID)) // ENABLE and same SpuID
+	q := t.WithContext(ctx).Where(t.Status.Eq(model.CommonStatusEnable), t.SpuID.Eq(spuID)) // ENABLE and same SpuID
 	if id > 0 {
 		q = q.Where(t.ID.Neq(id)) // Exclude current activity for update operations
 	}

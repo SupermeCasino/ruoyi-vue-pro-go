@@ -43,7 +43,7 @@ func (h *JobLogHandler) GetJobLog(c *gin.Context) {
 		Duration:     log.Duration,
 		Status:       log.Status,
 		Result:       log.Result,
-		CreateTime:   log.CreatedAt,
+		CreateTime:   log.CreateTime,
 	})
 }
 
@@ -73,7 +73,7 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 			Duration:     log.Duration,
 			Status:       log.Status,
 			Result:       log.Result,
-			CreateTime:   log.CreatedAt,
+			CreateTime:   log.CreateTime,
 		}
 	}
 
@@ -111,7 +111,7 @@ func (h *JobLogHandler) ExportJobLogExcel(c *gin.Context) {
 			Duration:     log.Duration,
 			Status:       log.Status,
 			Result:       log.Result,
-			CreateTime:   log.CreatedAt,
+			CreateTime:   log.CreateTime,
 		}
 	}
 

@@ -11,8 +11,8 @@ type SystemRoleMenu struct {
 	MenuID    int64     `gorm:"column:menu_id;not null" json:"menuId"`
 	Creator   string    `gorm:"column:creator;default:''" json:"creator"`
 	Updater   string    `gorm:"column:updater;default:''" json:"updater"`
-	CreatedAt time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	UpdatedAt time.Time `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
+	CreateTime time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
+	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
 	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag" json:"-"`
 	TenantID  int64     `gorm:"column:tenant_id;default:0" json:"tenantId"`
 }

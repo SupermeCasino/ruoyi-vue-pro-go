@@ -63,7 +63,7 @@ func (r *PayTransferRepositoryImpl) SelectPage(ctx context.Context, req *reqPay.
 		const layout = "2006-01-02 15:04:05"
 		if startTime, err := time.Parse(layout, req.CreateTime[0]); err == nil {
 			if endTime, err := time.Parse(layout, req.CreateTime[1]); err == nil {
-				q = q.Where(r.q.PayTransfer.CreatedAt.Between(startTime, endTime))
+				q = q.Where(r.q.PayTransfer.CreateTime.Between(startTime, endTime))
 			}
 		}
 	}

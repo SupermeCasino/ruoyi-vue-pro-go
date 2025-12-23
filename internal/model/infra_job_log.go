@@ -20,8 +20,8 @@ type InfraJobLog struct {
 	Result       string         `gorm:"column:result;type:varchar(4000);comment:结果数据" json:"result"`
 	Creator      string         `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
 	Updater      string         `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
-	CreatedAt    time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt    time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
+	CreateTime    time.Time      `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
+	UpdateTime    time.Time      `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"column:deleted;index;comment:是否删除" json:"-"`
 }
 

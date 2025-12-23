@@ -389,7 +389,7 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.
 		Name:       template.Name,
 		ChargeMode: template.ChargeMode,
 		Sort:       template.Sort,
-		CreateTime: template.CreatedAt,
+		CreateTime: template.CreateTime,
 	}
 
 	// 2. 获取计费规则

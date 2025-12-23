@@ -63,11 +63,11 @@ func (s *MemberSignInRecordService) GetSignInRecordSummary(ctx context.Context, 
 	}
 
 	// 3. Check Today
-	isToday := utils.IsToday(lastRecord.CreatedAt)
+	isToday := utils.IsToday(lastRecord.CreateTime)
 	summary.TodaySignIn = isToday
 
 	// 4. Check logic for continuous days
-	if !isToday && !utils.IsYesterday(lastRecord.CreatedAt) {
+	if !isToday && !utils.IsYesterday(lastRecord.CreateTime) {
 		// Not today and not yesterday -> Streak broken
 		return summary, nil
 	}
@@ -114,7 +114,7 @@ func (s *MemberSignInRecordService) CreateSignInRecord(ctx context.Context, user
 		Where(s.q.MemberSignInRecord.UserID.Eq(userId)).
 		Order(s.q.MemberSignInRecord.ID.Desc()).First()
 
-	if lastRecord != nil && utils.IsToday(lastRecord.CreatedAt) {
+	if lastRecord != nil && utils.IsToday(lastRecord.CreateTime) {
 		return nil, errors.NewBizError(1004014005, "Already signed in today")
 	}
 
@@ -129,7 +129,7 @@ func (s *MemberSignInRecordService) CreateSignInRecord(ctx context.Context, user
 	// Default day = 1
 	day := 1
 	// If last record was yesterday, continue streak
-	if lastRecord != nil && utils.IsYesterday(lastRecord.CreatedAt) {
+	if lastRecord != nil && utils.IsYesterday(lastRecord.CreateTime) {
 		day = lastRecord.Day + 1
 	}
 

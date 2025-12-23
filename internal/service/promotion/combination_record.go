@@ -65,7 +65,7 @@ func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Conte
 
 	records, err := q.WithContext(ctx).
 		// Where(status success). MVP: All records?
-		Order(q.CreatedAt.Desc()).
+		Order(q.CreateTime.Desc()).
 		Limit(7).
 		Find()
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context,
 	if req.Status != 0 {
 		do = do.Where(q.Status.Eq(req.Status))
 	}
-	list, total, err := do.Order(q.CreatedAt.Desc()).FindByPage(req.GetOffset(), req.GetLimit())
+	list, total, err := do.Order(q.CreateTime.Desc()).FindByPage(req.GetOffset(), req.GetLimit())
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Contex
 
 func (s *combinationRecordService) GetLatestCombinationRecordList(ctx context.Context, activityID int64, count int) ([]*promotion.PromotionCombinationRecord, error) {
 	q := s.q.PromotionCombinationRecord
-	return q.WithContext(ctx).Where(q.ActivityID.Eq(activityID), q.Status.Eq(1)).Order(q.CreatedAt.Desc()).Limit(count).Find()
+	return q.WithContext(ctx).Where(q.ActivityID.Eq(activityID), q.Status.Eq(1)).Order(q.CreateTime.Desc()).Limit(count).Find()
 }
 
 func (s *combinationRecordService) ValidateCombinationRecord(ctx context.Context, userID int64, activityID int64, headID int64, skuID int64, count int) (*promotion.PromotionCombinationActivity, *promotion.PromotionCombinationProduct, error) {
@@ -249,10 +249,10 @@ func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Con
 		do = do.Where(q.Status.Eq(*req.Status))
 	}
 	if len(req.DateRange) == 2 {
-		do = do.Where(q.CreatedAt.Between(req.DateRange[0], req.DateRange[1]))
+		do = do.Where(q.CreateTime.Between(req.DateRange[0], req.DateRange[1]))
 	}
 
-	list, total, err := do.Order(q.CreatedAt.Desc()).FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
+	list, total, err := do.Order(q.CreateTime.Desc()).FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
 	if err != nil {
 		return nil, err
 	}

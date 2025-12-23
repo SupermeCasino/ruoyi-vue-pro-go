@@ -31,7 +31,7 @@ type ProductFavoriteResp struct {
 	SalesCount         int               `json:"salesCount"`
 	VirtualSalesCount  int               `json:"virtualSalesCount"`
 	BrowseCount        int               `json:"browseCount"`
-	CreatedAt          time.Time         `json:"createTime"`
+	CreateTime          time.Time         `json:"createTime"`
 	Skus               []*ProductSkuResp `json:"skus,omitempty"`
 }
 
@@ -42,5 +42,5 @@ type AppFavoriteResp struct {
 	SpuName   string    `json:"spuName"`
 	PicURL    string    `json:"picUrl"`
 	Price     int64     `json:"price"`
-	CreatedAt time.Time `json:"createdAt"`
+	CreateTime time.Time `json:"createdAt"`
 }

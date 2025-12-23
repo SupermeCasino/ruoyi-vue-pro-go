@@ -91,7 +91,7 @@ func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 			Status:            item.Status,
 			EndTime:           item.EndTime,
 			OrderID:           item.OrderID,
-			CreatedAt:         item.CreatedAt,
+			CreateTime:         item.CreateTime,
 		}
 	}
 

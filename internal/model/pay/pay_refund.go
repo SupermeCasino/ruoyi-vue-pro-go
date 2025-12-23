@@ -33,12 +33,7 @@ type PayRefund struct {
 	ChannelErrorMsg   string     `gorm:"column:channel_error_msg;comment:调用渠道的错误提示" json:"channelErrorMsg"`
 	ChannelNotifyData string     `gorm:"column:channel_notify_data;comment:支付渠道的同步/异步通知的内容" json:"channelNotifyData"`
 
-	CreatedAt time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   model.BitBool `gorm:"column:deleted;default:0;comment:是否删除" json:"deleted"`
-	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
-	Creator   string        `gorm:"column:creator;default:'';comment:创建者" json:"creator"`
-	Updater   string        `gorm:"column:updater;default:'';comment:更新者" json:"updater"`
+	model.TenantBaseDO
 }
 
 func (PayRefund) TableName() string {

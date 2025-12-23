@@ -115,7 +115,7 @@ func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.
 
 	// Time ranges
 	if len(r.CreateTime) == 2 {
-		q = q.Where(s.q.BrokerageUser.CreatedAt.Between(parseTime(r.CreateTime[0]), parseTime(r.CreateTime[1])))
+		q = q.Where(s.q.BrokerageUser.CreateTime.Between(parseTime(r.CreateTime[0]), parseTime(r.CreateTime[1])))
 	}
 	// BindUserTime?
 
@@ -335,7 +335,7 @@ func (s *BrokerageUserService) isUserCanBind(ctx context.Context, user *brokerag
 		if err != nil || memberUser == nil {
 			return false, nil
 		}
-		if time.Since(memberUser.CreatedAt) > 30*time.Second {
+		if time.Since(memberUser.CreateTime) > 30*time.Second {
 			return false, errors.New("只有在注册时可以绑定")
 		}
 	case 3:

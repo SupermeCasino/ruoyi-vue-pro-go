@@ -5,5 +5,5 @@ import "time"
 type MemberTagResp struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createTime"`
+	CreateTime time.Time `json:"createTime"`
 }

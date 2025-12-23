@@ -96,7 +96,7 @@ func (h *SocialUserHandler) GetSocialUserList(c *gin.Context) {
 			RawUserInfo: user.RawUserInfo,
 			Code:        user.Code,
 			State:       user.State,
-			CreateTime:  user.CreatedAt,
+			CreateTime:  user.CreateTime,
 		}
 	}
 	response.WriteSuccess(c, result)
@@ -123,7 +123,7 @@ func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
 		RawUserInfo: user.RawUserInfo,
 		Code:        user.Code,
 		State:       user.State,
-		CreateTime:  user.CreatedAt,
+		CreateTime:  user.CreateTime,
 	}
 	response.WriteSuccess(c, result)
 }
@@ -155,7 +155,7 @@ func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
 			RawUserInfo: user.RawUserInfo,
 			Code:        user.Code,
 			State:       user.State,
-			CreateTime:  user.CreatedAt,
+			CreateTime:  user.CreateTime,
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -43,7 +44,7 @@ func (s *ProductBrowseHistoryService) CreateBrowseHistory(ctx context.Context, u
 	history, err := h.WithContext(ctx).Where(h.UserID.Eq(userId), h.SpuID.Eq(spuId)).First()
 	if err == nil && history != nil {
 		// Update time
-		_, err := h.WithContext(ctx).Where(h.ID.Eq(history.ID)).Update(h.UpdatedAt, time.Now())
+		_, err := h.WithContext(ctx).Where(h.ID.Eq(history.ID)).Update(h.UpdateTime, time.Now())
 		return err
 	}
 
@@ -77,7 +78,7 @@ func (s *ProductBrowseHistoryService) HideUserBrowseHistory(ctx context.Context,
 // Java has separate ReqVOs but logic is similar. Admin uses BrowseHistoryPageReqVO, App uses AppBrowseHistoryPageReqVO
 func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, r *req.ProductBrowseHistoryPageReq) (*pagination.PageResult[resp.ProductBrowseHistoryResp], error) {
 	h := s.q.ProductBrowseHistory
-	q := h.WithContext(ctx).Where(h.UserDeleted.Is(false)) // Only show non-deleted to user? Java: "Boolean userDeleted" in params.
+	q := h.WithContext(ctx)
 
 	if r.UserId > 0 {
 		q = q.Where(h.UserID.Eq(r.UserId))
@@ -85,8 +86,14 @@ func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, 
 	if r.SpuId > 0 {
 		q = q.Where(h.SpuID.Eq(r.SpuId))
 	}
+	if r.UserDeleted != nil {
+		q = q.Where(h.UserDeleted.Eq(model.BitBool(*r.UserDeleted)))
+	}
+	if len(r.CreateTime) == 2 {
+		q = q.Where(h.CreateTime.Between(r.CreateTime[0], r.CreateTime[1]))
+	}
 
-	list, total, err := q.Order(h.UpdatedAt.Desc()).FindByPage(r.PageNo, r.PageSize)
+	list, total, err := q.Order(h.UpdateTime.Desc()).FindByPage(r.PageNo, r.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -103,10 +110,9 @@ func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, 
 
 	result := lo.Map(list, func(item *product.ProductBrowseHistory, _ int) resp.ProductBrowseHistoryResp {
 		r := resp.ProductBrowseHistoryResp{
-			ID:        item.ID,
-			UserID:    item.UserID,
-			SpuID:     item.SpuID,
-			CreatedAt: item.CreatedAt,
+			ID:     item.ID,
+			UserID: item.UserID,
+			SpuID:  item.SpuID,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
 			r.SpuName = spu.Name
@@ -127,9 +133,9 @@ func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, 
 // GetAppBrowseHistoryPage
 func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Context, userId int64, r *req.AppProductBrowseHistoryPageReq) (*pagination.PageResult[resp.AppProductBrowseHistoryResp], error) {
 	h := s.q.ProductBrowseHistory
-	q := h.WithContext(ctx).Where(h.UserID.Eq(userId)).Where(h.UserDeleted.Is(false))
+	q := h.WithContext(ctx).Where(h.UserID.Eq(userId)).Where(h.UserDeleted.Eq(model.BitBool(false)))
 
-	list, total, err := q.Order(h.UpdatedAt.Desc()).FindByPage(r.PageNo, r.PageSize)
+	list, total, err := q.Order(h.UpdateTime.Desc()).FindByPage(r.PageNo, r.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -145,9 +151,8 @@ func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Contex
 
 	result := lo.Map(list, func(item *product.ProductBrowseHistory, _ int) resp.AppProductBrowseHistoryResp {
 		r := resp.AppProductBrowseHistoryResp{
-			ID:        item.ID,
-			SpuID:     item.SpuID,
-			CreatedAt: item.CreatedAt,
+			ID:    item.ID,
+			SpuID: item.SpuID,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
 			r.SpuName = spu.Name

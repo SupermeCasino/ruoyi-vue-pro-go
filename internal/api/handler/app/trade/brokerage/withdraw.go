@@ -70,7 +70,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 				AuditReason: item.AuditReason,
 				AuditTime:   item.AuditTime,
 				Remark:      item.Remark,
-				CreatedAt:   item.CreatedAt,
+				CreateTime:   item.CreateTime,
 				// TypeName, StatusName -> Dict lookup (Frontend can handle or backend add logic)
 			}
 		}),
@@ -104,7 +104,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
 		AuditReason: withdraw.AuditReason,
 		AuditTime:   withdraw.AuditTime,
 		Remark:      withdraw.Remark,
-		CreatedAt:   withdraw.CreatedAt,
+		CreateTime:   withdraw.CreateTime,
 	}
 
 	// Wechat Transfer Info Logic

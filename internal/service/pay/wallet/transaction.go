@@ -80,7 +80,7 @@ func (s *PayWalletTransactionService) GetWalletTransactionSummary(ctx context.Co
 	q := s.q.PayWalletTransaction.WithContext(ctx).Where(s.q.PayWalletTransaction.WalletID.Eq(wallet.ID))
 
 	if len(createTime) == 2 {
-		q = q.Where(s.q.PayWalletTransaction.CreatedAt.Between(createTime[0], createTime[1]))
+		q = q.Where(s.q.PayWalletTransaction.CreateTime.Between(createTime[0], createTime[1]))
 	}
 
 	// 统计支出 (Price < 0)

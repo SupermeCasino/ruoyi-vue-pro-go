@@ -110,7 +110,7 @@ func (h *SeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		SingleLimitCount: act.SingleLimitCount,
 		Stock:            act.Stock,
 		TotalStock:       act.TotalStock,
-		CreateTime:       act.CreatedAt,
+		CreateTime:       act.CreateTime,
 	}
 	for _, p := range products {
 		detail.Products = append(detail.Products, resp.SeckillProductResp{
@@ -184,7 +184,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 			SingleLimitCount: v.SingleLimitCount,
 			Stock:            v.Stock,
 			TotalStock:       v.TotalStock,
-			CreateTime:       v.CreatedAt,
+			CreateTime:       v.CreateTime,
 		}
 
 		// 拼接 Products
@@ -303,7 +303,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 			SingleLimitCount: act.SingleLimitCount,
 			Stock:            act.Stock,
 			TotalStock:       act.TotalStock,
-			CreateTime:       act.CreatedAt,
+			CreateTime:       act.CreateTime,
 		}
 	}
 	response.WriteSuccess(c, result)

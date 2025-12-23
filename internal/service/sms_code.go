@@ -139,7 +139,7 @@ func (s *SmsCodeService) SendSmsCode(ctx context.Context, mobile string, scene i
 	}
 
 	var todayIndex int32 = 1
-	if lastCode != nil && isToday(lastCode.CreatedAt) {
+	if lastCode != nil && isToday(lastCode.CreateTime) {
 		// 如果今天已发过，检查是否超过限制
 		if lastCode.TodayIndex >= int32(SmsCodeMaxPerDay) {
 			return ErrSmsCodeExceedMaxPerDay

@@ -228,7 +228,7 @@ func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *
 		do = do.Where(q.Status.Eq(*r.Status))
 	}
 	if len(r.CreateTime) == 2 && r.CreateTime[0] != nil && r.CreateTime[1] != nil {
-		do = do.Where(q.CreatedAt.Between(*r.CreateTime[0], *r.CreateTime[1]))
+		do = do.Where(q.CreateTime.Between(*r.CreateTime[0], *r.CreateTime[1]))
 	}
 	do = do.Order(q.Sort.Desc(), q.ID.Desc())
 	list, count, err := do.FindByPage(r.PageNo, r.PageSize)

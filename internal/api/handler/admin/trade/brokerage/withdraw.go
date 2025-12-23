@@ -160,6 +160,6 @@ func (h *BrokerageWithdrawHandler) convert(do *brokerageModel.BrokerageWithdraw)
 		Remark:           do.Remark,
 		PayTransferID:    payTransferId,
 		TransferErrorMsg: do.TransferErrorMsg,
-		CreateTime:       do.CreatedAt,
+		CreateTime:       do.CreateTime,
 	}
 }

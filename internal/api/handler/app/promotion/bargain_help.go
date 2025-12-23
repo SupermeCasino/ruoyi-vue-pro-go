@@ -75,7 +75,7 @@ func (h *AppBargainHelpHandler) GetBargainHelpList(c *gin.Context) {
 	for i, item := range list {
 		vo := resp.AppBargainHelpRespVO{
 			ReducePrice: item.ReducePrice,
-			CreateTime:  item.CreatedAt,
+			CreateTime:  item.CreateTime,
 		}
 		if u, ok := userMap[item.UserID]; ok {
 			vo.Nickname = u.Nickname

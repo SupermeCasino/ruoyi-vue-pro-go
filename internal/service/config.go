@@ -133,6 +133,6 @@ func (s *ConfigService) convertResp(item *model.SystemConfig) *resp.ConfigRespVO
 		Type:       item.Type,
 		Visible:    bool(item.Visible),
 		Remark:     item.Remark,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

@@ -91,7 +91,7 @@ func (h *SocialClientHandler) GetSocialClient(c *gin.Context) {
 		ClientSecret: client.ClientSecret,
 		AgentId:      client.AgentId,
 		Status:       client.Status,
-		CreateTime:   client.CreatedAt,
+		CreateTime:   client.CreateTime,
 	}
 	response.WriteSuccess(c, result)
 }
@@ -122,7 +122,7 @@ func (h *SocialClientHandler) GetSocialClientPage(c *gin.Context) {
 			ClientSecret: client.ClientSecret,
 			AgentId:      client.AgentId,
 			Status:       client.Status,
-			CreateTime:   client.CreatedAt,
+			CreateTime:   client.CreateTime,
 		}
 	}
 

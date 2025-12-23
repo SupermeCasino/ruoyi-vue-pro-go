@@ -75,7 +75,7 @@ func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 			ExpireTime: item.ExpireTime,
 			StartTime:  item.StartTime,
 			EndTime:    item.EndTime,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 			Nickname:   item.Nickname,
 			Avatar:     item.Avatar,
 			SpuID:      item.SpuID,

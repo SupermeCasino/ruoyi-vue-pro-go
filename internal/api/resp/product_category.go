@@ -11,5 +11,5 @@ type ProductCategoryResp struct {
 	Sort        int32     `json:"sort"`
 	Status      int32     `json:"status"`
 	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"createTime"`
+	CreateTime   time.Time `json:"createTime"`
 }

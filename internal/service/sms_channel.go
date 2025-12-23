@@ -132,6 +132,6 @@ func (s *SmsChannelService) convertResp(item *model.SystemSmsChannel) *resp.SmsC
 		ApiKey:      item.ApiKey,
 		ApiSecret:   item.ApiSecret,
 		CallbackUrl: item.CallbackUrl,
-		CreateTime:  item.CreatedAt,
+		CreateTime:  item.CreateTime,
 	}
 }

@@ -27,7 +27,7 @@ type ProductSpuResp struct {
 	SalesCount         int               `json:"salesCount"`
 	VirtualSalesCount  int               `json:"virtualSalesCount"`
 	BrowseCount        int               `json:"browseCount"`
-	CreatedAt          time.Time         `json:"createTime"`
+	CreateTime          time.Time         `json:"createTime"`
 	Skus               []*ProductSkuResp `json:"skus,omitempty"` // 详情时返回
 }
 

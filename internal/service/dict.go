@@ -87,7 +87,7 @@ func (s *DictService) GetDictType(ctx context.Context, id int64) (*resp.DictType
 		Type:       item.Type,
 		Status:     item.Status,
 		Remark:     item.Remark,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}, nil
 }
 
@@ -123,7 +123,7 @@ func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePage
 			Type:       item.Type,
 			Status:     item.Status,
 			Remark:     item.Remark,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		})
 	}
 
@@ -206,7 +206,7 @@ func (s *DictService) GetDictData(ctx context.Context, id int64) (*resp.DictData
 		ColorType:  item.ColorType,
 		CssClass:   item.CssClass,
 		Remark:     item.Remark,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}, nil
 }
 
@@ -246,7 +246,7 @@ func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPage
 			ColorType:  item.ColorType,
 			CssClass:   item.CssClass,
 			Remark:     item.Remark,
-			CreateTime: item.CreatedAt,
+			CreateTime: item.CreateTime,
 		})
 	}
 

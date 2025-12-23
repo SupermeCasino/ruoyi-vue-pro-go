@@ -36,8 +36,8 @@ type PayTransferResp struct {
 	ChannelErrorMsg    string            `json:"channelErrorMsg"`
 	ChannelNotifyData  string            `json:"channelNotifyData"`
 	ChannelPackageInfo string            `json:"channelPackageInfo"`
-	CreatedAt          time.Time         `json:"createTime"`
-	UpdatedAt          time.Time         `json:"updateTime"`
+	CreateTime          time.Time         `json:"createTime"`
+	UpdateTime          time.Time         `json:"updateTime"`
 	Creator            string            `json:"creator"`
 	Updater            string            `json:"updater"`
 	Deleted            model.BitBool     `json:"deleted"`

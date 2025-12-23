@@ -101,6 +101,6 @@ func convertWalletResp(item *pay.PayWallet) *resp.PayWalletResp {
 		TotalExpense:  item.TotalExpense,
 		TotalRecharge: item.TotalRecharge,
 		FreezePrice:   item.FreezePrice,
-		CreateTime:    item.CreatedAt,
+		CreateTime:    item.CreateTime,
 	}
 }

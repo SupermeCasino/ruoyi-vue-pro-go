@@ -119,6 +119,6 @@ func (h *MemberLevelHandler) convertResp(item *member.MemberLevel) *resp.MemberL
 		DiscountPercent: item.DiscountPercent,
 		Icon:            item.Icon,
 		BackgroundURL:   item.BackgroundURL,
-		CreatedAt:       item.CreatedAt,
+		CreateTime:       item.CreateTime,
 	}
 }

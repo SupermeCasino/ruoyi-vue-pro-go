@@ -50,7 +50,7 @@ func (h *OperateLogHandler) GetOperateLogPage(c *gin.Context) {
 			RequestURL:    log.RequestURL,
 			UserIP:        log.UserIP,
 			UserAgent:     log.UserAgent,
-			CreateTime:    log.CreatedAt,
+			CreateTime:    log.CreateTime,
 		}
 	}
 

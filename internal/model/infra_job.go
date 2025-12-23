@@ -1,27 +1,17 @@
 package model
 
-import (
-	"time"
-
-	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
-)
-
 // InfraJob 定时任务
 type InfraJob struct {
-	ID             int64         `gorm:"primaryKey;autoIncrement;comment:任务编号" json:"id"`
-	Name           string        `gorm:"column:name;type:varchar(32);not null;comment:任务名称" json:"name"`
-	Status         int           `gorm:"column:status;type:tinyint;not null;default:0;comment:任务状态" json:"status"`
-	HandlerName    string        `gorm:"column:handler_name;type:varchar(64);not null;comment:处理器的名字" json:"handlerName"`
-	HandlerParam   string        `gorm:"column:handler_param;type:varchar(255);comment:处理器的参数" json:"handlerParam"`
-	CronExpression string        `gorm:"column:cron_expression;type:varchar(32);not null;comment:CRON 表达式" json:"cronExpression"`
-	RetryCount     int           `gorm:"column:retry_count;type:int;not null;default:0;comment:重试次数" json:"retryCount"`
-	RetryInterval  int           `gorm:"column:retry_interval;type:int;not null;default:0;comment:重试间隔，单位：毫秒" json:"retryInterval"`
-	MonitorTimeout *int          `gorm:"column:monitor_timeout;type:int;comment:监控超时时间，单位：毫秒" json:"monitorTimeout"`
-	Creator        string        `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
-	Updater        string        `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
-	CreatedAt      time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdatedAt      time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted        types.BitBool `gorm:"column:deleted;softDelete;comment:是否删除" json:"-"`
+	ID             int64  `gorm:"primaryKey;autoIncrement;comment:任务编号" json:"id"`
+	Name           string `gorm:"column:name;type:varchar(32);not null;comment:任务名称" json:"name"`
+	Status         int    `gorm:"column:status;type:tinyint;not null;default:0;comment:任务状态" json:"status"`
+	HandlerName    string `gorm:"column:handler_name;type:varchar(64);not null;comment:处理器的名字" json:"handlerName"`
+	HandlerParam   string `gorm:"column:handler_param;type:varchar(255);comment:处理器的参数" json:"handlerParam"`
+	CronExpression string `gorm:"column:cron_expression;type:varchar(32);not null;comment:CRON 表达式" json:"cronExpression"`
+	RetryCount     int    `gorm:"column:retry_count;type:int;not null;default:0;comment:重试次数" json:"retryCount"`
+	RetryInterval  int    `gorm:"column:retry_interval;type:int;not null;default:0;comment:重试间隔，单位：毫秒" json:"retryInterval"`
+	MonitorTimeout *int   `gorm:"column:monitor_timeout;type:int;comment:监控超时时间，单位：毫秒" json:"monitorTimeout"`
+	BaseDO
 }
 
 func (InfraJob) TableName() string {

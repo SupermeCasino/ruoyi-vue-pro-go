@@ -46,7 +46,7 @@ func (s *BrokerageRecordService) GetSummaryPriceByUserId(ctx context.Context, us
 		q = q.Where(s.q.BrokerageRecord.Status.Eq(status))
 	}
 	if !beginTime.IsZero() && !endTime.IsZero() {
-		q = q.Where(s.q.BrokerageRecord.CreatedAt.Between(beginTime, endTime))
+		q = q.Where(s.q.BrokerageRecord.CreateTime.Between(beginTime, endTime))
 	}
 
 	var sum int
@@ -83,7 +83,7 @@ func (s *BrokerageRecordService) GetBrokerageRecordPage(ctx context.Context, r *
 		q = q.Where(s.q.BrokerageRecord.BizID.Eq(r.BizID))
 	}
 	if len(r.CreateTime) == 2 {
-		q = q.Where(s.q.BrokerageRecord.CreatedAt.Between(parseTime(r.CreateTime[0]), parseTime(r.CreateTime[1])))
+		q = q.Where(s.q.BrokerageRecord.CreateTime.Between(parseTime(r.CreateTime[0]), parseTime(r.CreateTime[1])))
 	}
 
 	total, err := q.Count()
@@ -135,7 +135,7 @@ func (s *BrokerageRecordService) AddBrokerage(ctx context.Context, userID int64,
 		Title:       title,
 		Description: title,
 		Status:      tradeModel.BrokerageRecordStatusSettlement,
-		CreatedAt:   time.Now(),
+		CreateTime:   time.Now(),
 		TotalPrice:  price,
 	}
 	return s.q.BrokerageRecord.WithContext(ctx).Create(record)
@@ -165,7 +165,7 @@ func (s *BrokerageRecordService) ReduceBrokerageForWithdraw(ctx context.Context,
 		Title:       "佣金提现",
 		Description: "佣金提现",
 		Status:      tradeModel.BrokerageRecordStatusSettlement,
-		CreatedAt:   time.Now(),
+		CreateTime:   time.Now(),
 		TotalPrice:  price,
 	}
 	return s.q.BrokerageRecord.WithContext(ctx).Create(record)
@@ -247,7 +247,7 @@ func (s *BrokerageRecordService) GetBrokerageUserRankPageByPrice(ctx context.Con
 	priceCol := br.Price.ColumnName().String()
 	bizTypeCol := br.BizType.ColumnName().String()
 	statusCol := br.Status.ColumnName().String()
-	createTimeCol := br.CreatedAt.ColumnName().String()
+	createTimeCol := br.CreateTime.ColumnName().String()
 
 	// 构建基础查询条件统计总数
 	q := br.WithContext(ctx).
@@ -255,7 +255,7 @@ func (s *BrokerageRecordService) GetBrokerageUserRankPageByPrice(ctx context.Con
 		Where(br.Status.Eq(tradeModel.BrokerageRecordStatusSettlement))
 
 	if !beginTime.IsZero() && !endTime.IsZero() {
-		q = q.Where(br.CreatedAt.Between(beginTime, endTime))
+		q = q.Where(br.CreateTime.Between(beginTime, endTime))
 	}
 
 	// 获取总数 (不同用户数)
@@ -327,7 +327,7 @@ func (s *BrokerageRecordService) GetUserRankByPrice(ctx context.Context, userId 
 	priceCol := br.Price.ColumnName().String()
 	bizTypeCol := br.BizType.ColumnName().String()
 	statusCol := br.Status.ColumnName().String()
-	createTimeCol := br.CreatedAt.ColumnName().String()
+	createTimeCol := br.CreateTime.ColumnName().String()
 
 	// 2. 获取比用户佣金高的用户数量
 	db := br.WithContext(ctx).UnderlyingDB()

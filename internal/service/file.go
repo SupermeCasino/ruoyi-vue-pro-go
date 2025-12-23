@@ -248,7 +248,7 @@ func (s *FileService) convertResp(item *model.InfraFile) *resp.FileRespVO {
 		Url:        item.Url,
 		Type:       item.Type,
 		Size:       item.Size,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }
 

@@ -115,6 +115,6 @@ func convertPackageResp(item *pay.PayWalletRechargePackage) *resp.PayWalletRecha
 		PayPrice:   item.PayPrice,
 		BonusPrice: item.BonusPrice,
 		Status:     item.Status,
-		CreateTime: item.CreatedAt,
+		CreateTime: item.CreateTime,
 	}
 }

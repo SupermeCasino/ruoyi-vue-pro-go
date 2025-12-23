@@ -155,7 +155,7 @@ func (r *TradeOrderStatisticsRepositoryImpl) GetCountByCreateTime(ctx context.Co
 	t := r.q.TradeOrder
 	return t.WithContext(ctx).
 		// Where(t.Deleted.Is(false)).
-		Where(t.CreatedAt.Between(beginTime, endTime)).
+		Where(t.CreateTime.Between(beginTime, endTime)).
 		Count()
 }
 
@@ -182,7 +182,7 @@ func (r *TradeOrderStatisticsRepositoryImpl) GetUserCountByCreateTime(ctx contex
 	t := r.q.TradeOrder
 	return t.WithContext(ctx).
 		// Where(t.Deleted.Is(false)).
-		Where(t.CreatedAt.Between(beginTime, endTime)).
+		Where(t.CreateTime.Between(beginTime, endTime)).
 		Distinct(t.UserID).
 		Count()
 }

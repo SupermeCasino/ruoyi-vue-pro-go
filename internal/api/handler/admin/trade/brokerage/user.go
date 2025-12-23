@@ -113,7 +113,7 @@ func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 		BrokerageTime:    user.BrokerageTime,
 		Price:            user.BrokeragePrice,
 		FrozenPrice:      user.FrozenPrice,
-		CreateTime:       user.CreatedAt,
+		CreateTime:       user.CreateTime,
 	}
 
 	// Fill Member Info
@@ -159,7 +159,7 @@ func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
 			BrokerageTime:    u.BrokerageTime,
 			Price:            u.BrokeragePrice,
 			FrozenPrice:      u.FrozenPrice,
-			CreateTime:       u.CreatedAt,
+			CreateTime:       u.CreateTime,
 		}
 		if mu, ok := userMap[u.ID]; ok {
 			res.Avatar = mu.Avatar

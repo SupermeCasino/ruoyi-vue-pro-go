@@ -85,7 +85,7 @@ func (s *BargainRecordService) CreateBargainRecord(ctx context.Context, userID i
 func (s *BargainRecordService) GetBargainRecordPage(ctx context.Context, userID int64, p *pagination.PageParam) (*pagination.PageResult[*promotion.PromotionBargainRecord], error) {
 	q := s.q.PromotionBargainRecord
 	// List Logic: Where(UserID = userID).Order(CreateTime Desc)
-	list, total, err := q.WithContext(ctx).Where(q.UserID.Eq(userID)).Order(q.CreatedAt.Desc()).FindByPage(p.GetOffset(), p.PageSize)
+	list, total, err := q.WithContext(ctx).Where(q.UserID.Eq(userID)).Order(q.CreateTime.Desc()).FindByPage(p.GetOffset(), p.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +101,10 @@ func (s *BargainRecordService) GetBargainRecordPageAdmin(ctx context.Context, re
 		do = do.Where(q.Status.Eq(*req.Status))
 	}
 	if len(req.DateRange) == 2 {
-		do = do.Where(q.CreatedAt.Between(req.DateRange[0], req.DateRange[1]))
+		do = do.Where(q.CreateTime.Between(req.DateRange[0], req.DateRange[1]))
 	}
 
-	list, total, err := do.Order(q.CreatedAt.Desc()).FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
+	list, total, err := do.Order(q.CreateTime.Desc()).FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
 	if err != nil {
 		return nil, err
 	}

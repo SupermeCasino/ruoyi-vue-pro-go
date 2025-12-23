@@ -318,7 +318,7 @@ func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (ma
 			Mark:      user.Mark,
 			LevelID:   user.LevelID,
 			GroupID:   user.GroupID,
-			CreatedAt: user.CreatedAt,
+			CreateTime: user.CreateTime,
 		}
 	}
 	return userMap, nil
@@ -397,10 +397,10 @@ func (s *MemberUserService) GetUserPage(ctx context.Context, r *req.MemberUserPa
 	}
 	if len(r.CreateTime) == 2 {
 		if r.CreateTime[0] != nil {
-			q = q.Where(u.CreatedAt.Gte(*r.CreateTime[0]))
+			q = q.Where(u.CreateTime.Gte(*r.CreateTime[0]))
 		}
 		if r.CreateTime[1] != nil {
-			q = q.Where(u.CreatedAt.Lte(*r.CreateTime[1]))
+			q = q.Where(u.CreateTime.Lte(*r.CreateTime[1]))
 		}
 	}
 

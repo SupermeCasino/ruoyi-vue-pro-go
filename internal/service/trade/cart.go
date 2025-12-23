@@ -168,7 +168,7 @@ func (s *CartService) GetCartCount(ctx context.Context, userId int64) (int, erro
 // GetCartList 获取购物车列表
 func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppCartListResp, error) {
 	c := s.q.Cart
-	carts, err := c.WithContext(ctx).Where(c.UserID.Eq(userId)).Order(c.UpdatedAt.Desc()).Find()
+	carts, err := c.WithContext(ctx).Where(c.UserID.Eq(userId)).Order(c.UpdateTime.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
