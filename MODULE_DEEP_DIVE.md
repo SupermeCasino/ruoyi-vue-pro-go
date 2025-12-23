@@ -33,7 +33,7 @@ SystemUser (用户表)
 ├── Mobile: 手机号
 ├── Status: 状态 (0=启用, 1=禁用)
 ├── TenantID: 租户ID
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 SystemRole (角色表)
 ├── ID: 角色ID
@@ -222,7 +222,7 @@ MemberUser (会员用户表)
 ├── Points: 积分
 ├── Balance: 余额
 ├── Status: 状态
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 MemberLevel (会员等级表)
 ├── ID: 等级ID
@@ -238,7 +238,7 @@ MemberPointRecord (积分记录表)
 ├── Points: 积分数量（正数增加，负数扣除）
 ├── Type: 类型 (1=购物获得, 2=签到获得, 3=兑换消耗)
 ├── Reason: 原因
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 MemberSignInRecord (签到记录表)
 ├── ID: 记录ID
@@ -246,7 +246,7 @@ MemberSignInRecord (签到记录表)
 ├── SignInDate: 签到日期
 ├── ContinuousDays: 连续签到天数
 ├── Points: 获得积分
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 ```
 
 ### 业务流程
@@ -409,7 +409,7 @@ ProductSPU (商品SPU表 - 标准产品单元)
 ├── Pictures: 图片列表 (JSON)
 ├── Price: 价格
 ├── Status: 状态
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 ProductSKU (商品SKU表 - 库存单位)
 ├── ID: SKUID
@@ -429,19 +429,19 @@ ProductComment (商品评论表)
 ├── Content: 评论内容
 ├── Pictures: 评论图片 (JSON)
 ├── Status: 状态
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 ProductFavorite (商品收藏表)
 ├── ID: 收藏ID
 ├── UserID: 用户ID
 ├── SPUID: SPUID
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 ProductBrowseHistory (浏览历史表)
 ├── ID: 记录ID
 ├── UserID: 用户ID
 ├── SPUID: SPUID
-└── CreatedAt: 浏览时间
+└── CreateTime: 浏览时间
 ```
 
 ### 业务流程
@@ -600,7 +600,7 @@ TradeCart (购物车表)
 ├── SKUID: SKUID
 ├── Quantity: 数量
 ├── Selected: 是否选中
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 TradeOrder (订单表)
 ├── ID: 订单ID
@@ -614,7 +614,7 @@ TradeOrder (订单表)
 ├── ReceiveTime: 收货时间
 ├── CancelTime: 取消时间
 ├── CancelReason: 取消原因
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 TradeOrderItem (订单项表)
 ├── ID: 项ID
@@ -624,7 +624,7 @@ TradeOrderItem (订单项表)
 ├── Quantity: 数量
 ├── Price: 单价
 ├── Amount: 小计
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 TradeAfterSale (售后表)
 ├── ID: 售后ID
@@ -634,7 +634,7 @@ TradeAfterSale (售后表)
 ├── Reason: 原因
 ├── Status: 状态 (1=待审核, 2=已同意, 3=待退货, 4=已收货, 5=已完成, 6=已拒绝)
 ├── RefundAmount: 退款金额
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 DeliveryExpress (快递公司表)
 ├── ID: 快递ID
@@ -876,7 +876,7 @@ PayOrder (支付订单表)
 ├── Status: 状态 (1=待支付, 2=已支付, 3=支付失败, 4=已关闭)
 ├── PaymentTime: 支付时间
 ├── ChannelOrderNo: 渠道订单号
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 PayRefund (退款表)
 ├── ID: 退款ID
@@ -886,7 +886,7 @@ PayRefund (退款表)
 ├── Reason: 退款原因
 ├── Status: 状态 (1=待退款, 2=已退款, 3=退款失败)
 ├── RefundTime: 退款时间
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 PayNotify (支付回调表)
 ├── ID: 回调ID
@@ -894,7 +894,7 @@ PayNotify (支付回调表)
 ├── ChannelID: 渠道ID
 ├── Content: 回调内容 (JSON)
 ├── Status: 处理状态
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 ```
 
 ### 业务流程
@@ -1071,7 +1071,7 @@ PromotionCombinationRecord (拼团记录表)
 ├── UserID: 用户ID
 ├── Quantity: 数量
 ├── Status: 状态 (1=待成团, 2=已成团, 3=已失败)
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 PromotionBargainActivity (砍价活动表)
 ├── ID: 活动ID
@@ -1089,14 +1089,14 @@ PromotionBargainRecord (砍价记录表)
 ├── UserID: 用户ID
 ├── CurrentPrice: 当前价格
 ├── Status: 状态 (1=砍价中, 2=已完成)
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 PromotionBargainHelp (砍价助力表)
 ├── ID: 助力ID
 ├── BargainRecordID: 砍价记录ID
 ├── HelpUserID: 助力用户ID
 ├── ReducePrice: 砍价金额
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 ```
 
 ### 业务流程
@@ -1275,7 +1275,7 @@ BrokerageUser (分销商表)
 ├── AvailableBrokerage: 可用佣金
 ├── WithdrawnBrokerage: 已提现佣金
 ├── Status: 状态
-└── CreatedAt/UpdateTime: 时间戳
+└── CreateTime/UpdateTime: 时间戳
 
 BrokerageRecord (佣金记录表)
 ├── ID: 记录ID
@@ -1284,7 +1284,7 @@ BrokerageRecord (佣金记录表)
 ├── BrokerageAmount: 佣金金额
 ├── Type: 类型 (1=销售佣金, 2=推荐佣金)
 ├── Status: 状态 (1=待结算, 2=已结算)
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 
 BrokerageWithdraw (提现记录表)
 ├── ID: 提现ID
@@ -1294,7 +1294,7 @@ BrokerageWithdraw (提现记录表)
 ├── Status: 状态 (1=待审核, 2=已审核, 3=已提现, 4=已拒绝)
 ├── AuditTime: 审核时间
 ├── WithdrawTime: 提现时间
-└── CreatedAt: 创建时间
+└── CreateTime: 创建时间
 ```
 
 ### 业务流程

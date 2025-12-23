@@ -153,7 +153,7 @@ user, err := s.q.SystemUser.WithContext(ctx).
 // 列表查询
 users, err := s.q.SystemUser.WithContext(ctx).
     Where(s.q.SystemUser.Status.Eq(0)).
-    Order(s.q.SystemUser.CreatedAt.Desc()).
+    Order(s.q.SystemUser.CreateTime.Desc()).
     Offset(offset).
     Limit(limit).
     Find()
@@ -503,12 +503,12 @@ users, err := u.WithContext(ctx).
 
 // 范围查询
 users, err := u.WithContext(ctx).
-    Where(u.CreatedAt.Between(startTime, endTime)).
+    Where(u.CreateTime.Between(startTime, endTime)).
     Find()
 
 // 排序
 users, err := u.WithContext(ctx).
-    Order(u.CreatedAt.Desc()).
+    Order(u.CreateTime.Desc()).
     Order(u.ID.Asc()).
     Find()
 

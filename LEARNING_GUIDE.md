@@ -1029,8 +1029,8 @@ type MyEntity struct {
     ID        int64     `gorm:"column:id;primaryKey;autoIncrement"`
     Name      string    `gorm:"column:name;type:varchar(100)"`
     Status    int32     `gorm:"column:status;type:int"`
-    CreatedAt time.Time `gorm:"column:created_at;type:datetime"`
-    UpdateTime time.Time `gorm:"column:updated_at;type:datetime"`
+    CreateTime time.Time `gorm:"column:create_time;type:datetime"`
+    UpdateTime time.Time `gorm:"column:update_time;type:datetime"`
 }
 
 func (MyEntity) TableName() string {
@@ -1063,7 +1063,7 @@ type MyEntityRespVO struct {
     ID        int64  `json:"id"`
     Name      string `json:"name"`
     Status    int32  `json:"status"`
-    CreatedAt string `json:"createdAt"`
+    CreateTime string `json:"CreateTime"`
 }
 ```
 
@@ -1118,7 +1118,7 @@ func (s *MyEntityService) GetByID(ctx context.Context, id int64) (*resp.MyEntity
         ID:        entity.ID,
         Name:      entity.Name,
         Status:    entity.Status,
-        CreatedAt: entity.CreatedAt.Format("2006-01-02 15:04:05"),
+        CreateTime: entity.CreateTime.Format("2006-01-02 15:04:05"),
     }, nil
 }
 
@@ -1469,7 +1469,7 @@ users, err := u.WithContext(ctx).
     Where(u.Status.Eq(0)).
     Where(u.DeptID.Eq(deptID)).
     Where(u.Username.Like("%" + keyword + "%")).
-    Order(u.CreatedAt.Desc()).
+    Order(u.CreateTime.Desc()).
     Offset(offset).
     Limit(limit).
     Find()
