@@ -41,6 +41,11 @@ type AppSeckillActivityDetailResp struct {
 	TotalLimitCount  int        `json:"totalLimitCount"`  // 总限购
 	Stock            int        `json:"stock"`            // 库存
 	TotalStock       int        `json:"totalStock"`       // 总库存
+	// SPU 信息
+	SpuName      string `json:"spuName"`      // 商品名称
+	PicURL       string `json:"picUrl"`       // 商品主图
+	MarketPrice  int    `json:"marketPrice"`  // 市场价 (分)
+	SeckillPrice int    `json:"seckillPrice"` // 秒杀价 (分)
 	// 秒杀商品
 	Products []AppSeckillProductResp `json:"products"`
 }

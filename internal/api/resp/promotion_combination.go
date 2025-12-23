@@ -99,6 +99,7 @@ type AppCombinationRecordRespVO struct {
 type AppCombinationRecordDetailRespVO struct {
 	HeadRecord    AppCombinationRecordRespVO   `json:"headRecord"`
 	MemberRecords []AppCombinationRecordRespVO `json:"memberRecords"`
+	OrderID       int64                        `json:"orderId"`
 }
 
 // AppCombinationRecordSummaryRespVO

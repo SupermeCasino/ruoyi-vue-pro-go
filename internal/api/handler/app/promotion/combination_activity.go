@@ -46,7 +46,6 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.C
 		return
 	}
 
-	// Parse IDs "1,2,3"
 	parts := strings.Split(idsStr, ",")
 	ids := make([]int64, 0, len(parts))
 	for _, p := range parts {
@@ -60,34 +59,14 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.C
 		return
 	}
 
-	// 调用 Service 获取数据
-	list, err := h.svc.GetCombinationActivityListByIds(c.Request.Context(), ids)
+	// 1. 获取活动列表 (已通过 Service 进行 SPU 过滤与详情聚合)
+	list, err := h.svc.GetCombinationActivityListByIdsForApp(c.Request.Context(), ids)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
 
-	// 转换为 App 格式 (CombinationActivityRespVO -> AppCombinationActivityRespVO)
-	result := make([]*resp.AppCombinationActivityRespVO, len(list))
-	for i, item := range list {
-		minPrice := 0
-		if len(item.Products) > 0 {
-			minPrice = item.Products[0].CombinationPrice
-			for _, p := range item.Products {
-				if p.CombinationPrice < minPrice {
-					minPrice = p.CombinationPrice
-				}
-			}
-		}
-		result[i] = &resp.AppCombinationActivityRespVO{
-			ID:               item.ID,
-			Name:             item.Name,
-			UserSize:         item.UserSize,
-			SpuID:            item.SpuID,
-			CombinationPrice: minPrice,
-		}
-	}
-	response.WriteSuccess(c, result)
+	response.WriteSuccess(c, list)
 }
 
 // GetCombinationActivityDetail 获得拼团活动明细

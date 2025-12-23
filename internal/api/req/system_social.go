@@ -43,3 +43,12 @@ type SocialUserPageReq struct {
 	Nickname string `form:"nickname" json:"nickname"`
 	Openid   string `form:"openid" json:"openid"`
 }
+
+// SocialWxaSubscribeMessageSendReq 微信小程序订阅消息发送请求
+type SocialWxaSubscribeMessageSendReq struct {
+	UserID        int64                  `json:"userId"`
+	UserType      int                    `json:"userType"`
+	TemplateTitle string                 `json:"templateTitle"`
+	Page          string                 `json:"page"`
+	Messages      map[string]interface{} `json:"messages"`
+}

@@ -402,6 +402,8 @@ func RegisterAppRoutes(engine *gin.Engine,
 			// Point Activity (Public)
 			pointActivityGroup := promotionGroup.Group("/point-activity")
 			{
+				pointActivityGroup.GET("/page", appPointActivityHandler.GetPointActivityPage)
+				pointActivityGroup.GET("/get-detail", appPointActivityHandler.GetPointActivity)
 				pointActivityGroup.GET("/list-by-ids", appPointActivityHandler.GetPointActivityListByIds)
 			}
 		}

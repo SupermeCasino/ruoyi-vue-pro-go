@@ -2,9 +2,11 @@ package promotion
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -58,10 +60,14 @@ func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
 		}
 	}
 
-	// Convert to Response (匹配 Java BargainActivityConvert.convertAppList)
-	result := make([]resp.AppBargainActivityRespVO, len(list))
-	for i, item := range list {
-		result[i] = h.convertActivityResp(item, spuMap[item.SpuID])
+	// Convert to Response (匹配 Java BargainActivityConvert.convertAppList)并过滤
+	result := make([]resp.AppBargainActivityRespVO, 0, len(list))
+	for _, item := range list {
+		spu, ok := spuMap[item.SpuID]
+		if !ok || spu.Status != model.ProductSpuStatusEnable {
+			continue
+		}
+		result = append(result, h.convertActivityResp(item, spu))
 	}
 	response.WriteSuccess(c, result)
 }
@@ -99,10 +105,14 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 		}
 	}
 
-	// Convert to Response
-	result := make([]resp.AppBargainActivityRespVO, len(page.List))
-	for i, item := range page.List {
-		result[i] = h.convertActivityResp(item, spuMap[item.SpuID])
+	// Convert to Response 并过滤
+	result := make([]resp.AppBargainActivityRespVO, 0, len(page.List))
+	for _, item := range page.List {
+		spu, ok := spuMap[item.SpuID]
+		if !ok || spu.Status != model.ProductSpuStatusEnable {
+			continue
+		}
+		result = append(result, h.convertActivityResp(item, spu))
 	}
 	response.WriteSuccess(c, pagination.PageResult[resp.AppBargainActivityRespVO]{List: result, Total: page.Total})
 }
@@ -124,9 +134,13 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 
 	// Fetch SPU Info
 	spu, _ := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
+	if spu == nil || spu.Status != model.ProductSpuStatusEnable {
+		response.WriteBizError(c, errors.NewBizError(1001004003, "砍价活动已结束或商品已下架"))
+		return
+	}
 
 	// Fetch Success Count (Status = 1 = SUCCESS)
-	successCount, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), id, 1)
+	successCount, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), id, model.BargainRecordStatusSuccess)
 
 	// 匹配 Java BargainActivityConvert.convert(activity, successUserCount, spu)
 	detail := resp.AppBargainActivityDetailRespVO{

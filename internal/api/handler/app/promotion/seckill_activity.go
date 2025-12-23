@@ -9,6 +9,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -35,7 +36,7 @@ func NewAppSeckillActivityHandler(
 // 对齐 Java: AppSeckillActivityController.getNowSeckillActivity
 func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 	// 1. 获取当前正在进行的秒杀时段
-	configs, err := h.configSvc.GetSeckillConfigListByStatus(c.Request.Context(), 1)
+	configs, err := h.configSvc.GetSeckillConfigListByStatus(c.Request.Context(), model.CommonStatusEnable)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -93,17 +94,13 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 	}
 
 	// 5. 构建响应
-	actResp := make([]resp.AppSeckillActivityResp, len(activities))
-	for i, act := range activities {
-		spu := spuMap[act.SpuID]
-		picUrl := ""
-		marketPrice := 0
-		spuName := ""
-		if spu != nil {
-			picUrl = spu.PicURL
-			marketPrice = spu.MarketPrice
-			spuName = spu.Name
+	actResp := make([]resp.AppSeckillActivityResp, 0, len(activities))
+	for _, act := range activities {
+		spu, ok := spuMap[act.SpuID]
+		if !ok || spu.Status != model.ProductSpuStatusEnable {
+			continue
 		}
+
 		// 获取最低秒杀价
 		products, _ := h.svc.GetSeckillProductListByActivityID(c.Request.Context(), act.ID)
 		minPrice := 0
@@ -115,18 +112,18 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 				}
 			}
 		}
-		actResp[i] = resp.AppSeckillActivityResp{
+		actResp = append(actResp, resp.AppSeckillActivityResp{
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,
-			SpuName:      spuName,
-			PicURL:       picUrl,
-			MarketPrice:  marketPrice,
+			SpuName:      spu.Name,
+			PicURL:       spu.PicURL,
+			MarketPrice:  spu.MarketPrice,
 			SeckillPrice: minPrice,
 			Status:       act.Status,
 			Stock:        act.Stock,
 			TotalStock:   act.TotalStock,
-		}
+		})
 	}
 
 	response.WriteSuccess(c, resp.AppSeckillActivityNowResp{
@@ -163,17 +160,13 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 	}
 
 	// 构建响应
-	list := make([]resp.AppSeckillActivityResp, len(result.List))
-	for i, act := range result.List {
-		spu := spuMap[act.SpuID]
-		picUrl := ""
-		marketPrice := 0
-		spuName := ""
-		if spu != nil {
-			picUrl = spu.PicURL
-			marketPrice = spu.MarketPrice
-			spuName = spu.Name
+	list := make([]resp.AppSeckillActivityResp, 0, len(result.List))
+	for _, act := range result.List {
+		spu, ok := spuMap[act.SpuID]
+		if !ok || spu.Status != model.ProductSpuStatusEnable {
+			continue
 		}
+
 		// 获取最低秒杀价
 		products, _ := h.svc.GetSeckillProductListByActivityID(c.Request.Context(), act.ID)
 		minPrice := 0
@@ -185,18 +178,18 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 				}
 			}
 		}
-		list[i] = resp.AppSeckillActivityResp{
+		list = append(list, resp.AppSeckillActivityResp{
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,
-			SpuName:      spuName,
-			PicURL:       picUrl,
-			MarketPrice:  marketPrice,
+			SpuName:      spu.Name,
+			PicURL:       spu.PicURL,
+			MarketPrice:  spu.MarketPrice,
 			SeckillPrice: minPrice,
 			Status:       act.Status,
 			Stock:        act.Stock,
 			TotalStock:   act.TotalStock,
-		}
+		})
 	}
 
 	response.WriteSuccess(c, pagination.PageResult[resp.AppSeckillActivityResp]{
@@ -218,8 +211,15 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	}
 
 	// 校验状态
-	if act.Status != 1 {
+	if act.Status != model.CommonStatusEnable {
 		response.WriteSuccess(c, nil)
+		return
+	}
+
+	// Fetch SPU Info
+	spu, _ := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
+	if spu == nil || spu.Status != model.ProductSpuStatusEnable {
+		response.WriteBizError(c, errors.NewBizError(1001004003, "秒杀活动已结束或商品已下架"))
 		return
 	}
 
@@ -238,8 +238,22 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		TotalLimitCount:  act.TotalLimitCount,
 		Stock:            act.Stock,
 		TotalStock:       act.TotalStock,
+		SpuName:          spu.Name,
+		PicURL:           spu.PicURL,
+		MarketPrice:      spu.MarketPrice,
+		Products:         make([]resp.AppSeckillProductResp, 0, len(products)),
 	}
+
+	// Calculate Min Seckill Price
+	minPrice := 0
+	if len(products) > 0 {
+		minPrice = products[0].SeckillPrice
+	}
+
 	for _, p := range products {
+		if p.SeckillPrice < minPrice {
+			minPrice = p.SeckillPrice
+		}
 		detail.Products = append(detail.Products, resp.AppSeckillProductResp{
 			ID:           p.ID,
 			ActivityID:   p.ActivityID,
@@ -249,6 +263,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 			Stock:        p.Stock,
 		})
 	}
+	detail.SeckillPrice = minPrice
 
 	response.WriteSuccess(c, detail)
 }
@@ -276,7 +291,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) 
 	// 过滤启用状态
 	var activeList []resp.AppSeckillActivityResp
 	for _, act := range activityList {
-		if act.Status == 1 {
+		if act.Status == model.CommonStatusEnable {
 			activeList = append(activeList, resp.AppSeckillActivityResp{
 				ID:    act.ID,
 				Name:  act.Name,

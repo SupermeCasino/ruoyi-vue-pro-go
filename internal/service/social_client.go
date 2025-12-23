@@ -105,3 +105,10 @@ func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *req.So
 		Total: total,
 	}, nil
 }
+
+// SendWxaSubscribeMessage 发送小程序订阅消息 (Skeleton)
+func (s *SocialClientService) SendWxaSubscribeMessage(ctx context.Context, r *req.SocialWxaSubscribeMessageSendReq) error {
+	// TODO: 集成真实的微信小程序 API
+	// 详见 Java: SocialClientApiImpl.sendWxaSubscribeMessage
+	return nil
+}

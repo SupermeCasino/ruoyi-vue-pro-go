@@ -22,17 +22,7 @@ func NewAppCombinationRecordHandler(svc promotion.CombinationRecordService) *App
 
 // GetCombinationRecordSummary 获得拼团记录的概要信息
 func (h *AppCombinationRecordHandler) GetCombinationRecordSummary(c *gin.Context) {
-	// Java: getCombinationRecordSummary() no args.
-	// But Service method I defined takes activityID?
-	// Wait, earlier I saw Java `getCombinationRecordSummary` takes NO args and returns GLOBAL summary (user count, avatars).
-	// So my Service `GetCombinationRecordSummary` taking `activityID` was WRONG?
-	// Re-reading service impl: I passed activityID but didn't use it in logic?
-	// Logic was: `q.Distinct(q.UserID).Count()`.
-	// Svn code: `combinationRecordService.getCombinationUserCount()` -> global.
-	// So `activityID` arg in Service/Handler is unnecessary.
-
-	// I'll call service with 0 or fix service later.
-	summary, err := h.svc.GetCombinationRecordSummary(c.Request.Context(), 0)
+	summary, err := h.svc.GetCombinationRecordSummary(c.Request.Context())
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -44,12 +34,8 @@ func (h *AppCombinationRecordHandler) GetCombinationRecordSummary(c *gin.Context
 func (h *AppCombinationRecordHandler) GetHeadCombinationRecordList(c *gin.Context) {
 	activityID, _ := strconv.ParseInt(c.Query("activityId"), 10, 64)
 	count, _ := strconv.Atoi(c.DefaultQuery("count", "20"))
-	// status is required in Java, default?
-	// Java: @RequestParam("status") Integer status.
-	// I'll assume valid status passed.
-	// logic: `getLatestCombinationRecordList` uses `activityID` and `status`.
-
-	list, err := h.svc.GetLatestCombinationRecordList(c.Request.Context(), activityID, count)
+	status, _ := strconv.Atoi(c.Query("status"))
+	list, err := h.svc.GetHeadCombinationRecordList(c.Request.Context(), activityID, status, count)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -80,7 +66,6 @@ func (h *AppCombinationRecordHandler) GetHeadCombinationRecordList(c *gin.Contex
 // GetCombinationRecordPage 获得我的拼团记录分页
 func (h *AppCombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 	var req req.AppCombinationRecordPageReq
-	// Bind Helper?
 	req.PageNo, _ = strconv.Atoi(c.DefaultQuery("pageNo", "1"))
 	req.PageSize, _ = strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	req.Status, _ = strconv.Atoi(c.DefaultQuery("status", "0"))
@@ -103,8 +88,7 @@ func (h *AppCombinationRecordHandler) GetCombinationRecordDetail(c *gin.Context)
 		return
 	}
 
-	userId := c.GetInt64("userId") // Optional?
-	// If context doesn't have it, it returns 0.
+	userId := c.GetInt64("userId")
 
 	detail, err := h.svc.GetCombinationRecordDetail(c.Request.Context(), userId, id)
 	if err != nil {

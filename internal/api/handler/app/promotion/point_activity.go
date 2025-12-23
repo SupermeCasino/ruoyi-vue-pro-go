@@ -4,10 +4,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +27,100 @@ func NewAppPointActivityHandler(svc *promotionSvc.PointActivityService, spuSvc *
 		svc:    svc,
 		spuSvc: spuSvc,
 	}
+}
+
+// GetPointActivityPage 获得积分商城活动分页
+// 对齐 Java: AppPointActivityController.getPointActivityPage
+func (h *AppPointActivityHandler) GetPointActivityPage(c *gin.Context) {
+	var reqVO req.PointActivityPageReq
+	if err := c.ShouldBindQuery(&reqVO); err != nil {
+		response.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	pageResult, err := h.svc.GetPointActivityPage(c.Request.Context(), &reqVO)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	if len(pageResult.List) == 0 {
+		response.WriteSuccess(c, pagination.PageResult[*resp.AppPointActivityRespVO]{
+			List:  []*resp.AppPointActivityRespVO{},
+			Total: pageResult.Total,
+		})
+		return
+	}
+
+	resultList, err := h.buildAppPointActivityRespVOList(c, lo.Map(pageResult.List, func(item promotion.PromotionPointActivity, _ int) *promotion.PromotionPointActivity {
+		return &item
+	}))
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+
+	response.WriteSuccess(c, pagination.PageResult[*resp.AppPointActivityRespVO]{
+		List:  resultList,
+		Total: pageResult.Total,
+	})
+}
+
+// GetPointActivity 获得积分商城活动明细
+// 对齐 Java: AppPointActivityController.getPointActivity (路径对应 get-detail)
+func (h *AppPointActivityHandler) GetPointActivity(c *gin.Context) {
+	idStr := c.Query("id")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if id == 0 {
+		response.WriteError(c, 400, "参数错误")
+		return
+	}
+
+	activity, products, err := h.svc.GetPointActivity(c.Request.Context(), id)
+	if err != nil {
+		response.WriteError(c, 500, err.Error())
+		return
+	}
+	if activity == nil || activity.Status == 0 {
+		response.WriteSuccess(c, nil)
+		return
+	}
+
+	// 拼接数据
+	respVO := &resp.AppPointActivityDetailRespVO{
+		ID:         activity.ID,
+		SpuID:      activity.SpuID,
+		Status:     activity.Status,
+		Stock:      activity.Stock,
+		TotalStock: activity.TotalStock,
+		Remark:     activity.Remark,
+	}
+
+	// 商品列表
+	respVO.Products = make([]resp.AppPointProductRespVO, len(products))
+	for i, p := range products {
+		respVO.Products[i] = resp.AppPointProductRespVO{
+			ID:    p.ID,
+			SkuID: p.SkuID,
+			Count: p.Count,
+			Point: p.Point,
+			Price: p.Price,
+			Stock: p.Stock,
+		}
+	}
+
+	// 设置最低积分/价格
+	if len(products) > 0 {
+		minProduct := lo.MinBy(products, func(a, b *promotion.PromotionPointProduct) bool {
+			return a.Point < b.Point
+		})
+		if minProduct != nil {
+			respVO.Point = minProduct.Point
+			respVO.Price = minProduct.Price
+		}
+	}
+
+	response.WriteSuccess(c, respVO)
 }
 
 // GetPointActivityListByIds 获得积分商城活动列表
@@ -92,11 +189,28 @@ func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context
 	})
 
 	// 3. 组装结果
-	result := make([]*resp.AppPointActivityRespVO, len(activityList))
-	for i, activity := range activityList {
+	result := make([]*resp.AppPointActivityRespVO, 0, len(activityList))
+	for _, activity := range activityList {
+		// ✅ 核心修复: 过滤无效 SPU (不存在或非上架状态)
+		spu, ok := spuMap[activity.SpuID]
+		if !ok || spu.Status != model.ProductSpuStatusEnable {
+			continue
+		}
+
+		// ✅ 核心修复: 过滤非开启状态的活动 (CommonStatusEnable = 0)
+		if activity.Status != model.CommonStatusEnable {
+			continue
+		}
+
 		vo := &resp.AppPointActivityRespVO{
-			ID:    activity.ID,
-			SpuID: activity.SpuID,
+			ID:          activity.ID,
+			SpuID:       activity.SpuID,
+			Status:      activity.Status,
+			Stock:       activity.Stock,
+			TotalStock:  activity.TotalStock,
+			SpuName:     spu.Name,
+			PicUrl:      spu.PicURL,
+			MarketPrice: spu.MarketPrice,
 		}
 
 		// 设置 Product 信息 (Min Point/Price)
@@ -110,14 +224,7 @@ func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context
 			}
 		}
 
-		// 设置 SPU 信息
-		if spu, ok := spuMap[activity.SpuID]; ok {
-			vo.SpuName = spu.Name
-			vo.PicUrl = spu.PicURL
-			vo.MarketPrice = spu.MarketPrice
-		}
-
-		result[i] = vo
+		result = append(result, vo)
 	}
 	return result, nil
 }
