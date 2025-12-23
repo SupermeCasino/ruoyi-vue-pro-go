@@ -218,33 +218,22 @@ func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, re
 }
 
 // GetUserCountByTagId 获得标签下的用户数量
+// 对齐 Java: MemberUserMapper.selectCountByTagId (使用 FIND_IN_SET)
 func (s *MemberUserService) GetUserCountByTagId(ctx context.Context, tagId int64) (int64, error) {
-	// MySQL JSON_CONTAINS equivalent
-	// gorm-gen doesn't support JSON_CONTAINS directly via generic API well, using raw query or Where condition string
-	// But `TagIds` is defined as `[]int64`, gorm handles serialization.
-	// We need to query where tagId is in the JSON array.
-	// Using `JSON_CONTAINS(tag_ids, CAST(tagId AS CHAR))` or just `JSON_CONTAINS(tag_ids, 'tagId')` depending on DB type.
-	// For simplicity and safety, we can try using the gorm-gen provided capabilities or fallback to WithContext clauses.
-	//
-	// However, gen might generate helper for JSON array field if configured properly.
-	// If not, we use:
-	// return s.q.MemberUser.WithContext(ctx).Where(gorm.Expr("JSON_CONTAINS(tag_ids, CAST(? AS CHAR))", tagId)).Count()
-	// Using UnderlyingDB() to execute raw condition for JSON_CONTAINS as gorm-gen specific Where expects gen.Condition
 	var count int64
-	err := s.q.MemberUser.WithContext(ctx).UnderlyingDB().Where("JSON_CONTAINS(tag_ids, ?)", tagId).Count(&count).Error
+	err := s.q.MemberUser.WithContext(ctx).UnderlyingDB().
+		Where("FIND_IN_SET(?, tag_ids)", tagId).
+		Count(&count).Error
 	return count, err
 }
 
 // UpdateUserPoint 更新用户积分
+// 对齐 Java: MemberUserMapper.updatePointIncr / updatePointDecr
 // point: 增加积分 (正数) 或 消费积分 (负数)
 func (s *MemberUserService) UpdateUserPoint(ctx context.Context, id int64, point int) bool {
 	if point == 0 {
 		return true
 	}
-	// GORM update with expression: point = point + ?
-	// result := s.q.MemberUser.WithContext(ctx).Where(s.q.MemberUser.ID.Eq(id)).UpdateSimple(s.q.MemberUser.Point.Add(point))
-	// Since gorm-gen might need specific syntax for simple update expressions or we can use generic update.
-	// Safe way with atomic update:
 	u := s.q.MemberUser
 	info, err := u.WithContext(ctx).Where(u.ID.Eq(id)).Update(u.Point, u.Point.Add(int32(point)))
 	if err != nil {
