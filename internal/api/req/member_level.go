@@ -12,7 +12,6 @@ type MemberLevelCreateReq struct {
 	Icon            string `json:"icon"`
 	BackgroundURL   string `json:"backgroundUrl"`
 	Status          int    `json:"status" binding:"required"`
-	Remark          string `json:"remark"`
 }
 
 type MemberLevelUpdateReq struct {
@@ -24,7 +23,6 @@ type MemberLevelUpdateReq struct {
 	Icon            string `json:"icon"`
 	BackgroundURL   string `json:"backgroundUrl"`
 	Status          int    `json:"status" binding:"required"`
-	Remark          string `json:"remark"`
 }
 
 type MemberLevelPageReq struct {

@@ -5,14 +5,12 @@ import (
 )
 
 type MemberTagCreateReq struct {
-	Name   string `json:"name" binding:"required"`
-	Remark string `json:"remark"`
+	Name string `json:"name" binding:"required"`
 }
 
 type MemberTagUpdateReq struct {
-	ID     int64  `json:"id" binding:"required"`
-	Name   string `json:"name" binding:"required"`
-	Remark string `json:"remark"`
+	ID   int64  `json:"id" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type MemberTagPageReq struct {

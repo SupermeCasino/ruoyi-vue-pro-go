@@ -4,12 +4,9 @@ import "time"
 
 // AppMemberUserUpdateReq 修改基本信息请求
 type AppMemberUserUpdateReq struct {
-	Nickname string     `json:"nickname" binding:"required"`
-	Avatar   string     `json:"avatar" binding:"required"`
-	Sex      int32      `json:"sex"`
-	Birthday *time.Time `json:"birthday"`
-	AreaID   int32      `json:"areaId"`
-	Email    string     `json:"email"`
+	Nickname string `json:"nickname" binding:"required"`
+	Avatar   string `json:"avatar" binding:"required"`
+	Sex      int32  `json:"sex"`
 }
 
 // AppMemberUserUpdateMobileReq 修改手机请求
@@ -39,7 +36,6 @@ type AppMemberUserResetPasswordReq struct {
 type MemberUserUpdateReq struct {
 	ID       int64      `json:"id" binding:"required"`
 	Mobile   string     `json:"mobile"`
-	Email    string     `json:"email"`
 	Status   int32      `json:"status"`
 	Nickname string     `json:"nickname"`
 	Avatar   string     `json:"avatar"`

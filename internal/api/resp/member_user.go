@@ -46,7 +46,6 @@ type MemberUserResp struct {
 	CreatedAt  time.Time  `json:"createTime"`
 	// 扩展字段
 	Point      int32    `json:"point"`
-	TotalPoint int32    `json:"totalPoint"`
 	TagNames   []string `json:"tagNames"`
 	LevelName  string   `json:"levelName"`
 	GroupName  string   `json:"groupName"`
