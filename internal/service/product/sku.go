@@ -2,6 +2,7 @@ package product
 
 import (
 	"context"
+	"strings"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
@@ -257,13 +258,7 @@ func (s *ProductSkuService) GetSkuList(ctx context.Context, ids []int64) ([]*res
 		return nil, err
 	}
 	result := lo.Map(skus, func(item *product.ProductSku, _ int) *resp.ProductSkuResp {
-		return &resp.ProductSkuResp{
-			ID:     item.ID,
-			SpuID:  item.SpuID,
-			Price:  item.Price,
-			Stock:  item.Stock,
-			PicURL: item.PicURL,
-		}
+		return s.convertSkuResp(item)
 	})
 	return result, nil
 }
@@ -457,5 +452,54 @@ func (s *ProductSkuService) convertSkuReqToModel(spuID int64, req *req.ProductSk
 		Volume:               req.Volume,
 		FirstBrokeragePrice:  req.FirstBrokeragePrice,
 		SecondBrokeragePrice: req.SecondBrokeragePrice,
+	}
+}
+
+func (s *ProductSkuService) convertSkuResp(sku *product.ProductSku) *resp.ProductSkuResp {
+	properties := make([]resp.ProductSkuPropertyResp, len(sku.Properties))
+	for i, p := range sku.Properties {
+		properties[i] = resp.ProductSkuPropertyResp{
+			PropertyID:   p.PropertyID,
+			PropertyName: p.PropertyName,
+			ValueID:      p.ValueID,
+			ValueName:    p.ValueName,
+		}
+	}
+
+	// 生成 SKU 名称：从属性拼接，例如 "黑色 - CH510"
+	// 如果没有属性，使用默认名称
+	var skuName string
+	if len(sku.Properties) > 0 {
+		var names []string
+		for _, p := range sku.Properties {
+			if p.ValueName != "" {
+				names = append(names, p.ValueName)
+			}
+		}
+		if len(names) > 0 {
+			skuName = strings.Join(names, " - ")
+		} else {
+			skuName = "默认规格"
+		}
+	} else {
+		skuName = "默认规格"
+	}
+
+	return &resp.ProductSkuResp{
+		ID:                   sku.ID,
+		Name:                 skuName, // ✅ 对齐 Java: 生成 SKU 名称
+		SpuID:                sku.SpuID,
+		Properties:           properties,
+		Price:                sku.Price,
+		MarketPrice:          sku.MarketPrice,
+		CostPrice:            sku.CostPrice,
+		BarCode:              sku.BarCode,
+		PicURL:               sku.PicURL,
+		Stock:                sku.Stock,
+		Weight:               sku.Weight,
+		Volume:               sku.Volume,
+		FirstBrokeragePrice:  sku.FirstBrokeragePrice,
+		SecondBrokeragePrice: sku.SecondBrokeragePrice,
+		SalesCount:           sku.SalesCount,
 	}
 }
