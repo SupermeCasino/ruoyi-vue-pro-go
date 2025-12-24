@@ -1,6 +1,10 @@
 package resp
 
-import "time"
+import (
+	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
+)
 
 // AppTradeOrderCreateResp 交易订单创建 Response
 type AppTradeOrderCreateResp struct {
@@ -10,13 +14,13 @@ type AppTradeOrderCreateResp struct {
 
 // AppTradeOrderSettlementResp 交易订单结算信息 Response
 type AppTradeOrderSettlementResp struct {
-	Type       int                              `json:"type"`
-	Items      []AppTradeOrderSettlementItem    `json:"items"`
-	Coupons    []AppTradeOrderSettlementCoupon  `json:"coupons"`
-	Price      AppTradeOrderSettlementPrice     `json:"price"`
-	Address    *AppTradeOrderSettlementAddress  `json:"address"`
-	UsePoint   int                              `json:"usePoint"`
-	TotalPoint int                              `json:"totalPoint"`
+	Type       int                                `json:"type"`
+	Items      []AppTradeOrderSettlementItem      `json:"items"`
+	Coupons    []AppTradeOrderSettlementCoupon    `json:"coupons"`
+	Price      AppTradeOrderSettlementPrice       `json:"price"`
+	Address    *AppTradeOrderSettlementAddress    `json:"address"`
+	UsePoint   int                                `json:"usePoint"`
+	TotalPoint int                                `json:"totalPoint"`
 	Promotions []AppTradeOrderSettlementPromotion `json:"promotions"`
 }
 
@@ -79,17 +83,17 @@ type AppTradeOrderDetailResp struct {
 	ID                    int64                   `json:"id"`
 	No                    string                  `json:"no"`
 	Type                  int                     `json:"type"`
-	CreateTime            time.Time               `json:"createTime"`
+	CreateTime            types.JsonDateTime      `json:"createTime"`
 	UserRemark            string                  `json:"userRemark"`
 	Status                int                     `json:"status"`
 	ProductCount          int                     `json:"productCount"`
-	FinishTime            *time.Time              `json:"finishTime"`
-	CancelTime            *time.Time              `json:"cancelTime"`
+	FinishTime            *types.JsonDateTime     `json:"finishTime"`
+	CancelTime            *types.JsonDateTime     `json:"cancelTime"`
 	CommentStatus         bool                    `json:"commentStatus"`
 	PayStatus             bool                    `json:"payStatus"`
 	PayOrderID            int64                   `json:"payOrderId"`
-	PayTime               *time.Time              `json:"payTime"`
-	PayExpireTime         *time.Time              `json:"payExpireTime"`
+	PayTime               *types.JsonDateTime     `json:"payTime"`
+	PayExpireTime         *types.JsonDateTime     `json:"payExpireTime"`
 	PayChannelCode        string                  `json:"payChannelCode"`
 	PayChannelName        string                  `json:"payChannelName"`
 	TotalPrice            int                     `json:"totalPrice"`
@@ -101,8 +105,8 @@ type AppTradeOrderDetailResp struct {
 	LogisticsID           int64                   `json:"logisticsId"`
 	LogisticsName         string                  `json:"logisticsName"`
 	LogisticsNo           string                  `json:"logisticsNo"`
-	DeliveryTime          *time.Time              `json:"deliveryTime"`
-	ReceiveTime           *time.Time              `json:"receiveTime"`
+	DeliveryTime          *types.JsonDateTime     `json:"deliveryTime"`
+	ReceiveTime           *types.JsonDateTime     `json:"receiveTime"`
 	ReceiverName          string                  `json:"receiverName"`
 	ReceiverMobile        string                  `json:"receiverMobile"`
 	ReceiverAreaID        int                     `json:"receiverAreaId"`
@@ -144,7 +148,7 @@ type AppTradeOrderPageItemResp struct {
 	Status              int                     `json:"status"`
 	ProductCount        int                     `json:"productCount"`
 	CommentStatus       bool                    `json:"commentStatus"`
-	CreateTime          time.Time               `json:"createTime"`
+	CreateTime          types.JsonDateTime      `json:"createTime"`
 	PayOrderID          int64                   `json:"payOrderId"`
 	PayPrice            int                     `json:"payPrice"`
 	DeliveryType        int                     `json:"deliveryType"`
