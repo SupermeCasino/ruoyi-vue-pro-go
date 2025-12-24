@@ -56,9 +56,9 @@ type DiyPagePropertyResp struct {
 type AppDiyTemplatePropertyResp struct {
 	ID       int64          `json:"id"`
 	Name     string         `json:"name"`
-	Property datatypes.JSON `json:"property"`
-	Home     datatypes.JSON `json:"home"`
-	User     datatypes.JSON `json:"user"`
+	Property datatypes.JSON `json:"property"` // JSON object, no escaping
+	Home     datatypes.JSON `json:"home"`     // JSON object, no escaping
+	User     datatypes.JSON `json:"user"`     // JSON object, no escaping
 }
 
 // AppDiyPagePropertyResp 用户App - 装修页面属性响应 (新增)

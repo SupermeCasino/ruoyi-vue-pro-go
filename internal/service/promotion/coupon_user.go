@@ -27,7 +27,7 @@ func NewCouponUserService(q *query.Query) *CouponUserService {
 // 返回值: canTakeAgain - 是否可继续领取
 func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *req.AppCouponTakeReq) (bool, error) {
 	// 1. 校验模板
-	template, err := s.q.PromotionCouponTemplate.WithContext(ctx).Where(s.q.PromotionCouponTemplate.ID.Eq(req.TemplateID)).First()
+	template, err := s.q.PromotionCouponTemplate.WithContext(ctx).Where(s.q.PromotionCouponTemplate.ID.Eq(int64(req.TemplateID))).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, errors.New("优惠券模板不存在")
@@ -35,9 +35,10 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 		return false, err
 	}
 
-	if template.Status != 1 { // 1: Enable
-		return false, errors.New("优惠券模板已禁用")
-	}
+	// 注意：Java版本没有检查模板状态，为保持兼容性，这里也不检查
+	// if template.Status != 1 { // 1: Enable
+	//     return false, errors.New("优惠券模板已禁用")
+	// }
 	if template.TotalCount > 0 && template.TakeCount >= template.TotalCount {
 		return false, errors.New("优惠券已领完")
 	}
@@ -69,19 +70,26 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 		endTime = startTime.AddDate(0, 0, template.FixedEndTerm)
 	}
 
-	// 4. 创建优惠券
+	// 4. 创建优惠券 (对齐Java CouponDO字段)
+	takeType := template.TakeType
+	if takeType == 0 {
+		takeType = 1 // 兜底：如果模板未设置领取方式，默认为手动领取
+	}
 	coupon := &promotion.PromotionCoupon{
-		TemplateID:      template.ID,
-		Name:            template.Name,
-		Status:          1, // 未使用
-		UserID:          userId,
-		ValidStartTime:  startTime,
-		ValidEndTime:    endTime,
-		DiscountType:    template.DiscountType,
-		DiscountPrice:   template.DiscountPrice,
-		DiscountPercent: template.DiscountPercent,
-		DiscountLimit:   template.DiscountLimit,
-		UsePriceMin:     template.UsePriceMin,
+		TemplateID:         template.ID,
+		Name:               template.Name,
+		Status:             1, // 未使用
+		UserID:             userId,
+		TakeType:           takeType,
+		UsePrice:           template.UsePriceMin, // 使用金额限制
+		ValidStartTime:     startTime,
+		ValidEndTime:       endTime,
+		ProductScope:       template.ProductScope,       // 商品范围
+		ProductScopeValues: template.ProductScopeValues, // 商品范围值
+		DiscountType:       template.DiscountType,
+		DiscountPrice:      template.DiscountPrice,
+		DiscountPercent:    template.DiscountPercent,
+		DiscountLimitPrice: template.DiscountLimitPrice,
 	}
 
 	err = s.q.Transaction(func(tx *query.Query) error {
@@ -197,8 +205,8 @@ func (s *CouponUserService) CalculateCoupon(ctx context.Context, userId int64, c
 		discount = int64(coupon.DiscountPrice)
 	case 2: // Percent
 		discount = price * int64(coupon.DiscountPercent) / 100
-		if coupon.DiscountLimit > 0 && discount > int64(coupon.DiscountLimit) {
-			discount = int64(coupon.DiscountLimit)
+		if coupon.DiscountLimitPrice > 0 && discount > int64(coupon.DiscountLimitPrice) {
+			discount = int64(coupon.DiscountLimitPrice)
 		}
 	}
 

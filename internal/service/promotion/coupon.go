@@ -41,7 +41,7 @@ func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *req.Coupo
 		DiscountType:       req.DiscountType,
 		DiscountPrice:      req.DiscountPrice,
 		DiscountPercent:    req.DiscountPercent,
-		DiscountLimit:      req.DiscountLimit,
+		DiscountLimitPrice: req.DiscountLimit,
 	}
 	err := s.q.PromotionCouponTemplate.WithContext(ctx).Create(t)
 	return t.ID, err
@@ -66,7 +66,7 @@ func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *req.Coupo
 		DiscountType:       req.DiscountType,
 		DiscountPrice:      req.DiscountPrice,
 		DiscountPercent:    req.DiscountPercent,
-		DiscountLimit:      req.DiscountLimit,
+		DiscountLimitPrice: req.DiscountLimit,
 	})
 	return err
 }
@@ -232,17 +232,17 @@ func (s *CouponService) TakeCouponByAdmin(ctx context.Context, templateId int64,
 	coupons := make([]*promotion.PromotionCoupon, 0, len(userIds))
 	for _, userId := range userIds {
 		coupon := &promotion.PromotionCoupon{
-			TemplateID:      templateId,
-			Name:            template.Name,
-			UserID:          userId,
-			Status:          1, // 未使用
-			UsePriceMin:     template.UsePriceMin,
-			ValidStartTime:  validStartTime,
-			ValidEndTime:    validEndTime,
-			DiscountType:    template.DiscountType,
-			DiscountPrice:   template.DiscountPrice,
-			DiscountPercent: template.DiscountPercent,
-			DiscountLimit:   template.DiscountLimit,
+			TemplateID:         templateId,
+			Name:               template.Name,
+			UserID:             userId,
+			Status:             1, // 未使用
+			UsePrice:           template.UsePriceMin,
+			ValidStartTime:     validStartTime,
+			ValidEndTime:       validEndTime,
+			DiscountType:       template.DiscountType,
+			DiscountPrice:      template.DiscountPrice,
+			DiscountPercent:    template.DiscountPercent,
+			DiscountLimitPrice: template.DiscountLimitPrice,
 		}
 		coupons = append(coupons, coupon)
 	}
@@ -394,7 +394,7 @@ func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCou
 		DiscountType:       t.DiscountType,
 		DiscountPercent:    t.DiscountPercent,
 		DiscountPrice:      t.DiscountPrice,
-		DiscountLimitPrice: t.DiscountLimit,
+		DiscountLimitPrice: t.DiscountLimitPrice,
 		TakeCount:          t.TakeCount,
 		CanTake:            canTake,
 	}

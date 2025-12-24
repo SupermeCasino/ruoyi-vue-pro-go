@@ -1,8 +1,12 @@
 package req
 
+import (
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
+)
+
 // AppCouponTakeReq 领取优惠券 Request
 type AppCouponTakeReq struct {
-	TemplateID int64 `json:"templateId" binding:"required"`
+	TemplateID types.FlexInt64 `json:"templateId" binding:"required"`
 }
 
 // AppCouponPageReq 我的优惠券分页 Request
