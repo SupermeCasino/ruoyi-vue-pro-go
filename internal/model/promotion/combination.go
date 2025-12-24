@@ -21,12 +21,12 @@ type PromotionCombinationActivity struct {
 	Status           int       `gorm:"column:status;not null;comment:活动状态" json:"status"`
 	LimitDuration    int       `gorm:"column:limit_duration;not null;comment:限制时长(小时)" json:"limitDuration"`
 
-	Creator   string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
+	Creator    string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
+	Updater    string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
 	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
 	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	Deleted    model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
+	TenantID   int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }
 
 // TableName 表名
@@ -46,12 +46,12 @@ type PromotionCombinationProduct struct {
 	ActivityStartTime time.Time `gorm:"column:activity_start_time;comment:活动开始时间" json:"activityStartTime"`
 	ActivityEndTime   time.Time `gorm:"column:activity_end_time;comment:活动结束时间" json:"activityEndTime"`
 
-	Creator   string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
+	Creator    string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
+	Updater    string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
 	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
 	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	Deleted    model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
+	TenantID   int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }
 
 // TableName 表名
@@ -83,12 +83,12 @@ type PromotionCombinationRecord struct {
 	StartTime        time.Time     `gorm:"column:start_time;comment:开始时间" json:"startTime"`
 	EndTime          time.Time     `gorm:"column:end_time;comment:结束时间" json:"endTime"`
 
-	Creator   string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
+	Creator    string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
+	Updater    string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
 	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
 	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID  int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	Deleted    model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
+	TenantID   int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
 }
 
 // TableName 表名
