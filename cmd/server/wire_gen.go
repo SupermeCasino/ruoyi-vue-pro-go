@@ -35,13 +35,13 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
-	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
+	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
@@ -141,24 +141,24 @@ func InitApp() (*gin.Engine, error) {
 	tradeOrderLogRepository := repo.NewTradeOrderLogRepository(query)
 	tradeOrderLogService := trade.NewTradeOrderLogService(tradeOrderLogRepository)
 	tradeNoRedisDAO := trade3.NewTradeNoRedisDAO(redisClient)
-	tradeOrderUpdateService := trade.NewTradeOrderUpdateService(query, productSkuService, cartService, tradePriceService, memberAddressService, couponUserService, tradeOrderLogService, tradeNoRedisDAO)
-	expressClientFactoryImpl := client.NewExpressClientFactory()
-	deliveryExpressService := trade.NewDeliveryExpressService(query)
-	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
-	tradeOrderHandler := trade4.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
-	payClientFactory := client2.NewPayClientFactory()
+	payClientFactory := client.NewPayClientFactory()
 	payChannelService := pay.NewPayChannelService(query, payClientFactory)
 	payAppService := pay.NewPayAppService(query, payChannelService)
 	payNotifyService := pay.NewPayNotifyService(query, zapLogger, redisClient)
 	payNoRedisDAO := pay2.NewPayNoRedisDAO(redisClient)
 	payOrderService := pay.NewPayOrderService(query, payAppService, payChannelService, payClientFactory, payNotifyService, payNoRedisDAO)
+	tradeConfigService := trade.NewTradeConfigService(query)
+	tradeOrderUpdateService := trade.NewTradeOrderUpdateService(query, productSkuService, cartService, tradePriceService, memberAddressService, couponUserService, tradeOrderLogService, tradeNoRedisDAO, payOrderService, tradeConfigService)
+	expressClientFactoryImpl := client2.NewExpressClientFactory()
+	deliveryExpressService := trade.NewDeliveryExpressService(query)
+	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
+	tradeOrderHandler := trade4.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
 	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService, payNoRedisDAO)
 	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
 	socialClientService := service.NewSocialClientService(query)
 	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService, tradeOrderUpdateService, socialClientService)
 	afterSaleLogRepository := repo.NewAfterSaleLogRepository(query)
 	afterSaleLogService := trade.NewAfterSaleLogService(afterSaleLogRepository)
-	tradeConfigService := trade.NewTradeConfigService(query)
 	tradeAfterSaleService := trade.NewTradeAfterSaleService(query, tradeOrderUpdateService, tradeOrderQueryService, deliveryExpressService, tradeNoRedisDAO, payRefundService, combinationRecordService, memberUserService, afterSaleLogService, tradeOrderLogService, tradeConfigService, payAppService)
 	appTradeOrderHandler := trade2.NewAppTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, tradeAfterSaleService, tradePriceService)
 	tradeAfterSaleHandler := trade4.NewTradeAfterSaleHandler(tradeAfterSaleService)

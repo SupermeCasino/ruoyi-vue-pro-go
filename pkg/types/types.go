@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -333,3 +334,61 @@ type IntListFromCSV = ListFromCSV[int]
 
 // StringListFromCSV 处理逗号分隔的字符串列表
 type StringListFromCSV = ListFromCSV[string]
+
+// JsonDateTime 用于 JSON 序列化时保持 "2006-01-02 15:04:05" 格式
+type JsonDateTime time.Time
+
+const jsonDateTimeLayout = "2006-01-02 15:04:05"
+
+func (t JsonDateTime) MarshalJSON() ([]byte, error) {
+	st := time.Time(t)
+	if st.IsZero() {
+		return []byte("null"), nil
+	}
+	return []byte(fmt.Sprintf("\"%s\"", st.Format(jsonDateTimeLayout))), nil
+}
+
+func (t *JsonDateTime) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		return nil
+	}
+	now, err := time.ParseInLocation("\""+jsonDateTimeLayout+"\"", string(data), time.Local)
+	*t = JsonDateTime(now)
+	return err
+}
+
+func (t JsonDateTime) Value() (driver.Value, error) {
+	st := time.Time(t)
+	if st.IsZero() {
+		return nil, nil
+	}
+	return st, nil
+}
+
+func (t *JsonDateTime) Scan(v interface{}) error {
+	if v == nil {
+		return nil
+	}
+	vt, ok := v.(time.Time)
+	if !ok {
+		return errors.New("invalid type for JsonDateTime")
+	}
+	*t = JsonDateTime(vt)
+	return nil
+}
+
+func (t JsonDateTime) String() string {
+	return time.Time(t).Format(jsonDateTimeLayout)
+}
+
+func ToJsonDateTime(t time.Time) JsonDateTime {
+	return JsonDateTime(t)
+}
+
+func ToJsonDateTimePtr(t *time.Time) *JsonDateTime {
+	if t == nil {
+		return nil
+	}
+	jt := JsonDateTime(*t)
+	return &jt
+}
