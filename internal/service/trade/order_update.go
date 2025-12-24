@@ -63,7 +63,7 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 	calcReq := &TradePriceCalculateReqBO{
 		UserID:        uId,
 		CouponID:      req.CouponID,
-		PointStatus:   req.PointStatus,
+		PointStatus:   *req.PointStatus,
 		DeliveryType:  req.DeliveryType,
 		AddressID:     req.AddressID,
 		PickUpStoreID: req.PickUpStoreID,
@@ -132,7 +132,7 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 	calcReq := &TradePriceCalculateReqBO{
 		UserID:        uId,
 		CouponID:      reqVO.CouponID,
-		PointStatus:   reqVO.PointStatus,
+		PointStatus:   *reqVO.PointStatus,
 		DeliveryType:  reqVO.DeliveryType,
 		AddressID:     reqVO.AddressID,
 		PickUpStoreID: reqVO.PickUpStoreID,
