@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -198,14 +199,17 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 			Selected: bool(cart.Selected),
 		}
 
-		// 判断有效性
-		isValid := sku != nil && spu != nil && spu.Status == 1 && sku.Stock > 0
+		// 判断有效性：SPU 已上架且 SKU 有库存
+		isValid := spu != nil && spu.Status == model.ProductSpuStatusEnable && sku != nil && sku.Stock > 0
 
 		if spu != nil {
 			item.Spu = &resp.AppCartSpuInfo{
-				ID:     spu.ID,
-				Name:   spu.Name,
-				PicURL: spu.PicURL,
+				ID:         spu.ID,
+				Name:       spu.Name,
+				PicURL:     spu.PicURL,
+				CategoryID: spu.CategoryID,
+				Stock:      spu.Stock,
+				Status:     spu.Status,
 			}
 		}
 		if sku != nil {
@@ -214,6 +218,14 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 				PicURL: sku.PicURL,
 				Price:  sku.Price,
 				Stock:  sku.Stock,
+				Properties: lo.Map(sku.Properties, func(p resp.ProductSkuPropertyResp, _ int) resp.AppCartSkuPropertyInfo {
+					return resp.AppCartSkuPropertyInfo{
+						PropertyID:   p.PropertyID,
+						PropertyName: p.PropertyName,
+						ValueID:      p.ValueID,
+						ValueName:    p.ValueName,
+					}
+				}),
 			}
 		}
 
