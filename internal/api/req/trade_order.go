@@ -2,29 +2,30 @@ package req
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
 )
 
 // AppTradeOrderSettlementReq 交易订单结算请求
 type AppTradeOrderSettlementReq struct {
-	Items                 []AppTradeOrderSettlementItem `json:"items" binding:"required,dive"`
-	CouponID              *int64                        `json:"couponId"`
-	PointStatus           bool                          `json:"pointStatus" binding:"required"`
-	DeliveryType          int                           `json:"deliveryType" binding:"required"` // 1: 快递, 2: 自提
-	AddressID             *int64                        `json:"addressId"`
-	PickUpStoreID         *int64                        `json:"pickUpStoreId"`
-	ReceiverName          string                        `json:"receiverName"`
-	ReceiverMobile        string                        `json:"receiverMobile"`
-	SeckillActivityID     *int64                        `json:"seckillActivityId"`
-	CombinationActivityID *int64                        `json:"combinationActivityId"`
-	CombinationHeadID     *int64                        `json:"combinationHeadId"`
-	BargainRecordID       *int64                        `json:"bargainRecordId"`
-	PointActivityID       *int64                        `json:"pointActivityId"`
+	Items                 []AppTradeOrderSettlementItem `json:"items" form:"items" binding:"dive"`
+	CouponID              *int64                        `json:"couponId" form:"couponId"`
+	PointStatus           *bool                         `json:"pointStatus" form:"pointStatus" binding:"required"`
+	DeliveryType          int                           `json:"deliveryType" form:"deliveryType" binding:"required"` // 1: 快递, 2: 自提
+	AddressID             *int64                        `json:"addressId" form:"addressId"`
+	PickUpStoreID         *int64                        `json:"pickUpStoreId" form:"pickUpStoreId"`
+	ReceiverName          string                        `json:"receiverName" form:"receiverName"`
+	ReceiverMobile        string                        `json:"receiverMobile" form:"receiverMobile"`
+	SeckillActivityID     *int64                        `json:"seckillActivityId" form:"seckillActivityId"`
+	CombinationActivityID *int64                        `json:"combinationActivityId" form:"combinationActivityId"`
+	CombinationHeadID     *int64                        `json:"combinationHeadId" form:"combinationHeadId"`
+	BargainRecordID       *int64                        `json:"bargainRecordId" form:"bargainRecordId"`
+	PointActivityID       *int64                        `json:"pointActivityId" form:"pointActivityId"`
 }
 
 type AppTradeOrderSettlementItem struct {
-	SkuID  int64 `json:"skuId"`
-	Count  int   `json:"count"`
-	CartID int64 `json:"cartId"`
+	SkuID  int64 `json:"skuId" form:"skuId"`
+	Count  int   `json:"count" form:"count"`
+	CartID int64 `json:"cartId" form:"cartId"`
 }
 
 // AppTradeOrderCreateReq 交易订单创建请求
@@ -101,6 +102,42 @@ type AppTradeOrderItemCommentCreateReq struct {
 type AppTradeOrderSettlementProductReq struct {
 	SkuID int64 `form:"skuId" binding:"required"`
 	Count int   `form:"count" binding:"required,min=1"`
+}
+
+// AppTradeOrderSettlementQueryReq 订单结算查询请求 (用于GET请求)
+type AppTradeOrderSettlementQueryReq struct {
+	SkuIds                types.ListFromCSV[int64] `form:"skuIds"`  // SKU ID列表，逗号分隔
+	Counts                types.ListFromCSV[int]   `form:"counts"`  // 数量列表，逗号分隔
+	CartIds               types.ListFromCSV[int64] `form:"cartIds"` // 购物车ID列表，逗号分隔
+	CouponID              *int64                   `form:"couponId"`
+	PointStatus           *bool                    `form:"pointStatus" binding:"required"`
+	DeliveryType          int                      `form:"deliveryType" binding:"required"` // 1: 快递, 2: 自提
+	AddressID             *int64                   `form:"addressId"`
+	PickUpStoreID         *int64                   `form:"pickUpStoreId"`
+	ReceiverName          string                   `form:"receiverName"`
+	ReceiverMobile        string                   `form:"receiverMobile"`
+	SeckillActivityID     *int64                   `form:"seckillActivityId"`
+	CombinationActivityID *int64                   `form:"combinationActivityId"`
+	CombinationHeadID     *int64                   `form:"combinationHeadId"`
+	BargainRecordID       *int64                   `form:"bargainRecordId"`
+	PointActivityID       *int64                   `form:"pointActivityId"`
+}
+
+func (q *AppTradeOrderSettlementQueryReq) ToSettlementItems() []AppTradeOrderSettlementItem {
+	if len(q.SkuIds) == 0 {
+		return nil
+	}
+	items := make([]AppTradeOrderSettlementItem, len(q.SkuIds))
+	for i, skuId := range q.SkuIds {
+		items[i].SkuID = skuId
+		if i < len(q.Counts) {
+			items[i].Count = q.Counts[i]
+		}
+		if i < len(q.CartIds) {
+			items[i].CartID = q.CartIds[i]
+		}
+	}
+	return items
 }
 
 // AppTradeOrderUpdatePaidReq 更新订单为已支付请求

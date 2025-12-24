@@ -1,6 +1,11 @@
 package trade
 
 import (
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
@@ -47,9 +52,35 @@ func (h *AppTradeOrderHandler) SettlementOrder(c *gin.Context) {
 		}
 	} else {
 		if err := c.ShouldBindQuery(&r); err != nil {
-			response.WriteBizError(c, errors.ErrParam)
+			// fmt.Printf("SettlementOrder Bind Error: %v\n", err)
+		}
+		// 支持 Spring 风格的 items[0].skuId 形式
+		if len(r.Items) == 0 {
+			r.Items = h.parseOrderItemsFromQuery(c.Request.URL.Query())
+		}
+		// 备选方案: 支持 skuIds=1,2&counts=1,1 形式
+		if len(r.Items) == 0 {
+			var q req.AppTradeOrderSettlementQueryReq
+			if err := c.ShouldBindQuery(&q); err == nil {
+				r.Items = q.ToSettlementItems()
+			}
+		}
+
+		// 验证基础字段 (PointStatus, DeliveryType)
+		if r.PointStatus == nil {
+			response.WriteError(c, 400, "参数错误: pointStatus 缺失")
 			return
 		}
+		if r.DeliveryType == 0 {
+			response.WriteError(c, 400, "参数错误: deliveryType 缺失或无效")
+			return
+		}
+	}
+
+	// 最终验证: 必须有商品
+	if len(r.Items) == 0 {
+		response.WriteError(c, 400, "参数错误: items 缺失")
+		return
 	}
 
 	res, err := h.svc.SettlementOrder(c, context.GetUserId(c), &r)
@@ -465,4 +496,65 @@ func (h *AppTradeOrderHandler) GetOrderItem(c *gin.Context) {
 		Properties:      properties,
 	}
 	response.WriteSuccess(c, res)
+}
+
+// parseOrderItemsFromQuery 解析 items[0].skuId 格式的查询参数
+func (h *AppTradeOrderHandler) parseOrderItemsFromQuery(q url.Values) []req.AppTradeOrderSettlementItem {
+	itemsMap := make(map[int]*req.AppTradeOrderSettlementItem)
+	indices := make([]int, 0)
+
+	for k, v := range q {
+		if !strings.HasPrefix(k, "items[") {
+			continue
+		}
+		// 解析 items[0].skuId
+		closeBracket := strings.Index(k, "]")
+		if closeBracket < 0 {
+			continue
+		}
+		indexStr := k[6:closeBracket]
+		index, err := strconv.Atoi(indexStr)
+		if err != nil {
+			continue
+		}
+
+		if _, ok := itemsMap[index]; !ok {
+			itemsMap[index] = &req.AppTradeOrderSettlementItem{}
+			indices = append(indices, index)
+		}
+
+		prop := ""
+		if len(k) > closeBracket+1 {
+			prop = k[closeBracket+1:]
+			prop = strings.TrimPrefix(prop, ".")
+			prop = strings.TrimPrefix(prop, "[")
+			prop = strings.TrimSuffix(prop, "]")
+		}
+
+		val := ""
+		if len(v) > 0 {
+			val = v[0]
+		}
+
+		switch prop {
+		case "skuId":
+			itemsMap[index].SkuID = utils.ParseInt64(val)
+		case "count":
+			itemsMap[index].Count, _ = strconv.Atoi(val)
+		case "cartId":
+			itemsMap[index].CartID = utils.ParseInt64(val)
+		}
+	}
+
+	if len(indices) == 0 {
+		return nil
+	}
+
+	// 排序索引以保证顺序一致性
+	sort.Ints(indices)
+	res := make([]req.AppTradeOrderSettlementItem, 0, len(indices))
+	for _, idx := range indices {
+		res = append(res, *itemsMap[idx])
+	}
+	return res
 }
