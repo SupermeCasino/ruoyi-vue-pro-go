@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -100,7 +101,7 @@ func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.Promo
 // GetInfoList 获得 App Banner 列表
 // 对应 Java /app-api/promotion/banner/list
 func (s *PromotionBannerService) GetAppBannerList(ctx context.Context, position int) ([]*resp.PromotionBannerResp, error) {
-	q := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.Status.Eq(0)) // Enable
+	q := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.Status.Eq(model.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
 	if position > 0 {
 		q = q.Where(s.q.PromotionBanner.Position.Eq(position))
 	}
@@ -115,14 +116,14 @@ func (s *PromotionBannerService) GetAppBannerList(ctx context.Context, position 
 
 func (s *PromotionBannerService) convertResp(item *promotion.PromotionBanner) *resp.PromotionBannerResp {
 	return &resp.PromotionBannerResp{
-		ID:        item.ID,
-		Title:     item.Title,
-		PicURL:    item.PicURL,
-		Url:       item.Url,
-		Status:    item.Status,
-		Sort:      item.Sort,
-		Position:  item.Position,
-		Memo:      item.Memo,
+		ID:         item.ID,
+		Title:      item.Title,
+		PicURL:     item.PicURL,
+		Url:        item.Url,
+		Status:     item.Status,
+		Sort:       item.Sort,
+		Position:   item.Position,
+		Memo:       item.Memo,
 		CreateTime: item.CreateTime,
 	}
 }

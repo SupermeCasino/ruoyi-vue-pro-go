@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -113,7 +114,7 @@ func (s *articleCategoryService) GetArticleCategoryList(ctx context.Context, req
 
 func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Context) ([]*resp.ArticleCategorySimpleRespVO, error) {
 	list, err := s.q.PromotionArticleCategory.WithContext(ctx).
-		Where(s.q.PromotionArticleCategory.Status.Eq(0)). // Only Enable
+		Where(s.q.PromotionArticleCategory.Status.Eq(model.CommonStatusEnable)). // 使用启用状态常量替代魔法数字 0
 		Order(s.q.PromotionArticleCategory.Sort.Asc()).
 		Find()
 	if err != nil {

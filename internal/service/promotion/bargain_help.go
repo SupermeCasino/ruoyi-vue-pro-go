@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -81,7 +82,7 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 		if record.UserID == userID {
 			return errors.NewBizError(1001007001, "不能给自己砍价")
 		}
-		if record.Status != 1 { // 1: In Progress
+		if record.Status != model.BargainRecordStatusInProgress { // 进行中
 			return errors.NewBizError(1001007002, "砍价记录已结束")
 		}
 
@@ -90,7 +91,7 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 		if err != nil {
 			return errors.NewBizError(1001004000, "砍价活动不存在")
 		}
-		if activity.Status != 1 { // 1: Open
+		if activity.Status != promotion.ActivityStatusRun { // 进行中
 			return errors.NewBizError(1001004001, "砍价活动已结束")
 		}
 		now := time.Now()
@@ -147,7 +148,7 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 		newStatus := record.Status
 		if newPrice <= activity.BargainMinPrice {
 			newPrice = activity.BargainMinPrice
-			newStatus = 2 // Success
+			newStatus = model.BargainRecordStatusSuccess // 成功
 		}
 
 		// 更新记录状态和金额
@@ -155,7 +156,7 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 			BargainPrice: newPrice,
 			Status:       newStatus,
 		}
-		if newStatus == 2 {
+		if newStatus == model.BargainRecordStatusSuccess {
 			updateData.EndTime = now // 成功时记录结束时间
 		}
 

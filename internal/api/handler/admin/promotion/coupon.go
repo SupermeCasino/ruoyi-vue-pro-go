@@ -22,12 +22,12 @@ func NewCouponHandler(svc *promotion.CouponService) *CouponHandler {
 func (h *CouponHandler) CreateCouponTemplate(c *gin.Context) {
 	var r req.CouponTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
 	}
 	id, err := h.svc.CreateCouponTemplate(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error()) // HTTP 500 Internal Server Error
 		return
 	}
 	response.WriteSuccess(c, id)
@@ -37,11 +37,11 @@ func (h *CouponHandler) CreateCouponTemplate(c *gin.Context) {
 func (h *CouponHandler) UpdateCouponTemplate(c *gin.Context) {
 	var r req.CouponTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
 	}
 	if err := h.svc.UpdateCouponTemplate(c, &r); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteError(c, 500, err.Error()) // HTTP 500 Internal Server Error
 		return
 	}
 	response.WriteSuccess(c, true)

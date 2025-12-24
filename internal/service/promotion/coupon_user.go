@@ -36,7 +36,7 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 	}
 
 	// 注意：Java版本没有检查模板状态，为保持兼容性，这里也不检查
-	// if template.Status != 1 { // 1: Enable
+	// if template.Status != promotion.CommonStatusEnable { // 启用状态
 	//     return false, errors.New("优惠券模板已禁用")
 	// }
 	if template.TotalCount > 0 && template.TakeCount >= template.TotalCount {
@@ -59,13 +59,13 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 	var startTime, endTime time.Time
 	now := time.Now()
 	switch template.ValidityType {
-	case 1: // 固定日期
+	case promotion.CouponValidityTypeDate: // 固定日期
 		if template.ValidEndTime == nil || now.After(*template.ValidEndTime) {
 			return false, errors.New("优惠券已过期")
 		}
 		startTime = *template.ValidStartTime
 		endTime = *template.ValidEndTime
-	case 2: // 领取后N天
+	case promotion.CouponValidityTypeTerm: // 领取后N天
 		startTime = now.AddDate(0, 0, template.FixedStartTerm)
 		endTime = startTime.AddDate(0, 0, template.FixedEndTerm)
 	}
@@ -73,12 +73,12 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 	// 4. 创建优惠券 (对齐Java CouponDO字段)
 	takeType := template.TakeType
 	if takeType == 0 {
-		takeType = 1 // 兜底：如果模板未设置领取方式，默认为手动领取
+		takeType = promotion.CouponTakeTypeUser // 兜底：如果模板未设置领取方式，默认为手动领取
 	}
 	coupon := &promotion.PromotionCoupon{
 		TemplateID:         template.ID,
 		Name:               template.Name,
-		Status:             1, // 未使用
+		Status:             promotion.CouponStatusUnused, // 未使用
 		UserID:             userId,
 		TakeType:           takeType,
 		UsePrice:           template.UsePriceMin, // 使用金额限制
@@ -159,7 +159,7 @@ func (s *CouponUserService) GetCoupon(ctx context.Context, userId int64, couponI
 func (s *CouponUserService) GetUnusedCouponCount(ctx context.Context, userId int64) (int64, error) {
 	return s.q.PromotionCoupon.WithContext(ctx).
 		Where(s.q.PromotionCoupon.UserID.Eq(userId)).
-		Where(s.q.PromotionCoupon.Status.Eq(1)). // 1: 未使用
+		Where(s.q.PromotionCoupon.Status.Eq(promotion.CouponStatusUnused)). // 未使用
 		Count()
 }
 
@@ -174,7 +174,7 @@ func (s *CouponUserService) CalculateCoupon(ctx context.Context, userId int64, c
 	}
 
 	// Check Validity
-	if coupon.Status != 1 {
+	if coupon.Status != promotion.CouponStatusUnused {
 		return 0, errors.New("优惠券不可用")
 	}
 	now := time.Now()
@@ -201,9 +201,9 @@ func (s *CouponUserService) CalculateCoupon(ctx context.Context, userId int64, c
 	// Calculate Amount
 	discount := int64(0)
 	switch coupon.DiscountType {
-	case 1: // Price
+	case promotion.DiscountTypePrice: // 满减
 		discount = int64(coupon.DiscountPrice)
-	case 2: // Percent
+	case promotion.DiscountTypePercent: // 折扣
 		discount = price * int64(coupon.DiscountPercent) / 100
 		if coupon.DiscountLimitPrice > 0 && discount > int64(coupon.DiscountLimitPrice) {
 			discount = int64(coupon.DiscountLimitPrice)
@@ -227,7 +227,7 @@ func (s *CouponUserService) UseCoupon(ctx context.Context, userId int64, couponI
 		return err
 	}
 
-	if coupon.Status != 1 {
+	if coupon.Status != promotion.CouponStatusUnused {
 		return errors.New("优惠券不可用")
 	}
 	now := time.Now()
@@ -240,7 +240,7 @@ func (s *CouponUserService) UseCoupon(ctx context.Context, userId int64, couponI
 	// Update Status
 	// Use map for updates to include UsedTime
 	_, err = s.q.PromotionCoupon.WithContext(ctx).Where(s.q.PromotionCoupon.ID.Eq(couponId)).Updates(map[string]interface{}{
-		"status":       2, // Used
+		"status":       promotion.CouponStatusUsed, // 已使用
 		"use_order_id": orderId,
 		"use_time":     now,
 	})
@@ -249,10 +249,10 @@ func (s *CouponUserService) UseCoupon(ctx context.Context, userId int64, couponI
 
 // checkScope 检查适用范围
 func (s *CouponUserService) checkScope(t *promotion.PromotionCouponTemplate, spuIDs []int64, categoryIDs []int64) bool {
-	if t.ProductScope == 1 { // All
+	if t.ProductScope == promotion.ProductScopeAll { // 全部商品
 		return true
 	}
-	if t.ProductScope == 2 { // Category
+	if t.ProductScope == promotion.ProductScopeCategory { // 指定品类
 		if len(t.ProductScopeValues) == 0 {
 			return true
 		}
@@ -265,7 +265,7 @@ func (s *CouponUserService) checkScope(t *promotion.PromotionCouponTemplate, spu
 		}
 		return false
 	}
-	if t.ProductScope == 3 { // SPU
+	if t.ProductScope == promotion.ProductScopeSpu { // 指定商品
 		if len(t.ProductScopeValues) == 0 {
 			return true
 		}
@@ -287,7 +287,7 @@ func (s *CouponUserService) GetCouponMatchList(ctx context.Context, userId int64
 	now := time.Now()
 	coupons, err := s.q.PromotionCoupon.WithContext(ctx).
 		Where(s.q.PromotionCoupon.UserID.Eq(userId)).
-		Where(s.q.PromotionCoupon.Status.Eq(1)). // Unused
+		Where(s.q.PromotionCoupon.Status.Eq(promotion.CouponStatusUnused)). // 未使用
 		Where(s.q.PromotionCoupon.ValidStartTime.Lt(now)).
 		Where(s.q.PromotionCoupon.ValidEndTime.Gt(now)).
 		Find()
@@ -341,13 +341,13 @@ func (s *CouponUserService) ReturnCoupon(ctx context.Context, userId int64, coup
 		return err
 	}
 
-	if coupon.Status != 2 { // 2: Used
+	if coupon.Status != promotion.CouponStatusUsed { // 已使用
 		return errors.New("优惠券状态错误，无法退还")
 	}
 
 	// Update Status to Unused (1) and clear Usage info
 	updates := map[string]interface{}{
-		"status":       1,
+		"status":       promotion.CouponStatusUnused,
 		"use_order_id": nil,
 		"use_time":     nil,
 	}

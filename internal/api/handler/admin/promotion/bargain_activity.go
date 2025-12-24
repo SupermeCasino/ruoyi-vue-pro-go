@@ -3,6 +3,7 @@ package promotion
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -120,7 +121,7 @@ func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
 		RandomMaxPrice:    act.RandomMaxPrice,
 		Status:            act.Status,
 		Sort:              act.Sort,
-		CreateTime:         act.CreateTime,
+		CreateTime:        act.CreateTime,
 	}
 	// Note: CreateReq has Remark but DO model logic I used previously didn't output Remark.
 	// But it is there. I should ensure DO has Remark later if needed.
@@ -170,11 +171,10 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 		}
 	}
 
-	// Fetch Stats (Ignoring errors for stats)
-	// Status 1 = Success? Need to check Enum.
-	// Usually Success=1 or 2.
+	// 获取统计数据 (忽略统计错误)
+	// 使用砍价记录状态常量
 	recordUserCountMap, _ := h.recordSvc.GetBargainRecordUserCountMap(c.Request.Context(), activityIds, nil)
-	successStatus := 1 // Assume Success=1
+	successStatus := model.BargainRecordStatusSuccess // 使用砍价记录成功状态常量替代魔法数字 1
 	recordSuccessUserCountMap, _ := h.recordSvc.GetBargainRecordUserCountMap(c.Request.Context(), activityIds, &successStatus)
 	helpUserCountMap, _ := h.helpSvc.GetBargainHelpUserCountMapByActivity(c.Request.Context(), activityIds)
 
@@ -209,7 +209,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 				RandomMinPrice:    item.RandomMinPrice,
 				RandomMaxPrice:    item.RandomMaxPrice,
 				Sort:              item.Sort,
-				CreateTime:         item.CreateTime,
+				CreateTime:        item.CreateTime,
 			},
 			SpuName:                spuName,
 			PicUrl:                 picUrl,

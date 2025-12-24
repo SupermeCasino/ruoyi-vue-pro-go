@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -23,7 +24,7 @@ func NewSeckillConfigHandler(svc *promotion.SeckillConfigService) *SeckillConfig
 func (h *SeckillConfigHandler) CreateSeckillConfig(c *gin.Context) {
 	var r req.SeckillConfigCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
 	}
 	id, err := h.svc.CreateSeckillConfig(c.Request.Context(), &r)
@@ -38,7 +39,7 @@ func (h *SeckillConfigHandler) CreateSeckillConfig(c *gin.Context) {
 func (h *SeckillConfigHandler) UpdateSeckillConfig(c *gin.Context) {
 	var r req.SeckillConfigUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
 	}
 	if err := h.svc.UpdateSeckillConfig(c.Request.Context(), &r); err != nil {
@@ -124,7 +125,7 @@ func (h *SeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
 
 // GetSeckillConfigSimpleList 精简列表
 func (h *SeckillConfigHandler) GetSeckillConfigSimpleList(c *gin.Context) {
-	res, err := h.svc.GetSeckillConfigListByStatus(c.Request.Context(), 1) // Enable
+	res, err := h.svc.GetSeckillConfigListByStatus(c.Request.Context(), model.CommonStatusEnable) // 使用启用状态常量替代魔法数字 1
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

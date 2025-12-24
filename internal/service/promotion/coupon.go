@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -235,7 +236,7 @@ func (s *CouponService) TakeCouponByAdmin(ctx context.Context, templateId int64,
 			TemplateID:         templateId,
 			Name:               template.Name,
 			UserID:             userId,
-			Status:             1, // 未使用
+			Status:             promotion.CouponStatusUnused, // 未使用
 			UsePrice:           template.UsePriceMin,
 			ValidStartTime:     validStartTime,
 			ValidEndTime:       validEndTime,
@@ -276,8 +277,8 @@ func (s *CouponService) GetCouponTemplateForApp(ctx context.Context, id int64, u
 // 对齐 Java: AppCouponTemplateController.getCouponTemplateList (带条件)
 func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *int64, productScope *int, count int, userId int64) ([]*resp.AppCouponTemplateResp, error) {
 	t := s.q.PromotionCouponTemplate
-	q := t.WithContext(ctx).Where(t.Status.Eq(1)) // 只查询启用状态
-	q = q.Where(t.TakeType.Eq(1))                 // 领取方式 = 直接领取 (CouponTakeTypeEnum.USER)
+	q := t.WithContext(ctx).Where(t.Status.Eq(model.CommonStatusEnable)) // 只查询启用状态
+	q = q.Where(t.TakeType.Eq(promotion.CouponTakeTypeUser))             // 领取方式 = 直接领取 (CouponTakeTypeEnum.USER)
 
 	if productScope != nil {
 		q = q.Where(t.ProductScope.Eq(*productScope))
@@ -341,8 +342,8 @@ func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, id
 // 对齐 Java: AppCouponTemplateController.getCouponTemplatePage
 func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.AppCouponTemplatePageReq, userId int64) (*pagination.PageResult[*resp.AppCouponTemplateResp], error) {
 	t := s.q.PromotionCouponTemplate
-	q := t.WithContext(ctx).Where(t.Status.Eq(1)) // 只查询启用状态
-	q = q.Where(t.TakeType.Eq(1))                 // 领取方式 = 直接领取
+	q := t.WithContext(ctx).Where(t.Status.Eq(model.CommonStatusEnable)) // 只查询启用状态
+	q = q.Where(t.TakeType.Eq(promotion.CouponTakeTypeUser))             // 领取方式 = 直接领取
 
 	if r.ProductScope != nil {
 		q = q.Where(t.ProductScope.Eq(*r.ProductScope))

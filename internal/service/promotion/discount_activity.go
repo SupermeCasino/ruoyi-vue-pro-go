@@ -417,14 +417,14 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 
 	for _, p := range products {
 		sku := skuMap[p.SkuID]
-		if p.DiscountType == 1 { // Fixed Price
+		if p.DiscountType == promotion.DiscountTypePrice { // 满减
 			if p.DiscountPrice > sku.Price {
 				return errors.NewBizError(400, "优惠价格不能高于原价")
 			}
 			if p.DiscountPrice <= 0 {
 				return errors.NewBizError(400, "优惠价格必须大于0")
 			}
-		} else if p.DiscountType == 2 { // Percent
+		} else if p.DiscountType == promotion.DiscountTypePercent { // 折扣
 			if p.DiscountPercent <= 0 || p.DiscountPercent >= 100 {
 				return errors.NewBizError(400, "优惠折扣必须在1-99之间")
 			}

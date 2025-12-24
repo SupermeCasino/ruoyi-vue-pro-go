@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -97,7 +98,7 @@ func (h *KefuHandler) UpdateMessageReadStatus(c *gin.Context) {
 	}
 	// 获取当前登录管理员ID
 	adminID := c.GetInt64("uid")
-	if err := h.svc.UpdateMessageReadStatus(c, conversationID, adminID, 2); err != nil { // SenderType 2 = Admin
+	if err := h.svc.UpdateMessageReadStatus(c, conversationID, adminID, promotionModel.SenderTypeAdmin); err != nil { // 使用客服发送者类型常量替代魔法数字 2
 		response.WriteBizError(c, err)
 		return
 	}
@@ -112,8 +113,8 @@ func (h *KefuHandler) SendMessage(c *gin.Context) {
 		return
 	}
 	// 获取当前登录管理员ID
-	adminID := c.GetInt64("uid")                     // 假设中间件注入了 admin uid
-	id, err := h.svc.CreateMessage(c, r, adminID, 2) // SenderType 2 = Admin
+	adminID := c.GetInt64("uid")                                                  // 假设中间件注入了 admin uid
+	id, err := h.svc.CreateMessage(c, r, adminID, promotionModel.SenderTypeAdmin) // 使用客服发送者类型常量替代魔法数字 2
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

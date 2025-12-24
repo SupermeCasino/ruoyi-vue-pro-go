@@ -245,7 +245,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 	// 过滤禁用状态 (对齐 Java: CommonStatusEnum.isDisable)
 	var activeList []*promotionModel.PromotionSeckillActivity
 	for _, act := range activityList {
-		if act.Status == 1 { // Enable
+		if act.Status == model.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字 1
 			activeList = append(activeList, act)
 		}
 	}

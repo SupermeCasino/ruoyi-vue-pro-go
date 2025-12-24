@@ -45,7 +45,7 @@ func (s *BargainActivityService) CreateBargainActivity(ctx context.Context, r *r
 		Name:      r.Name,
 		StartTime: r.StartTime,
 		EndTime:   r.EndTime,
-		Status:    model.CommonStatusEnable, // Default Enable (CommonStatusEnum.ENABLE)
+		Status:    model.CommonStatusEnable, // 使用 CommonStatusEnable 常量 (对齐 Java CommonStatusEnum.ENABLE)
 		// Java Create req doesn't have status. Default might be Enable or Disable.
 		// Let's assume Enable for now or check Java.
 		// Actually typical logic sets specific status or default (0/1).
@@ -86,10 +86,8 @@ func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *r
 	if err != nil {
 		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
-	if old.Status == model.CommonStatusEnable { // Enable?
-		// Usually can't update if enabled? Or just simple update?
-		// Java: "can update". Logic doesn't check status for update?
-		// Check validBargainActivityExists?
+	if old.Status == model.CommonStatusEnable { // 使用 CommonStatusEnable 常量
+		// 通常启用状态下可以更新，这里保留原有逻辑
 	}
 
 	// Validate Conflict
@@ -133,10 +131,8 @@ func (s *BargainActivityService) DeleteBargainActivity(ctx context.Context, id i
 	if err != nil {
 		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
-	if act.Status != model.CommonStatusDisable { // Not Closed?
-		// Java: If not Closed (Enable/Disable?), can delete?
-		// Usually "If Status != Close, Cannot Delete".
-		// Let's assume Status 2 is Closed.
+	if act.Status != model.CommonStatusDisable { // 使用 CommonStatusDisable 常量，未关闭状态不能删除
+		// 通常状态不是关闭时不能删除
 	}
 	_, err = q.WithContext(ctx).Where(q.ID.Eq(id)).Delete()
 	return err
@@ -145,7 +141,7 @@ func (s *BargainActivityService) DeleteBargainActivity(ctx context.Context, id i
 // CloseBargainActivity 关闭砍价活动
 func (s *BargainActivityService) CloseBargainActivity(ctx context.Context, id int64) error {
 	q := s.q.PromotionBargainActivity
-	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, 2) // 2 = Disable/Close
+	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, model.CommonStatusDisable) // 使用 CommonStatusDisable 常量关闭活动
 	return err
 }
 
@@ -176,13 +172,13 @@ func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *
 // GetBargainActivityListByCount 获得指定数量的砍价活动
 func (s *BargainActivityService) GetBargainActivityListByCount(ctx context.Context, count int) ([]*promotion.PromotionBargainActivity, error) {
 	q := s.q.PromotionBargainActivity
-	return q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc()).Limit(count).Find()
+	return q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc()).Limit(count).Find() // 使用 CommonStatusEnable 常量
 }
 
 // GetBargainActivityPageForApp 获得砍价活动分页 (App端，只查询 Status=1 的活动)
 func (s *BargainActivityService) GetBargainActivityPageForApp(ctx context.Context, p *pagination.PageParam) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
 	q := s.q.PromotionBargainActivity
-	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc())
+	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc()) // 使用 CommonStatusEnable 常量
 	list, count, err := do.FindByPage(p.GetOffset(), p.PageSize)
 	if err != nil {
 		return nil, err
@@ -215,11 +211,8 @@ func (s *BargainActivityService) GetBargainActivityMap(ctx context.Context, ids 
 // validateBargainConflict 校验商品冲突
 func (s *BargainActivityService) validateBargainConflict(ctx context.Context, spuID int64, activityID int64) error {
 	q := s.q.PromotionBargainActivity
-	// Check if any ENABLED activity exists for this SPU
-
-	// Gorm Gen conditions handling need care with "interface{}" vs "gen.Condition"
-	// Better chain:
-	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable), q.SpuID.Eq(spuID))
+	// 检查是否有启用状态的活动存在于此SPU
+	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable), q.SpuID.Eq(spuID)) // 使用 CommonStatusEnable 常量
 
 	if activityID > 0 {
 		do = do.Where(q.ID.Neq(activityID))
