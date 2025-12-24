@@ -10,8 +10,6 @@ type PayOrderResp struct {
 	AppName         string     `json:"appName"` // From PayApp
 	ChannelID       int64      `json:"channelId"`
 	ChannelCode     string     `json:"channelCode"`
-	UserID          int64      `json:"userId"`
-	UserType        int        `json:"userType"`
 	MerchantOrderId string     `json:"merchantOrderId"`
 	Subject         string     `json:"subject"`
 	Body            string     `json:"body"`

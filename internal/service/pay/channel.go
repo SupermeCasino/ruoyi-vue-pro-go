@@ -82,7 +82,14 @@ func (s *PayChannelService) DeleteChannel(ctx context.Context, id int64) error {
 
 // GetChannel 获得支付渠道
 func (s *PayChannelService) GetChannel(ctx context.Context, id int64) (*pay.PayChannel, error) {
-	return s.q.PayChannel.WithContext(ctx).Where(s.q.PayChannel.ID.Eq(id)).First()
+	channel, err := s.q.PayChannel.WithContext(ctx).Where(s.q.PayChannel.ID.Eq(id)).First()
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // 对齐Java: 查询不到返回null而不是异常
+		}
+		return nil, err
+	}
+	return channel, nil
 }
 
 // GetChannelListByAppIds 根据 AppID 集合获支付渠道列表
@@ -97,7 +104,14 @@ func (s *PayChannelService) GetChannelListByAppIds(ctx context.Context, appIds [
 
 // GetChannelByAppIdAndCode 根据 AppID 和 Code 获得支付渠道
 func (s *PayChannelService) GetChannelByAppIdAndCode(ctx context.Context, appId int64, code string) (*pay.PayChannel, error) {
-	return s.q.PayChannel.WithContext(ctx).Where(s.q.PayChannel.AppID.Eq(appId), s.q.PayChannel.Code.Eq(code)).First()
+	channel, err := s.q.PayChannel.WithContext(ctx).Where(s.q.PayChannel.AppID.Eq(appId), s.q.PayChannel.Code.Eq(code)).First()
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // 对齐Java: 查询不到返回null而不是异常
+		}
+		return nil, err
+	}
+	return channel, nil
 }
 
 // GetEnableChannelList 获得指定应用的开启的支付渠道列表

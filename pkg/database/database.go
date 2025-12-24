@@ -29,7 +29,7 @@ func InitDB() *gorm.DB {
 			SlowThreshold:             200 * time.Millisecond,
 			LogLevel:                  gormlogger.Info,
 			IgnoreRecordNotFoundError: true, // 忽略 RecordNotFound 错误日志 (因为我们会手动处理)
-			Colorful:                  false,
+			Colorful:                  true,
 		},
 	)
 

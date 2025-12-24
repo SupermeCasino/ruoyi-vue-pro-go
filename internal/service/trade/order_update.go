@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -33,6 +35,8 @@ type TradeOrderUpdateService struct {
 	couponSvc  *promotion.CouponUserService
 	logSvc     *TradeOrderLogService
 	noDAO      *tradeRepo.TradeNoRedisDAO
+	paySvc     *pay.PayOrderService
+	configSvc  *TradeConfigService
 }
 
 func NewTradeOrderUpdateService(
@@ -44,6 +48,8 @@ func NewTradeOrderUpdateService(
 	couponSvc *promotion.CouponUserService,
 	logSvc *TradeOrderLogService,
 	noDAO *tradeRepo.TradeNoRedisDAO,
+	paySvc *pay.PayOrderService,
+	configSvc *TradeConfigService,
 ) *TradeOrderUpdateService {
 	return &TradeOrderUpdateService{
 		q:          q,
@@ -54,6 +60,8 @@ func NewTradeOrderUpdateService(
 		couponSvc:  couponSvc,
 		logSvc:     logSvc,
 		noDAO:      noDAO,
+		paySvc:     paySvc,
+		configSvc:  configSvc,
 	}
 }
 
@@ -268,9 +276,65 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, re
 			return err
 		}
 
+		// 2.7 Create Pay Order (对齐 Java)
+		if order.PayPrice > 0 {
+			if err := s.createPayOrder(ctx, tx, order, priceResp.Items); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 	return order, err
+}
+
+func (s *TradeOrderUpdateService) createPayOrder(ctx context.Context, tx *query.Query, order *trade.TradeOrder, items []TradePriceCalculateItemRespBO) error {
+	// 1. Get Config
+	conf, err := s.configSvc.GetTradeConfig(ctx)
+	if err != nil {
+		return err
+	}
+
+	// 2. Build Subject
+	subject := ""
+	if len(items) > 0 {
+		subject = items[0].SpuName
+		if len(items) > 1 {
+			subject += fmt.Sprintf("等 %d 件商品", len(items))
+		}
+	}
+	// 对齐 Java: 限制长度最大为 32
+	if len([]rune(subject)) > 32 {
+		subject = string([]rune(subject)[:32])
+	}
+
+	// 3. Create Pay Order
+	payTimeout := conf.PayTimeoutMinutes
+	if payTimeout <= 0 {
+		payTimeout = 120 // 兜底：默认 120 分钟
+	}
+	expireTime := time.Now().Add(time.Duration(payTimeout) * time.Minute)
+	payOrderID, err := s.paySvc.CreateOrder(ctx, &req.PayOrderCreateReq{
+		AppKey:          "mall", // 对齐 Java: 默认使用 "mall"
+		UserIP:          order.UserIP,
+		MerchantOrderId: strconv.FormatInt(order.ID, 10),
+		Subject:         subject,
+		Body:            subject,
+		Price:           order.PayPrice,
+		ExpireTime:      expireTime,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 4. Update Trade Order
+	_, err = tx.TradeOrder.WithContext(ctx).Where(tx.TradeOrder.ID.Eq(order.ID)).Update(tx.TradeOrder.PayOrderID, payOrderID)
+	if err != nil {
+		return err
+	}
+	order.PayOrderID = &payOrderID
+
+	return nil
 }
 
 // DeliveryOrder 订单发货

@@ -84,6 +84,7 @@ func (h *PayChannelHandler) GetChannel(c *gin.Context) {
 			c.Error(err)
 			return
 		}
+		// 对齐Java: 查询不到返回null，Go版本返回nil
 		c.JSON(200, response.Success(convertChannelResp(channel)))
 		return
 	}
@@ -99,6 +100,7 @@ func (h *PayChannelHandler) GetChannel(c *gin.Context) {
 			c.Error(err)
 			return
 		}
+		// 对齐Java: 查询不到返回null，Go版本返回nil
 		c.JSON(200, response.Success(convertChannelResp(channel)))
 		return
 	}

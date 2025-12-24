@@ -212,11 +212,25 @@ func (s *PayAppService) validateAppKeyUnique(ctx context.Context, id int64, appK
 	return nil
 }
 
-// 校验关联数据是否存在
 // ValidPayApp 校验支付应用是否有效
 func (s *PayAppService) ValidPayApp(ctx context.Context, id int64) (*pay.PayApp, error) {
 	app, err := s.validateAppExists(ctx, id)
 	if err != nil {
+		return nil, err
+	}
+	if app.Status != 0 { // 0 = Enabled
+		return nil, pkgErrors.NewBizError(1006000002, "支付应用处于关闭状态") // PAY_APP_IS_DISABLE
+	}
+	return app, nil
+}
+
+// ValidPayAppByAppKey 校验支付应用是否有效
+func (s *PayAppService) ValidPayAppByAppKey(ctx context.Context, appKey string) (*pay.PayApp, error) {
+	app, err := s.GetAppByAppKey(ctx, appKey)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkgErrors.NewBizError(1006000000, "支付应用不存在") // PAY_APP_NOT_FOUND
+		}
 		return nil, err
 	}
 	if app.Status != 0 { // 0 = Enabled

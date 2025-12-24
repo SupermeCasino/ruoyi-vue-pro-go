@@ -1,6 +1,8 @@
 package req
 
 import (
+	"time"
+
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
@@ -34,14 +36,13 @@ type PayOrderSubmitReq struct {
 }
 
 type PayOrderCreateReq struct {
-	AppID           int64  `json:"appId" binding:"required"`
-	UserIP          string `json:"userIp" binding:"required"`
-	MerchantOrderId string `json:"merchantOrderId" binding:"required"`
-	Subject         string `json:"subject" binding:"required"`
-	Body            string `json:"body"`
-	NotifyUrl       string `json:"notifyUrl" binding:"required"`
-	Price           int    `json:"price" binding:"required,min=0"`
-	ExpireTime      string `json:"expireTime" binding:"required"` // time string
+	AppKey          string    `json:"appKey" binding:"required"`
+	UserIP          string    `json:"userIp" binding:"required"`
+	MerchantOrderId string    `json:"merchantOrderId" binding:"required"`
+	Subject         string    `json:"subject" binding:"required"`
+	Body            string    `json:"body"`
+	Price           int       `json:"price" binding:"required,min=0"`
+	ExpireTime      time.Time `json:"expireTime" binding:"required"`
 }
 
 type PayOrderNotifyReq struct {

@@ -12,8 +12,6 @@ type PayOrder struct {
 	AppID           int64      `gorm:"column:app_id"`
 	ChannelID       int64      `gorm:"column:channel_id"`
 	ChannelCode     string     `gorm:"column:channel_code"`
-	UserID          int64      `gorm:"column:user_id"`
-	UserType        int        `gorm:"column:user_type"`
 	MerchantOrderId string     `gorm:"column:merchant_order_id"`
 	Subject         string     `gorm:"column:subject"`
 	Body            string     `gorm:"column:body"`

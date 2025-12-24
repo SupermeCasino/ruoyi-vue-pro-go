@@ -51,8 +51,6 @@ func (h *AppPayOrderHandler) GetOrder(c *gin.Context) {
 		AppID:           order.AppID,
 		ChannelID:       order.ChannelID,
 		ChannelCode:     order.ChannelCode,
-		UserID:          order.UserID,
-		UserType:        order.UserType,
 		MerchantOrderId: order.MerchantOrderId,
 		Subject:         order.Subject,
 		Body:            order.Body,

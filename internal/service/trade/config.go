@@ -24,11 +24,17 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*resp.TradeCon
 	qc := s.q.TradeConfig
 	config, err := qc.WithContext(ctx).First()
 	if err != nil {
-		// 如果不存在，返回默认配置或空
-		return &resp.TradeConfigResp{}, nil // 或者返回默认值
+		// 如果不存在，返回默认配置（对齐 Java application.yaml / 默认行为）
+		return &resp.TradeConfigResp{
+			AfterSaleDeadlineDays: 7,
+			PayTimeoutMinutes:     120, // 默认 2 小时
+			AutoReceiveDays:       7,
+			AutoCommentDays:       7,
+		}, nil
 	}
 
-	return &resp.TradeConfigResp{
+	// 补充部分默认值，防止数据库中记录存在但值为 0 的情况
+	res := &resp.TradeConfigResp{
 		ID:                          config.ID,
 		AppID:                       config.AppID,
 		AfterSaleDeadlineDays:       config.AfterSaleDeadlineDays,
@@ -47,7 +53,14 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*resp.TradeCon
 			}
 			return strings.Split(config.BrokeragePosterUrls, ",")
 		}(),
-	}, nil
+	}
+	if res.PayTimeoutMinutes <= 0 {
+		res.PayTimeoutMinutes = 120
+	}
+	if res.AfterSaleDeadlineDays <= 0 {
+		res.AfterSaleDeadlineDays = 7
+	}
+	return res, nil
 }
 
 // SaveTradeConfig 保存交易配置 (Admin)

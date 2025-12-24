@@ -96,12 +96,9 @@ func (s *PayOrderService) GetOrderPage(ctx context.Context, req *req.PayOrderPag
 
 // CreateOrder 创建支付单
 func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *req.PayOrderCreateReq) (int64, error) {
-	app, err := s.appSvc.GetApp(ctx, reqDTO.AppID)
+	app, err := s.appSvc.ValidPayAppByAppKey(ctx, reqDTO.AppKey)
 	if err != nil {
 		return 0, err
-	}
-	if app == nil || app.Status != 0 {
-		return 0, errors.New("app disabled or not found")
 	}
 
 	existOrder, _ := s.q.PayOrder.WithContext(ctx).
@@ -119,7 +116,7 @@ func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *req.PayOrderC
 		Body:            reqDTO.Body,
 		NotifyURL:       app.OrderNotifyURL, // 对齐 Java: 使用 app 的回调地址
 		Price:           reqDTO.Price,
-		ExpireTime:      time.Now().Add(2 * time.Hour),
+		ExpireTime:      reqDTO.ExpireTime, // 对齐 Java: 使用传入的过期时间
 		Status:          PayOrderStatusWaiting,
 		RefundPrice:     0,
 		UserIP:          reqDTO.UserIP,

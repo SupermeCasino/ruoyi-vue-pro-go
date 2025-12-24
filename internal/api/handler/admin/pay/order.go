@@ -272,8 +272,6 @@ func convertOrderResp(order *pay.PayOrder) *resp.PayOrderResp {
 		AppID:           order.AppID,
 		ChannelID:       order.ChannelID,
 		ChannelCode:     order.ChannelCode,
-		UserID:          order.UserID,
-		UserType:        order.UserType,
 		MerchantOrderId: order.MerchantOrderId,
 		Subject:         order.Subject,
 		Body:            order.Body,
