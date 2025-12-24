@@ -16,7 +16,6 @@ type PromotionRewardActivityCreateReq struct {
 	ProductScope       int       `json:"productScope" binding:"required"`  // 1: All, 2: Spu, 3: Category
 	ProductScopeValues []int64   `json:"productScopeValues"`               // Array
 	Rules              []Rule    `json:"rules" binding:"required,dive"`
-	Sort               int       `json:"sort"`
 }
 
 type Rule struct {
@@ -38,7 +37,6 @@ type PromotionRewardActivityUpdateReq struct {
 	ProductScope       int       `json:"productScope" binding:"required"`
 	ProductScopeValues []int64   `json:"productScopeValues"`
 	Rules              []Rule    `json:"rules" binding:"required,dive"`
-	Sort               int       `json:"sort"`
 }
 
 // PromotionRewardActivityPageReq 分页 Request

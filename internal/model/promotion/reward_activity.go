@@ -18,7 +18,6 @@ type PromotionRewardActivity struct {
 	ProductScopeValues string    `gorm:"column:product_scope_values;type:json;comment:商品范围值" json:"productScopeValues"`       // Array of IDs
 	ConditionType      int       `gorm:"column:condition_type;type:int;not null;default:1;comment:条件类型" json:"conditionType"` // 10: 满N元, 20: 满N件
 	Rules              string    `gorm:"column:rules;type:json;not null;comment:优惠规则" json:"rules"`                           // List<Rule>
-	Sort               int       `gorm:"column:sort;type:int;not null;default:0;comment:排序" json:"sort"`
 	Remark             string    `gorm:"column:remark;type:varchar(255);comment:备注" json:"remark"`
 	model.TenantBaseDO
 }

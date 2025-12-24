@@ -12,9 +12,8 @@ type PromotionRewardActivityResp struct {
 	ProductScopeValues []int64   `json:"productScopeValues"`
 	ConditionType      int       `json:"conditionType"`
 	Rules              []Rule    `json:"rules"`
-	Sort               int       `json:"sort"`
 	Remark             string    `json:"remark"`
-	CreateTime          time.Time `json:"createTime"`
+	CreateTime         time.Time `json:"createTime"`
 }
 
 type Rule struct {

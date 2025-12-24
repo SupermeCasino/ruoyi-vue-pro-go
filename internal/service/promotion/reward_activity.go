@@ -37,7 +37,6 @@ func (s *RewardActivityService) CreateRewardActivity(ctx context.Context, r *req
 		ProductScopeValues: string(scopeValues),
 		ConditionType:      r.ConditionType,
 		Rules:              string(rules),
-		Sort:               r.Sort,
 		Remark:             r.Remark,
 	}
 	err := s.q.PromotionRewardActivity.WithContext(ctx).Create(activity)
@@ -62,7 +61,6 @@ func (s *RewardActivityService) UpdateRewardActivity(ctx context.Context, r *req
 		ProductScopeValues: string(scopeValues),
 		ConditionType:      r.ConditionType,
 		Rules:              string(rules),
-		Sort:               r.Sort,
 		Remark:             r.Remark,
 	})
 	return err
@@ -117,7 +115,7 @@ func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *re
 		q = q.Where(s.q.PromotionRewardActivity.CreateTime.Between(*r.CreateTime[0], *r.CreateTime[1]))
 	}
 
-	list, total, err := q.Order(s.q.PromotionRewardActivity.Sort.Desc(), s.q.PromotionRewardActivity.ID.Desc()).FindByPage(r.GetOffset(), r.PageSize)
+	list, total, err := q.Order(s.q.PromotionRewardActivity.ID.Desc()).FindByPage(r.GetOffset(), r.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -148,9 +146,8 @@ func (s *RewardActivityService) convertResp(item *promotion.PromotionRewardActiv
 		ProductScopeValues: scopeValues,
 		ConditionType:      item.ConditionType,
 		Rules:              rules,
-		Sort:               item.Sort,
 		Remark:             item.Remark,
-		CreateTime:          item.CreateTime,
+		CreateTime:         item.CreateTime,
 	}
 }
 
@@ -177,7 +174,7 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 		Where(s.q.PromotionRewardActivity.Status.Eq(0)).      // Open
 		Where(s.q.PromotionRewardActivity.StartTime.Lt(now)). // Started
 		Where(s.q.PromotionRewardActivity.EndTime.Gt(now)).   // Not Ended
-		Order(s.q.PromotionRewardActivity.Sort.Desc()).Find() // High Priority First
+		Order(s.q.PromotionRewardActivity.ID.Desc()).Find()   // High Priority First (ID as fallback)
 	if err != nil {
 		return 0, nil, err
 	}
