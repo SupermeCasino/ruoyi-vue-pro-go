@@ -29,15 +29,15 @@ func NewProductCommentHandler(svc *product.ProductCommentService) *ProductCommen
 func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
 	var req req.ProductCommentPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetCommentPage(c, &req)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // UpdateCommentVisible 更新商品评价可见性
@@ -49,14 +49,14 @@ func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
 func (h *ProductCommentHandler) UpdateCommentVisible(c *gin.Context) {
 	var req req.ProductCommentUpdateVisibleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateCommentVisible(c, &req); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // ReplyComment 回复商品评价
@@ -68,15 +68,15 @@ func (h *ProductCommentHandler) UpdateCommentVisible(c *gin.Context) {
 func (h *ProductCommentHandler) ReplyComment(c *gin.Context) {
 	var req req.ProductCommentReplyReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	userId := context.GetLoginUserID(c)
 	if err := h.svc.ReplyComment(c, &req, userId); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // CreateComment 添加自评
@@ -88,12 +88,12 @@ func (h *ProductCommentHandler) ReplyComment(c *gin.Context) {
 func (h *ProductCommentHandler) CreateComment(c *gin.Context) {
 	var req req.ProductCommentCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.CreateComment(c, &req); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }

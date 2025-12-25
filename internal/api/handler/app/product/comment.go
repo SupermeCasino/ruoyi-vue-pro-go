@@ -19,39 +19,31 @@ func NewAppProductCommentHandler(svc *product.ProductCommentService) *AppProduct
 }
 
 // GetCommentPage 获得商品评价分页 (App)
-// @Summary 获得商品评价分页
-// @Tags 用户 APP - 商品评价
-// @Produce json
-// @Param spuId query int false "商品SPU编号"
-// @Param pageNo query int true "页码"
-// @Param pageSize query int true "页数"
-// @Success 200 {object} pagination.PageResult[resp.AppProductCommentResp]
-// @Router /app-api/product/comment/page [get]
 func (h *AppProductCommentHandler) GetCommentPage(c *gin.Context) {
 	var r req.AppProductCommentPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAppCommentPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // CreateComment 创建商品评价
 func (h *AppProductCommentHandler) CreateComment(c *gin.Context) {
 	var r req.AppProductCommentCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.CreateAppComment(c, context.GetUserId(c), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res.ID))
+	response.WriteSuccess(c, res.ID)
 }

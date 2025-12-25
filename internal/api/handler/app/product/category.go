@@ -23,7 +23,7 @@ func NewAppCategoryHandler(svc *product.ProductCategoryService) *AppCategoryHand
 func (h *AppCategoryHandler) GetCategoryList(c *gin.Context) {
 	list, err := h.svc.GetEnableCategoryList(c)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	// sort
@@ -55,7 +55,7 @@ func (h *AppCategoryHandler) GetCategoryListByIds(c *gin.Context) {
 
 	list, err := h.svc.GetEnableCategoryListByIds(c, ids)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	// sort

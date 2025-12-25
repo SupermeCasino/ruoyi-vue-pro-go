@@ -20,81 +20,76 @@ func NewProductCategoryHandler(svc *product.ProductCategoryService) *ProductCate
 }
 
 // CreateCategory 创建商品分类
-// @Router /admin-api/product/category/create [post]
 func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 	var r req.ProductCategoryCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateCategory(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateCategory 更新商品分类
-// @Router /admin-api/product/category/update [put]
 func (h *ProductCategoryHandler) UpdateCategory(c *gin.Context) {
 	var r req.ProductCategoryUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateCategory(c, &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteCategory 删除商品分类
-// @Router /admin-api/product/category/delete [delete]
 func (h *ProductCategoryHandler) DeleteCategory(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteCategory(c, id); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetCategory 获得商品分类
-// @Router /admin-api/product/category/get [get]
 func (h *ProductCategoryHandler) GetCategory(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetCategory(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetCategoryList 获得商品分类列表
-// @Router /admin-api/product/category/list [get]
 func (h *ProductCategoryHandler) GetCategoryList(c *gin.Context) {
 	var r req.ProductCategoryListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetCategoryList(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }

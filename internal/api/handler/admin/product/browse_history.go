@@ -28,13 +28,13 @@ func NewProductBrowseHistoryHandler(svc *product.ProductBrowseHistoryService) *P
 func (h *ProductBrowseHistoryHandler) GetBrowseHistoryPage(c *gin.Context) {
 	var r req.ProductBrowseHistoryPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetBrowseHistoryPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
