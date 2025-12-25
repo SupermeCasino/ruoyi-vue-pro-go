@@ -67,6 +67,7 @@ func RegisterProductRoutes(engine *gin.Engine,
 
 		// SPU Routes
 		spuGroup := productGroup.Group("/spu")
+		spuGroup.Use(middleware.ProductErrorHandler()) // 使用商品模块错误处理中间件
 		{
 			spuGroup.POST("/create", casbinMiddleware.RequirePermission("product:spu:create"), productSpuHandler.CreateSpu)
 			spuGroup.PUT("/update", casbinMiddleware.RequirePermission("product:spu:update"), productSpuHandler.UpdateSpu)

@@ -173,9 +173,9 @@ func (s *ProductPropertyService) validatePropertyExists(ctx context.Context, id 
 
 func (s *ProductPropertyService) convertResp(item *product.ProductProperty) *resp.ProductPropertyResp {
 	return &resp.ProductPropertyResp{
-		ID:        item.ID,
-		Name:      item.Name,
-		Remark:    item.Remark,
+		ID:         item.ID,
+		Name:       item.Name,
+		Remark:     item.Remark,
 		CreateTime: item.CreateTime,
 	}
 }

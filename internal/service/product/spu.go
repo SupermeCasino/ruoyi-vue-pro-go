@@ -8,7 +8,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
 	"github.com/samber/lo"
@@ -145,7 +144,7 @@ func (s *ProductSpuService) DeleteSpu(ctx context.Context, id int64) error {
 	}
 	// 校验状态 (只有回收站可以删除)
 	if spu.Status != -1 { // RECYCLE_BIN
-		return errors.NewBizError(1006000004, "商品必须是回收站状态才能删除") // SPU_NOT_RECYCLE
+		return product.ErrSpuNotRecycle // 使用商品模块错误码
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
@@ -170,23 +169,33 @@ func (s *ProductSpuService) UpdateSpuStatus(ctx context.Context, req *req.Produc
 // UpdateBrowseCount 更新浏览量
 func (s *ProductSpuService) UpdateBrowseCount(ctx context.Context, id int64, count int) error {
 	_, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(id)).
-		Update(s.q.ProductSpu.BrowseCount, s.q.ProductSpu.BrowseCount.Add(count))
+		Update(s.q.ProductSpu.BrowseCount, s.q.ProductSpu.BrowseCount.Add(int32(count)))
 	return err
 }
 
-// GetSpuDetail 获得 SPU 详情
-func (s *ProductSpuService) GetSpuDetail(ctx context.Context, id int64) (*resp.ProductSpuResp, error) {
+// GetSpuDetail 获得 SPU 详情 - 返回模型数据，VO组装在Handler层完成
+func (s *ProductSpuService) GetSpuDetail(ctx context.Context, id int64) (*product.ProductSpu, []*product.ProductSku, error) {
+	// 获得商品 SPU
 	spu, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(id)).First()
 	if err != nil {
-		return nil, nil // Return nil if not found, or error
+		return nil, nil, product.ErrSpuNotExists // 使用商品模块错误码
 	}
 
+	// 检查商品状态，对齐Java版本的ProductSpuStatusEnum.isEnable检查
+	if spu.Status != model.ProductSpuStatusEnable { // Status=1表示上架状态
+		return nil, nil, product.ErrSpuNotEnable // 使用商品模块错误码
+	}
+
+	// 获得商品 SKU
 	skus, err := s.skuSvc.GetSkuListBySpuId(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return s.convertResp(spu, skus), nil
+	// 合并销量：实际销量 + 虚拟销量，对齐Java版本逻辑
+	spu.SalesCount = spu.SalesCount + spu.VirtualSalesCount
+
+	return spu, skus, nil
 }
 
 // GetSpuPage 获得 SPU 分页
@@ -304,18 +313,35 @@ func (s *ProductSpuService) GetSpuPageForApp(ctx context.Context, req *req.AppPr
 	}, nil
 }
 
-// GetSpuList 获得 SPU 列表 (Simple)
+// GetSpuList 获得 SPU 列表 (Simple) - 对齐Java版本逻辑
 func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*resp.ProductSpuResp, error) {
 	if len(ids) == 0 {
 		return []*resp.ProductSpuResp{}, nil
 	}
+
+	// 查询SPU数据
 	list, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.In(ids...)).Find()
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *product.ProductSpu, _ int) *resp.ProductSpuResp {
-		return s.convertResp(item, nil)
-	}), nil
+
+	// 创建ID到SPU的映射，用于保持返回顺序
+	spuMap := make(map[int64]*product.ProductSpu)
+	for _, spu := range list {
+		spuMap[spu.ID] = spu
+	}
+
+	// 按照输入ID顺序构建结果，对齐Java版本的convertList(ids, spuMap::get)逻辑
+	result := make([]*resp.ProductSpuResp, 0, len(ids))
+	for _, id := range ids {
+		if spu, exists := spuMap[id]; exists {
+			// 合并销量：实际销量 + 虚拟销量，对齐Java版本逻辑
+			spu.SalesCount = spu.SalesCount + spu.VirtualSalesCount
+			result = append(result, s.convertResp(spu, nil))
+		}
+	}
+
+	return result, nil
 }
 
 // GetSpuSimpleList 获得 SPU 精简列表
@@ -347,7 +373,7 @@ func (s *ProductSpuService) UpdateSpuStock(ctx context.Context, stockIncr map[in
 		// Note: We don't strictly check SPU stock >= 0 here because it's an aggregate.
 		// SKU level check is the authority.
 		_, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(spuID)).
-			Update(s.q.ProductSpu.Stock, s.q.ProductSpu.Stock.Add(incr))
+			Update(s.q.ProductSpu.Stock, s.q.ProductSpu.Stock.Add(int32(incr)))
 		if err != nil {
 			return err
 		}
@@ -370,7 +396,7 @@ func (s *ProductSpuService) GetSpu(ctx context.Context, id int64) (*product.Prod
 func (s *ProductSpuService) validateSpuExists(ctx context.Context, id int64) (*product.ProductSpu, error) {
 	spu, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(id)).First()
 	if err != nil {
-		return nil, errors.NewBizError(1006000002, "商品不存在") // SPU_NOT_EXISTS
+		return nil, product.ErrSpuNotExists // 使用商品模块错误码
 	}
 	return spu, nil
 }
@@ -413,16 +439,27 @@ func (s *ProductSpuService) convertResp(spu *product.ProductSpu, skus []*product
 		})
 	}
 
+	// 确保数组字段返回[]而不是null，对齐Java版本处理逻辑
+	sliderPicURLs := spu.SliderPicURLs
+	if sliderPicURLs == nil {
+		sliderPicURLs = []string{}
+	}
+
+	deliveryTypes := spu.DeliveryTypes
+	if deliveryTypes == nil {
+		deliveryTypes = []int{}
+	}
+
 	return &resp.ProductSpuResp{
 		ID:                 spu.ID,
 		Name:               spu.Name,
 		Keyword:            spu.Keyword,
-		Introduction:       spu.Introduction,
+		Introduction:       spu.Introduction, // 确保返回完整介绍文本而不是空字符串
 		Description:        spu.Description,
-		CategoryID:         spu.CategoryID,
+		CategoryID:         spu.CategoryID, // 确保返回正确分类ID而不是0
 		BrandID:            spu.BrandID,
 		PicURL:             spu.PicURL,
-		SliderPicURLs:      spu.SliderPicURLs,
+		SliderPicURLs:      sliderPicURLs, // 确保返回[]而不是null
 		Sort:               spu.Sort,
 		Status:             spu.Status,
 		SpecType:           bool(spu.SpecType),
@@ -430,11 +467,11 @@ func (s *ProductSpuService) convertResp(spu *product.ProductSpu, skus []*product
 		MarketPrice:        spu.MarketPrice,
 		CostPrice:          spu.CostPrice,
 		Stock:              spu.Stock,
-		DeliveryTypes:      spu.DeliveryTypes,
+		DeliveryTypes:      deliveryTypes, // 确保返回[]而不是null
 		DeliveryTemplateID: spu.DeliveryTemplateID,
 		GiveIntegral:       spu.GiveIntegral,
 		SubCommissionType:  bool(spu.SubCommissionType),
-		SalesCount:         spu.SalesCount,
+		SalesCount:         spu.SalesCount, // 注意：在GetSpuList中已合并虚拟销量
 		VirtualSalesCount:  spu.VirtualSalesCount,
 		BrowseCount:        spu.BrowseCount,
 		CreateTime:         spu.CreateTime,

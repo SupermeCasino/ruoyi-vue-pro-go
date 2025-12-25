@@ -192,10 +192,11 @@ func RegisterAppRoutes(engine *gin.Engine,
 
 			// SPU
 			spuGroup := productGroup.Group("/spu")
+			spuGroup.Use(middleware.ProductErrorHandler()) // 使用商品模块错误处理中间件
 			{
 				spuGroup.GET("/get-detail", appProductSpuHandler.GetSpuDetail)
 				spuGroup.GET("/page", appProductSpuHandler.GetSpuPage)
-				spuGroup.GET("/list-by-ids", appProductSpuHandler.GetSpuList)
+				spuGroup.GET("/list-by-ids", appProductSpuHandler.GetSpuListByIds)
 			}
 
 			// Comment
