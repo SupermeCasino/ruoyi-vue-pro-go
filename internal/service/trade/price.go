@@ -14,16 +14,17 @@ import (
 
 // TradePriceService 价格计算服务
 type TradePriceService struct {
-	productSkuSvc      *product.ProductSkuService
-	productSpuSvc      *product.ProductSpuService
-	couponSvc          *promotion.CouponUserService
-	rewardActivitySvc  *promotion.RewardActivityService
-	seckillActivitySvc *promotion.SeckillActivityService // 已添加
-	memberUserSvc      *memberSvc.MemberUserService
-	memberLevelSvc     *memberSvc.MemberLevelService
-	deliveryFreightSvc *DeliveryExpressTemplateService
-	memberAddressSvc   *memberSvc.MemberAddressService
-	memberConfigSvc    *memberSvc.MemberConfigService
+	productSkuSvc       *product.ProductSkuService
+	productSpuSvc       *product.ProductSpuService
+	couponSvc           *promotion.CouponUserService
+	rewardActivitySvc   *promotion.RewardActivityService
+	seckillActivitySvc  *promotion.SeckillActivityService
+	memberUserSvc       *memberSvc.MemberUserService
+	memberLevelSvc      *memberSvc.MemberLevelService
+	deliveryFreightSvc  *DeliveryExpressTemplateService
+	memberAddressSvc    *memberSvc.MemberAddressService
+	memberConfigSvc     *memberSvc.MemberConfigService
+	promotionCalculator PromotionPriceCalculator // 促销活动价格计算器
 }
 
 func NewTradePriceService(
@@ -31,37 +32,43 @@ func NewTradePriceService(
 	productSpuSvc *product.ProductSpuService,
 	couponSvc *promotion.CouponUserService,
 	rewardActivitySvc *promotion.RewardActivityService,
-	seckillActivitySvc *promotion.SeckillActivityService, // 已添加
+	seckillActivitySvc *promotion.SeckillActivityService,
 	memberUserSvc *memberSvc.MemberUserService,
 	memberLevelSvc *memberSvc.MemberLevelService,
 	deliveryFreightSvc *DeliveryExpressTemplateService,
 	memberAddressSvc *memberSvc.MemberAddressService,
 	memberConfigSvc *memberSvc.MemberConfigService,
+	promotionCalculator PromotionPriceCalculator,
 ) *TradePriceService {
 	return &TradePriceService{
-		productSkuSvc:      productSkuSvc,
-		productSpuSvc:      productSpuSvc,
-		couponSvc:          couponSvc,
-		rewardActivitySvc:  rewardActivitySvc,
-		seckillActivitySvc: seckillActivitySvc, // 已添加
-		memberUserSvc:      memberUserSvc,
-		memberLevelSvc:     memberLevelSvc,
-		deliveryFreightSvc: deliveryFreightSvc,
-		memberAddressSvc:   memberAddressSvc,
-		memberConfigSvc:    memberConfigSvc,
+		productSkuSvc:       productSkuSvc,
+		productSpuSvc:       productSpuSvc,
+		couponSvc:           couponSvc,
+		rewardActivitySvc:   rewardActivitySvc,
+		seckillActivitySvc:  seckillActivitySvc,
+		memberUserSvc:       memberUserSvc,
+		memberLevelSvc:      memberLevelSvc,
+		deliveryFreightSvc:  deliveryFreightSvc,
+		memberAddressSvc:    memberAddressSvc,
+		memberConfigSvc:     memberConfigSvc,
+		promotionCalculator: promotionCalculator,
 	}
 }
 
 // TradePriceCalculateReqBO 价格计算请求BO
 type TradePriceCalculateReqBO struct {
-	UserID            int64
-	CouponID          *int64
-	PointStatus       bool
-	DeliveryType      int
-	AddressID         *int64
-	PickUpStoreID     *int64
-	SeckillActivityId int64 // 已添加
-	Items             []TradePriceCalculateItemBO
+	UserID                int64
+	CouponID              *int64
+	PointStatus           bool
+	DeliveryType          int
+	AddressID             *int64
+	PickUpStoreID         *int64
+	SeckillActivityId     int64 // 秒杀活动ID
+	CombinationActivityId int64 // 拼团活动ID
+	CombinationHeadId     int64 // 拼团团长ID
+	BargainRecordId       int64 // 砍价记录ID
+	PointActivityId       int64 // 积分活动ID
+	Items                 []TradePriceCalculateItemBO
 }
 
 type TradePriceCalculateItemBO struct {
@@ -212,8 +219,8 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 
 	var totalPrice, totalPayPrice int
 
-	// 4. 计算秒杀优惠（订单8）
-	// 让我们使用 `respBO.Type` 作为标志。
+	// 4. 计算促销活动优惠
+	// 4.1 判断订单类型
 	if req.SeckillActivityId > 0 {
 		respBO.Type = 1 // 秒杀
 		if len(req.Items) != 1 {
@@ -224,6 +231,21 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		_, _, err := s.seckillActivitySvc.ValidateJoinSeckill(ctx, req.SeckillActivityId, item.SkuID, item.Count)
 		if err != nil {
 			return nil, err
+		}
+	} else if req.CombinationActivityId > 0 {
+		respBO.Type = 2 // 拼团
+		if len(req.Items) != 1 {
+			return nil, errors.New("拼团时，只允许选择一个商品")
+		}
+	} else if req.BargainRecordId > 0 {
+		respBO.Type = 3 // 砍价
+		if len(req.Items) != 1 {
+			return nil, errors.New("砍价时，只允许选择一个商品")
+		}
+	} else if req.PointActivityId > 0 {
+		respBO.Type = 4 // 积分
+		if len(req.Items) != 1 {
+			return nil, errors.New("积分商城时，只允许选择一个商品")
 		}
 	} else {
 		respBO.Type = 0 // 正常
@@ -262,22 +284,41 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 		itemPayPrice := itemPrice * item.Count
 
 		itemVipSavings := 0
-		seckillDiscount := 0
+		promotionDiscount := 0
 
-		// 秒杀逻辑（订单8）
-		if respBO.Type == 1 { // 秒杀
+		// 促销活动价格计算
+		switch respBO.Type {
+		case 1: // 秒杀
 			_, seckillProd, err := s.seckillActivitySvc.ValidateJoinSeckill(ctx, req.SeckillActivityId, sku.ID, item.Count)
 			if err != nil {
 				return nil, err
 			}
 			seckillTotal := seckillProd.SeckillPrice * item.Count
-			seckillDiscount = itemPayPrice - seckillTotal
+			promotionDiscount = itemPayPrice - seckillTotal
 			itemPayPrice = seckillTotal
-		} else {
-			// 正常订单逻辑（VIP）（订单10）
-			// 严格对齐 Java：TradeDiscountActivityPriceCalculator.calculateVipPrice
-			// Java: Integer newPrice = calculateRatePrice(orderItem.getPayPrice(), level.getDiscountPercent())
-			// Java: return orderItem.getPayPrice() - newPrice;
+		case 2: // 拼团
+			combinationPrice, err := s.promotionCalculator.CalculateCombinationPrice(ctx, req.UserID, req.CombinationActivityId, req.CombinationHeadId, sku.ID, item.Count)
+			if err != nil {
+				return nil, err
+			}
+			promotionDiscount = itemPayPrice - combinationPrice
+			itemPayPrice = combinationPrice
+		case 3: // 砍价
+			bargainPrice, err := s.promotionCalculator.CalculateBargainPrice(ctx, req.UserID, req.BargainRecordId, sku.ID, item.Count)
+			if err != nil {
+				return nil, err
+			}
+			promotionDiscount = itemPayPrice - bargainPrice
+			itemPayPrice = bargainPrice
+		case 4: // 积分
+			pointPrice, err := s.promotionCalculator.CalculatePointPrice(ctx, req.PointActivityId, spu.ID, sku.ID, item.Count)
+			if err != nil {
+				return nil, err
+			}
+			promotionDiscount = itemPayPrice - pointPrice
+			itemPayPrice = pointPrice
+		default: // 正常订单
+			// VIP会员折扣逻辑
 			if levelDiscountPercent < 100 {
 				// 基于 PayPrice 计算，不是基于 Price！
 				vipTotal := int(int64(itemPayPrice) * int64(levelDiscountPercent) / 100)
@@ -298,7 +339,7 @@ func (s *TradePriceService) CalculateOrderPrice(ctx context.Context, req *TradeP
 			Properties:    sku.Properties,
 			SpuName:       spu.Name,
 			CategoryID:    spu.CategoryID,
-			DiscountPrice: seckillDiscount,
+			DiscountPrice: promotionDiscount,
 			VipPrice:      itemVipSavings,
 		}
 

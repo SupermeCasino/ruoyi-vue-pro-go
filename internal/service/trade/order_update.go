@@ -77,6 +77,24 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 		PickUpStoreID: req.PickUpStoreID,
 		Items:         make([]TradePriceCalculateItemBO, len(req.Items)),
 	}
+
+	// 设置各种促销活动参数（对齐Java版本TradeOrderConvert第219行）
+	if req.SeckillActivityID != nil {
+		calcReq.SeckillActivityId = *req.SeckillActivityID
+	}
+	if req.CombinationActivityID != nil {
+		calcReq.CombinationActivityId = *req.CombinationActivityID
+	}
+	if req.CombinationHeadID != nil {
+		calcReq.CombinationHeadId = *req.CombinationHeadID
+	}
+	if req.BargainRecordID != nil {
+		calcReq.BargainRecordId = *req.BargainRecordID
+	}
+	if req.PointActivityID != nil {
+		calcReq.PointActivityId = *req.PointActivityID
+	}
+
 	for i, item := range req.Items {
 		calcReq.Items[i] = TradePriceCalculateItemBO{
 			SkuID:    item.SkuID,
@@ -138,14 +156,33 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, uId int64
 func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, uId int64, reqVO *req.AppTradeOrderCreateReq) (*trade.TradeOrder, error) {
 	// 1. Price Calculation
 	calcReq := &TradePriceCalculateReqBO{
-		UserID:        uId,
-		CouponID:      reqVO.CouponID,
-		PointStatus:   *reqVO.PointStatus,
-		DeliveryType:  reqVO.DeliveryType,
-		AddressID:     reqVO.AddressID,
-		PickUpStoreID: reqVO.PickUpStoreID,
-		Items:         make([]TradePriceCalculateItemBO, len(reqVO.Items)),
+		UserID:            uId,
+		CouponID:          reqVO.CouponID,
+		PointStatus:       *reqVO.PointStatus,
+		DeliveryType:      reqVO.DeliveryType,
+		AddressID:         reqVO.AddressID,
+		PickUpStoreID:     reqVO.PickUpStoreID,
+		SeckillActivityId: 0, // 默认值，表示非秒杀订单
+		Items:             make([]TradePriceCalculateItemBO, len(reqVO.Items)),
 	}
+
+	// 设置各种促销活动参数（对齐Java版本TradeOrderConvert第219行）
+	if reqVO.SeckillActivityID != nil {
+		calcReq.SeckillActivityId = *reqVO.SeckillActivityID
+	}
+	if reqVO.CombinationActivityID != nil {
+		calcReq.CombinationActivityId = *reqVO.CombinationActivityID
+	}
+	if reqVO.CombinationHeadID != nil {
+		calcReq.CombinationHeadId = *reqVO.CombinationHeadID
+	}
+	if reqVO.BargainRecordID != nil {
+		calcReq.BargainRecordId = *reqVO.BargainRecordID
+	}
+	if reqVO.PointActivityID != nil {
+		calcReq.PointActivityId = *reqVO.PointActivityID
+	}
+
 	for i, item := range reqVO.Items {
 		calcReq.Items[i] = TradePriceCalculateItemBO{
 			SkuID:    item.SkuID,

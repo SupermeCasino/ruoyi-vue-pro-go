@@ -226,7 +226,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 			// Order
 			orderGroup := tradeGroup.Group("/order")
 			{
-				orderGroup.POST("/settlement", appTradeOrderHandler.SettlementOrder) // 修正为POST
+				orderGroup.GET("/settlement", appTradeOrderHandler.SettlementOrder)
 				// settlement-product 移至公开路由组 (对齐 Java @PermitAll)
 				orderGroup.POST("/create", appTradeOrderHandler.CreateOrder)
 				orderGroup.GET("/get-detail", appTradeOrderHandler.GetOrderDetail)
