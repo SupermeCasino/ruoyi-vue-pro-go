@@ -152,7 +152,7 @@ func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 	tagMap := make(map[int64]string)
 
 	if len(levelIds) > 0 {
-		if levels, _ := h.levelSvc.GetLevelListByIds(c, levelIds); levels != nil {
+		if levels, _ := h.levelSvc.GetLevelList(c, levelIds); levels != nil {
 			for _, l := range levels {
 				levelMap[l.ID] = l.Name
 			}
@@ -207,7 +207,7 @@ func (h *MemberUserHandler) convertRespWithExt(user *memberModel.MemberUser, tag
 		RegisterIP: user.RegisterIP,
 		LoginIP:    user.LoginIP,
 		LoginDate:  user.LoginDate,
-		CreateTime:  user.CreateTime,
+		CreateTime: user.CreateTime,
 		Point:      user.Point,
 		Experience: user.Experience,
 		TagNames:   tagNames,

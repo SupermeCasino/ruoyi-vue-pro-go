@@ -3,7 +3,9 @@ package wallet
 import (
 	"context"
 	stdErrors "errors"
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
@@ -11,21 +13,30 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+)
+
+const (
+	walletLockKeyPrefix = "pay:wallet:lock:"
+	walletLockTimeout   = 5 * 1000 // 5 seconds in milliseconds
 )
 
 type PayWalletService struct {
 	q              *query.Query
+	rdb            *redis.Client
 	transactionSvc *PayWalletTransactionService
 }
 
-func NewPayWalletService(q *query.Query, transactionSvc *PayWalletTransactionService) *PayWalletService {
-	return &PayWalletService{q: q, transactionSvc: transactionSvc}
+func NewPayWalletService(q *query.Query, rdb *redis.Client, transactionSvc *PayWalletTransactionService) *PayWalletService {
+	return &PayWalletService{q: q, rdb: rdb, transactionSvc: transactionSvc}
 }
 
 // GetOrCreateWallet 获得会员钱包，不存在则创建
+// 严格对齐 Java 实现：获取一条，如果存在就返回一条，不存在就创建一条再返回
+// 通过 Redis 分布式锁确保在不改变数据库表结构的情况下避免重复创建
 func (s *PayWalletService) GetOrCreateWallet(ctx context.Context, userID int64, userType int) (*pay.PayWallet, error) {
-	// 1. 查询
+	// 1. 先进行一次查询，如果已存在则直接返回（优化性能，减少加锁频率）
 	wallet, err := s.q.PayWallet.WithContext(ctx).
 		Where(s.q.PayWallet.UserID.Eq(userID), s.q.PayWallet.UserType.Eq(userType)).
 		First()
@@ -36,7 +47,40 @@ func (s *PayWalletService) GetOrCreateWallet(ctx context.Context, userID int64, 
 		return nil, err
 	}
 
-	// 2. 创建
+	// 2. 钱包尝试加锁
+	lockKey := fmt.Sprintf("%s%d:%d", walletLockKeyPrefix, userID, userType)
+	// 尝试获取锁，设置 5 秒过期时间防止死锁
+	ok, err := s.rdb.SetNX(ctx, lockKey, "1", 5*time.Second).Result()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		// 加锁失败，说明有并发请求正在创建，等待一小段时间后重新查询
+		// 这里采用简单的轮询重试逻辑
+		for i := 0; i < 5; i++ {
+			time.Sleep(100 * time.Millisecond) // 等待 100ms
+			wallet, err = s.q.PayWallet.WithContext(ctx).
+				Where(s.q.PayWallet.UserID.Eq(userID), s.q.PayWallet.UserType.Eq(userType)).
+				First()
+			if err == nil {
+				return wallet, nil
+			}
+		}
+		return nil, stdErrors.New("获取钱包超时，请稍后重试")
+	}
+
+	// 确保释放锁
+	defer s.rdb.Del(ctx, lockKey)
+
+	// 3. 在锁内再次查询，防止在获取锁的过程中其他请求已经创建了钱包
+	wallet, err = s.q.PayWallet.WithContext(ctx).
+		Where(s.q.PayWallet.UserID.Eq(userID), s.q.PayWallet.UserType.Eq(userType)).
+		First()
+	if err == nil {
+		return wallet, nil
+	}
+
+	// 4. 执行创建
 	wallet = &pay.PayWallet{
 		UserID:        userID,
 		UserType:      userType,
@@ -49,6 +93,7 @@ func (s *PayWalletService) GetOrCreateWallet(ctx context.Context, userID int64, 
 	if err != nil {
 		return nil, err
 	}
+
 	return wallet, nil
 }
 

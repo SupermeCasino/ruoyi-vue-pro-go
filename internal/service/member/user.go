@@ -227,6 +227,12 @@ func (s *MemberUserService) GetUserCountByTagId(ctx context.Context, tagId int64
 	return count, err
 }
 
+// GetUserCountByLevelId 获得等级下的用户数量
+func (s *MemberUserService) GetUserCountByLevelId(ctx context.Context, levelId int64) (int64, error) {
+	u := s.q.MemberUser
+	return u.WithContext(ctx).Where(u.LevelID.Eq(levelId)).Count()
+}
+
 // UpdateUserPoint 更新用户积分
 // 对齐 Java: MemberUserMapper.updatePointIncr / updatePointDecr
 // point: 增加积分 (正数) 或 消费积分 (负数)
@@ -274,6 +280,16 @@ func (s *MemberUserService) updateUserMobile(ctx context.Context, id int64, mobi
 	return err
 }
 
+// UpdateUserLevel 更新用户等级信息
+func (s *MemberUserService) UpdateUserLevel(ctx context.Context, id int64, levelId int64, experience int) error {
+	u := s.q.MemberUser
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(id)).Updates(&member.MemberUser{
+		LevelID:    levelId,
+		Experience: int32(experience),
+	})
+	return err
+}
+
 func (s *MemberUserService) GetUserListByNickname(ctx context.Context, nickname string) ([]*member.MemberUser, error) {
 	return s.q.MemberUser.WithContext(ctx).Where(s.q.MemberUser.Nickname.Like("%" + nickname + "%")).Find()
 }
@@ -307,17 +323,17 @@ func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (ma
 		// Fetch Level info if needed or just basic info
 		// For now, basic info is enough as per TradeOrder requirements
 		userMap[user.ID] = &resp.MemberUserResp{
-			ID:        user.ID,
-			Mobile:    user.Mobile,
-			Status:    user.Status,
-			Nickname:  user.Nickname,
-			Avatar:    user.Avatar,
-			Sex:       user.Sex,
-			AreaID:    int64(user.AreaID),
-			Birthday:  user.Birthday,
-			Mark:      user.Mark,
-			LevelID:   user.LevelID,
-			GroupID:   user.GroupID,
+			ID:         user.ID,
+			Mobile:     user.Mobile,
+			Status:     user.Status,
+			Nickname:   user.Nickname,
+			Avatar:     user.Avatar,
+			Sex:        user.Sex,
+			AreaID:     int64(user.AreaID),
+			Birthday:   user.Birthday,
+			Mark:       user.Mark,
+			LevelID:    user.LevelID,
+			GroupID:    user.GroupID,
 			CreateTime: user.CreateTime,
 		}
 	}
