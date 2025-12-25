@@ -4,7 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -17,10 +17,10 @@ import (
 type AppBargainActivityHandler struct {
 	activitySvc *promotion.BargainActivityService
 	recordSvc   *promotion.BargainRecordService
-	spuSvc      *product.ProductSpuService
+	spuSvc      *productSvc.ProductSpuService
 }
 
-func NewAppBargainActivityHandler(activitySvc *promotion.BargainActivityService, recordSvc *promotion.BargainRecordService, spuSvc *product.ProductSpuService) *AppBargainActivityHandler {
+func NewAppBargainActivityHandler(activitySvc *promotion.BargainActivityService, recordSvc *promotion.BargainRecordService, spuSvc *productSvc.ProductSpuService) *AppBargainActivityHandler {
 	return &AppBargainActivityHandler{
 		activitySvc: activitySvc,
 		recordSvc:   recordSvc,
@@ -133,10 +133,20 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 	}
 
 	// Fetch SPU Info
-	spu, _ := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
-	if spu == nil || spu.Status != model.ProductSpuStatusEnable {
+	spu, _, err := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
+	if err != nil || spu == nil || spu.Status != model.ProductSpuStatusEnable {
 		response.WriteBizError(c, errors.NewBizError(1001004003, "砍价活动已结束或商品已下架"))
 		return
+	}
+
+	// 将模型数据转换为VO
+	spuResp := &resp.ProductSpuResp{
+		ID:          spu.ID,
+		Name:        spu.Name,
+		PicURL:      spu.PicURL,
+		Price:       spu.Price,
+		MarketPrice: spu.MarketPrice,
+		Status:      spu.Status,
 	}
 
 	// Fetch Success Count (Status = 1 = SUCCESS)
@@ -144,7 +154,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 
 	// 匹配 Java BargainActivityConvert.convert(activity, successUserCount, spu)
 	detail := resp.AppBargainActivityDetailRespVO{
-		AppBargainActivityRespVO: h.convertActivityResp(act, spu),
+		AppBargainActivityRespVO: h.convertActivityResp(act, spuResp),
 		BargainFirstPrice:        act.BargainFirstPrice,
 		HelpMaxCount:             act.HelpMaxCount,
 		BargainCount:             act.BargainCount,

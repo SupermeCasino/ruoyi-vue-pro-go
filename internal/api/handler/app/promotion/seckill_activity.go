@@ -8,7 +8,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -21,14 +21,14 @@ import (
 type AppSeckillActivityHandler struct {
 	svc       *promotion.SeckillActivityService
 	configSvc *promotion.SeckillConfigService
-	spuSvc    *product.ProductSpuService
+	spuSvc    *productSvc.ProductSpuService
 }
 
 // NewAppSeckillActivityHandler 创建 Handler
 func NewAppSeckillActivityHandler(
 	svc *promotion.SeckillActivityService,
 	configSvc *promotion.SeckillConfigService,
-	spuSvc *product.ProductSpuService,
+	spuSvc *productSvc.ProductSpuService,
 ) *AppSeckillActivityHandler {
 	return &AppSeckillActivityHandler{svc: svc, configSvc: configSvc, spuSvc: spuSvc}
 }
@@ -218,8 +218,8 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	}
 
 	// Fetch SPU Info
-	spu, _ := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
-	if spu == nil || spu.Status != model.ProductSpuStatusEnable {
+	spu, _, err := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
+	if err != nil || spu == nil || spu.Status != model.ProductSpuStatusEnable {
 		response.WriteBizError(c, errors.NewBizError(1001004003, "秒杀活动已结束或商品已下架"))
 		return
 	}
