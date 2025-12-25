@@ -317,6 +317,8 @@ func InitApp() (*gin.Engine, error) {
 
 		wire.Bind(new(promotionSvc.CombinationTradeOrderService), new(*tradeSvc.TradeOrderUpdateService)),
 		wire.Bind(new(promotionSvc.CombinationSocialClientService), new(*service.SocialClientService)),
+		tradeSvc.NewDefaultPromotionPriceCalculator,
+		wire.Bind(new(tradeSvc.PromotionPriceCalculator), new(*tradeSvc.DefaultPromotionPriceCalculator)),
 
 		payAdmin.NewPayAppHandler,
 		payAdmin.NewPayChannelHandler,
