@@ -392,6 +392,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 				seckillActivityGroup.GET("/get-now", appSeckillActivityHandler.GetNowSeckillActivity)
 				seckillActivityGroup.GET("/page", appSeckillActivityHandler.GetSeckillActivityPage)
 				seckillActivityGroup.GET("/get", appSeckillActivityHandler.GetSeckillActivity)
+				seckillActivityGroup.GET("/get-detail", appSeckillActivityHandler.GetSeckillActivityDetail)
 				seckillActivityGroup.GET("/list-by-ids", appSeckillActivityHandler.GetSeckillActivityListByIds)
 			}
 

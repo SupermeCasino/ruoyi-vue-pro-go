@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -205,6 +206,150 @@ func (s *SeckillActivityService) CloseSeckillActivity(ctx context.Context, id in
 func (s *SeckillActivityService) GetSeckillActivity(ctx context.Context, id int64) (*promotion.PromotionSeckillActivity, error) {
 	q := s.q.PromotionSeckillActivity
 	return q.WithContext(ctx).Where(q.ID.Eq(id)).First()
+}
+
+// GetSeckillActivityDetail 获取秒杀活动详情（包含时间段计算）
+func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, id int64) (*resp.AppSeckillActivityDetailResp, error) {
+	// 1. 获取活动基本信息
+	act, err := s.GetSeckillActivity(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if act == nil || act.Status == model.CommonStatusDisable {
+		return nil, nil // 对齐 Java 行为
+	}
+
+	// 2. 获取时间段配置
+	configs, err := s.configSvc.GetSeckillConfigListByStatus(ctx, model.CommonStatusEnable)
+	if err != nil {
+		return nil, err
+	}
+
+	// 过滤活动相关的时间段
+	activityConfigs := lo.Filter(configs, func(c *promotion.PromotionSeckillConfig, _ int) bool {
+		return lo.Contains(act.ConfigIds, c.ID)
+	})
+
+	if len(activityConfigs) == 0 {
+		return nil, errors.NewBizError(1001004003, "秒杀活动已结束或商品已下架")
+	}
+
+	// 3. 计算开始和结束时间
+	startTime, endTime := s.calculateActivityTimes(act, activityConfigs)
+
+	// 4. 获取商品信息
+	spu, _, err := s.spuSvc.GetSpuDetail(ctx, act.SpuID)
+	if err != nil {
+		return nil, err
+	}
+	if spu == nil || spu.Status != model.ProductSpuStatusEnable {
+		return nil, errors.NewBizError(1001004003, "秒杀活动已结束或商品已下架")
+	}
+
+	// 5. 获取秒杀商品列表
+	products, err := s.GetSeckillProductListByActivityID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 6. 构建完整响应
+	detail := &resp.AppSeckillActivityDetailResp{
+		ID:               act.ID,
+		Name:             act.Name,
+		Status:           act.Status,
+		SpuID:            act.SpuID,
+		StartTime:        startTime,
+		EndTime:          endTime,
+		SingleLimitCount: act.SingleLimitCount,
+		TotalLimitCount:  act.TotalLimitCount,
+		Stock:            act.Stock,
+		TotalStock:       act.TotalStock,
+		SpuName:          spu.Name,
+		PicURL:           spu.PicURL,
+		MarketPrice:      spu.MarketPrice,
+		Products:         make([]resp.AppSeckillProductResp, 0, len(products)),
+	}
+
+	// Calculate Min Seckill Price
+	minPrice := 0
+	if len(products) > 0 {
+		minPrice = products[0].SeckillPrice
+	}
+
+	for _, p := range products {
+		if p.SeckillPrice < minPrice {
+			minPrice = p.SeckillPrice
+		}
+		detail.Products = append(detail.Products, resp.AppSeckillProductResp{
+			ID:           p.ID,
+			ActivityID:   p.ActivityID,
+			SpuID:        p.SpuID,
+			SkuID:        p.SkuID,
+			SeckillPrice: p.SeckillPrice,
+			Stock:        p.Stock,
+		})
+	}
+	detail.SeckillPrice = minPrice
+
+	return detail, nil
+}
+
+// calculateActivityTimes 时间段计算逻辑（对齐Java版本）
+func (s *SeckillActivityService) calculateActivityTimes(activity *promotion.PromotionSeckillActivity, configs []*promotion.PromotionSeckillConfig) (startTime, endTime *time.Time) {
+	now := time.Now()
+	var currentConfig *promotion.PromotionSeckillConfig
+
+	// 优先选择当前进行中的时段
+	currentTimeStr := now.Format("15:04:05")
+	for _, cfg := range configs {
+		startStr := cfg.StartTime
+		endStr := cfg.EndTime
+		if len(startStr) == 5 {
+			startStr += ":00"
+		}
+		if len(endStr) == 5 {
+			endStr += ":00"
+		}
+
+		if currentTimeStr >= startStr && currentTimeStr <= endStr {
+			currentConfig = cfg
+			break
+		}
+	}
+
+	// 如果没有正在进行的，取最后一个（对齐 Java 逻辑）
+	if currentConfig == nil && len(configs) > 0 {
+		currentConfig = configs[len(configs)-1]
+	}
+
+	if currentConfig == nil {
+		return nil, nil
+	}
+
+	// 计算基准日期
+	// 如果当前时间在活动范围内，用今天；否则用活动结束那天
+	baseDate := now
+	if now.After(activity.EndTime) {
+		baseDate = activity.EndTime
+	}
+
+	// 解析时分秒
+	startStr := currentConfig.StartTime
+	endStr := currentConfig.EndTime
+	if len(startStr) == 5 {
+		startStr += ":00"
+	}
+	if len(endStr) == 5 {
+		endStr += ":00"
+	}
+
+	sTime, _ := time.Parse("15:04:05", startStr)
+	eTime, _ := time.Parse("15:04:05", endStr)
+
+	start := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), sTime.Hour(), sTime.Minute(), sTime.Second(), 0, baseDate.Location())
+	end := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), eTime.Hour(), eTime.Minute(), eTime.Second(), 0, baseDate.Location())
+
+	return &start, &end
 }
 
 // GetSeckillProductListByActivityID 获得秒杀商品列表

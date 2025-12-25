@@ -199,7 +199,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 	})
 }
 
-// GetSeckillActivity 获得秒杀活动详情
+// GetSeckillActivity 获得秒杀活动
 // 对齐 Java: AppSeckillActivityController.getSeckillActivity
 func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	idStr := c.Query("id")
@@ -265,6 +265,24 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		})
 	}
 	detail.SeckillPrice = minPrice
+
+	response.WriteSuccess(c, detail)
+}
+
+// GetSeckillActivityDetail 获得秒杀活动详情
+// 对齐 Java: AppSeckillActivityController.getSeckillActivity (get-detail路径)
+func (h *AppSeckillActivityHandler) GetSeckillActivityDetail(c *gin.Context) {
+	var r req.AppSeckillActivityDetailReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		response.WriteError(c, 400, err.Error())
+		return
+	}
+
+	detail, err := h.svc.GetSeckillActivityDetail(c.Request.Context(), r.ID)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
 
 	response.WriteSuccess(c, detail)
 }
