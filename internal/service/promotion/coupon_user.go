@@ -5,7 +5,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -118,24 +120,39 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 	return canTakeAgain, nil
 }
 
-// GetCouponPage 用户优惠券分页
-func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req *req.AppCouponPageReq) (*pagination.PageResult[promotion.PromotionCoupon], error) {
+// GetCouponPage 用户优惠券分页 (对齐 Java: AppCouponController.getCouponPage)
+func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req *req.AppCouponPageReq) (*pagination.PageResult[*resp.AppCouponResp], error) {
 	q := s.q.PromotionCoupon.WithContext(ctx).Where(s.q.PromotionCoupon.UserID.Eq(userId))
 	if req.Status != nil {
 		q = q.Where(s.q.PromotionCoupon.Status.Eq(*req.Status))
 	}
+
+	q = q.Order(s.q.PromotionCoupon.ID.Desc()) // 按 ID 降序排列，对齐 Java 实现
 
 	result, count, err := q.FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	list := make([]promotion.PromotionCoupon, len(result))
-	for i, v := range result {
-		list[i] = *v
-	}
+	// 转换为响应对象
+	list := lo.Map(result, func(coupon *promotion.PromotionCoupon, _ int) *resp.AppCouponResp {
+		return &resp.AppCouponResp{
+			ID:                 coupon.ID,
+			Name:               coupon.Name,
+			Status:             coupon.Status,
+			UsePrice:           coupon.UsePrice,
+			ProductScope:       coupon.ProductScope,
+			ProductScopeValues: coupon.ProductScopeValues,
+			ValidStartTime:     coupon.ValidStartTime.UnixMilli(),
+			ValidEndTime:       coupon.ValidEndTime.UnixMilli(),
+			DiscountType:       coupon.DiscountType,
+			DiscountPercent:    coupon.DiscountPercent,
+			DiscountPrice:      coupon.DiscountPrice,
+			DiscountLimitPrice: coupon.DiscountLimitPrice,
+		}
+	})
 
-	return &pagination.PageResult[promotion.PromotionCoupon]{
+	return &pagination.PageResult[*resp.AppCouponResp]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -162,6 +179,15 @@ func (s *CouponUserService) GetUnusedCouponCount(ctx context.Context, userId int
 		Where(s.q.PromotionCoupon.UserID.Eq(userId)).
 		Where(s.q.PromotionCoupon.Status.Eq(consts.CouponStatusUnused)). // 未使用
 		Count()
+}
+
+// GetUnusedCouponList 获取用户所有未使用的优惠券列表
+// 对齐 Java: couponApi.getCouponListByUserId(userId, CouponStatusEnum.UNUSED.getStatus())
+func (s *CouponUserService) GetUnusedCouponList(ctx context.Context, userId int64) ([]*promotion.PromotionCoupon, error) {
+	return s.q.PromotionCoupon.WithContext(ctx).
+		Where(s.q.PromotionCoupon.UserID.Eq(userId)).
+		Where(s.q.PromotionCoupon.Status.Eq(consts.CouponStatusUnused)). // 未使用
+		Find()
 }
 
 // CalculateCoupon 计算优惠券金额

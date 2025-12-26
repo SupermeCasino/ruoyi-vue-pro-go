@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
@@ -286,6 +287,8 @@ func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *
 		q = q.Where(t.ProductScope.Eq(*productScope))
 	}
 
+	q = q.Order(t.ID.Desc()) // 按 ID 降序排列，对齐 Java 实现
+
 	if count <= 0 {
 		count = 10
 	}
@@ -351,26 +354,26 @@ func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.
 		q = q.Where(t.ProductScope.Eq(*r.ProductScope))
 	}
 
+	q = q.Order(t.ID.Desc()) // 按 ID 降序排列，对齐 Java 实现
+
 	templates, count, err := q.FindByPage((r.PageNo-1)*r.PageSize, r.PageSize)
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取用户是否可领取
-	templateIds := make([]int64, len(templates))
-	for i, tmpl := range templates {
-		templateIds[i] = tmpl.ID
-	}
+	templateIds := lo.Map(templates, func(tmpl *promotion.PromotionCouponTemplate, _ int) int64 {
+		return tmpl.ID
+	})
 	canTakeMap, err := s.GetUserCanTakeMap(ctx, userId, templateIds)
 	if err != nil {
 		return nil, err
 	}
 
 	// 转换响应
-	result := make([]*resp.AppCouponTemplateResp, len(templates))
-	for i, tmpl := range templates {
-		result[i] = s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
-	}
+	result := lo.Map(templates, func(tmpl *promotion.PromotionCouponTemplate, _ int) *resp.AppCouponTemplateResp {
+		return s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
+	})
 
 	return &pagination.PageResult[*resp.AppCouponTemplateResp]{
 		List:  result,
@@ -386,20 +389,36 @@ func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCou
 		productScopeValues = []int64{}
 	}
 
+	// 处理时间戳：转换为毫秒时间戳或 null
+	var validStartTime, validEndTime interface{}
+	if t.ValidStartTime != nil {
+		validStartTime = t.ValidStartTime.UnixMilli()
+	}
+	if t.ValidEndTime != nil {
+		validEndTime = t.ValidEndTime.UnixMilli()
+	}
+
+	// 处理 fixedStartTerm 和 fixedEndTerm：当 validityType=1 时返回 null
+	var fixedStartTerm, fixedEndTerm *int
+	if t.ValidityType == 2 { // 2 = 领取后N天
+		fixedStartTerm = &t.FixedStartTerm
+		fixedEndTerm = &t.FixedEndTerm
+	}
+
 	return &resp.AppCouponTemplateResp{
 		ID:                 t.ID,
 		Name:               t.Name,
-		Description:        t.Description, // 使用真实的Description字段
+		Description:        t.Description,
 		TotalCount:         t.TotalCount,
 		TakeLimitCount:     t.TakeLimitCount,
 		UsePrice:           t.UsePriceMin,
 		ProductScope:       int(t.ProductScope),
 		ProductScopeValues: productScopeValues,
 		ValidityType:       t.ValidityType,
-		ValidStartTime:     t.ValidStartTime,
-		ValidEndTime:       t.ValidEndTime,
-		FixedStartTerm:     t.FixedStartTerm,
-		FixedEndTerm:       t.FixedEndTerm,
+		ValidStartTime:     validStartTime,
+		ValidEndTime:       validEndTime,
+		FixedStartTerm:     fixedStartTerm,
+		FixedEndTerm:       fixedEndTerm,
 		DiscountType:       t.DiscountType,
 		DiscountPercent:    t.DiscountPercent,
 		DiscountPrice:      t.DiscountPrice,

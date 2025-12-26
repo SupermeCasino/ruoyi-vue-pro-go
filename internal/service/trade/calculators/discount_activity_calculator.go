@@ -2,6 +2,7 @@ package calculators
 
 import (
 	"context"
+	"fmt"
 
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
@@ -89,10 +90,13 @@ func (c *DiscountActivityPriceCalculator) Calculate(ctx context.Context, req *tr
 		// A. 计算限时折扣
 		activitySaving := 0
 		if discount, ok := discountActivityMap[item.SkuID]; ok {
-			if discount.DiscountType == tradeModel.DiscountTypePrice { // 减价
+			switch discount.DiscountType {
+			case tradeModel.DiscountTypePrice: // 减价
 				activitySaving = discount.DiscountPrice * item.Count
-			} else if discount.DiscountType == tradeModel.DiscountTypePercent { // 打折
-				targetPrice := c.Helper.CalculateRatePrice(itemPayPrice, discount.DiscountPercent)
+			case tradeModel.DiscountTypePercent: // 打折
+				// DiscountPercent 是万分比（如8000=80%），需要除以100转为百分比
+				// 对齐 Java: calculateRatePrice(orderItem.getPayPrice(), discount.getDiscountPercent() / 100.0)
+				targetPrice := c.Helper.CalculateRatePrice(itemPayPrice, discount.DiscountPercent/100)
 				activitySaving = itemPayPrice - targetPrice
 			}
 		}
@@ -112,13 +116,15 @@ func (c *DiscountActivityPriceCalculator) Calculate(ctx context.Context, req *tr
 
 				// 记录限时折扣活动明细
 				if discount, ok := discountActivityMap[item.SkuID]; ok {
+					description := fmt.Sprintf("限时折扣：省 %.2f 元", float64(activitySaving)/100.0)
 					c.Helper.AddPromotion(resp, &trade.TradePriceCalculatePromotionBO{
 						ID:            discount.ActivityID,
-						Name:          "限时折扣",
+						Name:          discount.ActivityName,
 						Type:          tradeModel.PromotionTypeDiscountActivity,
 						TotalPrice:    itemPayPrice,
 						DiscountPrice: activitySaving,
 						Match:         true,
+						Description:   description,
 						Items: []trade.TradePriceCalculatePromotionItemBO{
 							{
 								SkuID:         item.SkuID,
@@ -206,9 +212,10 @@ func (c *DiscountActivityPriceCalculator) CalculateSkuPromotion(
 	var discountAmount int
 	var discount = discountMap[skuId]
 	if discount != nil {
-		if discount.DiscountType == tradeModel.DiscountTypePrice { // 满减
+		switch discount.DiscountType {
+		case tradeModel.DiscountTypePrice: // 满减
 			discountAmount = discount.DiscountPrice
-		} else if discount.DiscountType == tradeModel.DiscountTypePercent { // 打折
+		case tradeModel.DiscountTypePercent: // 打折
 			// discountPercent 是万分比，例如 8000 表示 80.00%
 			// 计算方式：newPrice = price * discountPercent / 10000
 			newPrice := price * discount.DiscountPercent / 10000
