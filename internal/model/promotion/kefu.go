@@ -31,13 +31,7 @@ type PromotionKefuConversation struct {
 
 	// 管理员未读消息数 (用户发送消息时增加，管理员查看后扣减)
 	AdminUnreadMessageCount int `gorm:"comment:管理员未读消息数"`
-
-	Creator    string        `gorm:"column:creator"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime"`
-	Updater    string        `gorm:"column:updater"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted"`
-	TenantID   int64         `gorm:"column:tenant_id"`
+	model.TenantBaseDO
 }
 
 func (PromotionKefuConversation) TableName() string {
@@ -55,13 +49,7 @@ type PromotionKefuMessage struct {
 	ContentType    int           `gorm:"comment:消息类型"`  // 1-文本 2-图片 3-商品 4-订单
 	Content        string        `gorm:"comment:消息内容"`  // JSON 结构，根据 ContentType 解析
 	ReadStatus     model.BitBool `gorm:"comment:是否已读"`  // false-未读 true-已读
-
-	Creator    string        `gorm:"column:creator"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime"`
-	Updater    string        `gorm:"column:updater"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted"`
-	TenantID   int64         `gorm:"column:tenant_id"`
+	model.TenantBaseDO
 }
 
 func (PromotionKefuMessage) TableName() string {

@@ -1,9 +1,5 @@
 package model
 
-import (
-	"time"
-)
-
 // SystemOAuth2Client OAuth2 客户端
 type SystemOAuth2Client struct {
 	ID                          int64  `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
@@ -22,12 +18,7 @@ type SystemOAuth2Client struct {
 	Authorities                 string `gorm:"column:authorities;comment:权限" json:"authorities"`                                // JSON array
 	ResourceIDs                 string `gorm:"column:resource_ids;comment:资源" json:"resourceIds"`                               // JSON array
 	AdditionalInformation       string `gorm:"column:additional_information;comment:附加信息" json:"additionalInformation"`         // JSON string
-
-	Creator   string    `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string    `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	BaseDO
 }
 
 func (SystemOAuth2Client) TableName() string {

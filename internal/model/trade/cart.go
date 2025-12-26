@@ -12,7 +12,7 @@ type Cart struct {
 	SkuID    int64         `gorm:"index;not null;comment:商品 SKU 编号" json:"skuId"`
 	Count    int           `gorm:"not null;default:1;comment:商品数量" json:"count"`
 	Selected model.BitBool `gorm:"not null;comment:是否选中" json:"selected"`
-	model.BaseDO
+	model.TenantBaseDO
 }
 
 func (*Cart) TableName() string {

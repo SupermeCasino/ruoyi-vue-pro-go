@@ -71,7 +71,7 @@ type TradeOrder struct {
 	CombinationHeadID        int64                `gorm:"column:combination_head_id;type:bigint;comment:拼团团长编号"`
 	CombinationRecordID      int64                `gorm:"column:combination_record_id;type:bigint;comment:拼团记录编号"`
 	PointActivityID          int64                `gorm:"column:point_activity_id;type:bigint;comment:积分商城活动的编号"`
-	model.BaseDO
+	model.TenantBaseDO
 }
 
 func (TradeOrder) TableName() string {
@@ -103,7 +103,7 @@ type TradeOrderItem struct {
 	VipPrice        int                                         `gorm:"column:vip_price;type:int;not null;default:0;comment:VIP 减免金额"`
 	AfterSaleID     int64                                       `gorm:"column:after_sale_id;type:bigint;comment:售后单编号"`
 	AfterSaleStatus int                                         `gorm:"column:after_sale_status;type:int;not null;comment:售后状态"`
-	model.BaseDO
+	model.TenantBaseDO
 }
 
 func (TradeOrderItem) TableName() string {
@@ -127,7 +127,7 @@ type TradeOrderLog struct {
 	AfterStatus  int    `gorm:"column:after_status;type:int;comment:操作后状态"`
 	OperateType  int    `gorm:"column:operate_type;type:int;not null;comment:操作类型"`
 	Content      string `gorm:"column:content;type:varchar(2000);not null;comment:订单日志信息"`
-	model.BaseDO
+	model.TenantBaseDO
 }
 
 func (TradeOrderLog) TableName() string {

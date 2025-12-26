@@ -17,13 +17,7 @@ type PromotionDiyTemplate struct {
 	Remark         string                  `gorm:"column:remark;type:varchar(255);comment:备注" json:"remark"`
 	Used           model.BitBool           `gorm:"column:used;type:bit(1);not null;default:0;comment:是否使用" json:"used"`
 	UsedTime       *time.Time              `gorm:"column:used_time;comment:使用时间" json:"usedTime"`
-
-	Creator    string        `gorm:"column:creator" json:"creator"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	Updater    string        `gorm:"column:updater" json:"updater"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted" json:"deleted"`
-	TenantID   int64         `gorm:"column:tenant_id" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 func (PromotionDiyTemplate) TableName() string {
@@ -38,13 +32,7 @@ type PromotionDiyPage struct {
 	Remark         string                  `gorm:"column:remark;type:varchar(255);comment:备注" json:"remark"`
 	PreviewPicUrls types.StringListFromCSV `gorm:"column:preview_pic_urls;type:varchar(2000);comment:预览图片" json:"previewPicUrls"`
 	Property       datatypes.JSON          `gorm:"column:property;type:longtext;comment:页面属性" json:"property"` // JSON
-
-	Creator    string        `gorm:"column:creator" json:"creator"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	Updater    string        `gorm:"column:updater" json:"updater"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted" json:"deleted"`
-	TenantID   int64         `gorm:"column:tenant_id" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 func (PromotionDiyPage) TableName() string {

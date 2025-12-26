@@ -25,7 +25,7 @@ type SystemPost struct {
 	Sort   int32  `gorm:"column:sort;not null;default:0" json:"sort"`
 	Status int32  `gorm:"column:status;not null;default:0" json:"status"` // 0:开启, 1:禁用
 	Remark string `gorm:"column:remark;default:''" json:"remark"`
-	BaseDO
+	TenantBaseDO
 }
 
 func (SystemPost) TableName() string {

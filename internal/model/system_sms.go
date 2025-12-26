@@ -18,11 +18,7 @@ type SystemSmsChannel struct {
 	CallbackUrl string `gorm:"size:255;comment:短信发送回调 URL" json:"callbackUrl"`
 
 	// Base fields
-	Creator   string    `gorm:"column:creator;size:64;comment:创建者" json:"creator"`
-	Updater   string    `gorm:"column:updater;size:64;comment:更新者" json:"updater"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	BaseDO
 }
 
 func (SystemSmsChannel) TableName() string {
@@ -44,11 +40,7 @@ type SystemSmsTemplate struct {
 	ChannelCode   string                      `gorm:"size:63;not null;comment:短信渠道编码" json:"channelCode"`
 
 	// Base fields
-	Creator   string    `gorm:"column:creator;size:64;comment:创建者" json:"creator"`
-	Updater   string    `gorm:"column:updater;size:64;comment:更新者" json:"updater"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	BaseDO
 }
 
 func (SystemSmsTemplate) TableName() string {
@@ -81,11 +73,7 @@ type SystemSmsLog struct {
 	ApiReceiveMsg   string                 `gorm:"size:255;comment:短信 API 接收结果的提示" json:"apiReceiveMsg"`
 
 	// Base fields
-	Creator   string    `gorm:"column:creator;size:64;comment:创建者" json:"creator"`
-	Updater   string    `gorm:"column:updater;size:64;comment:更新者" json:"updater"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	BaseDO
 }
 
 func (SystemSmsLog) TableName() string {
@@ -105,11 +93,7 @@ type SystemSmsCode struct {
 	UsedIp     string     `gorm:"size:30;comment:使用 IP" json:"usedIp"`
 
 	// Base fields
-	Creator   string    `gorm:"column:creator;size:64;comment:创建者" json:"creator"`
-	Updater   string    `gorm:"column:updater;size:64;comment:更新者" json:"updater"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	BaseDO
 }
 
 func (SystemSmsCode) TableName() string {

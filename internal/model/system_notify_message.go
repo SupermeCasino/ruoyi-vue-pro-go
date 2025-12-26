@@ -17,12 +17,7 @@ type SystemNotifyMessage struct {
 	TemplateParams   string     `gorm:"column:template_params;not null;comment:模版参数" json:"templateParams"` // JSON map
 	ReadStatus       bool       `gorm:"column:read_status;not null;default:0;comment:是否已读" json:"readStatus"`
 	ReadTime         *time.Time `gorm:"column:read_time;comment:阅读时间" json:"readTime"`
-
-	Creator   string    `gorm:"column:creator;size:64;default:'';comment:创建者" json:"creator"`
-	Updater   string    `gorm:"column:updater;size:64;default:'';comment:更新者" json:"updater"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted   BitBool   `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"-"`
+	TenantBaseDO
 }
 
 func (SystemNotifyMessage) TableName() string {
