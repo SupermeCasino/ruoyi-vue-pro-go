@@ -12,6 +12,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -720,7 +721,8 @@ func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId in
 	}
 
 	// 设置配送信息
-	if createReq.DeliveryType == consts.DeliveryTypeExpress {
+	switch createReq.DeliveryType {
+	case consts.DeliveryTypeExpress:
 		// 快递配送
 		if createReq.AddressID != nil && *createReq.AddressID > 0 {
 			address, _ := s.addressSvc.GetAddress(ctx, *createReq.AddressID, userId)
@@ -731,7 +733,7 @@ func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId in
 				order.ReceiverDetailAddress = address.DetailAddress
 			}
 		}
-	} else if createReq.DeliveryType == consts.DeliveryTypePickUp {
+	case consts.DeliveryTypePickUp:
 		// 到店自提
 		order.ReceiverName = createReq.ReceiverName
 		order.ReceiverMobile = createReq.ReceiverMobile
@@ -1023,7 +1025,7 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 
 	// 转换商品项
 	for _, item := range priceResp.Items {
-		result.Items = append(result.Items, resp.AppTradeOrderSettlementItem{
+		settlementItem := resp.AppTradeOrderSettlementItem{
 			CategoryID: item.CategoryID,
 			SpuID:      item.SpuID,
 			SpuName:    item.SpuName,
@@ -1031,43 +1033,69 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 			PicURL:     item.PicURL,
 			Price:      item.Price,
 			Count:      item.Count,
-		})
+			Properties: item.Properties, // 填充 SKU 属性
+		}
+		// 处理 CartID：如果为 0 则设为 nil（Java 返回 null）
+		if item.CartID > 0 {
+			cID := item.CartID
+			settlementItem.CartID = &cID
+		}
+		result.Items = append(result.Items, settlementItem)
 	}
 
 	// 转换优惠券列表
 	for _, coupon := range priceResp.Coupons {
+		var mismatchReason *string
+		if !coupon.Match && coupon.MismatchReason != nil {
+			mismatchReason = coupon.MismatchReason
+		}
 		result.Coupons = append(result.Coupons, resp.AppTradeOrderSettlementCoupon{
 			ID:                 coupon.ID,
 			Name:               coupon.Name,
 			UsePrice:           coupon.UsePrice,
-			ValidStartTime:     s.parseTimeString(coupon.ValidStartTime),
-			ValidEndTime:       s.parseTimeString(coupon.ValidEndTime),
+			ValidStartTime:     coupon.ValidStartTime,
+			ValidEndTime:       coupon.ValidEndTime,
 			DiscountType:       coupon.DiscountType,
 			DiscountPercent:    coupon.DiscountPercent,
 			DiscountPrice:      coupon.DiscountPrice,
 			DiscountLimitPrice: coupon.DiscountLimitPrice,
 			Match:              coupon.Match,
-			MismatchReason:     coupon.MismatchReason,
+			MismatchReason:     mismatchReason,
 		})
 	}
 
-	// 转换促销活动列表
+	// 转换促销活动列表（对齐 Java: TradePriceCalculateRespBO.Promotion）
 	for _, promotion := range priceResp.Promotions {
-		result.Promotions = append(result.Promotions, resp.AppTradeOrderSettlementPromotion{
+		promotionItem := resp.AppTradeOrderSettlementPromotion{
 			ID:            promotion.ID,
 			Name:          promotion.Name,
 			Type:          promotion.Type,
+			TotalPrice:    promotion.TotalPrice,
 			DiscountPrice: promotion.DiscountPrice,
-		})
+			Match:         promotion.Match,
+			Description:   promotion.Description,
+			Items:         make([]resp.AppTradeOrderSettlementPromotionItem, 0, len(promotion.Items)),
+		}
+		// 转换促销活动商品项
+		for _, item := range promotion.Items {
+			promotionItem.Items = append(promotionItem.Items, resp.AppTradeOrderSettlementPromotionItem{
+				SkuID:         item.SkuID,
+				TotalPrice:    item.TotalPrice,
+				DiscountPrice: item.DiscountPrice,
+				PayPrice:      item.PayPrice,
+			})
+		}
+		result.Promotions = append(result.Promotions, promotionItem)
 	}
 
-	// 设置地址信息
+	// 设置地址信息（对齐 Java: 使用 AreaUtils.format() 填充 areaName）
 	if address != nil {
 		result.Address = &resp.AppTradeOrderSettlementAddress{
 			ID:            address.ID,
 			Name:          address.Name,
 			Mobile:        address.Mobile,
 			AreaID:        address.AreaID,
+			AreaName:      area.Format(int(address.AreaID)), // 填充地区格式化名称
 			DetailAddress: address.DetailAddress,
 			DefaultStatus: bool(address.DefaultStatus),
 		}
@@ -1316,7 +1344,7 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, userId int64,
 	// 对应 Java: if (TradeOrderStatusEnum.isUnpaid(order.getStatus()))
 	if order.PayOrderID != nil && *order.PayOrderID > 0 {
 		payOrder, err := s.paySvc.GetOrder(ctx, *order.PayOrderID)
-		if err == nil && payOrder != nil && payOrder.Status == 2 { // 2 = PayOrderStatusSuccess
+		if err == nil && payOrder != nil && payOrder.Status == consts.PayOrderStatusSuccess {
 			s.logger.Warn("订单支付单已支付（支付回调延迟），不支持取消",
 				zap.Int64("orderId", orderId),
 				zap.Int64("payOrderId", *order.PayOrderID),

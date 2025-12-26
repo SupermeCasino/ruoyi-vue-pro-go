@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 
+	apiResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	productModel "github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -198,6 +199,7 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 
 	// 3. 构建 SKU Map
 	skuMap := make(map[int64]*productModel.ProductSku)
+	skuRespMap := make(map[int64]*apiResp.ProductSkuResp)
 	spuIDs := make([]int64, 0)
 	for _, sku := range skuList {
 		skuMap[sku.ID] = &productModel.ProductSku{
@@ -208,7 +210,12 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 			PicURL: sku.PicURL,
 			Weight: sku.Weight,
 			Volume: sku.Volume,
+			// 注意：resp.ProductSkuResp 的 Properties 是 []resp.ProductSkuPropertyResp
+			// 而 productModel.ProductSku 的 Properties 是 []productModel.ProductSkuProperty
+			// 这里我们直接复用 skuList 里的 resp 数据即可，不需要在 Map 里存模型级的 Properties
 		}
+		// 为了后续方便获取原 resp 里的属性，我们可以开个 map 存 resp 数据
+		skuRespMap[sku.ID] = sku
 		spuIDs = append(spuIDs, sku.SpuID)
 	}
 
@@ -225,6 +232,7 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 		spuMap[spu.ID] = &productModel.ProductSpu{
 			ID:            spu.ID,
 			Name:          spu.Name,
+			Status:        spu.Status,
 			CategoryID:    spu.CategoryID,
 			PicURL:        spu.PicURL,
 			GiveIntegral:  spu.GiveIntegral,
@@ -236,6 +244,7 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 	resp.Items = make([]TradePriceCalculateItemRespBO, 0, len(req.Items))
 	for _, reqItem := range req.Items {
 		sku, skuExists := skuMap[reqItem.SkuID]
+		skuResp, _ := skuRespMap[reqItem.SkuID]
 		if !skuExists {
 			s.logger.Error("SKU不存在",
 				zap.Int64("skuId", reqItem.SkuID),
@@ -283,6 +292,7 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 			PicURL:     sku.PicURL,
 			CategoryID: spu.CategoryID,
 			GivePoint:  spu.GiveIntegral * reqItem.Count,
+			Properties: skuResp.Properties,
 		}
 
 		// 如果 SKU 没有图片，使用 SPU 的图片

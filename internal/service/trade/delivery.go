@@ -77,11 +77,11 @@ func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *
 
 	pageNo := r.PageNo
 	pageSize := r.PageSize
-	if pageNo <= 0 {
-		pageNo = 1
+	if pageNo <= consts.DefaultPageNo {
+		pageNo = consts.DefaultPageNo
 	}
 	if pageSize <= 0 {
-		pageSize = 10
+		pageSize = consts.DefaultPageSize
 	}
 	offset := (pageNo - 1) * pageSize
 
@@ -179,11 +179,11 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 
 	pageNo := r.PageNo
 	pageSize := r.PageSize
-	if pageNo <= 0 {
-		pageNo = 1
+	if pageNo <= consts.DefaultPageNo {
+		pageNo = consts.DefaultPageNo
 	}
 	if pageSize <= 0 {
-		pageSize = 10
+		pageSize = consts.DefaultPageSize
 	}
 	offset := (pageNo - 1) * pageSize
 
@@ -435,11 +435,11 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx cont
 
 	pageNo := r.PageNo
 	pageSize := r.PageSize
-	if pageNo <= 0 {
-		pageNo = 1
+	if pageNo <= consts.DefaultPageNo {
+		pageNo = consts.DefaultPageNo
 	}
 	if pageSize <= 0 {
-		pageSize = 10
+		pageSize = consts.DefaultPageSize
 	}
 	offset := (pageNo - 1) * pageSize
 

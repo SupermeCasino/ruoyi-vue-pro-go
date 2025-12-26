@@ -32,22 +32,22 @@ type AppTradeOrderSettlementItem struct {
 	Price      int                      `json:"price"`
 	PicURL     string                   `json:"picUrl"`
 	Properties []ProductSkuPropertyResp `json:"properties"`
-	CartID     int64                    `json:"cartId"`
+	CartID     *int64                   `json:"cartId"` // 使用指针类型支持 null
 	Count      int                      `json:"count"`
 }
 
 type AppTradeOrderSettlementCoupon struct {
-	ID                 int64      `json:"id"`
-	Name               string     `json:"name"`
-	UsePrice           int        `json:"usePrice"`
-	ValidStartTime     *time.Time `json:"validStartTime"`
-	ValidEndTime       *time.Time `json:"validEndTime"`
-	DiscountType       int        `json:"discountType"`
-	DiscountPercent    int        `json:"discountPercent"`
-	DiscountPrice      int        `json:"discountPrice"`
-	DiscountLimitPrice int        `json:"discountLimitPrice"`
-	Match              bool       `json:"match"`
-	MismatchReason     string     `json:"mismatchReason"`
+	ID                 int64   `json:"id"`
+	Name               string  `json:"name"`
+	UsePrice           int     `json:"usePrice"`
+	ValidStartTime     int64   `json:"validStartTime"` // 毫秒时间戳
+	ValidEndTime       int64   `json:"validEndTime"`   // 毫秒时间戳
+	DiscountType       int     `json:"discountType"`
+	DiscountPercent    int     `json:"discountPercent"`
+	DiscountPrice      int     `json:"discountPrice"`
+	DiscountLimitPrice int     `json:"discountLimitPrice"`
+	Match              bool    `json:"match"`
+	MismatchReason     *string `json:"mismatchReason"` // 支持null
 }
 
 type AppTradeOrderSettlementPrice struct {
@@ -71,11 +71,24 @@ type AppTradeOrderSettlementAddress struct {
 }
 
 // AppTradeOrderSettlementPromotion 交易订单结算 - 促销活动信息
+// 对齐 Java: TradePriceCalculateRespBO.Promotion
 type AppTradeOrderSettlementPromotion struct {
-	ID            int64  `json:"id"`
-	Name          string `json:"name"`
-	Type          int    `json:"type"`          // 活动类型
-	DiscountPrice int    `json:"discountPrice"` // 折扣金额
+	ID            int64                                  `json:"id"`
+	Name          string                                 `json:"name"`
+	Type          int                                    `json:"type"`          // 活动类型
+	TotalPrice    int                                    `json:"totalPrice"`    // 计算时的原价
+	DiscountPrice int                                    `json:"discountPrice"` // 折扣金额
+	Items         []AppTradeOrderSettlementPromotionItem `json:"items"`         // 匹配的商品 SKU 数组
+	Match         bool                                   `json:"match"`         // 是否满足优惠条件
+	Description   string                                 `json:"description"`   // 满足条件的提示
+}
+
+// AppTradeOrderSettlementPromotionItem 促销活动匹配的商品 SKU
+type AppTradeOrderSettlementPromotionItem struct {
+	SkuID         int64 `json:"skuId"`         // 商品 SKU 编号
+	TotalPrice    int   `json:"totalPrice"`    // 计算时的原价
+	DiscountPrice int   `json:"discountPrice"` // 计算时的优惠
+	PayPrice      int   `json:"payPrice"`      // 计算时的实付
 }
 
 // AppTradeOrderDetailResp 交易订单详情 Response

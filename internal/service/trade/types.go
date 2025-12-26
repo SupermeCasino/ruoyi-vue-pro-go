@@ -67,17 +67,17 @@ type TradePriceCalculatePromotionItemBO struct {
 
 // TradePriceCalculateCouponBO 优惠券业务对象
 type TradePriceCalculateCouponBO struct {
-	ID                 int64  `json:"id"`                 // 优惠券ID
-	Name               string `json:"name"`               // 优惠券名称
-	UsePrice           int    `json:"usePrice"`           // 使用门槛价格
-	ValidStartTime     string `json:"validStartTime"`     // 有效开始时间
-	ValidEndTime       string `json:"validEndTime"`       // 有效结束时间
-	DiscountType       int    `json:"discountType"`       // 折扣类型
-	DiscountPercent    int    `json:"discountPercent"`    // 折扣百分比
-	DiscountPrice      int    `json:"discountPrice"`      // 折扣金额
-	DiscountLimitPrice int    `json:"discountLimitPrice"` // 折扣限制价格
-	Match              bool   `json:"match"`              // 是否匹配
-	MismatchReason     string `json:"mismatchReason"`     // 不匹配原因
+	ID                 int64   `json:"id"`                 // 优惠券ID
+	Name               string  `json:"name"`               // 优惠券名称
+	UsePrice           int     `json:"usePrice"`           // 使用门槛价格
+	ValidStartTime     int64   `json:"validStartTime"`     // 有效开始时间（毫秒时间戳）
+	ValidEndTime       int64   `json:"validEndTime"`       // 有效结束时间（毫秒时间戳）
+	DiscountType       int     `json:"discountType"`       // 折扣类型
+	DiscountPercent    int     `json:"discountPercent"`    // 折扣百分比
+	DiscountPrice      int     `json:"discountPrice"`      // 折扣金额
+	DiscountLimitPrice int     `json:"discountLimitPrice"` // 折扣上限
+	Match              bool    `json:"match"`              // 是否匹配
+	MismatchReason     *string `json:"mismatchReason"`     // 不匹配原因（支持null）
 }
 
 // TradePriceCalculatePriceBO 价格信息业务对象
