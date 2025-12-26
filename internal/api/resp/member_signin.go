@@ -20,7 +20,7 @@ type MemberSignInRecordResp struct {
 	Day        int       `json:"day"`
 	Point      int       `json:"point"`
 	Experience int       `json:"experience"`
-	CreateTime  time.Time `json:"createTime"`
+	CreateTime time.Time `json:"createTime"`
 }
 
 // AppMemberSignInRecordResp App签到记录响应
@@ -29,7 +29,7 @@ type AppMemberSignInRecordResp struct {
 	Day        int       `json:"day"`
 	Point      int       `json:"point"`
 	Experience int       `json:"experience"`
-	CreateTime  time.Time `json:"createTime"`
+	CreateTime time.Time `json:"createTime"`
 }
 
 // AppMemberSignInRecordSummaryResp App签到统计响应
@@ -37,4 +37,10 @@ type AppMemberSignInRecordSummaryResp struct {
 	TotalDay      int  `json:"totalDay"`
 	ContinuousDay int  `json:"continuousDay"`
 	TodaySignIn   bool `json:"todaySignIn"`
+}
+
+// AppMemberSignInConfigResp App签到配置响应 (对齐 Java AppMemberSignInConfigRespVO)
+type AppMemberSignInConfigResp struct {
+	Day   int `json:"day"`   // 签到第 x 天
+	Point int `json:"point"` // 奖励积分
 }

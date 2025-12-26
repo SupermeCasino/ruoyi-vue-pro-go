@@ -1,6 +1,11 @@
 package router
 
 import (
+	"fmt"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
 	adminHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin" // Statistics Handlers
 	memberAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/member"
@@ -16,15 +21,8 @@ import (
 	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
 	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
 	appBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
-
-	"fmt"
-
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
