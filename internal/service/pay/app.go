@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -176,7 +177,7 @@ func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) 
 		}
 		// 匹配渠道
 		for _, channel := range channels {
-			if channel.AppID == app.ID && channel.Status == 0 { // 0 = Enabled
+			if channel.AppID == app.ID && channel.Status == consts.CommonStatusEnable {
 				item.ChannelCodes = append(item.ChannelCodes, channel.Code)
 			}
 		}
@@ -218,7 +219,7 @@ func (s *PayAppService) ValidPayApp(ctx context.Context, id int64) (*pay.PayApp,
 	if err != nil {
 		return nil, err
 	}
-	if app.Status != 0 { // 0 = Enabled
+	if app.Status != consts.CommonStatusEnable { // ENABLE = 0
 		return nil, pkgErrors.NewBizError(1006000002, "支付应用处于关闭状态") // PAY_APP_IS_DISABLE
 	}
 	return app, nil
@@ -233,7 +234,7 @@ func (s *PayAppService) ValidPayAppByAppKey(ctx context.Context, appKey string) 
 		}
 		return nil, err
 	}
-	if app.Status != 0 { // 0 = Enabled
+	if app.Status != consts.CommonStatusEnable { // ENABLE = 0
 		return nil, pkgErrors.NewBizError(1006000002, "支付应用处于关闭状态") // PAY_APP_IS_DISABLE
 	}
 	return app, nil
