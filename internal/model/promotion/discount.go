@@ -2,6 +2,8 @@ package promotion
 
 import (
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
 // PromotionDiscountActivity 限时折扣活动
@@ -13,12 +15,7 @@ type PromotionDiscountActivity struct {
 	EndTime   time.Time `gorm:"column:end_time" json:"endTime"`
 	Remark    string    `gorm:"column:remark" json:"remark"`
 
-	Creator    string    `gorm:"column:creator" json:"creator"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	Updater    string    `gorm:"column:updater" json:"updater"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
-	Deleted    int       `gorm:"column:deleted" json:"deleted"`
-	TenantID   int64     `gorm:"column:tenant_id" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 func (PromotionDiscountActivity) TableName() string {
@@ -41,12 +38,7 @@ type PromotionDiscountProduct struct {
 	ActivityStartTime time.Time `gorm:"column:activity_start_time" json:"activityStartTime"`
 	ActivityEndTime   time.Time `gorm:"column:activity_end_time" json:"activityEndTime"`
 
-	Creator    string    `gorm:"column:creator" json:"creator"`
-	CreateTime time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
-	Updater    string    `gorm:"column:updater" json:"updater"`
-	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
-	Deleted    int       `gorm:"column:deleted" json:"deleted"`
-	TenantID   int64     `gorm:"column:tenant_id" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 func (PromotionDiscountProduct) TableName() string {

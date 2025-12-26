@@ -9,6 +9,7 @@ import (
 // CouponTemplateCreateReq 创建优惠券模板 Request
 type CouponTemplateCreateReq struct {
 	Name               string     `json:"name"`
+	Description        string     `json:"description"`
 	Status             int        `json:"status"`
 	TotalCount         int        `json:"totalCount"`
 	TakeLimitCount     int        `json:"takeLimitCount"`
@@ -31,6 +32,7 @@ type CouponTemplateCreateReq struct {
 type CouponTemplateUpdateReq struct {
 	ID                 int64      `json:"id"`
 	Name               string     `json:"name"`
+	Description        string     `json:"description"`
 	Status             int        `json:"status"`
 	TotalCount         int        `json:"totalCount"`
 	TakeLimitCount     int        `json:"takeLimitCount"`

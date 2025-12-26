@@ -27,6 +27,7 @@ func NewCouponService(q *query.Query) *CouponService {
 func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *req.CouponTemplateCreateReq) (int64, error) {
 	t := &promotion.PromotionCouponTemplate{
 		Name:               req.Name,
+		Description:        req.Description,
 		Status:             req.Status,
 		TotalCount:         req.TotalCount,
 		TakeLimitCount:     req.TakeLimitCount,
@@ -52,6 +53,7 @@ func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *req.Coupo
 func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *req.CouponTemplateUpdateReq) error {
 	_, err := s.q.PromotionCouponTemplate.WithContext(ctx).Where(s.q.PromotionCouponTemplate.ID.Eq(req.ID)).Updates(promotion.PromotionCouponTemplate{
 		Name:               req.Name,
+		Description:        req.Description,
 		Status:             req.Status,
 		TotalCount:         req.TotalCount,
 		TakeLimitCount:     req.TakeLimitCount,
@@ -378,20 +380,45 @@ func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.
 
 // convertToAppCouponTemplateResp 转换模板 Model 到 App 响应 VO
 func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCouponTemplate, canTake bool) *resp.AppCouponTemplateResp {
+	// 处理ProductScopeValues，如果为空则返回空数组而不是null
+	productScopeValues := t.ProductScopeValues
+	if len(productScopeValues) == 0 {
+		productScopeValues = []int64{}
+	}
+
+	// 处理时间戳：转换为毫秒级Unix时间戳
+	var validStartTime, validEndTime interface{}
+	if t.ValidStartTime != nil {
+		validStartTime = t.ValidStartTime.UnixMilli()
+	}
+	if t.ValidEndTime != nil {
+		validEndTime = t.ValidEndTime.UnixMilli()
+	}
+
+	// 处理fixedStartTerm/fixedEndTerm：当validityType=1时应为null
+	var fixedStartTerm, fixedEndTerm interface{}
+	if t.ValidityType == 1 { // 固定日期类型
+		fixedStartTerm = nil
+		fixedEndTerm = nil
+	} else { // 领取后N天类型
+		fixedStartTerm = t.FixedStartTerm
+		fixedEndTerm = t.FixedEndTerm
+	}
+
 	return &resp.AppCouponTemplateResp{
 		ID:                 t.ID,
 		Name:               t.Name,
-		Description:        "", // 模型中暂无此字段
+		Description:        t.Description,
 		TotalCount:         t.TotalCount,
 		TakeLimitCount:     t.TakeLimitCount,
 		UsePrice:           t.UsePriceMin,
 		ProductScope:       int(t.ProductScope),
-		ProductScopeValues: t.ProductScopeValues,
+		ProductScopeValues: productScopeValues,
 		ValidityType:       t.ValidityType,
-		ValidStartTime:     t.ValidStartTime,
-		ValidEndTime:       t.ValidEndTime,
-		FixedStartTerm:     t.FixedStartTerm,
-		FixedEndTerm:       t.FixedEndTerm,
+		ValidStartTime:     validStartTime,
+		ValidEndTime:       validEndTime,
+		FixedStartTerm:     fixedStartTerm,
+		FixedEndTerm:       fixedEndTerm,
 		DiscountType:       t.DiscountType,
 		DiscountPercent:    t.DiscountPercent,
 		DiscountPrice:      t.DiscountPrice,
@@ -405,41 +432,63 @@ func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCou
 // 对齐 Java: CouponService.getUserCanCanTakeMap
 func (s *CouponService) GetUserCanTakeMap(ctx context.Context, userId int64, templateIds []int64) (map[int64]bool, error) {
 	result := make(map[int64]bool)
-	if userId == 0 || len(templateIds) == 0 {
+	if len(templateIds) == 0 {
+		return result, nil
+	}
+
+	// 1. 未登录时，都显示可以领取
+	if userId == 0 {
 		for _, id := range templateIds {
-			result[id] = true // 未登录用户默认可领取
+			result[id] = true
 		}
 		return result, nil
 	}
 
-	// 查询用户对每个模板已领取的数量
-	c := s.q.PromotionCoupon
-	coupons, err := c.WithContext(ctx).
-		Where(c.UserID.Eq(userId)).
-		Where(c.TemplateID.In(templateIds...)).
-		Find()
-	if err != nil {
-		return nil, err
-	}
-
-	// 统计每个模板的领取数量
-	takeCountMap := make(map[int64]int)
-	for _, coupon := range coupons {
-		takeCountMap[coupon.TemplateID]++
-	}
-
-	// 查询模板的领取限制
+	// 2. 查询模板的领取限制
 	t := s.q.PromotionCouponTemplate
 	templates, err := t.WithContext(ctx).Where(t.ID.In(templateIds...)).Find()
 	if err != nil {
 		return nil, err
 	}
 
+	// 3. 初始化结果，默认都为可领取
 	for _, template := range templates {
-		takeCount := takeCountMap[template.ID]
-		if template.TakeLimitCount <= 0 {
-			result[template.ID] = true // 无限制
-		} else {
+		result[template.ID] = true
+	}
+
+	// 4. 过滤出需要检查限制的模板（领取限制不为-1）
+	var limitedTemplateIds []int64
+	for _, template := range templates {
+		if template.TakeLimitCount != -1 { // -1 表示不限制
+			limitedTemplateIds = append(limitedTemplateIds, template.ID)
+		}
+	}
+
+	if len(limitedTemplateIds) == 0 {
+		return result, nil
+	}
+
+	// 5. 查询用户对每个模板已领取的数量
+	c := s.q.PromotionCoupon
+	coupons, err := c.WithContext(ctx).
+		Where(c.UserID.Eq(userId)).
+		Where(c.TemplateID.In(limitedTemplateIds...)).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 6. 统计每个模板的领取数量
+	takeCountMap := make(map[int64]int)
+	for _, coupon := range coupons {
+		takeCountMap[coupon.TemplateID]++
+	}
+
+	// 7. 检查是否超过限制
+	for _, template := range templates {
+		if template.TakeLimitCount != -1 { // 只检查有限制的模板
+			takeCount := takeCountMap[template.ID]
+			// takeCount == nil 或 takeCount < takeLimitCount 时可领取
 			result[template.ID] = takeCount < template.TakeLimitCount
 		}
 	}

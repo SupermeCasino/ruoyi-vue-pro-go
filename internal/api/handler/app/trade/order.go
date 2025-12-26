@@ -98,7 +98,8 @@ func (h *AppTradeOrderHandler) CreateOrder(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	res, err := h.svc.CreateOrder(c, context.GetUserId(c), &r)
+	terminal, _ := strconv.Atoi(c.GetHeader("terminal"))
+	res, err := h.svc.CreateOrder(c, context.GetUserId(c), c.ClientIP(), terminal, &r)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

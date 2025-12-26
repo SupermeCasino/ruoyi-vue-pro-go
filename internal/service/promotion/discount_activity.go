@@ -20,6 +20,9 @@ type DiscountActivityService interface {
 	DeleteDiscountActivity(ctx context.Context, id int64) error
 	GetDiscountActivity(ctx context.Context, id int64) (*resp.DiscountActivityRespVO, error)
 	GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*pagination.PageResult[*resp.DiscountActivityRespVO], error)
+
+	// GetMatchDiscountProductMap 获得指定 SKU 列表中，当前生效的限时折扣活动
+	GetMatchDiscountProductMap(ctx context.Context, skuIDs []int64) (map[int64]*promotion.PromotionDiscountProduct, error)
 }
 
 type discountActivityService struct {
@@ -474,4 +477,29 @@ func (s *discountActivityService) validateProductConflict(ctx context.Context, i
 		}
 	}
 	return nil
+}
+
+func (s *discountActivityService) GetMatchDiscountProductMap(ctx context.Context, skuIDs []int64) (map[int64]*promotion.PromotionDiscountProduct, error) {
+	if len(skuIDs) == 0 {
+		return map[int64]*promotion.PromotionDiscountProduct{}, nil
+	}
+	now := time.Now()
+	pq := s.q.PromotionDiscountProduct
+	products, err := pq.WithContext(ctx).Where(
+pq.SkuID.In(skuIDs...),
+pq.ActivityStatus.Eq(1), // ENABLE
+pq.ActivityStartTime.Lte(now),
+pq.ActivityEndTime.Gte(now),
+).Order(pq.CreateTime.Desc()).Find() // 如果有多个活动，取最新的一个
+	if err != nil {
+		return nil, err
+	}
+	
+	res := make(map[int64]*promotion.PromotionDiscountProduct)
+	for _, p := range products {
+		if _, ok := res[p.SkuID]; !ok {
+			res[p.SkuID] = p
+		}
+	}
+	return res, nil
 }

@@ -42,12 +42,7 @@ type PromotionSeckillProduct struct {
 	ActivityStatus    int                      `gorm:"default:0;not null;comment:秒杀商品状态" json:"activityStatus"`
 	ActivityStartTime time.Time                `gorm:"column:activity_start_time;not null;comment:活动开始时间点" json:"activityStartTime"`
 	ActivityEndTime   time.Time                `gorm:"column:activity_end_time;not null;comment:活动结束时间点" json:"activityEndTime"`
-	Creator           string                   `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater           string                   `gorm:"size:64;default:'';comment:更新者" json:"updater"`
-	CreateTime        time.Time                `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime        time.Time                `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted           model.BitBool            `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID          int64                    `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 func (PromotionSeckillProduct) TableName() string {

@@ -364,8 +364,8 @@ func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *req.P
 			_, err := s.q.ProductSku.WithContext(ctx).
 				Where(s.q.ProductSku.ID.Eq(item.ID)).
 				Updates(map[string]interface{}{
-					"stock":       s.q.ProductSku.Stock.Add(int32(item.IncrCount)),
-					"sales_count": s.q.ProductSku.SalesCount.Sub(int32(item.IncrCount)),
+					"stock":       s.q.ProductSku.Stock.Add(int(item.IncrCount)),
+					"sales_count": s.q.ProductSku.SalesCount.Sub(int(item.IncrCount)),
 				})
 			if err != nil {
 				return err
@@ -376,11 +376,11 @@ func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *req.P
 			result, err := s.q.ProductSku.WithContext(ctx).
 				Where(
 					s.q.ProductSku.ID.Eq(item.ID),
-					s.q.ProductSku.Stock.Gte(int32(decrCount)),
+					s.q.ProductSku.Stock.Gte(int(decrCount)),
 				).
 				Updates(map[string]interface{}{
-					"stock":       s.q.ProductSku.Stock.Sub(int32(decrCount)),
-					"sales_count": s.q.ProductSku.SalesCount.Add(int32(decrCount)),
+					"stock":       s.q.ProductSku.Stock.Sub(int(decrCount)),
+					"sales_count": s.q.ProductSku.SalesCount.Add(int(decrCount)),
 				})
 			if err != nil {
 				return err

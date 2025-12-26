@@ -19,6 +19,11 @@ const (
 	PayTransferTypeWxBalance     = 2 // 微信 - 余额
 	PayTransferTypeBankCard      = 3 // 银行卡
 	PayTransferTypeWallet        = 4 // 钱包余额
+
+	// PayOrderStatus 支付订单状态
+	PayOrderStatusWaiting = 0  // 等待支付
+	PayOrderStatusSuccess = 10 // 支付成功
+	PayOrderStatusClosed  = 20 // 支付关闭
 )
 
 // IsPayTransferStatusSuccess 判断是否转账成功

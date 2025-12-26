@@ -169,7 +169,7 @@ func (s *ProductSpuService) UpdateSpuStatus(ctx context.Context, req *req.Produc
 // UpdateBrowseCount 更新浏览量
 func (s *ProductSpuService) UpdateBrowseCount(ctx context.Context, id int64, count int) error {
 	_, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(id)).
-		Update(s.q.ProductSpu.BrowseCount, s.q.ProductSpu.BrowseCount.Add(int32(count)))
+		Update(s.q.ProductSpu.BrowseCount, s.q.ProductSpu.BrowseCount.Add(count))
 	return err
 }
 
@@ -373,7 +373,7 @@ func (s *ProductSpuService) UpdateSpuStock(ctx context.Context, stockIncr map[in
 		// Note: We don't strictly check SPU stock >= 0 here because it's an aggregate.
 		// SKU level check is the authority.
 		_, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.ID.Eq(spuID)).
-			Update(s.q.ProductSpu.Stock, s.q.ProductSpu.Stock.Add(int32(incr)))
+			Update(s.q.ProductSpu.Stock, s.q.ProductSpu.Stock.Add(int(incr)))
 		if err != nil {
 			return err
 		}

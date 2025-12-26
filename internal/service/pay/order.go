@@ -612,6 +612,33 @@ func (s *PayOrderService) notifyOrderClosedTx(ctx context.Context, tx *query.Que
 	return nil
 }
 
+// UpdatePayOrderPrice 更新支付订单价格
+// 对齐 Java: PayOrderService.updatePayOrderPrice(Long id, Integer payPrice)
+func (s *PayOrderService) UpdatePayOrderPrice(ctx context.Context, id int64, payPrice int) error {
+	// 1. 查询支付订单
+	order, err := s.q.PayOrder.WithContext(ctx).Where(s.q.PayOrder.ID.Eq(id)).First()
+	if err != nil {
+		return fmt.Errorf("支付订单不存在")
+	}
+
+	// 2. 校验状态：必须是待支付
+	if order.Status != PayOrderStatusWaiting {
+		return fmt.Errorf("支付订单状态不是待支付，无法修改价格")
+	}
+
+	// 3. 如果价格相同，直接返回
+	if order.Price == payPrice {
+		return nil
+	}
+
+	// 4. 更新订单价格
+	_, err = s.q.PayOrder.WithContext(ctx).
+		Where(s.q.PayOrder.ID.Eq(id)).
+		Update(s.q.PayOrder.Price, payPrice)
+
+	return err
+}
+
 // UpdateOrderRefundPrice 更新订单退款金额
 // 对齐 Java: PayOrderService.updateOrderRefundPrice(Long id, Integer incrRefundPrice)
 func (s *PayOrderService) UpdateOrderRefundPrice(ctx context.Context, id int64, incrRefundPrice int) error {

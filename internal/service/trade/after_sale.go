@@ -84,8 +84,7 @@ func (s *TradeAfterSaleService) CreateAfterSale(ctx context.Context, userId int6
 		afterSaleId = afterSale.ID
 
 		// 2.2 更新订单项的售后状态
-		if _, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.ID.Eq(item.ID)).
-			Update(tx.TradeOrderItem.AfterSaleStatus, trade.AfterSaleStatusApply); err != nil {
+		if err := s.orderSvc.UpdateOrderItemWhenAfterSaleCreate(ctx, item.OrderID, item.ID, afterSaleId); err != nil {
 			return fmt.Errorf("更新订单项售后状态失败: %w", err)
 		}
 
@@ -381,9 +380,7 @@ func (s *TradeAfterSaleService) CancelAfterSale(ctx context.Context, userId int6
 		}
 
 		// 3. 更新订单项状态为【未申请】
-		if _, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.ID.Eq(as.OrderItemID)).Updates(map[string]interface{}{
-			"after_sale_status": trade.AfterSaleStatusNone,
-		}); err != nil {
+		if err := s.orderSvc.UpdateOrderItemWhenAfterSaleCancel(ctx, as.OrderID, as.OrderItemID); err != nil {
 			return err
 		}
 		return nil
@@ -472,7 +469,7 @@ func (s *TradeAfterSaleService) DisagreeAfterSale(ctx context.Context, adminUser
 		}
 
 		// 3. 更新交易订单项的售后状态为【未申请】
-		if _, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.ID.Eq(as.OrderItemID)).Update(tx.TradeOrderItem.AfterSaleStatus, trade.AfterSaleStatusNone); err != nil {
+		if err := s.orderSvc.UpdateOrderItemWhenAfterSaleCancel(ctx, as.OrderID, as.OrderItemID); err != nil {
 			return err
 		}
 		return nil
@@ -782,7 +779,7 @@ func (s *TradeAfterSaleService) UpdateAfterSaleRefunded(ctx context.Context, aft
 		}
 
 		// 3. 更新订单项状态
-		if _, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.ID.Eq(as.OrderItemID)).Update(tx.TradeOrderItem.AfterSaleStatus, trade.AfterSaleStatusComplete); err != nil {
+		if err := s.orderSvc.UpdateOrderItemWhenAfterSaleSuccess(ctx, as.OrderID, as.OrderItemID, as.RefundPrice); err != nil {
 			return err
 		}
 		return nil

@@ -11,6 +11,7 @@ import (
 type PromotionCouponTemplate struct {
 	ID                 int64                    `gorm:"primaryKey;autoIncrement;comment:模板编号"`
 	Name               string                   `gorm:"column:name;type:varchar(64);not null;comment:优惠券名称"`
+	Description        string                   `gorm:"column:description;type:varchar(255);comment:优惠券说明"`
 	Status             int                      `gorm:"column:status;type:int;not null;comment:状态"` // 0: Disable, 1: Enable
 	TotalCount         int                      `gorm:"column:total_count;type:int;not null;comment:发放总量"`
 	TakeCount          int                      `gorm:"column:take_count;type:int;not null;default:0;comment:已领取数量"`

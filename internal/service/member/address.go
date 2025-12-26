@@ -106,6 +106,11 @@ func (s *MemberAddressService) GetDefaultUserAddress(ctx context.Context, userId
 	return s.convertResp(address), nil
 }
 
+// GetDefaultAddress 获得默认收件地址（Alias for GetDefaultUserAddress）
+func (s *MemberAddressService) GetDefaultAddress(ctx context.Context, userId int64) (*resp.AppAddressResp, error) {
+	return s.GetDefaultUserAddress(ctx, userId)
+}
+
 // GetAddressList 获得收件地址列表
 func (s *MemberAddressService) GetAddressList(ctx context.Context, userId int64) ([]*resp.AppAddressResp, error) {
 	u := s.q.MemberAddress

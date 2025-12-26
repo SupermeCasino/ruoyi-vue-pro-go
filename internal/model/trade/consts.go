@@ -25,6 +25,104 @@ const (
 	OrderTypeNormal = 1
 )
 
+// ============= 订单类型常量 (Order Type Constants) =============
+
+const (
+	// TradeOrderTypeNormal 普通订单
+	TradeOrderTypeNormal = 0
+	// TradeOrderTypeSeckill 秒杀订单
+	TradeOrderTypeSeckill = 1
+	// TradeOrderTypeBargain 砍价订单
+	TradeOrderTypeBargain = 2
+	// TradeOrderTypeCombination 拼团订单
+	TradeOrderTypeCombination = 3
+	// TradeOrderTypePoint 积分订单
+	TradeOrderTypePoint = 4
+)
+
+// ============= 价格计算器优先级常量 (Price Calculator Priority) =============
+// 数字越小优先级越高，按照Java版本的TradePriceCalculator优先顺序定义
+
+const (
+	// OrderSeckillActivity 秒杀活动计算器优先级
+	OrderSeckillActivity = 8
+	// OrderBargainActivity 砍价活动计算器优先级
+	OrderBargainActivity = 8
+	// OrderCombinationActivity 拼团活动计算器优先级
+	OrderCombinationActivity = 8
+	// OrderPointActivity 积分商城活动计算器优先级
+	OrderPointActivity = 8
+	// OrderDiscountActivity 限时折扣活动计算器优先级
+	OrderDiscountActivity = 10
+	// OrderRewardActivity 满减送活动计算器优先级
+	OrderRewardActivity = 20
+	// OrderCoupon 优惠券计算器优先级
+	OrderCoupon = 30
+	// OrderPointUse 积分抵扣计算器优先级
+	OrderPointUse = 40
+	// OrderDelivery 运费计算器优先级
+	OrderDelivery = 50
+	// OrderPointGive 积分赠送计算器优先级
+	OrderPointGive = 999
+)
+
+// ============= 促销类型常量 (Promotion Type Constants) =============
+
+const (
+	// PromotionTypeNone 无促销
+	PromotionTypeNone = 0
+	// PromotionTypeDiscountActivity 限时折扣活动
+	PromotionTypeDiscountActivity = 10
+	// PromotionTypeRewardActivity 满减送活动
+	PromotionTypeRewardActivity = 20
+	// PromotionTypeMemberLevel 会员等级折扣
+	PromotionTypeMemberLevel = 30
+	// PromotionTypeCoupon 优惠券
+	PromotionTypeCoupon = 40
+	// PromotionTypeCombination 拼团活动
+	PromotionTypeCombination = 50
+	// PromotionTypeBargain 砍价活动
+	PromotionTypeBargain = 60
+	// PromotionTypeSeckill 秒杀活动
+	PromotionTypeSeckill = 70
+	// PromotionTypePoint 积分抵扣
+	PromotionTypePoint = 80
+)
+
+// ============= 折扣类型常量 (Discount Type Constants) =============
+
+const (
+	// DiscountTypePrice 减价
+	DiscountTypePrice = 1
+	// DiscountTypePercent 打折
+	DiscountTypePercent = 2
+)
+
+// ============= 计算器名称常量 (Calculator Name Constants) =============
+
+const (
+	// CalculatorNameSeckill 秒杀活动价格计算器
+	CalculatorNameSeckill = "秒杀活动价格计算器"
+	// CalculatorNameBargain 砍价活动价格计算器
+	CalculatorNameBargain = "砍价活动价格计算器"
+	// CalculatorNameCombination 拼团活动价格计算器
+	CalculatorNameCombination = "拼团活动价格计算器"
+	// CalculatorNamePoint 积分商城价格计算器
+	CalculatorNamePoint = "积分商城价格计算器"
+	// CalculatorNameDiscount 限时折扣活动价格计算器
+	CalculatorNameDiscount = "限时折扣活动价格计算器"
+	// CalculatorNameReward 满减送活动价格计算器
+	CalculatorNameReward = "满减送活动价格计算器"
+	// CalculatorNameCoupon 优惠券价格计算器
+	CalculatorNameCoupon = "优惠券价格计算器"
+	// CalculatorNamePointUse 积分抵扣价格计算器
+	CalculatorNamePointUse = "积分抵扣价格计算器"
+	// CalculatorNameDelivery 运费计算器
+	CalculatorNameDelivery = "运费计算器"
+	// CalculatorNamePointGive 积分赠送计算器
+	CalculatorNamePointGive = "积分赠送计算器"
+)
+
 const (
 	// OrderOperateTypeCreate 创建订单
 	OrderOperateTypeCreate = 10
@@ -37,20 +135,26 @@ const (
 	// OrderOperateTypePickUp 自提核销
 	OrderOperateTypePickUp = 50
 	// OrderOperateTypeCancel 取消订单
-	OrderOperateTypeCancel = 40
+	OrderOperateTypeCancel = 41
 	// OrderOperateTypeRefund 退款
 	OrderOperateTypeRefund = 60
 )
 
 const (
-	// OrderCancelTypeUser 用户取消
-	OrderCancelTypeUser = 1
+	// OrderCancelTypeMember 会员取消
+	OrderCancelTypeMember = 10
+	// OrderCancelTypeTimeout 支付超时取消
+	OrderCancelTypeTimeout = 20
 	// OrderCancelTypeAdmin 管理员取消
-	OrderCancelTypeAdmin = 2
+	OrderCancelTypeAdmin = 30
 	// OrderCancelTypeSystem 系统取消
-	OrderCancelTypeSystem = 3
+	OrderCancelTypeSystem = 40
+	// OrderCancelTypeAfterSaleClose 售后全退关闭
+	OrderCancelTypeAfterSaleClose = 50
+	// OrderCancelTypePaymentFallback 支付异常回滚
+	OrderCancelTypePaymentFallback = 60
 	// OrderCancelTypeCombinationClose 拼团关闭取消
-	OrderCancelTypeCombinationClose = 4
+	OrderCancelTypeCombinationClose = 70
 )
 
 const (

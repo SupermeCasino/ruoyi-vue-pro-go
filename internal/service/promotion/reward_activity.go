@@ -161,6 +161,7 @@ type ActivityMatchItem struct {
 }
 
 type ActivityMatchResult struct {
+	TotalPrice    int
 	TotalDiscount int
 	ActivityID    int64
 	ActivityName  string
@@ -275,6 +276,7 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 			}
 
 			results = append(results, ActivityMatchResult{
+				TotalPrice:    matchedPrice,
 				TotalDiscount: discount,
 				ActivityID:    activity.ID,
 				ActivityName:  activity.Name,
@@ -284,4 +286,46 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 	}
 
 	return totalDiscount, results, nil
+}
+
+// GetRewardActivityMapBySpuIds 获得指定 SPU 编号数组的满减送活动 Map
+func (s *RewardActivityService) GetRewardActivityMapBySpuIds(ctx context.Context, spuIDs []int64) (map[int64]*promotion.PromotionRewardActivity, error) {
+	if len(spuIDs) == 0 {
+		return map[int64]*promotion.PromotionRewardActivity{}, nil
+	}
+	now := time.Now()
+	q := s.q.PromotionRewardActivity
+	activities, err := q.WithContext(ctx).Where(
+		q.Status.Eq(0), // ENABLE
+		q.StartTime.Lte(now),
+		q.EndTime.Gte(now),
+	).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[int64]*promotion.PromotionRewardActivity)
+	for _, activity := range activities {
+		for _, spuID := range spuIDs {
+			if _, ok := res[spuID]; ok {
+				continue
+			}
+			if s.isSpuMatchActivity(activity, spuID) {
+				res[spuID] = activity
+			}
+		}
+	}
+	return res, nil
+}
+
+func (s *RewardActivityService) isSpuMatchActivity(activity *promotion.PromotionRewardActivity, spuID int64) bool {
+	if activity.ProductScope == promotion.ProductScopeAll {
+		return true
+	}
+	var scopeValues []int64
+	_ = json.Unmarshal([]byte(activity.ProductScopeValues), &scopeValues)
+	if activity.ProductScope == promotion.ProductScopeSpu {
+		return lo.Contains(scopeValues, spuID)
+	}
+	return false
 }

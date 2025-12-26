@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
@@ -24,7 +25,7 @@ func (s *MemberConfigService) SaveConfig(ctx context.Context, r *req.MemberConfi
 	}
 
 	newConfig := &member.MemberConfig{
-		PointTradeDeductEnable:    r.PointTradeDeductEnable,
+		PointTradeDeductEnable:    model.BitBool(r.PointTradeDeductEnable == 1),
 		PointTradeDeductUnitPrice: r.PointTradeDeductUnitPrice,
 		PointTradeDeductMaxPrice:  r.PointTradeDeductMaxPrice,
 		PointTradeGivePoint:       r.PointTradeGivePoint,

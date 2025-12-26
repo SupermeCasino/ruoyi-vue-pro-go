@@ -27,12 +27,7 @@ type PromotionBargainActivity struct {
 	Sort              int       `gorm:"default:0;comment:排序" json:"sort"`
 	Remark            string    `gorm:"size:255;default:'';comment:备注" json:"remark"`
 
-	Creator    string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater    string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID   int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 // TableName PromoBargainActivity's table name
@@ -53,12 +48,7 @@ type PromotionBargainRecord struct {
 	EndTime           time.Time `gorm:"column:end_time;comment:结束时间" json:"endTime"`
 	OrderID           int64     `gorm:"column:order_id;comment:订单编号" json:"orderId"`
 
-	Creator    string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater    string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID   int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 // TableName PromoBargainRecord's table name
@@ -74,12 +64,7 @@ type PromotionBargainHelp struct {
 	UserID      int64 `gorm:"column:user_id;not null;comment:用户编号" json:"userId"`
 	ReducePrice int   `gorm:"column:reduce_price;comment:减少价格，单位：分" json:"reducePrice"`
 
-	Creator    string        `gorm:"size:64;default:'';comment:创建者" json:"creator"`
-	Updater    string        `gorm:"size:64;default:'';comment:更新者" json:"updater"`
-	CreateTime time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"createTime"`
-	UpdateTime time.Time     `gorm:"column:update_time;autoUpdateTime;comment:更新时间" json:"updateTime"`
-	Deleted    model.BitBool `gorm:"column:deleted;softDelete:flag;default:0;comment:是否删除" json:"deleted"`
-	TenantID   int64         `gorm:"column:tenant_id;default:0;comment:租户编号" json:"tenantId"`
+	model.TenantBaseDO
 }
 
 // TableName PromoBargainHelp's table name

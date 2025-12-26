@@ -40,6 +40,7 @@ import (
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	tradeSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	tradeBrokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/calculators"
 	deliveryClient "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
 
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
@@ -176,6 +177,9 @@ func InitApp() (*gin.Engine, error) {
 		tradeSvc.NewCartService,
 		tradeSvc.NewTradeOrderQueryService,
 		tradeSvc.NewTradePriceService,
+		tradeSvc.NewPriceCalculatorHelper,
+		calculators.ProviderSet,
+		ProvidePriceCalculators,
 		tradeSvc.NewTradeOrderUpdateService,
 		tradeSvc.NewTradeAfterSaleService,
 		tradeSvc.NewAfterSaleLogService,  // Added
@@ -345,4 +349,30 @@ func InitApp() (*gin.Engine, error) {
 		service.ProvideJobHandlers,
 	)
 	return &gin.Engine{}, nil
+}
+
+func ProvidePriceCalculators(
+	bargain *calculators.BargainActivityPriceCalculator,
+	combination *calculators.CombinationActivityPriceCalculator,
+	coupon *calculators.CouponPriceCalculator,
+	delivery *calculators.DeliveryPriceCalculator,
+	discount *calculators.DiscountActivityPriceCalculator,
+	pointActivity *calculators.PointActivityPriceCalculator,
+	pointGive *calculators.PointGivePriceCalculator,
+	pointUse *calculators.PointUsePriceCalculator,
+	reward *calculators.RewardActivityPriceCalculator,
+	seckill *calculators.SeckillActivityPriceCalculator,
+) []tradeSvc.PriceCalculator {
+	return []tradeSvc.PriceCalculator{
+		bargain,
+		combination,
+		coupon,
+		delivery,
+		discount,
+		pointActivity,
+		pointGive,
+		pointUse,
+		reward,
+		seckill,
+	}
 }

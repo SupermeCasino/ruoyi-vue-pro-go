@@ -41,14 +41,14 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/calculators"
 	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
-)
 
-import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
+
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -131,30 +131,43 @@ func InitApp() (*gin.Engine, error) {
 	appProductCommentHandler := product3.NewAppProductCommentHandler(productCommentService)
 	cartService := trade.NewCartService(query, productSkuService, productSpuService)
 	appCartHandler := trade2.NewAppCartHandler(cartService)
+	defaultPromotionPriceCalculator := trade.NewDefaultPromotionPriceCalculator(query)
+	priceCalculatorHelper := trade.NewPriceCalculatorHelper(zapLogger)
+	bargainActivityPriceCalculator := calculators.NewBargainActivityPriceCalculator(defaultPromotionPriceCalculator, priceCalculatorHelper, zapLogger)
+	combinationActivityPriceCalculator := calculators.NewCombinationActivityPriceCalculator(defaultPromotionPriceCalculator, priceCalculatorHelper, zapLogger)
 	couponUserService := promotion.NewCouponUserService(query)
+	couponPriceCalculator := calculators.NewCouponPriceCalculator(couponUserService, priceCalculatorHelper, zapLogger)
+	deliveryExpressTemplateService := trade.NewDeliveryExpressTemplateService(query)
+	deliveryPriceCalculator := calculators.NewDeliveryPriceCalculator(deliveryExpressTemplateService, memberAddressService, productSpuService, priceCalculatorHelper, zapLogger)
+	discountActivityService := promotion.NewDiscountActivityService(query, productSkuService)
+	discountActivityPriceCalculator := calculators.NewDiscountActivityPriceCalculator(discountActivityService, memberUserService, memberLevelService, priceCalculatorHelper, zapLogger)
+	pointActivityPriceCalculator := calculators.NewPointActivityPriceCalculator(defaultPromotionPriceCalculator, priceCalculatorHelper, zapLogger)
+	memberConfigService := member.NewMemberConfigService(query)
+	pointGivePriceCalculator := calculators.NewPointGivePriceCalculator(memberConfigService, priceCalculatorHelper, zapLogger)
+	pointUsePriceCalculator := calculators.NewPointUsePriceCalculator(memberConfigService, memberUserService, priceCalculatorHelper, zapLogger)
 	rewardActivityService := promotion.NewRewardActivityService(query)
+	rewardActivityPriceCalculator := calculators.NewRewardActivityPriceCalculator(rewardActivityService, priceCalculatorHelper, zapLogger)
 	seckillConfigService := promotion.NewSeckillConfigService(query)
 	seckillActivityService := promotion.NewSeckillActivityService(query, seckillConfigService, productSpuService, productSkuService)
-	deliveryExpressTemplateService := trade.NewDeliveryExpressTemplateService(query)
-	memberConfigService := member.NewMemberConfigService(query)
-	defaultPromotionPriceCalculator := trade.NewDefaultPromotionPriceCalculator(query)
-	tradePriceService := trade.NewTradePriceService(productSkuService, productSpuService, couponUserService, rewardActivityService, seckillActivityService, memberUserService, memberLevelService, deliveryExpressTemplateService, memberAddressService, memberConfigService, defaultPromotionPriceCalculator)
-	tradeOrderLogRepository := repo.NewTradeOrderLogRepository(query)
-	tradeOrderLogService := trade.NewTradeOrderLogService(tradeOrderLogRepository)
-	tradeNoRedisDAO := trade3.NewTradeNoRedisDAO(redisClient)
+	seckillActivityPriceCalculator := calculators.NewSeckillActivityPriceCalculator(seckillActivityService, priceCalculatorHelper, zapLogger)
+	v := ProvidePriceCalculators(bargainActivityPriceCalculator, combinationActivityPriceCalculator, couponPriceCalculator, deliveryPriceCalculator, discountActivityPriceCalculator, pointActivityPriceCalculator, pointGivePriceCalculator, pointUsePriceCalculator, rewardActivityPriceCalculator, seckillActivityPriceCalculator)
+	tradePriceService := trade.NewTradePriceService(v, priceCalculatorHelper, productSkuService, productSpuService, zapLogger)
 	payClientFactory := client.NewPayClientFactory()
 	payChannelService := pay.NewPayChannelService(query, payClientFactory)
 	payAppService := pay.NewPayAppService(query, payChannelService)
 	payNotifyService := pay.NewPayNotifyService(query, zapLogger, redisClient)
 	payNoRedisDAO := pay2.NewPayNoRedisDAO(redisClient)
 	payOrderService := pay.NewPayOrderService(query, payAppService, payChannelService, payClientFactory, payNotifyService, payNoRedisDAO)
+	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService, payNoRedisDAO)
 	tradeConfigService := trade.NewTradeConfigService(query)
-	tradeOrderUpdateService := trade.NewTradeOrderUpdateService(query, productSkuService, cartService, tradePriceService, memberAddressService, couponUserService, tradeOrderLogService, tradeNoRedisDAO, payOrderService, tradeConfigService)
+	tradeOrderLogRepository := repo.NewTradeOrderLogRepository(query)
+	tradeOrderLogService := trade.NewTradeOrderLogService(tradeOrderLogRepository)
+	tradeNoRedisDAO := trade3.NewTradeNoRedisDAO(redisClient)
+	tradeOrderUpdateService := trade.NewTradeOrderUpdateService(query, tradePriceService, cartService, memberAddressService, payOrderService, payRefundService, payAppService, tradeConfigService, productSkuService, productCommentService, couponUserService, memberUserService, tradeOrderLogService, tradeNoRedisDAO, zapLogger)
 	expressClientFactoryImpl := client2.NewExpressClientFactory()
 	deliveryExpressService := trade.NewDeliveryExpressService(query)
 	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
 	tradeOrderHandler := trade4.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
-	payRefundService := pay.NewPayRefundService(query, payAppService, payChannelService, payOrderService, payNotifyService, payNoRedisDAO)
 	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
 	socialClientService := service.NewSocialClientService(query)
 	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService, tradeOrderUpdateService, socialClientService)
@@ -167,7 +180,6 @@ func InitApp() (*gin.Engine, error) {
 	couponService := promotion.NewCouponService(query)
 	couponHandler := promotion2.NewCouponHandler(couponService)
 	combinationActivityHandler := promotion2.NewCombinationActivityHandler(combinationActivityService, combinationRecordService, productSpuService)
-	discountActivityService := promotion.NewDiscountActivityService(query, productSkuService)
 	discountActivityHandler := promotion2.NewDiscountActivityHandler(discountActivityService)
 	appCombinationActivityHandler := promotion3.NewAppCombinationActivityHandler(combinationActivityService)
 	appCombinationRecordHandler := promotion3.NewAppCombinationRecordHandler(combinationRecordService)
@@ -227,8 +239,8 @@ func InitApp() (*gin.Engine, error) {
 	payOrderSyncJob := service.NewPayOrderSyncJob(payOrderService)
 	payOrderExpireJob := service.NewPayOrderExpireJob(payOrderService)
 	payRefundSyncJob := service.NewPayRefundSyncJob(payRefundService)
-	v := service.ProvideJobHandlers(payTransferSyncJob, payNotifyJob, payOrderSyncJob, payOrderExpireJob, payRefundSyncJob)
-	scheduler, err := service.NewScheduler(query, zapLogger, v)
+	v2 := service.ProvideJobHandlers(payTransferSyncJob, payNotifyJob, payOrderSyncJob, payOrderExpireJob, payRefundSyncJob)
+	scheduler, err := service.NewScheduler(query, zapLogger, v2)
 	if err != nil {
 		return nil, err
 	}
@@ -322,4 +334,32 @@ func InitApp() (*gin.Engine, error) {
 	casbinMiddleware := middleware.NewCasbinMiddleware(enforcer, permissionService)
 	engine := router.InitRouter(db, redisClient, pluginRegistered, authHandler, userHandler, tenantHandler, dictHandler, deptHandler, postHandler, roleHandler, menuHandler, permissionHandler, noticeHandler, configHandler, smsChannelHandler, smsTemplateHandler, smsLogHandler, fileConfigHandler, fileHandler, appAuthHandler, appMemberUserHandler, appMemberAddressHandler, productCategoryHandler, productPropertyHandler, productBrandHandler, productSpuHandler, productCommentHandler, productFavoriteHandler, productBrowseHistoryHandler, appCategoryHandler, appProductFavoriteHandler, appProductBrowseHistoryHandler, appProductSpuHandler, appProductCommentHandler, appCartHandler, tradeOrderHandler, appTradeOrderHandler, tradeAfterSaleHandler, appTradeAfterSaleHandler, couponHandler, combinationActivityHandler, discountActivityHandler, appCombinationActivityHandler, appCombinationRecordHandler, appCouponHandler, appCouponTemplateHandler, deliveryExpressHandler, deliveryPickUpStoreHandler, deliveryExpressTemplateHandler, bannerHandler, rewardActivityHandler, seckillConfigHandler, seckillActivityHandler, bargainActivityHandler, appBannerHandler, memberLevelHandler, memberGroupHandler, memberTagHandler, memberConfigHandler, memberPointRecordHandler, appMemberPointRecordHandler, memberSignInConfigHandler, memberSignInRecordHandler, appMemberSignInRecordHandler, appSocialUserHandler, memberUserHandler, payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler, payTransferHandler, payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler, loginLogHandler, operateLogHandler, jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler, socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oAuth2ClientHandler, appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler, appSeckillActivityHandler, appSeckillConfigHandler, articleCategoryHandler, articleHandler, appArticleHandler, diyTemplateHandler, diyPageHandler, appDiyPageHandler, appDiyTemplateHandler, kefuHandler, appKefuHandler, pointActivityHandler, bargainRecordHandler, combinationRecordHandler, bargainHelpHandler, tradeConfigHandler, appTradeConfigHandler, brokerageUserHandler, brokerageRecordHandler, brokerageWithdrawHandler, tradeStatisticsHandler, productStatisticsHandler, memberStatisticsHandler, payStatisticsHandler, appBrokerageUserHandler, appBrokerageRecordHandler, appBrokerageWithdrawHandler, appPayOrderHandler, appPayWalletHandler, appPayChannelHandler, appPayTransferHandler, appPayWalletTransactionHandler, appPayWalletRechargePackageHandler, appActivityHandler, appPointActivityHandler, webSocketHandler, casbinMiddleware)
 	return engine, nil
+}
+
+// wire.go:
+
+func ProvidePriceCalculators(
+	bargain *calculators.BargainActivityPriceCalculator,
+	combination *calculators.CombinationActivityPriceCalculator,
+	coupon *calculators.CouponPriceCalculator,
+	delivery *calculators.DeliveryPriceCalculator,
+	discount *calculators.DiscountActivityPriceCalculator,
+	pointActivity *calculators.PointActivityPriceCalculator,
+	pointGive *calculators.PointGivePriceCalculator,
+	pointUse *calculators.PointUsePriceCalculator,
+	reward *calculators.RewardActivityPriceCalculator,
+	seckill *calculators.SeckillActivityPriceCalculator,
+) []trade.PriceCalculator {
+	return []trade.PriceCalculator{
+		bargain,
+		combination,
+		coupon,
+		delivery,
+		discount,
+		pointActivity,
+		pointGive,
+		pointUse,
+		reward,
+		seckill,
+	}
 }

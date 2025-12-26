@@ -7,6 +7,15 @@ import (
 	"gorm.io/datatypes"
 )
 
+// TradeOrderItemAfterSaleStatus 订单项售后状态
+// 对应 Java: TradeOrderItemAfterSaleStatusEnum
+const (
+	TradeOrderItemAfterSaleStatusNone    = 0  // 无
+	TradeOrderItemAfterSaleStatusApply   = 10 // 申请中
+	TradeOrderItemAfterSaleStatusSuccess = 20 // 成功
+	TradeOrderItemAfterSaleStatusFailure = 30 // 失败
+)
+
 // TradeOrder 交易订单
 type TradeOrder struct {
 	ID                       int64                `gorm:"primaryKey;autoIncrement;comment:订单编号"`

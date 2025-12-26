@@ -248,3 +248,12 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 		InvalidList: invalidList,
 	}, nil
 }
+
+// GetCartListByIDs 获得购物车列表
+func (s *CartService) GetCartListByIDs(ctx context.Context, userId int64, ids []int64) ([]*trade.Cart, error) {
+	if len(ids) == 0 {
+		return []*trade.Cart{}, nil
+	}
+	c := s.q.Cart
+	return c.WithContext(ctx).Where(c.UserID.Eq(userId), c.ID.In(ids...)).Find()
+}

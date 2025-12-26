@@ -48,9 +48,13 @@ func (h *MemberConfigHandler) convertResp(item *memberModel.MemberConfig) *resp.
 	if item == nil {
 		return nil
 	}
+	pointTradeDeductEnable := 0
+	if item.PointTradeDeductEnable {
+		pointTradeDeductEnable = 1
+	}
 	return &resp.MemberConfigResp{
 		ID:                        item.ID,
-		PointTradeDeductEnable:    item.PointTradeDeductEnable,
+		PointTradeDeductEnable:    pointTradeDeductEnable,
 		PointTradeDeductUnitPrice: item.PointTradeDeductUnitPrice,
 		PointTradeDeductMaxPrice:  item.PointTradeDeductMaxPrice,
 		PointTradeGivePoint:       item.PointTradeGivePoint,

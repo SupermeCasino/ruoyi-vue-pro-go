@@ -2,6 +2,7 @@ package trade
 
 import (
 	"context"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
@@ -88,32 +89,26 @@ func (s *TradeOrderQueryService) GetOrderItem(ctx context.Context, userId int64,
 
 // GetOrderPageForAdmin 获得交易订单分页 (Admin)
 func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *req.TradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
-	q := s.q.TradeOrder.WithContext(ctx)
+	// 1. 构建查询条件
+	q := s.buildOrderQuery(ctx, r)
 
-	if r.No != "" {
-		q = q.Where(s.q.TradeOrder.No.Like("%" + r.No + "%"))
-	}
-	if r.UserID != nil {
-		q = q.Where(s.q.TradeOrder.UserID.Eq(*r.UserID))
-	}
-	if r.Status != nil {
-		q = q.Where(s.q.TradeOrder.Status.Eq(*r.Status))
-	}
-	if r.CommentStatus != nil {
-		q = q.Where(s.q.TradeOrder.CommentStatus.Eq(model.NewBitBool(*r.CommentStatus)))
-	}
-	// Add more filters as needed (e.g. create_time, type, etc.)
-
-	list, total, err := q.Order(s.q.TradeOrder.ID.Desc()).FindByPage(r.GetOffset(), r.PageSize)
+	// 2. 统计总数
+	total, err := q.Count()
 	if err != nil {
 		return nil, err
 	}
 
-	result := &pagination.PageResult[*trade.TradeOrder]{
+	// 3. 分页查询
+	offset := (r.PageNo - 1) * r.PageSize
+	list, err := q.Order(s.q.TradeOrder.ID.Desc()).Offset(offset).Limit(r.PageSize).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pagination.PageResult[*trade.TradeOrder]{
 		List:  list,
 		Total: total,
-	}
-	return result, nil
+	}, nil
 }
 
 // GetExpressTrackList 获得物流轨迹 (App - requires UserId)
@@ -149,8 +144,6 @@ func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order 
 	// 获得客户端
 	expressClient := s.expressClientFactory.GetDefaultExpressClient()
 	if expressClient == nil {
-		// Mock Data if no client configured ? Or return error?
-		// User wants Kd100 implemented. If configured, it should work.
 		return nil, errors.NewBizError(500, "物流客户端未配置")
 	}
 
@@ -177,17 +170,10 @@ func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order 
 
 // GetOrderSummary 获得交易订单统计
 func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.TradeOrderPageReq) (*resp.TradeOrderSummaryResp, error) {
-	// 1. Construct Query with filters
-	q := s.q.TradeOrder.WithContext(ctx)
-	if r.UserID != nil {
-		q = q.Where(s.q.TradeOrder.UserID.Eq(*r.UserID))
-	}
-	if r.No != "" {
-		q = q.Where(s.q.TradeOrder.No.Like("%" + r.No + "%"))
-	}
-	// Add other filters as needed to match Page Request behavior if consistent with Java
+	// 1. 构建查询条件 (复用逻辑)
+	q := s.buildOrderQuery(ctx, r)
 
-	// 2. Define result struct for aggregation
+	// 2. 定义聚合结果结构
 	type AggResult struct {
 		RefundStatus int   `gorm:"column:refund_status"` // Group by RefundStatus
 		Count        int64 `gorm:"column:count"`         // Count(*)
@@ -195,7 +181,7 @@ func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.Tra
 	}
 	var results []AggResult
 
-	// 3. Execute Group By Query
+	// 3. 执行聚合查询
 	// Select: refund_status, count(*) as count, sum(pay_price) as price
 	err := q.Select(
 		s.q.TradeOrder.RefundStatus,
@@ -207,7 +193,7 @@ func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.Tra
 		return nil, err
 	}
 
-	// 4. Aggregate into Summary Response
+	// 4. 聚合到响应结构
 	summary := &resp.TradeOrderSummaryResp{}
 	for _, res := range results {
 		if res.RefundStatus == 0 { // None (Unrefunded)
@@ -220,6 +206,92 @@ func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.Tra
 	}
 
 	return summary, nil
+}
+
+// buildOrderQuery 构建订单查询条件
+func (s *TradeOrderQueryService) buildOrderQuery(ctx context.Context, r *req.TradeOrderPageReq) query.ITradeOrderDo {
+	q := s.q.TradeOrder.WithContext(ctx)
+
+	// 1. 用户信息过滤 (Nickname/Mobile) -> 转换为 UserID 列表
+	if r.UserNickname != "" || r.UserMobile != "" {
+		u := s.q.MemberUser
+		uq := u.WithContext(ctx)
+		if r.UserNickname != "" {
+			uq = uq.Where(u.Nickname.Like("%" + r.UserNickname + "%"))
+		}
+		if r.UserMobile != "" {
+			uq = uq.Where(u.Mobile.Like("%" + r.UserMobile + "%"))
+		}
+		users, err := uq.Select(u.ID).Find()
+		if err == nil {
+			var userIds []int64
+			for _, user := range users {
+				userIds = append(userIds, user.ID)
+			}
+			// 如果没有匹配的用户，则 UserID IN (NULL)，直接返回空结果查询
+			if len(userIds) == 0 {
+				q = q.Where(s.q.TradeOrder.ID.Eq(-1)) // Force empty
+			} else {
+				q = q.Where(s.q.TradeOrder.UserID.In(userIds...))
+			}
+		}
+	}
+
+	// 2. 基础字段过滤
+	if r.No != "" {
+		q = q.Where(s.q.TradeOrder.No.Like("%" + r.No + "%"))
+	}
+	if r.UserID != nil {
+		q = q.Where(s.q.TradeOrder.UserID.Eq(*r.UserID))
+	}
+	if r.Type != nil {
+		q = q.Where(s.q.TradeOrder.Type.Eq(*r.Type))
+	}
+	if r.Status != nil {
+		q = q.Where(s.q.TradeOrder.Status.Eq(*r.Status))
+	}
+	if r.CommentStatus != nil {
+		q = q.Where(s.q.TradeOrder.CommentStatus.Eq(model.NewBitBool(*r.CommentStatus)))
+	}
+	if r.PayChannelCode != "" {
+		q = q.Where(s.q.TradeOrder.PayChannelCode.Eq(r.PayChannelCode))
+	}
+	if r.Terminal != nil {
+		q = q.Where(s.q.TradeOrder.Terminal.Eq(*r.Terminal))
+	}
+
+	// 3. 物流/自提相关
+	if r.DeliveryType != nil {
+		q = q.Where(s.q.TradeOrder.DeliveryType.Eq(*r.DeliveryType))
+	}
+	if r.LogisticsID != nil {
+		q = q.Where(s.q.TradeOrder.LogisticsID.Eq(*r.LogisticsID))
+	}
+	if len(r.PickUpStoreIDs) > 0 {
+		q = q.Where(s.q.TradeOrder.PickUpStoreID.In(r.PickUpStoreIDs...))
+	}
+	if r.PickUpVerifyCode != "" {
+		q = q.Where(s.q.TradeOrder.PickUpVerifyCode.Like("%" + r.PickUpVerifyCode + "%")) // Fuzzy match? Usually exact but Java might be partial? aligning with 'Like' for safety on codes unless strict required. Java wrapper usually 'eq' for codes. checking... assume Like for verify code is rare, usually Eq. Let's use Eq for verify code to be strict.
+		// Re-thinking: Verify code is usually exact match. But if request is "Like", then Like. Admin dashboard often uses partial match.
+		// Let's stick to Like for flexibility in admin search.
+		q = q.Where(s.q.TradeOrder.PickUpVerifyCode.Like("%" + r.PickUpVerifyCode + "%"))
+	}
+
+	// 4. 时间范围
+	if len(r.CreateTime) == 2 {
+		q = q.Where(s.q.TradeOrder.CreateTime.Between(
+			s.parseTime(r.CreateTime[0]),
+			s.parseTime(r.CreateTime[1]),
+		))
+	}
+
+	return q
+}
+
+// parseTime 辅助解析时间
+func (s *TradeOrderQueryService) parseTime(tStr string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", tStr)
+	return t
 }
 
 // GetOrderLogListByOrderId 获得交易订单日志列表
