@@ -10,7 +10,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
@@ -91,11 +91,11 @@ func (s *TradeAfterSaleService) CreateAfterSale(ctx context.Context, userId int6
 		// 2.3 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       userId,
-			UserType:     model.UserTypeMember,
+			UserType:     consts.UserTypeMember,
 			AfterSaleID:  afterSale.ID,
-			BeforeStatus: trade.AfterSaleStatusNone,
-			AfterStatus:  trade.AfterSaleStatusApply,
-			OperateType:  trade.AfterSaleOperateTypeMemberCreate,
+			BeforeStatus: consts.AfterSaleStatusNone,
+			AfterStatus:  consts.AfterSaleStatusApply,
+			OperateType:  consts.AfterSaleOperateTypeMemberCreate,
 			Content:      "用户申请售后",
 		}); err != nil {
 			return fmt.Errorf("记录售后日志失败: %w", err)
@@ -119,7 +119,7 @@ func (s *TradeAfterSaleService) validateOrderItemApplicable(ctx context.Context,
 	}
 
 	// 已申请售后，不允许再发起售后申请
-	if item.AfterSaleStatus != trade.AfterSaleStatusNone {
+	if item.AfterSaleStatus != consts.AfterSaleStatusNone {
 		return nil, fmt.Errorf("该订单项已申请售后")
 	}
 
@@ -135,17 +135,17 @@ func (s *TradeAfterSaleService) validateOrderItemApplicable(ctx context.Context,
 	}
 
 	// 已取消，无法发起售后
-	if order.Status == trade.TradeOrderStatusCanceled {
+	if order.Status == consts.TradeOrderStatusCanceled {
 		return nil, fmt.Errorf("订单已取消，无法发起售后")
 	}
 
 	// 未支付，无法发起售后
-	if order.Status == trade.TradeOrderStatusUnpaid {
+	if order.Status == consts.TradeOrderStatusUnpaid {
 		return nil, fmt.Errorf("订单未支付，无法发起售后")
 	}
 
 	// 如果是【退货退款】的情况，需要额外校验是否发货
-	if r.Way == trade.AfterSaleWayReturnAndRefund && order.Status < trade.TradeOrderStatusDelivered {
+	if r.Way == consts.AfterSaleWayReturnAndRefund && order.Status < consts.TradeOrderStatusDelivered {
 		return nil, fmt.Errorf("订单未发货，无法申请退货退款")
 	}
 
@@ -175,9 +175,9 @@ func (s *TradeAfterSaleService) createAfterSaleDOWithQuery(ctx context.Context, 
 
 	afterSale := &trade.AfterSale{
 		No:               afterSaleNo,
-		Status:           trade.AfterSaleStatusApply,
+		Status:           consts.AfterSaleStatusApply,
 		Way:              r.Way,
-		Type:             trade.AfterSaleTypeInSale,
+		Type:             consts.AfterSaleTypeInSale,
 		UserID:           item.UserID,
 		ApplyReason:      r.ApplyReason,
 		ApplyDescription: r.ApplyDescription,
@@ -195,8 +195,8 @@ func (s *TradeAfterSaleService) createAfterSaleDOWithQuery(ctx context.Context, 
 	}
 
 	// 标记是售中还是售后
-	if order.Status == trade.TradeOrderStatusCompleted {
-		afterSale.Type = trade.AfterSaleTypeAfterSale
+	if order.Status == consts.TradeOrderStatusCompleted {
+		afterSale.Type = consts.AfterSaleTypeAfterSale
 	}
 
 	if err := tx.AfterSale.WithContext(ctx).Create(afterSale); err != nil {
@@ -356,24 +356,24 @@ func (s *TradeAfterSaleService) CancelAfterSale(ctx context.Context, userId int6
 	if err != nil {
 		return err
 	}
-	if as.Status != trade.AfterSaleStatusApply {
+	if as.Status != consts.AfterSaleStatusApply {
 		return fmt.Errorf("状态不允许取消")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态
-		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(id)).Update(tx.AfterSale.Status, trade.AfterSaleStatusBuyerCancel); err != nil {
+		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(id)).Update(tx.AfterSale.Status, consts.AfterSaleStatusBuyerCancel); err != nil {
 			return err
 		}
 
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       userId,
-			UserType:     model.UserTypeMember,
+			UserType:     consts.UserTypeMember,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
-			AfterStatus:  trade.AfterSaleStatusBuyerCancel,
-			OperateType:  trade.AfterSaleOperateTypeMemberCancel,
+			AfterStatus:  consts.AfterSaleStatusBuyerCancel,
+			OperateType:  consts.AfterSaleOperateTypeMemberCancel,
 			Content:      "用户取消售后申请",
 		}); err != nil {
 			return err
@@ -393,15 +393,15 @@ func (s *TradeAfterSaleService) AgreeAfterSale(ctx context.Context, adminUserId 
 	if err != nil {
 		return err
 	}
-	if as.Status != trade.AfterSaleStatusApply {
+	if as.Status != consts.AfterSaleStatusApply {
 		return fmt.Errorf("售后单状态不是申请中，无法同意")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态
-		newStatus := trade.AfterSaleStatusSellerAgree
-		if as.Way == trade.AfterSaleWayRefund {
-			newStatus = trade.AfterSaleStatusWaitRefund
+		newStatus := consts.AfterSaleStatusSellerAgree
+		if as.Way == consts.AfterSaleWayRefund {
+			newStatus = consts.AfterSaleStatusWaitRefund
 		}
 
 		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(id)).Updates(trade.AfterSale{
@@ -415,11 +415,11 @@ func (s *TradeAfterSaleService) AgreeAfterSale(ctx context.Context, adminUserId 
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     model.UserTypeAdmin,
+			UserType:     consts.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
-			OperateType:  trade.AfterSaleOperateTypeAdminAgreeApply,
+			OperateType:  consts.AfterSaleOperateTypeAdminAgreeApply,
 			Content:      "管理员同意售后申请",
 		}); err != nil {
 			return err
@@ -439,13 +439,13 @@ func (s *TradeAfterSaleService) DisagreeAfterSale(ctx context.Context, adminUser
 	if err != nil {
 		return err
 	}
-	if as.Status != trade.AfterSaleStatusApply {
+	if as.Status != consts.AfterSaleStatusApply {
 		return fmt.Errorf("售后单状态不是申请中，无法拒绝")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态
-		newStatus := trade.AfterSaleStatusSellerDisagree
+		newStatus := consts.AfterSaleStatusSellerDisagree
 		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(req.ID)).Updates(trade.AfterSale{
 			Status:      newStatus,
 			AuditReason: req.AuditReason,
@@ -458,11 +458,11 @@ func (s *TradeAfterSaleService) DisagreeAfterSale(ctx context.Context, adminUser
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     model.UserTypeAdmin,
+			UserType:     consts.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
-			OperateType:  trade.AfterSaleOperateTypeAdminDisagreeApply,
+			OperateType:  consts.AfterSaleOperateTypeAdminDisagreeApply,
 			Content:      fmt.Sprintf("管理员拒绝售后申请，原因：%s", req.AuditReason),
 		}); err != nil {
 			return err
@@ -482,7 +482,7 @@ func (s *TradeAfterSaleService) RefundAfterSale(ctx context.Context, adminUserId
 	if err != nil {
 		return err
 	}
-	if as.Status != trade.AfterSaleStatusWaitRefund {
+	if as.Status != consts.AfterSaleStatusWaitRefund {
 		return fmt.Errorf("售后单状态不是待退款，无法退款")
 	}
 
@@ -523,7 +523,7 @@ func (s *TradeAfterSaleService) RefundAfterSale(ctx context.Context, adminUserId
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  as.Status,
-			OperateType:  trade.AfterSaleOperateTypeAdminRefund,
+			OperateType:  consts.AfterSaleOperateTypeAdminRefund,
 			Content:      "管理员发起退款申请",
 		}); err != nil {
 			return err
@@ -663,13 +663,13 @@ func (s *TradeAfterSaleService) ReceiveAfterSale(ctx context.Context, adminUserI
 	}
 
 	// 校验状态：只有待收货状态才能确认收货
-	if as.Status != trade.AfterSaleStatusBuyerDelivery {
+	if as.Status != consts.AfterSaleStatusBuyerDelivery {
 		return fmt.Errorf("售后状态不允许确认收货")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态为待退款
-		newStatus := trade.AfterSaleStatusWaitRefund
+		newStatus := consts.AfterSaleStatusWaitRefund
 		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(id)).Updates(trade.AfterSale{
 			Status:      newStatus,
 			ReceiveTime: time.Now(),
@@ -680,11 +680,11 @@ func (s *TradeAfterSaleService) ReceiveAfterSale(ctx context.Context, adminUserI
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     model.UserTypeAdmin,
+			UserType:     consts.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
-			OperateType:  trade.AfterSaleOperateTypeAdminAgreeReceive,
+			OperateType:  consts.AfterSaleOperateTypeAdminAgreeReceive,
 			Content:      "管理员确认收货",
 		}); err != nil {
 			return err
@@ -706,13 +706,13 @@ func (s *TradeAfterSaleService) DeliveryAfterSale(ctx context.Context, userId in
 	}
 
 	// 校验状态：只有已同意状态才能填写物流信息
-	if as.Status != trade.AfterSaleStatusSellerAgree {
+	if as.Status != consts.AfterSaleStatusSellerAgree {
 		return fmt.Errorf("售后状态不允许填写物流信息")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态为买家已发货
-		newStatus := trade.AfterSaleStatusBuyerDelivery
+		newStatus := consts.AfterSaleStatusBuyerDelivery
 		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(req.ID)).Updates(trade.AfterSale{
 			Status:       newStatus,
 			LogisticsID:  req.LogisticsId,
@@ -725,11 +725,11 @@ func (s *TradeAfterSaleService) DeliveryAfterSale(ctx context.Context, userId in
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       userId,
-			UserType:     model.UserTypeMember,
+			UserType:     consts.UserTypeMember,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
-			OperateType:  trade.AfterSaleOperateTypeMemberDelivery,
+			OperateType:  consts.AfterSaleOperateTypeMemberDelivery,
 			Content:      "用户退回货物",
 		}); err != nil {
 			return err
@@ -750,13 +750,13 @@ func (s *TradeAfterSaleService) UpdateAfterSaleRefunded(ctx context.Context, aft
 	if err != nil {
 		return err
 	}
-	if as.Status == trade.AfterSaleStatusComplete { // Already completed
+	if as.Status == consts.AfterSaleStatusComplete { // Already completed
 		return nil
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态为完成
-		newStatus := trade.AfterSaleStatusComplete
+		newStatus := consts.AfterSaleStatusComplete
 		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(afterSaleId)).Updates(trade.AfterSale{
 			Status:      newStatus,
 			RefundTime:  time.Now(),
@@ -768,11 +768,11 @@ func (s *TradeAfterSaleService) UpdateAfterSaleRefunded(ctx context.Context, aft
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       0, // System
-			UserType:     model.UserTypeAdmin,
+			UserType:     consts.UserTypeAdmin,
 			AfterSaleID:  as.ID,
 			BeforeStatus: as.Status,
 			AfterStatus:  newStatus,
-			OperateType:  trade.AfterSaleOperateTypeAdminRefund,
+			OperateType:  consts.AfterSaleOperateTypeAdminRefund,
 			Content:      "支付退款成功，售后完成",
 		}); err != nil {
 			return err
@@ -809,10 +809,10 @@ func (s *TradeAfterSaleService) GetUserAfterSaleCount(ctx context.Context, userI
 	return s.q.AfterSale.WithContext(ctx).
 		Where(s.q.AfterSale.UserID.Eq(userId)).
 		Where(s.q.AfterSale.Status.In(
-			trade.AfterSaleStatusApply,
-			trade.AfterSaleStatusSellerAgree,
-			trade.AfterSaleStatusBuyerDelivery,
-			trade.AfterSaleStatusWaitRefund)).
+			consts.AfterSaleStatusApply,
+			consts.AfterSaleStatusSellerAgree,
+			consts.AfterSaleStatusBuyerDelivery,
+			consts.AfterSaleStatusWaitRefund)).
 		Count()
 }
 
@@ -824,14 +824,14 @@ func (s *TradeAfterSaleService) RefuseAfterSale(ctx context.Context, adminUserId
 	}
 
 	// 校验状态：必须是已发货状态才能拒绝收货
-	if as.Status != trade.AfterSaleStatusBuyerDelivery {
+	if as.Status != consts.AfterSaleStatusBuyerDelivery {
 		return fmt.Errorf("售后状态不是买家已发货，不能拒绝收货")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新售后单状态为卖家拒绝收货
 		if _, err := tx.AfterSale.WithContext(ctx).Where(tx.AfterSale.ID.Eq(req.ID)).Updates(trade.AfterSale{
-			Status:        trade.AfterSaleStatusSellerRefuse,
+			Status:        consts.AfterSaleStatusSellerRefuse,
 			ReceiveTime:   time.Now(),
 			ReceiveReason: req.RefuseMemo,
 		}); err != nil {
@@ -841,18 +841,18 @@ func (s *TradeAfterSaleService) RefuseAfterSale(ctx context.Context, adminUserId
 		// 2. 记录售后日志
 		if err := tx.AfterSaleLog.WithContext(ctx).Create(&trade.AfterSaleLog{
 			UserID:       adminUserId,
-			UserType:     model.UserTypeAdmin,
+			UserType:     consts.UserTypeAdmin,
 			AfterSaleID:  as.ID,
-			BeforeStatus: trade.AfterSaleStatusBuyerDelivery,
-			AfterStatus:  trade.AfterSaleStatusSellerRefuse,
-			OperateType:  trade.AfterSaleOperateTypeAdminDisagreeReceive,
+			BeforeStatus: consts.AfterSaleStatusBuyerDelivery,
+			AfterStatus:  consts.AfterSaleStatusSellerRefuse,
+			OperateType:  consts.AfterSaleOperateTypeAdminDisagreeReceive,
 			Content:      fmt.Sprintf("卖家拒绝收货，原因：%s", req.RefuseMemo),
 		}); err != nil {
 			return err
 		}
 
 		// 3. 更新订单项状态为【未申请】(对齐 Java)
-		if _, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.ID.Eq(as.OrderItemID)).Update(tx.TradeOrderItem.AfterSaleStatus, trade.AfterSaleStatusNone); err != nil {
+		if _, err := tx.TradeOrderItem.WithContext(ctx).Where(tx.TradeOrderItem.ID.Eq(as.OrderItemID)).Update(tx.TradeOrderItem.AfterSaleStatus, consts.AfterSaleStatusNone); err != nil {
 			return err
 		}
 

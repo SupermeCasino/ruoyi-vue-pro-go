@@ -1,6 +1,8 @@
 package trade
 
 import (
+	"context"
+
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 )
 
@@ -110,4 +112,51 @@ type TradePriceCalculateItemRespBO struct {
 	DeliveryTypes []int                         `json:"deliveryTypes"` // 配送方式
 	GivePoint     int                           `json:"givePoint"`     // 赠送积分
 	Properties    []resp.ProductSkuPropertyResp `json:"properties"`    // 商品属性
+}
+
+// AppTradeProductSettlementRespBO 商品结算信息响应业务对象
+// 对齐 Java: AppTradeProductSettlementRespVO
+type AppTradeProductSettlementRespBO struct {
+	SpuID          int64                            `json:"spuId"`
+	Skus           []AppTradeProductSettlementSkuBO `json:"skus"`
+	RewardActivity *RewardActivityBO                `json:"rewardActivity"`
+}
+
+// AppTradeProductSettlementSkuBO SKU 价格信息
+type AppTradeProductSettlementSkuBO struct {
+	ID               int64 `json:"id"`
+	PromotionPrice   int   `json:"promotionPrice"`   // 优惠后价格
+	PromotionType    int   `json:"promotionType"`    // 营销类型
+	PromotionID      int64 `json:"promotionId"`      // 营销编号
+	PromotionEndTime int64 `json:"promotionEndTime"` // 活动结束时间（毫秒时间戳）
+}
+
+// RewardActivityBO 满减送活动信息
+type RewardActivityBO struct {
+	ID            int64                  `json:"id"`
+	ConditionType int                    `json:"conditionType"`
+	Rules         []RewardActivityRuleBO `json:"rules"`
+}
+
+// RewardActivityRuleBO 满减送活动规则
+type RewardActivityRuleBO struct {
+	Limit                    int           `json:"limit"`
+	DiscountPrice            int           `json:"discountPrice"`
+	FreeDelivery             bool          `json:"freeDelivery"`
+	Point                    int           `json:"point"`
+	GiveCouponTemplateCounts map[int64]int `json:"giveCouponTemplateCounts"`
+}
+
+// SkuPromotionResult SKU 优惠计算结果
+type SkuPromotionResult struct {
+	PromotionPrice   int   // 优惠后价格
+	PromotionType    int   // 优惠类型: 4=限时折扣, 7=VIP等级
+	PromotionID      int64 // 优惠活动/等级 ID
+	PromotionEndTime int64 // 活动结束时间（毫秒时间戳）
+}
+
+// SkuPromotionCalculator SKU 优惠计算器接口
+// 用于 CalculateProductPrice 复用计算逻辑，避免循环导入
+type SkuPromotionCalculator interface {
+	CalculateSkuPromotion(ctx context.Context, userId int64, skuId int64, price int) (*SkuPromotionResult, error)
 }

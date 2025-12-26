@@ -22,19 +22,6 @@ type PriceCalculator interface {
 	IsApplicable(orderType int) bool
 }
 
-const (
-	// PromotionTypeCoupon 优惠券
-	PromotionTypeCoupon = 40
-	// PromotionTypeCombination 拼团活动
-	PromotionTypeCombination = 50
-	// PromotionTypeBargain 砍价活动
-	PromotionTypeBargain = 60
-	// PromotionTypeSeckill 秒杀活动
-	PromotionTypeSeckill = 70
-	// PromotionTypePoint 积分抵扣
-	PromotionTypePoint = 80
-)
-
 // PriceCalculatorFactory 价格计算器工厂
 type PriceCalculatorFactory struct {
 	calculators []PriceCalculator

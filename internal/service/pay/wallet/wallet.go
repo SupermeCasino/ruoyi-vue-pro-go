@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -134,15 +135,15 @@ func (s *PayWalletService) AddWalletBalance(ctx context.Context, walletID int64,
 
 	// 2. 更新余额
 	switch bizType {
-	case pay.PayWalletBizTypePayment:
+	case consts.PayWalletBizTypePayment:
 		if wallet.Balance < -price { // price is negative for payment
 			return stdErrors.New("insufficient balance")
 		}
-	case pay.PayWalletBizTypePaymentRefund:
+	case consts.PayWalletBizTypePaymentRefund:
 		// Refund adds back checks?
-	case pay.PayWalletBizTypeRecharge:
+	case consts.PayWalletBizTypeRecharge:
 		// Recharge adds
-	case pay.PayWalletBizTypeUpdateBalance:
+	case consts.PayWalletBizTypeUpdateBalance:
 		if price < 0 && wallet.Balance < -price {
 			return stdErrors.New("insufficient balance")
 		}
@@ -176,7 +177,7 @@ func (s *PayWalletService) AddWalletBalance(ctx context.Context, walletID int64,
 	// 3. 记录流水
 	wallet.Balance += price // Approximate new balance for log
 	title := "钱包余额更新"
-	if bizType == pay.PayWalletBizTypeUpdateBalance {
+	if bizType == consts.PayWalletBizTypeUpdateBalance {
 		title = "管理员修改"
 	}
 	_, err = s.transactionSvc.CreateWalletTransaction(ctx, wallet, bizType, bizID, title, price)

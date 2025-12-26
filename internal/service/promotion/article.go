@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -135,7 +136,7 @@ func (s *articleService) GetArticlePage(ctx context.Context, req req.ArticlePage
 
 func (s *articleService) GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error) {
 	q := s.q.PromotionArticle
-	do := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
+	do := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
 
 	if req.Title != "" {
 		do = do.Where(q.Title.Like("%" + req.Title + "%"))
@@ -174,7 +175,7 @@ func (s *articleService) validateArticleExists(ctx context.Context, id int64) (*
 }
 
 func (s *articleService) validateArticleCategory(ctx context.Context, categoryID int64) error {
-	count, err := s.q.PromotionArticleCategory.WithContext(ctx).Where(s.q.PromotionArticleCategory.ID.Eq(categoryID), s.q.PromotionArticleCategory.Status.Eq(model.CommonStatusEnable)).Count() // 使用启用状态常量替代魔法数字 0
+	count, err := s.q.PromotionArticleCategory.WithContext(ctx).Where(s.q.PromotionArticleCategory.ID.Eq(categoryID), s.q.PromotionArticleCategory.Status.Eq(consts.CommonStatusEnable)).Count() // 使用启用状态常量替代魔法数字 0
 	if err != nil {
 		return err
 	}

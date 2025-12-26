@@ -7,6 +7,7 @@ import (
 
 	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
 	respPay "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	repoPay "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
@@ -89,8 +90,8 @@ func (s *PayTransferService) GetTransferPage(ctx context.Context, req *reqPay.Pa
 			ChannelErrorMsg:    item.ChannelErrorMsg,
 			ChannelNotifyData:  item.ChannelNotifyData,
 			ChannelPackageInfo: item.ChannelPackageInfo,
-			CreateTime:          item.CreateTime,
-			UpdateTime:          item.UpdateTime,
+			CreateTime:         item.CreateTime,
+			UpdateTime:         item.UpdateTime,
 			Creator:            item.Creator,
 			Updater:            item.Updater,
 			Deleted:            item.Deleted,
@@ -136,8 +137,8 @@ func (s *PayTransferService) GetTransfer(ctx context.Context, id int64) (*respPa
 		ChannelErrorMsg:    transfer.ChannelErrorMsg,
 		ChannelNotifyData:  transfer.ChannelNotifyData,
 		ChannelPackageInfo: transfer.ChannelPackageInfo,
-		CreateTime:          transfer.CreateTime,
-		UpdateTime:          transfer.UpdateTime,
+		CreateTime:         transfer.CreateTime,
+		UpdateTime:         transfer.UpdateTime,
 		Creator:            transfer.Creator,
 		Updater:            transfer.Updater,
 		Deleted:            transfer.Deleted,
@@ -204,14 +205,14 @@ func (s *PayTransferService) CreateTransfer(ctx context.Context, req *reqPay.Pay
 			Type:               req.Type,
 			UserName:           req.UserName,
 			UserAccount:        req.UserAccount,
-			Status:             modelPay.PayTransferStatusWaiting,
+			Status:             consts.PayTransferStatusWaiting,
 			NotifyURL:          app.TransferNotifyURL,
 			UserIP:             req.UserIP,
 			ChannelExtras:      req.ChannelExtras,
 		}
-		if req.Type == modelPay.PayTransferTypeWxBalance {
+		if req.Type == consts.PayTransferTypeWxBalance {
 			transfer.UserAccount = req.OpenID
-		} else if req.Type == modelPay.PayTransferTypeAlipayBalance {
+		} else if req.Type == consts.PayTransferTypeAlipayBalance {
 			transfer.UserAccount = req.AlipayLogonID
 		}
 		if err := s.transferRepo.Create(ctx, transfer); err != nil {
@@ -219,12 +220,12 @@ func (s *PayTransferService) CreateTransfer(ctx context.Context, req *reqPay.Pay
 		}
 	} else {
 		// 2.2 情况二：存在创建转账单，但是状态为关闭，则更新为等待中
-		_, err := s.transferRepo.UpdateByIdAndStatus(ctx, transfer.ID, []int{modelPay.PayTransferStatusClosed},
-			&modelPay.PayTransfer{Status: modelPay.PayTransferStatusWaiting})
+		_, err := s.transferRepo.UpdateByIdAndStatus(ctx, transfer.ID, []int{consts.PayTransferStatusClosed},
+			&modelPay.PayTransfer{Status: consts.PayTransferStatusWaiting})
 		if err != nil {
 			return nil, err
 		}
-		transfer.Status = modelPay.PayTransferStatusWaiting
+		transfer.Status = consts.PayTransferStatusWaiting
 	}
 
 	// 3. 调用三方渠道发起转账
@@ -269,7 +270,7 @@ func (s *PayTransferService) validateTransferCanCreate(ctx context.Context, req 
 	}
 	if transfer != nil {
 		// 只有转账单状态为关闭，才能再次发起转账
-		if transfer.Status != modelPay.PayTransferStatusClosed {
+		if transfer.Status != consts.PayTransferStatusClosed {
 			return nil, errors.New("转账单已存在且状态不是关闭，无法重新发起")
 		}
 		// 校验参数是否一致

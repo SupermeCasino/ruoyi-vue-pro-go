@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
@@ -72,7 +72,7 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq, i
 	}
 
 	// 5. 生成 Token（使用 OAuth2TokenService，UserType=1 表示会员）
-	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeUsername, openid, ip, userAgent)
+	return s.createTokenAfterLoginSuccess(ctx, user, consts.LoginLogTypeUsername, openid, ip, userAgent)
 }
 
 // SmsLogin 手机+验证码登录
@@ -132,7 +132,7 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 	}
 
 	// 5. 在事务外记录登录日志和更新登录信息，避免锁冲突
-	result, err := s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSms, openid, ip, userAgent)
+	result, err := s.createTokenAfterLoginSuccess(ctx, user, consts.LoginLogTypeSms, openid, ip, userAgent)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 
 		// Create Token（使用 OAuth2TokenService）
 		var err error
-		result, err = s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSocial, socialUser.Openid, ip, userAgent)
+		result, err = s.createTokenAfterLoginSuccess(ctx, user, consts.LoginLogTypeSocial, socialUser.Openid, ip, userAgent)
 		return err
 	})
 
@@ -260,7 +260,7 @@ func (s *MemberAuthService) Logout(ctx context.Context, token, ip, userAgent str
 func (s *MemberAuthService) createTokenAfterLoginSuccess(ctx context.Context, user *member.MemberUser,
 	logType int, openid, ip, userAgent string) (*resp.AppAuthLoginResp, error) {
 	// 1. 记录登录日志
-	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeMember, user.Mobile, ip, userAgent, logType, model.LoginResultSuccess)
+	s.loginLogSvc.CreateLoginLog(ctx, user.ID, consts.UserTypeMember, user.Mobile, ip, userAgent, logType, consts.LoginResultSuccess)
 	// 2. 更新最后登录时间
 	_ = s.userSvc.UpdateUserLogin(ctx, user.ID, ip)
 
@@ -276,7 +276,7 @@ func (s *MemberAuthService) createToken(ctx context.Context, user *member.Member
 	}
 
 	// 创建访问令牌（UserType=1 表示会员，TenantID=0 表示默认租户）
-	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, model.UserTypeMember, 0, userInfo)
+	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, consts.UserTypeMember, 0, userInfo)
 	if err != nil {
 		return nil, errors.ErrUnknown
 	}
@@ -321,7 +321,7 @@ func (s *MemberAuthService) WeixinMiniAppLogin(ctx context.Context, r *req.AppAu
 	}
 
 	// 4. 创建 Token
-	return s.createTokenAfterLoginSuccess(ctx, user, model.LoginLogTypeSocial, openid, ip, userAgent)
+	return s.createTokenAfterLoginSuccess(ctx, user, consts.LoginLogTypeSocial, openid, ip, userAgent)
 }
 
 // CreateWeixinMpJsapiSignature 创建微信 MP JSAPI 签名

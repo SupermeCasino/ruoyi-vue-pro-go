@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
 )
@@ -28,7 +29,7 @@ func NewSmsClient(channel *model.SystemSmsChannel) (client.SmsClient, error) {
 }
 
 func (c *SmsClient) GetCode() string {
-	return model.SMSChannelCodeAliyun
+	return consts.SMSChannelCodeAliyun
 }
 
 func (c *SmsClient) SendSms(ctx context.Context, mobile string, apiTemplateId string, templateParams []client.KeyValue) (*client.SmsSendResp, error) {

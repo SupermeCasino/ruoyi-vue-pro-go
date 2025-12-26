@@ -4,7 +4,7 @@ import (
 	"context"
 
 	apiResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
@@ -51,6 +51,12 @@ func (c *DeliveryPriceCalculator) Calculate(ctx context.Context, req *trade.Trad
 	}
 
 	c.LogCalculation(ctx, req, "开始执行运费计算")
+
+	// 检查地址 ID 是否存在（商品结算预览时可能没有地址）
+	if req.AddressID == nil || *req.AddressID == 0 {
+		c.LogCalculation(ctx, req, "未提供地址ID，跳过运费计算")
+		return nil
+	}
 
 	// 获取收货地址
 	address, err := c.memberAddressSvc.GetAddress(ctx, req.UserID, *req.AddressID)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -182,7 +183,7 @@ func (s *ProductSpuService) GetSpuDetail(ctx context.Context, id int64) (*produc
 	}
 
 	// 检查商品状态，对齐Java版本的ProductSpuStatusEnum.isEnable检查
-	if spu.Status != model.ProductSpuStatusEnable { // Status=1表示上架状态
+	if spu.Status != consts.ProductSpuStatusEnable { // Status=1表示上架状态
 		return nil, nil, product.ErrSpuNotEnable // 使用商品模块错误码
 	}
 

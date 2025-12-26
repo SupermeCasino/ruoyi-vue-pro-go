@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -420,14 +421,14 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 
 	for _, p := range products {
 		sku := skuMap[p.SkuID]
-		if p.DiscountType == promotion.DiscountTypePrice { // 满减
+		if p.DiscountType == consts.DiscountTypePrice { // 满减
 			if p.DiscountPrice > sku.Price {
 				return errors.NewBizError(400, "优惠价格不能高于原价")
 			}
 			if p.DiscountPrice <= 0 {
 				return errors.NewBizError(400, "优惠价格必须大于0")
 			}
-		} else if p.DiscountType == promotion.DiscountTypePercent { // 折扣
+		} else if p.DiscountType == consts.DiscountTypePercent { // 折扣
 			if p.DiscountPercent <= 0 || p.DiscountPercent >= 100 {
 				return errors.NewBizError(400, "优惠折扣必须在1-99之间")
 			}
@@ -486,15 +487,15 @@ func (s *discountActivityService) GetMatchDiscountProductMap(ctx context.Context
 	now := time.Now()
 	pq := s.q.PromotionDiscountProduct
 	products, err := pq.WithContext(ctx).Where(
-pq.SkuID.In(skuIDs...),
-pq.ActivityStatus.Eq(1), // ENABLE
-pq.ActivityStartTime.Lte(now),
-pq.ActivityEndTime.Gte(now),
-).Order(pq.CreateTime.Desc()).Find() // 如果有多个活动，取最新的一个
+		pq.SkuID.In(skuIDs...),
+		pq.ActivityStatus.Eq(consts.CommonStatusEnable), // ENABLE = 0 (Java: CommonStatusEnum.ENABLE = 0)
+		pq.ActivityStartTime.Lt(now),                    // 对齐 Java: lt(ActivityStartTime, now)
+		pq.ActivityEndTime.Gt(now),                      // 对齐 Java: gt(ActivityEndTime, now)
+	).Order(pq.CreateTime.Desc()).Find() // 如果有多个活动，取最新的一个
 	if err != nil {
 		return nil, err
 	}
-	
+
 	res := make(map[int64]*promotion.PromotionDiscountProduct)
 	for _, p := range products {
 		if _, ok := res[p.SkuID]; !ok {

@@ -3,8 +3,7 @@ package calculators
 import (
 	"context"
 
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"go.uber.org/zap"
@@ -24,8 +23,8 @@ func NewCombinationActivityPriceCalculator(
 ) *CombinationActivityPriceCalculator {
 	return &CombinationActivityPriceCalculator{
 		BasePriceCalculator: trade.NewBasePriceCalculator(
-			tradeModel.CalculatorNameCombination,
-			tradeModel.TradeOrderTypeCombination, // Use the constant from tradeModel
+			consts.CalculatorNameCombination,
+			consts.TradeOrderTypeCombination,
 			helper,
 			logger,
 		),
@@ -36,7 +35,7 @@ func NewCombinationActivityPriceCalculator(
 // Calculate 执行拼团活动价格计算
 func (c *CombinationActivityPriceCalculator) Calculate(ctx context.Context, req *trade.TradePriceCalculateReqBO, resp *trade.TradePriceCalculateRespBO) error {
 	// 只处理拼团订单
-	if resp.Type != tradeModel.TradeOrderTypeCombination {
+	if resp.Type != consts.TradeOrderTypeCombination {
 		return nil
 	}
 
@@ -75,7 +74,7 @@ func (c *CombinationActivityPriceCalculator) Calculate(ctx context.Context, req 
 			c.Helper.AddPromotion(resp, &trade.TradePriceCalculatePromotionBO{
 				ID:            req.CombinationActivityId,
 				Name:          "拼团活动",
-				Type:          tradeModel.PromotionTypeCombination,
+				Type:          consts.PromotionTypeCombinationActivity,
 				TotalPrice:    originalPayPrice,
 				DiscountPrice: promotionDiscount,
 				Match:         true,
@@ -104,5 +103,5 @@ func (c *CombinationActivityPriceCalculator) Calculate(ctx context.Context, req 
 
 // IsApplicable 判断是否适用于当前订单类型
 func (c *CombinationActivityPriceCalculator) IsApplicable(orderType int) bool {
-	return orderType == tradeModel.TradeOrderTypeCombination
+	return orderType == consts.TradeOrderTypeCombination
 }

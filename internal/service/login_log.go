@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -90,13 +91,13 @@ func (s *LoginLogService) CreateLoginLog(ctx context.Context, userId int64, user
 func (s *LoginLogService) CreateLogoutLog(ctx context.Context, userId int64, userType int, username, ip, userAgent string) {
 	go func() {
 		log := &model.SystemLoginLog{
-			LogType:   model.LogoutLogTypeSelf,
+			LogType:   consts.LogoutLogTypeSelf,
 			UserID:    userId,
 			UserType:  userType,
 			Username:  username,
 			UserIP:    ip,
 			UserAgent: userAgent,
-			Result:    model.LoginResultSuccess,
+			Result:    consts.LoginResultSuccess,
 		}
 		_ = s.q.SystemLoginLog.WithContext(context.Background()).Create(log)
 	}()

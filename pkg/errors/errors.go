@@ -24,7 +24,7 @@ const (
 	NotImplementCode   = 501 // 未实现
 	ServiceUnavailCode = 503 // 服务不可用
 
-	// 业务失败标识（来自 core/consts.go）
+	// 业务失败标识（来自 core/pay_consts.go）
 	FailCode = 1
 )
 

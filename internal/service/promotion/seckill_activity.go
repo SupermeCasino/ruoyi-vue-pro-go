@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product" // Import Product services
@@ -64,7 +64,7 @@ func (s *SeckillActivityService) CreateSeckillActivity(ctx context.Context, r *r
 		activity := &promotion.PromotionSeckillActivity{
 			SpuID:            r.SpuID,
 			Name:             r.Name,
-			Status:           model.CommonStatusEnable, // 使用 CommonStatusEnable 常量
+			Status:           consts.CommonStatusEnable, // 使用 CommonStatusEnable 常量
 			Remark:           r.Remark,
 			StartTime:        r.StartTime,
 			EndTime:          r.EndTime,
@@ -110,7 +110,7 @@ func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *r
 	if err != nil {
 		return errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
-	if oldActivity.Status == model.CommonStatusDisable { // 使用 CommonStatusDisable 常量替代魔法数字
+	if oldActivity.Status == consts.CommonStatusDisable { // 使用 CommonStatusDisable 常量替代魔法数字
 		return errors.NewBizError(1001002003, "秒杀活动已关闭，不能修改")
 	}
 
@@ -184,7 +184,7 @@ func (s *SeckillActivityService) DeleteSeckillActivity(ctx context.Context, id i
 	if err != nil {
 		return errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
-	if act.Status == model.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
+	if act.Status == consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
 		return errors.NewBizError(1001002004, "活动未关闭，不能删除")
 	}
 	// Delete Activity and Products
@@ -198,7 +198,7 @@ func (s *SeckillActivityService) DeleteSeckillActivity(ctx context.Context, id i
 // CloseSeckillActivity 关闭秒杀活动
 func (s *SeckillActivityService) CloseSeckillActivity(ctx context.Context, id int64) error {
 	q := s.q.PromotionSeckillActivity
-	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, model.CommonStatusDisable) // 使用 CommonStatusDisable 常量
+	_, err := q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, consts.CommonStatusDisable) // 使用 CommonStatusDisable 常量
 	return err
 }
 
@@ -215,12 +215,12 @@ func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, i
 	if err != nil {
 		return nil, err
 	}
-	if act == nil || act.Status == model.CommonStatusDisable {
+	if act == nil || act.Status == consts.CommonStatusDisable {
 		return nil, nil // 对齐 Java 行为
 	}
 
 	// 2. 获取时间段配置
-	configs, err := s.configSvc.GetSeckillConfigListByStatus(ctx, model.CommonStatusEnable)
+	configs, err := s.configSvc.GetSeckillConfigListByStatus(ctx, consts.CommonStatusEnable)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, i
 	if err != nil {
 		return nil, err
 	}
-	if spu == nil || spu.Status != model.ProductSpuStatusEnable {
+	if spu == nil || spu.Status != consts.ProductSpuStatusEnable {
 		return nil, errors.NewBizError(1001004003, "秒杀活动已结束或商品已下架")
 	}
 
@@ -402,7 +402,7 @@ func (s *SeckillActivityService) GetSeckillActivityListByConfigId(ctx context.Co
 	q := s.q.PromotionSeckillActivity
 	now := time.Now()
 	list, err := q.WithContext(ctx).Where(
-		q.Status.Eq(model.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
+		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Order(q.Sort.Desc()).Find()
@@ -425,7 +425,7 @@ func (s *SeckillActivityService) GetSeckillActivityPageForApp(ctx context.Contex
 	q := s.q.PromotionSeckillActivity
 	now := time.Now()
 	list, err := q.WithContext(ctx).Where(
-		q.Status.Eq(model.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
+		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Order(q.Sort.Desc()).Find()
@@ -466,7 +466,7 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 	// Find all ENABLED activities for this SPU
 	conds := []gen.Condition{
 		q.SpuID.Eq(spuID),
-		q.Status.Eq(model.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 (Enable)
+		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 (Enable)
 	}
 	if activityID > 0 {
 		conds = append(conds, q.ID.Neq(activityID))
@@ -494,7 +494,7 @@ func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, 
 	// Fetch candidates (Status=Enable, Time Valid)
 	now := time.Now()
 	list, err := q.WithContext(ctx).Where(
-		q.Status.Eq(model.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
+		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Order(q.Sort.Desc()).Find() // Fetch all active first
@@ -531,7 +531,7 @@ func (s *SeckillActivityService) ValidateJoinSeckill(ctx context.Context, activi
 	if err != nil || act == nil {
 		return nil, nil, errors.NewBizError(1001002000, "秒杀活动不存在")
 	}
-	if act.Status != model.CommonStatusEnable { // 使用 CommonStatusEnable 常量
+	if act.Status != consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量
 		return nil, nil, errors.NewBizError(1001002003, "秒杀活动已关闭")
 	}
 	now := time.Now()
@@ -628,7 +628,7 @@ func (s *SeckillActivityService) GetMatchSeckillActivityBySpuId(ctx context.Cont
 	q := s.q.PromotionSeckillActivity
 	return q.WithContext(ctx).
 		Where(q.SpuID.Eq(spuId)).
-		Where(q.Status.Eq(model.CommonStatusEnable)).
+		Where(q.Status.Eq(consts.CommonStatusEnable)).
 		Where(q.StartTime.Lt(now)).
 		Where(q.EndTime.Gt(now)).
 		First()

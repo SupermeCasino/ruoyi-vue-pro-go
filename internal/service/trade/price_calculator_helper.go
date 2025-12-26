@@ -3,7 +3,7 @@ package trade
 import (
 	"fmt"
 
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"go.uber.org/zap"
 )
 

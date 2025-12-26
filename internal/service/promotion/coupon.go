@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -238,7 +238,7 @@ func (s *CouponService) TakeCouponByAdmin(ctx context.Context, templateId int64,
 			TemplateID:         templateId,
 			Name:               template.Name,
 			UserID:             userId,
-			Status:             promotion.CouponStatusUnused, // 未使用
+			Status:             consts.CouponStatusUnused, // 未使用
 			UsePrice:           template.UsePriceMin,
 			ValidStartTime:     validStartTime,
 			ValidEndTime:       validEndTime,
@@ -279,8 +279,8 @@ func (s *CouponService) GetCouponTemplateForApp(ctx context.Context, id int64, u
 // 对齐 Java: AppCouponTemplateController.getCouponTemplateList (带条件)
 func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *int64, productScope *int, count int, userId int64) ([]*resp.AppCouponTemplateResp, error) {
 	t := s.q.PromotionCouponTemplate
-	q := t.WithContext(ctx).Where(t.Status.Eq(model.CommonStatusEnable)) // 只查询启用状态
-	q = q.Where(t.TakeType.Eq(promotion.CouponTakeTypeUser))             // 领取方式 = 直接领取 (CouponTakeTypeEnum.USER)
+	q := t.WithContext(ctx).Where(t.Status.Eq(consts.CommonStatusEnable)) // 只查询启用状态
+	q = q.Where(t.TakeType.Eq(consts.CouponTakeTypeUser))                 // 领取方式 = 直接领取 (CouponTakeTypeEnum.USER)
 
 	if productScope != nil {
 		q = q.Where(t.ProductScope.Eq(*productScope))
@@ -344,8 +344,8 @@ func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, id
 // 对齐 Java: AppCouponTemplateController.getCouponTemplatePage
 func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.AppCouponTemplatePageReq, userId int64) (*pagination.PageResult[*resp.AppCouponTemplateResp], error) {
 	t := s.q.PromotionCouponTemplate
-	q := t.WithContext(ctx).Where(t.Status.Eq(model.CommonStatusEnable)) // 只查询启用状态
-	q = q.Where(t.TakeType.Eq(promotion.CouponTakeTypeUser))             // 领取方式 = 直接领取
+	q := t.WithContext(ctx).Where(t.Status.Eq(consts.CommonStatusEnable)) // 只查询启用状态
+	q = q.Where(t.TakeType.Eq(consts.CouponTakeTypeUser))                 // 领取方式 = 直接领取
 
 	if r.ProductScope != nil {
 		q = q.Where(t.ProductScope.Eq(*r.ProductScope))
@@ -386,39 +386,20 @@ func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCou
 		productScopeValues = []int64{}
 	}
 
-	// 处理时间戳：转换为毫秒级Unix时间戳
-	var validStartTime, validEndTime interface{}
-	if t.ValidStartTime != nil {
-		validStartTime = t.ValidStartTime.UnixMilli()
-	}
-	if t.ValidEndTime != nil {
-		validEndTime = t.ValidEndTime.UnixMilli()
-	}
-
-	// 处理fixedStartTerm/fixedEndTerm：当validityType=1时应为null
-	var fixedStartTerm, fixedEndTerm interface{}
-	if t.ValidityType == 1 { // 固定日期类型
-		fixedStartTerm = nil
-		fixedEndTerm = nil
-	} else { // 领取后N天类型
-		fixedStartTerm = t.FixedStartTerm
-		fixedEndTerm = t.FixedEndTerm
-	}
-
 	return &resp.AppCouponTemplateResp{
 		ID:                 t.ID,
 		Name:               t.Name,
-		Description:        t.Description,
+		Description:        t.Description, // 使用真实的Description字段
 		TotalCount:         t.TotalCount,
 		TakeLimitCount:     t.TakeLimitCount,
 		UsePrice:           t.UsePriceMin,
 		ProductScope:       int(t.ProductScope),
 		ProductScopeValues: productScopeValues,
 		ValidityType:       t.ValidityType,
-		ValidStartTime:     validStartTime,
-		ValidEndTime:       validEndTime,
-		FixedStartTerm:     fixedStartTerm,
-		FixedEndTerm:       fixedEndTerm,
+		ValidStartTime:     t.ValidStartTime,
+		ValidEndTime:       t.ValidEndTime,
+		FixedStartTerm:     t.FixedStartTerm,
+		FixedEndTerm:       t.FixedEndTerm,
 		DiscountType:       t.DiscountType,
 		DiscountPercent:    t.DiscountPercent,
 		DiscountPrice:      t.DiscountPrice,
@@ -432,35 +413,33 @@ func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCou
 // 对齐 Java: CouponService.getUserCanCanTakeMap
 func (s *CouponService) GetUserCanTakeMap(ctx context.Context, userId int64, templateIds []int64) (map[int64]bool, error) {
 	result := make(map[int64]bool)
-	if len(templateIds) == 0 {
-		return result, nil
-	}
-
-	// 1. 未登录时，都显示可以领取
-	if userId == 0 {
+	if userId == 0 || len(templateIds) == 0 {
 		for _, id := range templateIds {
-			result[id] = true
+			result[id] = true // 未登录用户默认可领取
 		}
 		return result, nil
 	}
 
-	// 2. 查询模板的领取限制
+	// 查询模板的领取限制
 	t := s.q.PromotionCouponTemplate
 	templates, err := t.WithContext(ctx).Where(t.ID.In(templateIds...)).Find()
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. 初始化结果，默认都为可领取
+	// 初始化结果，默认都为可领取
 	for _, template := range templates {
 		result[template.ID] = true
 	}
 
-	// 4. 过滤出需要检查限制的模板（领取限制不为-1）
+	// 过滤出需要检查限制的模板（有限领数量且不为-1）
 	var limitedTemplateIds []int64
 	for _, template := range templates {
-		if template.TakeLimitCount != -1 { // -1 表示不限制
+		if template.TakeLimitCount > 0 { // 只检查有限领数量且大于0的模板
 			limitedTemplateIds = append(limitedTemplateIds, template.ID)
+		} else {
+			// 无限制或-1表示不限制，直接设为可领取
+			result[template.ID] = true
 		}
 	}
 
@@ -468,7 +447,7 @@ func (s *CouponService) GetUserCanTakeMap(ctx context.Context, userId int64, tem
 		return result, nil
 	}
 
-	// 5. 查询用户对每个模板已领取的数量
+	// 查询用户对每个模板已领取的数量
 	c := s.q.PromotionCoupon
 	coupons, err := c.WithContext(ctx).
 		Where(c.UserID.Eq(userId)).
@@ -478,17 +457,16 @@ func (s *CouponService) GetUserCanTakeMap(ctx context.Context, userId int64, tem
 		return nil, err
 	}
 
-	// 6. 统计每个模板的领取数量
+	// 统计每个模板的领取数量
 	takeCountMap := make(map[int64]int)
 	for _, coupon := range coupons {
 		takeCountMap[coupon.TemplateID]++
 	}
 
-	// 7. 检查是否超过限制
+	// 检查是否超过限制
 	for _, template := range templates {
-		if template.TakeLimitCount != -1 { // 只检查有限制的模板
+		if template.TakeLimitCount > 0 { // 只检查有限领数量的模板
 			takeCount := takeCountMap[template.ID]
-			// takeCount == nil 或 takeCount < takeLimitCount 时可领取
 			result[template.ID] = takeCount < template.TakeLimitCount
 		}
 	}

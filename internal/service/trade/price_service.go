@@ -2,11 +2,16 @@ package trade
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	productModel "github.com/wxlbd/ruoyi-mall-go/internal/model/product"
+	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -14,19 +19,30 @@ import (
 // TradePriceService 价格计算服务
 // 使用策略模式实现价格计算，对应 Java: TradePriceServiceImpl
 type TradePriceService struct {
-	calculators []PriceCalculator
-	helper      *PriceCalculatorHelper
-	skuSvc      *product.ProductSkuService
-	spuSvc      *product.ProductSpuService
-	logger      *zap.Logger
+	calculators         []PriceCalculator
+	helper              *PriceCalculatorHelper
+	skuSvc              *product.ProductSkuService
+	spuSvc              *product.ProductSpuService
+	rewardActivitySvc   *promotion.RewardActivityService
+	skuPromotionCalc    SkuPromotionCalculator            // 复用 SKU 优惠计算逻辑
+	memberUserSvc       *member.MemberUserService         // 备用：会员用户服务
+	memberLevelSvc      *member.MemberLevelService        // 备用：会员等级服务
+	discountActivitySvc promotion.DiscountActivityService // 备用：折扣活动服务
+	logger              *zap.Logger
 }
 
+// NewTradePriceService 创建价格计算服务
 // NewTradePriceService 创建价格计算服务
 func NewTradePriceService(
 	calculators []PriceCalculator,
 	helper *PriceCalculatorHelper,
 	skuSvc *product.ProductSkuService,
 	spuSvc *product.ProductSpuService,
+	rewardActivitySvc *promotion.RewardActivityService,
+	skuPromotionCalc SkuPromotionCalculator, // 复用 SKU 优惠计算逻辑
+	discountActivitySvc promotion.DiscountActivityService,
+	memberUserSvc *member.MemberUserService,
+	memberLevelSvc *member.MemberLevelService,
 	logger *zap.Logger,
 ) *TradePriceService {
 	// 按优先级排序计算器
@@ -47,11 +63,16 @@ func NewTradePriceService(
 	}
 
 	return &TradePriceService{
-		calculators: calculators,
-		helper:      helper,
-		skuSvc:      skuSvc,
-		spuSvc:      spuSvc,
-		logger:      logger,
+		calculators:         calculators,
+		helper:              helper,
+		skuSvc:              skuSvc,
+		spuSvc:              spuSvc,
+		rewardActivitySvc:   rewardActivitySvc,
+		skuPromotionCalc:    skuPromotionCalc,
+		discountActivitySvc: discountActivitySvc,
+		memberUserSvc:       memberUserSvc,
+		memberLevelSvc:      memberLevelSvc,
+		logger:              logger,
 	}
 }
 
@@ -231,7 +252,7 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 		}
 
 		// 验证 SPU 状态
-		if spu.Status != 0 { // 0: 上架
+		if spu.Status != consts.ProductSpuStatusEnable { // 0: 上架
 			s.logger.Error("商品已下架",
 				zap.Int64("spuId", spu.ID),
 				zap.Int("status", spu.Status),
@@ -251,23 +272,17 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 
 		// 构建商品项
 		item := TradePriceCalculateItemRespBO{
-			SpuID:         spu.ID,
-			SkuID:         sku.ID,
-			Count:         reqItem.Count,
-			CartID:        reqItem.CartID,
-			Selected:      reqItem.Selected,
-			Price:         sku.Price,
-			PayPrice:      sku.Price * reqItem.Count,
-			DiscountPrice: 0,
-			DeliveryPrice: 0,
-			CouponPrice:   0,
-			PointPrice:    0,
-			VipPrice:      0,
-			UsePoint:      0,
-			SpuName:       spu.Name,
-			PicURL:        sku.PicURL,
-			CategoryID:    spu.CategoryID,
-			GivePoint:     spu.GiveIntegral * reqItem.Count,
+			SpuID:      spu.ID,
+			SkuID:      sku.ID,
+			Count:      reqItem.Count,
+			CartID:     reqItem.CartID,
+			Selected:   reqItem.Selected,
+			Price:      sku.Price,
+			PayPrice:   sku.Price * reqItem.Count,
+			SpuName:    spu.Name,
+			PicURL:     sku.PicURL,
+			CategoryID: spu.CategoryID,
+			GivePoint:  spu.GiveIntegral * reqItem.Count,
 		}
 
 		// 如果 SKU 没有图片，使用 SPU 的图片
@@ -335,63 +350,144 @@ func (s *TradePriceService) GetApplicableCalculators(orderType int) []PriceCalcu
 
 // CalculateProductPrice 计算商品价格
 // 对应 Java: TradePriceServiceImpl#calculateProductPrice
-func (s *TradePriceService) CalculateProductPrice(ctx context.Context, userId int64, spuIds []int64) (*TradePriceCalculateRespBO, error) {
+// 返回 []AppTradeProductSettlementResp，每个 SPU 对应一个结算信息
+func (s *TradePriceService) CalculateProductPrice(ctx context.Context, userId int64, spuIds []int64) ([]AppTradeProductSettlementRespBO, error) {
 	s.logger.Info("开始计算商品价格",
 		zap.Int64("userId", userId),
 		zap.Int("spuCount", len(spuIds)),
 	)
 
-	// 1. 获取所有 SPU 的 SKU 列表
-	var skuList []*productModel.ProductSku
+	if len(spuIds) == 0 {
+		return []AppTradeProductSettlementRespBO{}, nil
+	}
+
+	// 1. 获取所有 SPU 的 SKU 列表，并按 SPU 分组
+	spuIdAndSkuListMap := make(map[int64][]*productModel.ProductSku)
+	var allSkuIDs []int64
 	for _, spuId := range spuIds {
 		skus, err := s.skuSvc.GetSkuListBySpuId(ctx, spuId)
 		if err != nil {
 			s.logger.Warn("获取SPU的SKU失败", zap.Int64("spuId", spuId), zap.Error(err))
 			continue
 		}
-		skuList = append(skuList, skus...)
-	}
-
-	if len(skuList) == 0 {
-		return nil, pkgErrors.NewBizError(1004003001, "没有有效的商品")
-	}
-
-	// 2. 初始化返回结果
-	resp := &TradePriceCalculateRespBO{
-		Price: TradePriceCalculatePriceBO{},
-		Items: make([]TradePriceCalculateItemRespBO, 0, len(skuList)),
-	}
-
-	// 3. 针对每个 SKU 独立计算价格
-	for _, sku := range skuList {
-		// 构建单项计算请求
-		// 注意：这里 check=false，且 count=1
-		req := &TradePriceCalculateReqBO{
-			UserID:       userId,
-			DeliveryType: 1, // 默认快递
-			Items: []TradePriceCalculateItemBO{
-				{
-					SkuID:    sku.ID,
-					Count:    1,
-					Selected: true,
-				},
-			},
+		spuIdAndSkuListMap[spuId] = skus
+		for _, sku := range skus {
+			allSkuIDs = append(allSkuIDs, sku.ID)
 		}
+	}
 
-		// 调用内部计算
-		calcRes, err := s.calculatePriceInternal(ctx, req, false)
+	// 2. 获取满减送活动 Map（仍需）
+	var rewardActivityMap map[int64]*promotionModel.PromotionRewardActivity
+	if s.rewardActivitySvc != nil {
+		var err error
+		rewardActivityMap, err = s.rewardActivitySvc.GetRewardActivityMapBySpuIds(ctx, spuIds)
 		if err != nil {
-			s.logger.Warn("计算商品价格失败", zap.Int64("skuId", sku.ID), zap.Error(err))
+			s.logger.Warn("获取满减送活动失败", zap.Error(err))
+		}
+	}
+	if rewardActivityMap == nil {
+		rewardActivityMap = make(map[int64]*promotionModel.PromotionRewardActivity)
+	}
+
+	// 注: discountMap 和 memberLevel 的获取已移至 SkuPromotionCalculator 接口内部
+	// 这减少了代码重复并统一了优惠计算逻辑
+
+	// 4. 针对每个 SPU 构建结果
+	result := make([]AppTradeProductSettlementRespBO, 0, len(spuIds))
+	for _, spuId := range spuIds {
+		skuList := spuIdAndSkuListMap[spuId]
+		if len(skuList) == 0 {
 			continue
 		}
 
-		// 将结果添加到 Items 列表
-		if len(calcRes.Items) > 0 {
-			resp.Items = append(resp.Items, calcRes.Items[0])
+		// 构建 SPU 结算信息
+		spuVO := AppTradeProductSettlementRespBO{
+			SpuID: spuId,
+			Skus:  make([]AppTradeProductSettlementSkuBO, 0, len(skuList)),
+		}
+
+		// 为每个 SKU 计算优惠价格
+		for _, sku := range skuList {
+			skuVO := AppTradeProductSettlementSkuBO{
+				ID:             sku.ID,
+				PromotionPrice: sku.Price, // 默认为原价
+			}
+
+			// 使用 SkuPromotionCalculator 接口计算优惠
+			// 这复用了 DiscountActivityPriceCalculator 的逻辑，避免代码重复
+			if s.skuPromotionCalc != nil {
+				result, err := s.skuPromotionCalc.CalculateSkuPromotion(ctx, userId, sku.ID, sku.Price)
+				s.logger.Info("CalculateSkuPromotion 调用结果",
+					zap.Int64("skuId", sku.ID),
+					zap.Int("price", sku.Price),
+					zap.Bool("resultNil", result == nil),
+					zap.Error(err),
+				)
+				if err != nil {
+					s.logger.Warn("计算 SKU 优惠失败", zap.Int64("skuId", sku.ID), zap.Error(err))
+				} else if result != nil {
+					skuVO.PromotionPrice = result.PromotionPrice
+					skuVO.PromotionType = result.PromotionType
+					skuVO.PromotionID = result.PromotionID
+					skuVO.PromotionEndTime = result.PromotionEndTime
+				}
+			} else {
+				s.logger.Warn("skuPromotionCalc 为 nil，无法计算优惠", zap.Int64("skuId", sku.ID))
+			}
+
+			spuVO.Skus = append(spuVO.Skus, skuVO)
+		}
+
+		// 获取满减送活动
+		if rewardActivity, ok := rewardActivityMap[spuId]; ok {
+			spuVO.RewardActivity = s.convertRewardActivityBO(rewardActivity)
+		}
+
+		result = append(result, spuVO)
+	}
+
+	return result, nil
+}
+
+// convertRewardActivityBO 转换满减送活动为 BO
+func (s *TradePriceService) convertRewardActivityBO(activity *promotionModel.PromotionRewardActivity) *RewardActivityBO {
+	if activity == nil {
+		return nil
+	}
+
+	bo := &RewardActivityBO{
+		ID:            activity.ID,
+		ConditionType: activity.ConditionType,
+		Rules:         make([]RewardActivityRuleBO, 0),
+	}
+
+	// 解析 Rules JSON 字符串
+	if activity.Rules != "" {
+		type RuleJSON struct {
+			Limit                    int           `json:"limit"`
+			DiscountPrice            int           `json:"discountPrice"`
+			FreeDelivery             bool          `json:"freeDelivery"`
+			Point                    int           `json:"point"`
+			GiveCouponTemplateCounts map[int64]int `json:"giveCouponTemplateCounts"`
+		}
+		var rules []RuleJSON
+		if err := json.Unmarshal([]byte(activity.Rules), &rules); err == nil {
+			for _, rule := range rules {
+				ruleBo := RewardActivityRuleBO{
+					Limit:         rule.Limit,
+					DiscountPrice: rule.DiscountPrice,
+					FreeDelivery:  rule.FreeDelivery,
+					Point:         rule.Point,
+				}
+				if rule.GiveCouponTemplateCounts != nil {
+					ruleBo.GiveCouponTemplateCounts = rule.GiveCouponTemplateCounts
+				} else {
+					ruleBo.GiveCouponTemplateCounts = make(map[int64]int)
+				}
+				bo.Rules = append(bo.Rules, ruleBo)
+			}
 		}
 	}
 
-	// 4. 设置 Success (虽然 Price 是 0，但 Items 有值即可)
-	resp.Success = true
-	return resp, nil
+	return bo
 }

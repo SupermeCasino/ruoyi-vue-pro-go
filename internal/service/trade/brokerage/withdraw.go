@@ -10,9 +10,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -65,27 +63,27 @@ func (s *BrokerageWithdrawService) AuditBrokerageWithdraw(ctx context.Context, i
 	}
 
 	// 1.2 特殊：【重新转账】如果是提现失败，允许重新审核
-	if withdraw.Status == tradeModel.BrokerageWithdrawStatusWithdrawFail {
+	if withdraw.Status == consts.BrokerageWithdrawStatusWithdrawFail {
 		// 重置为审核中状态
 		if _, err := w.WithContext(ctx).Where(w.ID.Eq(id)).
 			Updates(map[string]interface{}{
-				"status":             tradeModel.BrokerageWithdrawStatusAuditing,
+				"status":             consts.BrokerageWithdrawStatusAuditing,
 				"transfer_error_msg": "",
 			}); err != nil {
 			return err
 		}
-		withdraw.Status = tradeModel.BrokerageWithdrawStatusAuditing
+		withdraw.Status = consts.BrokerageWithdrawStatusAuditing
 		withdraw.TransferErrorMsg = ""
 	}
 
 	// 1.3 校验状态为审核中
-	if withdraw.Status != tradeModel.BrokerageWithdrawStatusAuditing {
+	if withdraw.Status != consts.BrokerageWithdrawStatusAuditing {
 		return errors.New("当前状态不可审核")
 	}
 
 	// 2. 更新状态（使用乐观锁）
 	// 对齐 Java: updateByIdAndStatus
-	result, err := w.WithContext(ctx).Where(w.ID.Eq(id)).Where(w.Status.Eq(tradeModel.BrokerageWithdrawStatusAuditing)).
+	result, err := w.WithContext(ctx).Where(w.ID.Eq(id)).Where(w.Status.Eq(consts.BrokerageWithdrawStatusAuditing)).
 		Updates(map[string]interface{}{
 			"status":       status,
 			"audit_reason": auditReason,
@@ -100,10 +98,10 @@ func (s *BrokerageWithdrawService) AuditBrokerageWithdraw(ctx context.Context, i
 
 	// 3. 处理审批结果
 	switch status {
-	case tradeModel.BrokerageWithdrawStatusAuditSuccess:
+	case consts.BrokerageWithdrawStatusAuditSuccess:
 		// 3.1 审批通过的后续处理
 		s.auditBrokerageWithdrawSuccess(ctx, withdraw)
-	case tradeModel.BrokerageWithdrawStatusAuditFail:
+	case consts.BrokerageWithdrawStatusAuditFail:
 		// 3.2 审批不通过：退还佣金
 		s.recordSvc.AddBrokerage(ctx, withdraw.UserID, "withdraw_reject",
 			strconv.FormatInt(withdraw.ID, 10), withdraw.Price, "提现驳回")
@@ -124,14 +122,14 @@ func (s *BrokerageWithdrawService) auditBrokerageWithdrawSuccess(ctx context.Con
 
 	// 情况二：非 API 转账（银行卡，手动打款）
 	s.q.BrokerageWithdraw.WithContext(ctx).Where(s.q.BrokerageWithdraw.ID.Eq(withdraw.ID)).
-		Update(s.q.BrokerageWithdraw.Status, tradeModel.BrokerageWithdrawStatusWithdrawSuccess)
+		Update(s.q.BrokerageWithdraw.Status, consts.BrokerageWithdrawStatusWithdrawSuccess)
 }
 
 // isApiWithdrawType 判断是否为 API 提现类型
 func (s *BrokerageWithdrawService) isApiWithdrawType(withdrawType int) bool {
-	return withdrawType == tradeModel.BrokerageWithdrawTypeWallet ||
-		withdrawType == tradeModel.BrokerageWithdrawTypeWechat ||
-		withdrawType == tradeModel.BrokerageWithdrawTypeAlipay
+	return withdrawType == consts.BrokerageWithdrawTypeWallet ||
+		withdrawType == consts.BrokerageWithdrawTypeWechat ||
+		withdrawType == consts.BrokerageWithdrawTypeAlipay
 }
 
 // createPayTransfer 创建支付转账
@@ -145,25 +143,25 @@ func (s *BrokerageWithdrawService) createPayTransfer(ctx context.Context, withdr
 	transferType := 0
 
 	switch withdraw.Type {
-	case tradeModel.BrokerageWithdrawTypeAlipay:
+	case consts.BrokerageWithdrawTypeAlipay:
 		channelCode = "alipay_pc"
-		transferType = modelPay.PayTransferTypeAlipayBalance
-	case tradeModel.BrokerageWithdrawTypeWechat:
+		transferType = consts.PayTransferTypeAlipayBalance
+	case consts.BrokerageWithdrawTypeWechat:
 		channelCode = withdraw.TransferChannelCode
 		userAccount = withdraw.UserAccount
-		transferType = modelPay.PayTransferTypeWxBalance
+		transferType = consts.PayTransferTypeWxBalance
 		// 特殊：微信需要有报备信息
 		// 对齐 Java: PayTransferCreateReqDTO.buildWeiXinChannelExtra1000()
 		channelExtras = map[string]string{
 			"transfer_scene_id": "1000",
 			"user_name":         userName,
 		}
-	case tradeModel.BrokerageWithdrawTypeWallet:
+	case consts.BrokerageWithdrawTypeWallet:
 		// 钱包转账：需要获取钱包 ID 作为 userAccount
 		channelCode = "wallet"
-		transferType = modelPay.PayTransferTypeWallet
+		transferType = consts.PayTransferTypeWallet
 		// 调用钱包 API 获取钱包 ID
-		walletInfo, err := s.payWalletSvc.GetOrCreateWallet(ctx, withdraw.UserID, model.UserTypeMember)
+		walletInfo, err := s.payWalletSvc.GetOrCreateWallet(ctx, withdraw.UserID, consts.UserTypeMember)
 		if err != nil {
 			s.logger.Error("[createPayTransfer][获取钱包失败]",
 				zap.Int64("userId", withdraw.UserID),
@@ -250,7 +248,7 @@ func (s *BrokerageWithdrawService) CreateBrokerageWithdraw(ctx context.Context, 
 		BankName:    reqVO.BankName,
 		BankAddress: reqVO.BankAddress,
 		QrCodeURL:   reqVO.QrCodeUrl,
-		Status:      tradeModel.BrokerageWithdrawStatusAuditing,
+		Status:      consts.BrokerageWithdrawStatusAuditing,
 	}
 
 	err = s.q.Transaction(func(tx *query.Query) error {
@@ -284,8 +282,8 @@ func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx contex
 	}
 
 	// 1.2 校验提现单已经结束（成功或失败）
-	if withdraw.Status == tradeModel.BrokerageWithdrawStatusWithdrawSuccess ||
-		withdraw.Status == tradeModel.BrokerageWithdrawStatusWithdrawFail {
+	if withdraw.Status == consts.BrokerageWithdrawStatusWithdrawSuccess ||
+		withdraw.Status == consts.BrokerageWithdrawStatusWithdrawFail {
 		// 特殊：转账单编号相同，直接返回，说明重复回调
 		if withdraw.PayTransferID == payTransferId {
 			s.logger.Warn("提现单已结束，且转账单编号相同，直接返回",
@@ -305,7 +303,7 @@ func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx contex
 	}
 
 	// 2.1 校验转账单已成功或关闭
-	if payTransfer.Status != tradeModel.PayTransferStatusSuccess && payTransfer.Status != tradeModel.PayTransferStatusClosed {
+	if payTransfer.Status != consts.PayTransferStatusSuccess && payTransfer.Status != consts.PayTransferStatusClosed {
 		s.logger.Error("转账单未结束", zap.Int64("id", id), zap.Int64("payTransferId", payTransferId))
 		return errors.New("转账单未结束")
 	}
@@ -336,10 +334,10 @@ func (s *BrokerageWithdrawService) UpdateBrokerageWithdrawTransferred(ctx contex
 
 	// 3. 更新提现单状态
 	var newStatus int
-	if payTransfer.Status == tradeModel.PayTransferStatusSuccess {
-		newStatus = tradeModel.BrokerageWithdrawStatusWithdrawSuccess
+	if payTransfer.Status == consts.PayTransferStatusSuccess {
+		newStatus = consts.BrokerageWithdrawStatusWithdrawSuccess
 	} else {
-		newStatus = tradeModel.BrokerageWithdrawStatusWithdrawFail
+		newStatus = consts.BrokerageWithdrawStatusWithdrawFail
 	}
 
 	// 对齐 Java: updateByIdAndStatus

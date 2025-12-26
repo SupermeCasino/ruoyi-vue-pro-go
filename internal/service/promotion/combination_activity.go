@@ -7,7 +7,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -70,7 +70,7 @@ func (s *combinationActivityService) CreateCombinationActivity(ctx context.Conte
 		EndTime:          req.EndTime,
 		UserSize:         req.UserSize,
 		VirtualGroup:     req.VirtualGroup,
-		Status:           model.CommonStatusEnable, // 使用 CommonStatusEnable 常量替代魔法数字 1
+		Status:           consts.CommonStatusEnable, // 使用 CommonStatusEnable 常量替代魔法数字 1
 		LimitDuration:    req.LimitDuration,
 	}
 
@@ -107,7 +107,7 @@ func (s *combinationActivityService) UpdateCombinationActivity(ctx context.Conte
 	if err != nil {
 		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if old.Status == model.CommonStatusDisable { // 使用 CommonStatusDisable 常量替代魔法数字
+	if old.Status == consts.CommonStatusDisable { // 使用 CommonStatusDisable 常量替代魔法数字
 		return errors.NewBizError(1001006010, "拼团活动已关闭，不能修改")
 	}
 
@@ -169,7 +169,7 @@ func (s *combinationActivityService) DeleteCombinationActivity(ctx context.Conte
 	if err != nil {
 		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if activity.Status == model.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
+	if activity.Status == consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
 		return errors.NewBizError(1001006011, "拼团活动进行中，无法删除")
 	}
 	_, err = s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).Delete()
@@ -183,16 +183,16 @@ func (s *combinationActivityService) CloseCombinationActivity(ctx context.Contex
 	if err != nil {
 		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if activity.Status == model.CommonStatusDisable { // 使用 CommonStatusDisable 常量，已禁用
+	if activity.Status == consts.CommonStatusDisable { // 使用 CommonStatusDisable 常量，已禁用
 		return errors.NewBizError(1001006012, "拼团活动已关闭")
 	}
-	_, err = q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, model.CommonStatusDisable) // 使用 CommonStatusDisable 常量
+	_, err = q.WithContext(ctx).Where(q.ID.Eq(id)).Update(q.Status, consts.CommonStatusDisable) // 使用 CommonStatusDisable 常量
 	return err
 }
 
 func (s *combinationActivityService) validateProductConflict(ctx context.Context, spuID int64, activityID int64) error {
 	q := s.q.PromotionCombinationActivity
-	query := q.WithContext(ctx).Where(q.Status.Eq(model.CommonStatusEnable), q.SpuID.Eq(spuID)) // 使用 CommonStatusEnable 常量 & SpuID match
+	query := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable), q.SpuID.Eq(spuID)) // 使用 CommonStatusEnable 常量 & SpuID match
 	if activityID > 0 {
 		query = query.Where(q.ID.Neq(activityID))
 	}
@@ -329,7 +329,7 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 		ActivityID int64
 		Count      int64
 	}
-	_ = qr.WithContext(ctx).Where(qr.ActivityID.In(activityIDs...), qr.HeadID.Eq(0), qr.Status.Eq(model.PromotionCombinationRecordStatusSuccess)). // 使用常量替代魔法数字 1
+	_ = qr.WithContext(ctx).Where(qr.ActivityID.In(activityIDs...), qr.HeadID.Eq(0), qr.Status.Eq(consts.PromotionCombinationRecordStatusSuccess)). // 使用常量替代魔法数字 1
 																			Select(qr.ActivityID, qr.ID.Count().As("count")).Group(qr.ActivityID).Scan(&groupSuccessCounts)
 	groupSuccessCountMap := lo.SliceToMap(groupSuccessCounts, func(item struct {
 		ActivityID int64
@@ -416,7 +416,7 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 		return nil, err
 	}
 	enabledList := lo.Filter(list, func(activity *promotion.PromotionCombinationActivity, _ int) bool {
-		return activity.Status != model.CommonStatusDisable
+		return activity.Status != consts.CommonStatusDisable
 	})
 	if len(enabledList) == 0 {
 		return []*resp.CombinationActivityRespVO{}, nil
@@ -502,8 +502,8 @@ func (s *combinationActivityService) GetCombinationActivityListByIdsForApp(ctx c
 func (s *combinationActivityService) GetCombinationActivityList(ctx context.Context, count int) ([]*resp.AppCombinationActivityRespVO, error) {
 	q := s.q.PromotionCombinationActivity
 	list, err := q.WithContext(ctx).
-		Where(q.Status.Eq(model.CommonStatusEnable)). // 使用 CommonStatusEnable 常量替代魔法数字
-		Order(q.ID.Desc()).                           // Usually Sort desc
+		Where(q.Status.Eq(consts.CommonStatusEnable)). // 使用 CommonStatusEnable 常量替代魔法数字
+		Order(q.ID.Desc()).                            // Usually Sort desc
 		Limit(count).
 		Find()
 	if err != nil {
@@ -516,7 +516,7 @@ func (s *combinationActivityService) GetCombinationActivityList(ctx context.Cont
 func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx context.Context, p pagination.PageParam) (*pagination.PageResult[*resp.AppCombinationActivityRespVO], error) {
 	q := s.q.PromotionCombinationActivity
 	list, total, err := q.WithContext(ctx).
-		Where(q.Status.Eq(model.CommonStatusEnable)). // 使用 CommonStatusEnable 常量替代魔法数字
+		Where(q.Status.Eq(consts.CommonStatusEnable)). // 使用 CommonStatusEnable 常量替代魔法数字
 		Order(q.ID.Desc()).
 		FindByPage(p.GetOffset(), p.GetLimit())
 	if err != nil {
@@ -538,7 +538,7 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 	if err != nil {
 		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if activity.Status != model.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
+	if activity.Status != consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
 		return nil, errors.NewBizError(1001006001, "拼团活动已关闭")
 	}
 
@@ -549,7 +549,7 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 
 	// 成功的拼团数量 (Status = 1 && HeadID = 0)
 	qr := s.q.PromotionCombinationRecord
-	successCount, _ := qr.WithContext(ctx).Where(qr.ActivityID.Eq(id), qr.HeadID.Eq(0), qr.Status.Eq(model.PromotionCombinationRecordStatusSuccess)).Count() // 使用常量替代魔法数字 1
+	successCount, _ := qr.WithContext(ctx).Where(qr.ActivityID.Eq(id), qr.HeadID.Eq(0), qr.Status.Eq(consts.PromotionCombinationRecordStatusSuccess)).Count() // 使用常量替代魔法数字 1
 
 	detailVo := &resp.AppCombinationActivityDetailRespVO{
 		ID:               activity.ID,
@@ -580,7 +580,7 @@ func (s *combinationActivityService) ValidateCombinationActivityCanJoin(ctx cont
 	if err != nil {
 		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if activity.Status != model.CommonStatusEnable {
+	if activity.Status != consts.CommonStatusEnable {
 		return nil, errors.NewBizError(1001006001, "拼团活动已关闭")
 	}
 	now := time.Now()
@@ -598,7 +598,7 @@ func (s *combinationActivityService) GetMatchCombinationActivityBySpuId(ctx cont
 	q := s.q.PromotionCombinationActivity
 	return q.WithContext(ctx).
 		Where(q.SpuID.Eq(spuId)).
-		Where(q.Status.Eq(model.CommonStatusEnable)).
+		Where(q.Status.Eq(consts.CommonStatusEnable)).
 		Where(q.StartTime.Lt(now)).
 		Where(q.EndTime.Gt(now)).
 		First()
@@ -646,7 +646,7 @@ func (s *combinationActivityService) buildAppActivityList(ctx context.Context, l
 	for _, item := range list {
 		// ✅ 核心修复: 过滤无效 SPU (不存在或非上架状态)
 		spu, ok := spuMap[item.SpuID]
-		if !ok || spu.Status != model.ProductSpuStatusEnable {
+		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
 		result = append(result, &resp.AppCombinationActivityRespVO{

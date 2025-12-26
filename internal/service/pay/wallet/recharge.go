@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
@@ -128,7 +129,7 @@ func (s *PayWalletRechargeService) UpdateWalletRechargerPaid(ctx context.Context
 	}
 
 	// 3. 更新钱包余额
-	err = s.walletSvc.AddWalletBalance(ctx, recharge.WalletID, strconv.FormatInt(id, 10), pay.PayWalletBizTypeRecharge, recharge.TotalPrice)
+	err = s.walletSvc.AddWalletBalance(ctx, recharge.WalletID, strconv.FormatInt(id, 10), consts.PayWalletBizTypeRecharge, recharge.TotalPrice)
 	if err != nil {
 		return err
 	}
@@ -180,7 +181,7 @@ func (s *PayWalletRechargeService) RefundWalletRecharge(ctx context.Context, id 
 		Where(s.q.PayWalletRecharge.ID.Eq(id)).
 		Updates(map[string]interface{}{
 			"pay_refund_id": payRefundID,
-			"refund_status": pay.PayRefundStatusWaiting,
+			"refund_status": consts.PayRefundStatusWaiting,
 		})
 	return err
 }
@@ -202,7 +203,7 @@ func (s *PayWalletRechargeService) UpdateWalletRechargeRefunded(ctx context.Cont
 
 	// 2. 处理退款结果
 	updates := map[string]interface{}{}
-	if payRefund.Status == pay.PayRefundStatusSuccess {
+	if payRefund.Status == consts.PayRefundStatusSuccess {
 		// 2.1 退款成功: 真正的扣除余额 (ReduceFrozen)
 		// Manual update for deduacting frozen and total recharge
 		res, err := s.walletSvc.q.PayWallet.WithContext(ctx).
@@ -219,20 +220,20 @@ func (s *PayWalletRechargeService) UpdateWalletRechargeRefunded(ctx context.Cont
 		}
 		// Record Transaction
 		s.trxSvc.CreateWalletTransaction(ctx, &pay.PayWallet{ID: recharge.WalletID, Balance: 0}, // approximate
-			pay.PayWalletBizTypeRechargeRefund, strconv.FormatInt(recharge.ID, 10), "充值退款", -recharge.TotalPrice)
+			consts.PayWalletBizTypeRechargeRefund, strconv.FormatInt(recharge.ID, 10), "充值退款", -recharge.TotalPrice)
 
-		updates["refund_status"] = pay.PayRefundStatusSuccess
+		updates["refund_status"] = consts.PayRefundStatusSuccess
 		updates["refund_time"] = payRefund.SuccessTime
 		updates["refund_total_price"] = recharge.TotalPrice
 		updates["refund_pay_price"] = recharge.PayPrice
 		updates["refund_bonus_price"] = recharge.BonusPrice
-	} else if payRefund.Status == pay.PayRefundStatusFailure {
+	} else if payRefund.Status == consts.PayRefundStatusFailure {
 		// 2.2 退款失败: 解冻
 		err = s.walletSvc.UnfreezePrice(ctx, recharge.WalletID, recharge.TotalPrice)
 		if err != nil {
 			return err
 		}
-		updates["refund_status"] = pay.PayRefundStatusFailure
+		updates["refund_status"] = consts.PayRefundStatusFailure
 	} else {
 		return nil // Still waiting
 	}

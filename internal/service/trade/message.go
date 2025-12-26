@@ -3,7 +3,7 @@ package trade
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 )
 
@@ -45,5 +45,5 @@ func (s *TradeMessageService) SendMessageWhenDeliveryOrder(ctx context.Context, 
 
 	// 2、发送站内信 (对齐 Java: notifyMessageSendApi.sendSingleMessageToMember)
 	// userType = 1 表示会员用户 (model.UserTypeMember)
-	_, _ = s.notifySvc.SendNotify(ctx, req.UserID, model.UserTypeMember, SMSOrderDelivery, msgMap)
+	_, _ = s.notifySvc.SendNotify(ctx, req.UserID, consts.UserTypeMember, SMSOrderDelivery, msgMap)
 }

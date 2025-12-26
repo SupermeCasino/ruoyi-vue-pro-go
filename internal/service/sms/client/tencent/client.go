@@ -8,6 +8,7 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
 )
@@ -44,7 +45,7 @@ func NewSmsClient(channel *model.SystemSmsChannel) (client.SmsClient, error) {
 }
 
 func (c *SmsClient) GetCode() string {
-	return model.SMSChannelCodeTencent
+	return consts.SMSChannelCodeTencent
 }
 
 func (c *SmsClient) SendSms(ctx context.Context, mobile string, apiTemplateId string, templateParams []client.KeyValue) (*client.SmsSendResp, error) {

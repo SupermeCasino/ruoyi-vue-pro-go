@@ -3,8 +3,7 @@ package calculators
 import (
 	"context"
 
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
@@ -177,4 +176,74 @@ func (c *DiscountActivityPriceCalculator) Calculate(ctx context.Context, req *tr
 // IsApplicable 判断是否适用于当前订单类型
 func (c *DiscountActivityPriceCalculator) IsApplicable(orderType int) bool {
 	return orderType == tradeModel.TradeOrderTypeNormal
+}
+
+// CalculateSkuPromotion 计算单个 SKU 的优惠信息（公共方法）
+// 供 CalculateProductPrice 复用，避免代码重复
+// 实现 trade.SkuPromotionCalculator 接口
+func (c *DiscountActivityPriceCalculator) CalculateSkuPromotion(
+	ctx context.Context,
+	userId int64,
+	skuId int64,
+	price int,
+) (*trade.SkuPromotionResult, error) {
+	// 1. 获取限时折扣活动
+	discountMap, err := c.discountActivitySvc.GetMatchDiscountProductMap(ctx, []int64{skuId})
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 获取会员等级
+	var memberLevel *memberModel.MemberLevel
+	if userId > 0 {
+		user, _ := c.memberUserSvc.GetUser(ctx, userId)
+		if user != nil && user.LevelID > 0 {
+			memberLevel, _ = c.memberLevelSvc.GetLevel(ctx, user.LevelID)
+		}
+	}
+
+	// 3. 计算限时折扣优惠金额
+	var discountAmount int
+	var discount = discountMap[skuId]
+	if discount != nil {
+		if discount.DiscountType == tradeModel.DiscountTypePrice { // 满减
+			discountAmount = discount.DiscountPrice
+		} else if discount.DiscountType == tradeModel.DiscountTypePercent { // 打折
+			// discountPercent 是万分比，例如 8000 表示 80.00%
+			// 计算方式：newPrice = price * discountPercent / 10000
+			newPrice := price * discount.DiscountPercent / 10000
+			discountAmount = price - newPrice
+		}
+	}
+
+	// 4. 计算 VIP 优惠金额
+	var vipAmount int
+	if memberLevel != nil && memberLevel.Status == 0 && memberLevel.DiscountPercent > 0 {
+		newPrice := price * memberLevel.DiscountPercent / 100
+		vipAmount = price - newPrice
+	}
+
+	// 5. 选择较大优惠（对齐 Java）
+	if discountAmount > 0 && discountAmount >= vipAmount {
+		// 限时折扣优惠更大
+		result := &trade.SkuPromotionResult{
+			PromotionPrice: price - discountAmount,
+			PromotionType:  tradeModel.PromotionTypeDiscountActivity, // 4
+			PromotionID:    discount.ID,
+		}
+		if !discount.ActivityEndTime.IsZero() {
+			result.PromotionEndTime = discount.ActivityEndTime.UnixMilli()
+		}
+		return result, nil
+	} else if vipAmount > 0 {
+		// VIP 优惠更大
+		return &trade.SkuPromotionResult{
+			PromotionPrice: price - vipAmount,
+			PromotionType:  tradeModel.PromotionTypeMemberLevel, // 7
+			PromotionID:    memberLevel.ID,
+		}, nil
+	}
+
+	// 无优惠
+	return nil, nil
 }

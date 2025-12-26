@@ -3,6 +3,7 @@ package debug
 import (
 	"context"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
 
@@ -26,7 +27,7 @@ func NewSmsClient(channel *model.SystemSmsChannel) (client.SmsClient, error) {
 }
 
 func (c *SmsClient) GetCode() string {
-	return model.SMSChannelCodeDebug
+	return consts.SMSChannelCodeDebug
 }
 
 func (c *SmsClient) SendSms(ctx context.Context, mobile string, apiTemplateId string, templateParams []client.KeyValue) (*client.SmsSendResp, error) {

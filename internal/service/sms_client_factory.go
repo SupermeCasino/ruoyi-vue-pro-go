@@ -3,6 +3,7 @@ package service
 import (
 	"sync"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client/aliyun"
@@ -40,11 +41,11 @@ func (f *SmsClientFactory) CreateOrUpdateClient(channel *model.SystemSmsChannel)
 
 func (f *SmsClientFactory) createClient(channel *model.SystemSmsChannel) (client.SmsClient, error) {
 	switch channel.Code {
-	case model.SMSChannelCodeAliyun:
+	case consts.SMSChannelCodeAliyun:
 		return aliyun.NewSmsClient(channel)
-	case model.SMSChannelCodeTencent:
+	case consts.SMSChannelCodeTencent:
 		return tencent.NewSmsClient(channel)
-	case model.SMSChannelCodeDebug:
+	case consts.SMSChannelCodeDebug:
 		return debug.NewSmsClient(channel)
 	default:
 		// Fallback to debug

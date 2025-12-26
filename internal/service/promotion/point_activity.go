@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -87,7 +87,7 @@ func (s *PointActivityService) UpdatePointActivity(ctx context.Context, r *req.P
 	if err != nil {
 		return err
 	}
-	if activity.Status == model.CommonStatusDisable {
+	if activity.Status == consts.CommonStatusDisable {
 		return errors.NewBizError(1006003001, "积分商城活动已关闭") // POINT_ACTIVITY_UPDATE_FAIL_STATUS_CLOSED
 	}
 
@@ -209,18 +209,18 @@ func (s *PointActivityService) ClosePointActivity(ctx context.Context, id int64)
 	if err != nil {
 		return err
 	}
-	if activity.Status == model.CommonStatusDisable {
+	if activity.Status == consts.CommonStatusDisable {
 		return errors.NewBizError(1006003002, "积分商城活动已关闭") // POINT_ACTIVITY_CLOSE_FAIL_STATUS_CLOSED
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新活动状态
-		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(id)).Update(tx.PromotionPointActivity.Status, model.CommonStatusDisable); err != nil {
+		if _, err := tx.PromotionPointActivity.WithContext(ctx).Where(tx.PromotionPointActivity.ID.Eq(id)).Update(tx.PromotionPointActivity.Status, consts.CommonStatusDisable); err != nil {
 			return err
 		}
 		// 2. 更新商品状态
 		p := tx.PromotionPointProduct
-		_, err := p.WithContext(ctx).Where(p.ActivityID.Eq(id)).Update(p.ActivityStatus, model.CommonStatusDisable)
+		_, err := p.WithContext(ctx).Where(p.ActivityID.Eq(id)).Update(p.ActivityStatus, consts.CommonStatusDisable)
 		return err
 	})
 }
@@ -232,7 +232,7 @@ func (s *PointActivityService) DeletePointActivity(ctx context.Context, id int64
 	if err != nil {
 		return err
 	}
-	if activity.Status == model.CommonStatusEnable {
+	if activity.Status == consts.CommonStatusEnable {
 		return errors.NewBizError(1006003003, "活动未关闭或未结束，不能删除") // POINT_ACTIVITY_DELETE_FAIL_STATUS_NOT_CLOSED_OR_END
 	}
 
@@ -355,7 +355,7 @@ func (s *PointActivityService) validateProductExists(ctx context.Context, spuID 
 // 校验当前 SPU 是否已经参加了其他开启的积分商城活动
 func (s *PointActivityService) validatePointActivityProductConflicts(ctx context.Context, id int64, spuID int64) error {
 	t := s.q.PromotionPointActivity
-	q := t.WithContext(ctx).Where(t.Status.Eq(model.CommonStatusEnable), t.SpuID.Eq(spuID)) // ENABLE and same SpuID
+	q := t.WithContext(ctx).Where(t.Status.Eq(consts.CommonStatusEnable), t.SpuID.Eq(spuID)) // ENABLE and same SpuID
 	if id > 0 {
 		q = q.Where(t.ID.Neq(id)) // Exclude current activity for update operations
 	}
@@ -380,7 +380,7 @@ func (s *PointActivityService) UpdatePointStockDecr(ctx context.Context, id int6
 	if activity == nil {
 		return errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
-	if activity.Status != model.CommonStatusEnable {
+	if activity.Status != consts.CommonStatusEnable {
 		return errors.NewBizError(1006003002, "积分商城活动已关闭")
 	}
 
@@ -465,7 +465,7 @@ func (s *PointActivityService) ValidateJoinPointActivity(ctx context.Context, ac
 	if activity == nil {
 		return nil, errors.NewBizError(1006003000, "积分商城活动不存在")
 	}
-	if activity.Status != model.CommonStatusEnable { // ENABLE
+	if activity.Status != consts.CommonStatusEnable { // ENABLE
 		return nil, errors.NewBizError(1006003002, "积分商城活动已关闭")
 	}
 

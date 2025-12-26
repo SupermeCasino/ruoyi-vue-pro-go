@@ -7,7 +7,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -135,7 +135,6 @@ func (s *BrokerageRecordService) AddBrokerage(ctx context.Context, userID int64,
 		Title:       title,
 		Description: title,
 		Status:      tradeModel.BrokerageRecordStatusSettlement,
-		CreateTime:   time.Now(),
 		TotalPrice:  price,
 	}
 	return s.q.BrokerageRecord.WithContext(ctx).Create(record)
@@ -165,7 +164,6 @@ func (s *BrokerageRecordService) ReduceBrokerageForWithdraw(ctx context.Context,
 		Title:       "佣金提现",
 		Description: "佣金提现",
 		Status:      tradeModel.BrokerageRecordStatusSettlement,
-		CreateTime:   time.Now(),
 		TotalPrice:  price,
 	}
 	return s.q.BrokerageRecord.WithContext(ctx).Create(record)

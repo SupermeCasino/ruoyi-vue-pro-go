@@ -97,7 +97,6 @@ func (s *kefuService) CreateMessage(ctx context.Context, r req.KefuMessageCreate
 		ContentType:    r.ContentType,
 		Content:        r.Content,
 		ReadStatus:     false,
-		CreateTime:     time.Now(),
 	}
 
 	// 设置接收人 (对齐 Java 逻辑)
@@ -521,7 +520,6 @@ func (s *kefuService) getOrCreateConversation(ctx context.Context, userID int64)
 		UserDeleted:             false,
 		AdminDeleted:            false,
 		AdminUnreadMessageCount: 0,
-		CreateTime:              time.Now(),
 	}
 	if err := convoRepo.WithContext(ctx).Create(newConvo); err != nil {
 		return nil, err

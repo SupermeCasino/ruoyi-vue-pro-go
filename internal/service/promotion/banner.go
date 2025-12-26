@@ -5,7 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -101,7 +101,7 @@ func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.Promo
 // GetInfoList 获得 App Banner 列表
 // 对应 Java /app-api/promotion/banner/list
 func (s *PromotionBannerService) GetAppBannerList(ctx context.Context, position int) ([]*resp.PromotionBannerResp, error) {
-	q := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.Status.Eq(model.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
+	q := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.Status.Eq(consts.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
 	if position > 0 {
 		q = q.Where(s.q.PromotionBanner.Position.Eq(position))
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -27,7 +28,7 @@ func NewUserService(q *query.Query, deptSvc *DeptService) *UserService {
 // GetSimpleUserList 获取用户精简列表（只包含启用用户）
 func (s *UserService) GetSimpleUserList(ctx context.Context) ([]resp.UserSimpleRespVO, error) {
 	u := s.q.SystemUser
-	list, err := u.WithContext(ctx).Where(u.Status.Eq(model.CommonStatusEnable)).Find()
+	list, err := u.WithContext(ctx).Where(u.Status.Eq(consts.CommonStatusEnable)).Find()
 	if err != nil {
 		return nil, err
 	}

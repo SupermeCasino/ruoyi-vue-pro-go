@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -137,7 +137,7 @@ func (s *SeckillConfigService) ValidateSeckillConfigExists(ctx context.Context, 
 
 // GetCurrentSeckillConfig 获得当前秒杀时段
 func (s *SeckillConfigService) GetCurrentSeckillConfig(ctx context.Context) (*promotion.PromotionSeckillConfig, error) {
-	list, err := s.GetSeckillConfigListByStatus(ctx, model.CommonStatusEnable)
+	list, err := s.GetSeckillConfigListByStatus(ctx, consts.CommonStatusEnable)
 	if err != nil {
 		return nil, err
 	}

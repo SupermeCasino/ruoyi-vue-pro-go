@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -99,7 +100,7 @@ func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, us
 //   - point: 变动积分（正数增加，负数扣减）
 //   - bizType: 业务类型（使用 member.MemberPointBizType 枚举）
 //   - bizId: 业务编码
-func (s *MemberPointRecordService) CreatePointRecord(ctx context.Context, userId int64, point int, bizType member.MemberPointBizType, bizId string) error {
+func (s *MemberPointRecordService) CreatePointRecord(ctx context.Context, userId int64, point int, bizType consts.MemberPointBizType, bizId string) error {
 	// 积分为0时不处理
 	if point == 0 {
 		return nil

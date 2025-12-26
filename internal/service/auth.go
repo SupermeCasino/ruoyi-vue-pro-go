@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -56,13 +56,13 @@ func NewAuthService(
 
 // SocialAuthRedirect 社交授权跳转
 func (s *AuthService) SocialAuthRedirect(ctx context.Context, socialType int, redirectUri string) (string, error) {
-	return s.socialUserSvc.GetAuthorizeUrl(ctx, socialType, model.UserTypeAdmin, redirectUri)
+	return s.socialUserSvc.GetAuthorizeUrl(ctx, socialType, consts.UserTypeAdmin, redirectUri)
 }
 
 // SocialLogin 社交登录
 func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginReq) (*resp.AuthLoginResp, error) {
 	// 1. 获取社交用户及绑定用户ID
-	_, userId, err := s.socialUserSvc.GetSocialUserByCode(ctx, model.UserTypeAdmin, req.Type, req.Code, req.State)
+	_, userId, err := s.socialUserSvc.GetSocialUserByCode(ctx, consts.UserTypeAdmin, req.Type, req.Code, req.State)
 	if err != nil {
 		return nil, err
 	}
@@ -90,13 +90,13 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 	}
 
 	// 6. 创建访问令牌
-	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, model.UserTypeAdmin, user.TenantID, userInfo)
+	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, consts.UserTypeAdmin, user.TenantID, userInfo)
 	if err != nil {
 		return nil, errors.ErrUnknown
 	}
 
 	// 7. 记录登录日志
-	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeAdmin, user.Username, user.LoginIP, "", model.LoginLogTypeSocial, model.LoginResultSuccess)
+	s.loginLogSvc.CreateLoginLog(ctx, user.ID, consts.UserTypeAdmin, user.Username, user.LoginIP, "", consts.LoginLogTypeSocial, consts.LoginResultSuccess)
 
 	return &resp.AuthLoginResp{
 		UserId:       user.ID,
@@ -237,7 +237,7 @@ func (s *AuthService) Login(ctx context.Context, req *req.AuthLoginReq) (*resp.A
 	}
 
 	// 5. 创建访问令牌（使用 OAuth2TokenService，与 Java 对齐）
-	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, model.UserTypeAdmin, tenantId, userInfo)
+	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, consts.UserTypeAdmin, tenantId, userInfo)
 	if err != nil {
 		return nil, errors.ErrUnknown
 	}
@@ -339,13 +339,13 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 	}
 
 	// 5. 创建访问令牌
-	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, model.UserTypeAdmin, user.TenantID, userInfo)
+	tokenDO, err := s.tokenSvc.CreateAccessToken(ctx, user.ID, consts.UserTypeAdmin, user.TenantID, userInfo)
 	if err != nil {
 		return nil, errors.ErrUnknown
 	}
 
 	// 6. 记录登录日志
-	s.loginLogSvc.CreateLoginLog(ctx, user.ID, model.UserTypeAdmin, user.Username, user.LoginIP, "", model.LoginLogTypeSms, model.LoginResultSuccess)
+	s.loginLogSvc.CreateLoginLog(ctx, user.ID, consts.UserTypeAdmin, user.Username, user.LoginIP, "", consts.LoginLogTypeSms, consts.LoginResultSuccess)
 
 	return &resp.AuthLoginResp{
 		UserId:       user.ID,

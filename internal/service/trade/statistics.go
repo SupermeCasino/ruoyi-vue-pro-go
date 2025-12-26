@@ -6,8 +6,8 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/statistics"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
@@ -230,9 +230,9 @@ func (s *TradeStatisticsService) calculateData(ctx context.Context, start, end t
 	// AfterSale Data
 	// Status = 30 (Refunded), RefundTime in range? Or CreateTime?
 	// Align with Java/Requirement: usually RefundTime for financial stats.
-	afQ := af.WithContext(ctx).Where(af.Status.Eq(trade.TradeOrderStatusCompleted /* 30? No, AfterSale status */), af.RefundTime.Between(start, end))
+	afQ := af.WithContext(ctx).Where(af.Status.Eq(consts.TradeOrderStatusCompleted /* 30? No, AfterSale status */), af.RefundTime.Between(start, end))
 	// Wait, AfterSale status 30? Checking code snippet in Step 244: af.Status.Eq(30).
-	// But consts.go has TradeOrderStatusCompleted = 30.
+	// But pay_consts.go has TradeOrderStatusCompleted = 30.
 	// AfterSale status is logic specific. Java uses AfterSaleStatusEnum.
 	// I added `AfterSaleStatusApply = 10`.
 	// For "Refunded", assumption 30 is correct if consistent.

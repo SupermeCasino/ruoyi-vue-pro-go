@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payrepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -89,7 +90,7 @@ func (s *PayRefundService) CreateRefund(ctx context.Context, reqDTO *req.PayRefu
 		MerchantOrderId:  reqDTO.MerchantOrderId,
 		MerchantRefundId: reqDTO.MerchantRefundId,
 		NotifyURL:        app.RefundNotifyURL,
-		Status:           payModel.PayRefundStatusWaiting,
+		Status:           consts.PayRefundStatusWaiting,
 		PayPrice:         payOrder.Price,
 		RefundPrice:      reqDTO.Price,
 		Reason:           reqDTO.Reason,
@@ -157,7 +158,7 @@ func (s *PayRefundService) validatePayOrderCanRefund(ctx context.Context, appId 
 func (s *PayRefundService) validateNoRefundingOrder(ctx context.Context, appId int64, orderId int64) error {
 	count, err := s.q.PayRefund.WithContext(ctx).
 		Where(s.q.PayRefund.AppID.Eq(appId), s.q.PayRefund.OrderID.Eq(orderId),
-			s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+			s.q.PayRefund.Status.Eq(consts.PayRefundStatusWaiting)).
 		Count()
 	if err != nil {
 		return err
@@ -277,12 +278,12 @@ func (s *PayRefundService) NotifyRefund(ctx context.Context, channelID int64, no
 	// 使用事务包装（对齐 Java @Transactional）
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 情况一：退款成功
-		if notify.Status == payModel.PayRefundStatusSuccess {
+		if notify.Status == consts.PayRefundStatusSuccess {
 			return s.notifyRefundSuccessTx(ctx, tx, channel, notify)
 		}
 
 		// 情况二：退款失败
-		if notify.Status == payModel.PayRefundStatusFailure {
+		if notify.Status == consts.PayRefundStatusFailure {
 			return s.notifyRefundFailureTx(ctx, tx, channel, notify)
 		}
 
@@ -301,21 +302,21 @@ func (s *PayRefundService) notifyRefundSuccessTx(ctx context.Context, tx *query.
 	}
 
 	// 如果已经是成功，直接返回
-	if refund.Status == payModel.PayRefundStatusSuccess {
+	if refund.Status == consts.PayRefundStatusSuccess {
 		return nil
 	}
 
 	// 校验状态，必须是等待状态
-	if refund.Status != payModel.PayRefundStatusWaiting {
+	if refund.Status != consts.PayRefundStatusWaiting {
 		return fmt.Errorf("退款订单状态不是待退款")
 	}
 
 	// 1.2 更新 PayRefund (使用乐观锁)
 	notifyDataJSON, _ := json.Marshal(notify)
 	result, err := tx.PayRefund.WithContext(ctx).
-		Where(tx.PayRefund.ID.Eq(refund.ID), tx.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+		Where(tx.PayRefund.ID.Eq(refund.ID), tx.PayRefund.Status.Eq(consts.PayRefundStatusWaiting)).
 		Updates(map[string]interface{}{
-			"status":              payModel.PayRefundStatusSuccess,
+			"status":              consts.PayRefundStatusSuccess,
 			"success_time":        notify.SuccessTime,
 			"channel_refund_no":   notify.ChannelRefundNo,
 			"channel_notify_data": string(notifyDataJSON),
@@ -347,21 +348,21 @@ func (s *PayRefundService) notifyRefundFailureTx(ctx context.Context, tx *query.
 	}
 
 	// 如果已经是失败，直接返回
-	if refund.Status == payModel.PayRefundStatusFailure {
+	if refund.Status == consts.PayRefundStatusFailure {
 		return nil
 	}
 
 	// 校验状态，必须是等待状态
-	if refund.Status != payModel.PayRefundStatusWaiting {
+	if refund.Status != consts.PayRefundStatusWaiting {
 		return fmt.Errorf("退款订单状态不是待退款")
 	}
 
 	// 1.2 更新 PayRefund (使用乐观锁)
 	notifyDataJSON, _ := json.Marshal(notify)
 	result, err := tx.PayRefund.WithContext(ctx).
-		Where(tx.PayRefund.ID.Eq(refund.ID), tx.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+		Where(tx.PayRefund.ID.Eq(refund.ID), tx.PayRefund.Status.Eq(consts.PayRefundStatusWaiting)).
 		Updates(map[string]interface{}{
-			"status":              payModel.PayRefundStatusFailure,
+			"status":              consts.PayRefundStatusFailure,
 			"channel_refund_no":   notify.ChannelRefundNo,
 			"channel_notify_data": string(notifyDataJSON),
 			"channel_error_code":  notify.ChannelErrorCode,
@@ -382,7 +383,7 @@ func (s *PayRefundService) notifyRefundFailureTx(ctx context.Context, tx *query.
 func (s *PayRefundService) SyncRefund(ctx context.Context) (int, error) {
 	// 1. 查询指定创建时间内的待退款订单
 	refunds, err := s.q.PayRefund.WithContext(ctx).
-		Where(s.q.PayRefund.Status.Eq(payModel.PayRefundStatusWaiting)).
+		Where(s.q.PayRefund.Status.Eq(consts.PayRefundStatusWaiting)).
 		Find()
 	if err != nil {
 		return 0, err
@@ -424,5 +425,5 @@ func (s *PayRefundService) syncRefund(ctx context.Context, refund *payModel.PayR
 	}
 
 	// 2. 如果同步到，则返回 true
-	return respDTO.Status == payModel.PayRefundStatusSuccess || respDTO.Status == payModel.PayRefundStatusFailure, nil
+	return respDTO.Status == consts.PayRefundStatusSuccess || respDTO.Status == consts.PayRefundStatusFailure, nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -102,7 +103,7 @@ func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *
 
 // GetSimpleDeliveryExpressList 获取物流公司精简列表
 func (s *DeliveryExpressService) GetSimpleDeliveryExpressList(ctx context.Context) ([]*trade.TradeDeliveryExpress, error) {
-	return s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.Status.Eq(trade.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryExpress.Sort.Asc()).Find()
+	return s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.Status.Eq(consts.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryExpress.Sort.Asc()).Find()
 }
 
 type DeliveryPickUpStoreService struct {
@@ -204,7 +205,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Cont
 
 // GetSimpleDeliveryPickUpStoreList 获取自提门店精简列表
 func (s *DeliveryPickUpStoreService) GetSimpleDeliveryPickUpStoreList(ctx context.Context) ([]*trade.TradeDeliveryPickUpStore, error) {
-	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(trade.DeliveryStatusEnabled)).Find()
+	return s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.Status.Eq(consts.DeliveryStatusEnabled)).Find()
 }
 
 // BindDeliveryPickUpStore 绑定自提门店核销员工

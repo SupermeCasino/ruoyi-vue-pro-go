@@ -3,8 +3,7 @@ package calculators
 import (
 	"context"
 
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
-
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	"go.uber.org/zap"

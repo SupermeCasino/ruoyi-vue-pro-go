@@ -7,7 +7,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -83,14 +83,14 @@ func (s *RewardActivityService) CloseRewardActivity(ctx context.Context, id int6
 	}
 
 	// 2. 检查状态：已关闭的活动不能再关闭
-	if activity.Status == model.CommonStatusEnable { // 已启用，需要关闭
+	if activity.Status == consts.CommonStatusEnable { // 已启用，需要关闭
 		return errors.NewBizError(1004002003, "活动已关闭，不能重复关闭")
 	}
 
 	// 3. 更新状态为关闭
 	_, err = s.q.PromotionRewardActivity.WithContext(ctx).
 		Where(s.q.PromotionRewardActivity.ID.Eq(id)).
-		Update(s.q.PromotionRewardActivity.Status, model.CommonStatusDisable) // 禁用
+		Update(s.q.PromotionRewardActivity.Status, consts.CommonStatusDisable) // 禁用
 	return err
 }
 
@@ -212,13 +212,13 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 
 			// Check Scope
 			isMatch := false
-			if activity.ProductScope == promotion.ProductScopeAll { // 全部商品
+			if activity.ProductScope == consts.ProductScopeAll { // 全部商品
 				isMatch = true
-			} else if activity.ProductScope == promotion.ProductScopeSpu { // 指定商品
+			} else if activity.ProductScope == consts.ProductScopeSpu { // 指定商品
 				if lo.Contains(scopeValues, item.SpuID) {
 					isMatch = true
 				}
-			} else if activity.ProductScope == promotion.ProductScopeCategory { // 指定品类
+			} else if activity.ProductScope == consts.ProductScopeCategory { // 指定品类
 				if lo.Contains(scopeValues, item.CategoryID) {
 					isMatch = true
 				}
@@ -242,7 +242,7 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 		// Rule Limit: Price or Count.
 		discount := 0
 		for _, rule := range rules {
-			if activity.ConditionType == promotion.ConditionTypePrice { // 满金额
+			if activity.ConditionType == consts.ConditionTypePrice { // 满金额
 				if matchedPrice >= rule.Limit {
 					// Use the biggest valid limit? Usually rules are ascending or descending.
 					// Assume simplified: Find MAX satisfied limit.
@@ -251,7 +251,7 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 						discount = rule.ReducePrice
 					}
 				}
-			} else if activity.ConditionType == promotion.ConditionTypeCount { // 满数量
+			} else if activity.ConditionType == consts.ConditionTypeCount { // 满数量
 				if matchedCount >= rule.Limit {
 					if rule.ReducePrice > discount {
 						discount = rule.ReducePrice
@@ -319,12 +319,12 @@ func (s *RewardActivityService) GetRewardActivityMapBySpuIds(ctx context.Context
 }
 
 func (s *RewardActivityService) isSpuMatchActivity(activity *promotion.PromotionRewardActivity, spuID int64) bool {
-	if activity.ProductScope == promotion.ProductScopeAll {
+	if activity.ProductScope == consts.ProductScopeAll {
 		return true
 	}
 	var scopeValues []int64
 	_ = json.Unmarshal([]byte(activity.ProductScopeValues), &scopeValues)
-	if activity.ProductScope == promotion.ProductScopeSpu {
+	if activity.ProductScope == consts.ProductScopeSpu {
 		return lo.Contains(scopeValues, spuID)
 	}
 	return false

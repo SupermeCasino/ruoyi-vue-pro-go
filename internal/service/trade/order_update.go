@@ -8,9 +8,9 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -447,7 +447,7 @@ func (s *TradeOrderUpdateService) UpdateOrderAddress(ctx context.Context, reqVO 
 
 		// 2. 只有待发货状态，才可以修改订单收货地址
 		// 对应 Java: if (!TradeOrderStatusEnum.isUndelivered(order.getStatus()))
-		if order.Status != tradeModel.TradeOrderStatusUndelivered {
+		if order.Status != consts.TradeOrderStatusUndelivered {
 			return NewTradeErrorWithMsg(ErrorCodeOrderUpdateError, "只有待发货状态才能修改收货地址")
 		}
 
@@ -688,8 +688,8 @@ func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId in
 		Terminal:     terminal,
 		Type:         priceResp.Type,
 		No:           s.generateOrderNo(),
-		Status:       tradeModel.TradeOrderStatusUnpaid,
-		RefundStatus: tradeModel.OrderRefundStatusNone,
+		Status:       consts.TradeOrderStatusUnpaid,
+		RefundStatus: consts.OrderRefundStatusNone,
 		Remark:       createReq.Remark,
 		PayStatus:    false,
 		AdjustPrice:  0,
@@ -720,7 +720,7 @@ func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId in
 	}
 
 	// 设置配送信息
-	if createReq.DeliveryType == tradeModel.DeliveryTypeExpress {
+	if createReq.DeliveryType == consts.DeliveryTypeExpress {
 		// 快递配送
 		if createReq.AddressID != nil && *createReq.AddressID > 0 {
 			address, _ := s.addressSvc.GetAddress(ctx, *createReq.AddressID, userId)
@@ -731,7 +731,7 @@ func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId in
 				order.ReceiverDetailAddress = address.DetailAddress
 			}
 		}
-	} else if createReq.DeliveryType == tradeModel.DeliveryTypePickUp {
+	} else if createReq.DeliveryType == consts.DeliveryTypePickUp {
 		// 到店自提
 		order.ReceiverName = createReq.ReceiverName
 		order.ReceiverMobile = createReq.ReceiverMobile
@@ -1257,7 +1257,7 @@ func (s *TradeOrderUpdateService) createOrderLogWithOrder(ctx context.Context, o
 	log := &tradeModel.TradeOrderLog{
 		OrderID:     order.ID,
 		UserID:      order.UserID,
-		UserType:    model.UserTypeMember, // 1-会员 2-管理员
+		UserType:    consts.UserTypeMember, // 1-会员 2-管理员
 		OperateType: operateType,
 		Content:     content,
 	}
@@ -1308,7 +1308,7 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, userId int64,
 	}
 
 	// 2. 校验订单状态必须是待支付
-	if order.Status != tradeModel.TradeOrderStatusUnpaid {
+	if order.Status != consts.TradeOrderStatusUnpaid {
 		return pkgErrors.NewBizError(1004001002, "订单状态不是待支付，不允许取消")
 	}
 
@@ -1332,9 +1332,9 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, userId int64,
 		_, err := tx.TradeOrder.WithContext(ctx).
 			Where(tx.TradeOrder.ID.Eq(orderId), tx.TradeOrder.Status.Eq(order.Status)).
 			Updates(map[string]interface{}{
-				"status":      tradeModel.TradeOrderStatusCanceled,
+				"status":      consts.TradeOrderStatusCanceled,
 				"cancel_time": now,
-				"cancel_type": tradeModel.OrderCancelTypeMember,
+				"cancel_type": consts.OrderCancelTypeMember,
 			})
 		if err != nil {
 			return err
@@ -1349,9 +1349,9 @@ func (s *TradeOrderUpdateService) CancelOrder(ctx context.Context, userId int64,
 		}
 
 		// 更新订单对象状态用于后置处理
-		order.Status = tradeModel.TradeOrderStatusCanceled
+		order.Status = consts.TradeOrderStatusCanceled
 		order.CancelTime = &now
-		order.CancelType = tradeModel.OrderCancelTypeMember
+		order.CancelType = consts.OrderCancelTypeMember
 
 		// 执行后置处理（库存回滚、优惠券回滚等）
 		if err := s.executeAfterCancelOrder(ctx, order, orderItems); err != nil {
@@ -1400,10 +1400,10 @@ func (s *TradeOrderUpdateService) CancelPaidOrder(ctx context.Context, userID in
 	if !order.PayStatus {
 		return pkgErrors.NewBizError(1004001002, "订单未支付，不能使用此接口取消")
 	}
-	if order.Status == tradeModel.TradeOrderStatusCanceled {
+	if order.Status == consts.TradeOrderStatusCanceled {
 		return nil // 已经取消了
 	}
-	if order.Status == tradeModel.TradeOrderStatusCompleted {
+	if order.Status == consts.TradeOrderStatusCompleted {
 		return pkgErrors.NewBizError(1004001002, "订单已完成，不允许取消")
 	}
 
@@ -1414,7 +1414,7 @@ func (s *TradeOrderUpdateService) CancelPaidOrder(ctx context.Context, userID in
 		_, err := tx.TradeOrder.WithContext(ctx).
 			Where(tx.TradeOrder.ID.Eq(orderID), tx.TradeOrder.Status.Eq(order.Status)).
 			Updates(map[string]interface{}{
-				"status":      tradeModel.TradeOrderStatusCanceled,
+				"status":      consts.TradeOrderStatusCanceled,
 				"cancel_time": now,
 				"cancel_type": cancelType,
 			})
@@ -1431,7 +1431,7 @@ func (s *TradeOrderUpdateService) CancelPaidOrder(ctx context.Context, userID in
 		}
 
 		// 更新内存对象状态
-		order.Status = tradeModel.TradeOrderStatusCanceled
+		order.Status = consts.TradeOrderStatusCanceled
 		order.CancelTime = &now
 		order.CancelType = cancelType
 
@@ -1519,7 +1519,7 @@ func (s *TradeOrderUpdateService) DeleteOrder(ctx context.Context, userId int64,
 
 	// 2. 校验订单状态必须是已取消
 	// 对应 Java: if (ObjectUtil.notEqual(order.getStatus(), TradeOrderStatusEnum.CANCELED.getStatus()))
-	if order.Status != tradeModel.TradeOrderStatusCanceled {
+	if order.Status != consts.TradeOrderStatusCanceled {
 		return pkgErrors.NewBizError(1004001003, "订单状态不是已取消，不允许删除")
 	}
 
@@ -1566,7 +1566,7 @@ func (s *TradeOrderUpdateService) ReceiveOrder(ctx context.Context, userId int64
 
 	// 2. 校验订单状态必须是已发货
 	// 对应 Java: if (!TradeOrderStatusEnum.isDelivered(order.getStatus()))
-	if order.Status != tradeModel.TradeOrderStatusDelivered {
+	if order.Status != consts.TradeOrderStatusDelivered {
 		return pkgErrors.NewBizError(1004001004, "订单状态不是已发货，不允许确认收货")
 	}
 
@@ -1577,7 +1577,7 @@ func (s *TradeOrderUpdateService) ReceiveOrder(ctx context.Context, userId int64
 		_, err := tx.TradeOrder.WithContext(ctx).
 			Where(tx.TradeOrder.ID.Eq(orderId), tx.TradeOrder.Status.Eq(order.Status)).
 			Updates(map[string]interface{}{
-				"status":       tradeModel.TradeOrderStatusCompleted,
+				"status":       consts.TradeOrderStatusCompleted,
 				"receive_time": now,
 				"finish_time":  now,
 			})
@@ -1586,7 +1586,7 @@ func (s *TradeOrderUpdateService) ReceiveOrder(ctx context.Context, userId int64
 		}
 
 		// 3.2 更新订单对象状态用于后置处理
-		order.Status = tradeModel.TradeOrderStatusCompleted
+		order.Status = consts.TradeOrderStatusCompleted
 		order.ReceiveTime = &now
 		order.FinishTime = &now
 
@@ -1640,7 +1640,7 @@ func (s *TradeOrderUpdateService) CreateOrderItemCommentByMember(ctx context.Con
 	}
 
 	// 3. 验证订单状态（必须是已完成）
-	if order.Status != tradeModel.TradeOrderStatusCompleted {
+	if order.Status != consts.TradeOrderStatusCompleted {
 		return 0, pkgErrors.NewBizError(1004002002, "订单未完成，不能评价")
 	}
 
@@ -1693,7 +1693,7 @@ func (s *TradeOrderUpdateService) UpdateOrderItemWhenAfterSaleCreate(ctx context
 		// 2. 更新订单售后状态为【申请退款】
 		if _, err := tx.TradeOrder.WithContext(ctx).
 			Where(tx.TradeOrder.ID.Eq(orderId)).
-			Update(tx.TradeOrder.RefundStatus, tradeModel.OrderRefundStatusApply); err != nil {
+			Update(tx.TradeOrder.RefundStatus, consts.OrderRefundStatusApply); err != nil {
 			return err
 		}
 
@@ -1729,7 +1729,7 @@ func (s *TradeOrderUpdateService) UpdateOrderItemWhenAfterSaleSuccess(ctx contex
 
 		updates := map[string]interface{}{
 			"refund_price":  order.RefundPrice + refundPrice,
-			"refund_status": tradeModel.OrderRefundStatusRefunded,
+			"refund_status": consts.OrderRefundStatusRefunded,
 		}
 
 		// 3. 检查是否所有订单项都售后成功，如果是则取消订单
@@ -1751,8 +1751,8 @@ func (s *TradeOrderUpdateService) UpdateOrderItemWhenAfterSaleSuccess(ctx contex
 		}
 
 		if allSuccess {
-			updates["status"] = tradeModel.TradeOrderStatusCanceled
-			updates["cancel_type"] = tradeModel.OrderCancelTypeAfterSaleClose
+			updates["status"] = consts.TradeOrderStatusCanceled
+			updates["cancel_type"] = consts.OrderCancelTypeAfterSaleClose
 			now := time.Now()
 			updates["cancel_time"] = &now
 		}
@@ -1793,7 +1793,7 @@ func (s *TradeOrderUpdateService) UpdateOrderItemWhenAfterSaleCancel(ctx context
 		if count == 0 {
 			if _, err := tx.TradeOrder.WithContext(ctx).
 				Where(tx.TradeOrder.ID.Eq(orderId)).
-				Update(tx.TradeOrder.RefundStatus, tradeModel.OrderRefundStatusNone); err != nil {
+				Update(tx.TradeOrder.RefundStatus, consts.OrderRefundStatusNone); err != nil {
 				return err
 			}
 		}
@@ -1818,7 +1818,7 @@ func (s *TradeOrderUpdateService) CancelOrderBySystem(ctx context.Context) (int6
 	expireTime := time.Now().Add(-time.Duration(tradeConfig.PayTimeoutMinutes) * time.Minute)
 
 	orders, err := s.q.TradeOrder.WithContext(ctx).
-		Where(s.q.TradeOrder.Status.Eq(tradeModel.TradeOrderStatusUnpaid), s.q.TradeOrder.CreateTime.Lt(expireTime)).
+		Where(s.q.TradeOrder.Status.Eq(consts.TradeOrderStatusUnpaid), s.q.TradeOrder.CreateTime.Lt(expireTime)).
 		Find()
 	if err != nil {
 		return 0, err
@@ -1860,7 +1860,7 @@ func (s *TradeOrderUpdateService) cancelOrderBySystemSingle(ctx context.Context,
 		Operation:    "cancel",
 		OrderID:      order.ID,
 		UserID:       order.UserID,
-		CancelType:   tradeModel.OrderCancelTypeTimeout,
+		CancelType:   consts.OrderCancelTypeTimeout,
 		CancelReason: "支付超时取消",
 		OrderItems:   items, // 放入 Request 以便 Processor 可能使用
 	}
@@ -1872,10 +1872,10 @@ func (s *TradeOrderUpdateService) cancelOrderBySystemSingle(ctx context.Context,
 
 	// 3. 执行后置处理（库存回滚、优惠券回滚等）
 	// 注意：订单对象的状态在 HandleOrder 中已被更新，但为了确保 executeAfterCancelOrder 获取到最新状态
-	order.Status = tradeModel.TradeOrderStatusCanceled
+	order.Status = consts.TradeOrderStatusCanceled
 	now := time.Now()
 	order.CancelTime = &now
-	order.CancelType = tradeModel.OrderCancelTypeTimeout
+	order.CancelType = consts.OrderCancelTypeTimeout
 
 	if err := s.executeAfterCancelOrder(ctx, order, items); err != nil {
 		s.logger.Error("执行取消订单后置处理失败", zap.Error(err))
@@ -1898,7 +1898,7 @@ func (s *TradeOrderUpdateService) ReceiveOrderBySystem(ctx context.Context) (int
 	expireTime := time.Now().Add(-time.Duration(tradeConfig.AutoReceiveDays) * time.Hour * 24) // Day to Day
 
 	orders, err := s.q.TradeOrder.WithContext(ctx).
-		Where(s.q.TradeOrder.Status.Eq(tradeModel.TradeOrderStatusDelivered), s.q.TradeOrder.DeliveryTime.Lt(expireTime)).
+		Where(s.q.TradeOrder.Status.Eq(consts.TradeOrderStatusDelivered), s.q.TradeOrder.DeliveryTime.Lt(expireTime)).
 		Find()
 	if err != nil {
 		return 0, err
@@ -1935,7 +1935,7 @@ func (s *TradeOrderUpdateService) CreateOrderItemCommentBySystem(ctx context.Con
 
 	// 查询 Status=Completed AND CommentStatus=false AND FinishTime < expireTime, Limit ?
 	orders, err := s.q.TradeOrder.WithContext(ctx).
-		Where(s.q.TradeOrder.Status.Eq(tradeModel.TradeOrderStatusCompleted),
+		Where(s.q.TradeOrder.Status.Eq(consts.TradeOrderStatusCompleted),
 			s.q.TradeOrder.CommentStatus.Eq(model.NewBitBool(false)),
 			s.q.TradeOrder.FinishTime.Lt(expireTime)).
 		Find()
@@ -2045,7 +2045,7 @@ func (s *TradeOrderUpdateService) SyncOrderPayStatusQuietly(ctx context.Context,
 	}
 
 	// 3. 如果支付成功，则更新我们系统的订单状态
-	if payOrder != nil && payOrder.Status == payModel.PayOrderStatusSuccess {
+	if payOrder != nil && payOrder.Status == consts.PayOrderStatusSuccess {
 		// 调用 UpdateOrderPaid
 		if err := s.UpdateOrderPaid(ctx, orderId, payOrder.ID); err != nil {
 			s.logger.Error("静默同步支付状态失败：更新订单支付状态失败", zap.Int64("orderId", orderId), zap.Error(err))

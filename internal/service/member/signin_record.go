@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -170,7 +171,7 @@ func (s *MemberSignInRecordService) CreateSignInRecord(ctx context.Context, user
 		// 2. 增加积分
 		if rewardPoint > 0 {
 			// 使用签到业务类型枚举
-			if err := s.pointRecordSvc.CreatePointRecord(ctx, userId, rewardPoint, member.MemberPointBizTypeSign, utils.ToString(record.ID)); err != nil {
+			if err := s.pointRecordSvc.CreatePointRecord(ctx, userId, rewardPoint, consts.MemberPointBizTypeSign, utils.ToString(record.ID)); err != nil {
 				return err
 			}
 		}

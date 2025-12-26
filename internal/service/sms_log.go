@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -33,9 +34,9 @@ func (s *SmsLogService) CreateSmsLogWithStatus(ctx context.Context, mobile strin
 	template *model.SystemSmsTemplate, content string, templateParams map[string]interface{}) (int64, error) {
 
 	// 根据是否需要发送设置不同的状态
-	sendStatus := model.SmsSendStatusInit
+	sendStatus := consts.SmsSendStatusInit
 	if !isSend {
-		sendStatus = model.SmsSendStatusIgnore
+		sendStatus = consts.SmsSendStatusIgnore
 	}
 
 	log := &model.SystemSmsLog{
@@ -52,7 +53,7 @@ func (s *SmsLogService) CreateSmsLogWithStatus(ctx context.Context, mobile strin
 		UserType:        userType,
 		SendStatus:      sendStatus,
 		SendTime:        nil,
-		ReceiveStatus:   model.SmsReceiveStatusInit,
+		ReceiveStatus:   consts.SmsReceiveStatusInit,
 	}
 	err := s.q.SystemSmsLog.WithContext(ctx).Create(log)
 	return log.ID, err

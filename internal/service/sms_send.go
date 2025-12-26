@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/sms/client"
@@ -37,13 +38,13 @@ func NewSmsSendService(
 // SendSingleSmsToAdmin 发送单条短信给 Admin 用户
 func (s *SmsSendService) SendSingleSmsToAdmin(ctx context.Context, mobile string, userId int64, templateCode string, templateParams map[string]any) (int64, error) {
 	// 如果 mobile 为空，查询 Admin 用户手机号 (此处暂略，假设 mobile 必传或调用者已处理)
-	return s.SendSingleSms(ctx, mobile, userId, model.UserTypeAdmin, templateCode, templateParams)
+	return s.SendSingleSms(ctx, mobile, userId, consts.UserTypeAdmin, templateCode, templateParams)
 }
 
 // SendSingleSmsToMember 发送单条短信给 Member 用户
 func (s *SmsSendService) SendSingleSmsToMember(ctx context.Context, mobile string, userId int64, templateCode string, templateParams map[string]any) (int64, error) {
 	// 如果 mobile 为空，查询 Member 用户手机号
-	return s.SendSingleSms(ctx, mobile, userId, model.UserTypeMember, templateCode, templateParams)
+	return s.SendSingleSms(ctx, mobile, userId, consts.UserTypeMember, templateCode, templateParams)
 }
 
 // SendSingleSms 发送单条短信（严格对齐 Java 实现）
@@ -73,7 +74,7 @@ func (s *SmsSendService) SendSingleSms(ctx context.Context, mobile string, userI
 	}
 
 	// 5. 判断是否需要发送（根据模板和渠道的启用状态）
-	isSend := template.Status == model.CommonStatusEnable && channel.Status == model.CommonStatusEnable
+	isSend := template.Status == consts.CommonStatusEnable && channel.Status == consts.CommonStatusEnable
 
 	// 6. 格式化短信内容
 	content := s.templateSvc.FormatSmsTemplateContent(template.Content, templateParams)
@@ -155,7 +156,7 @@ func (s *SmsSendService) buildTemplateParams(template *model.SystemSmsTemplate, 
 func (s *SmsSendService) updateLogSendFail(ctx context.Context, logId int64, err error) {
 	now := time.Now()
 	updates := map[string]any{
-		"send_status":  model.SmsSendStatusFailure,
+		"send_status":  consts.SmsSendStatusFailure,
 		"send_time":    now,
 		"api_send_msg": err.Error(),
 	}
@@ -165,7 +166,7 @@ func (s *SmsSendService) updateLogSendFail(ctx context.Context, logId int64, err
 func (s *SmsSendService) updateLogSendSuccess(ctx context.Context, logId int64, sendResp *client.SmsSendResp) {
 	now := time.Now()
 	updates := map[string]any{
-		"send_status": model.SmsSendStatusSuccess,
+		"send_status": consts.SmsSendStatusSuccess,
 		"send_time":   now,
 	}
 	if sendResp != nil {
