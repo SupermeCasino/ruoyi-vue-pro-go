@@ -1,4 +1,4 @@
-package model
+package consts
 
 // TerminalEnum 终端类型枚举
 // 对应 Java: TerminalEnum

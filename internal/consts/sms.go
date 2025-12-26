@@ -1,6 +1,4 @@
-package model
-
-import "github.com/wxlbd/ruoyi-mall-go/internal/consts"
+package consts
 
 // SmsSendStatus SMS 短信发送状态常量
 // 对应 Java: SmsSendStatusEnum
@@ -43,12 +41,6 @@ var SmsReceiveStatusNames = map[int32]string{
 	SmsReceiveStatusFailure: "失败",
 }
 
-// CommonStatusNames 通用状态名称映射
-var CommonStatusNames = map[int32]string{
-	consts.CommonStatusEnable:  "启用",
-	consts.CommonStatusDisable: "禁用",
-}
-
 // GetSmsSendStatusName 获取短信发送状态名称
 func GetSmsSendStatusName(status int32) string {
 	if name, exists := SmsSendStatusNames[status]; exists {
@@ -60,14 +52,6 @@ func GetSmsSendStatusName(status int32) string {
 // GetSmsReceiveStatusName 获取短信接收状态名称
 func GetSmsReceiveStatusName(status int32) string {
 	if name, exists := SmsReceiveStatusNames[status]; exists {
-		return name
-	}
-	return "未知"
-}
-
-// GetCommonStatusName 获取通用状态名称
-func GetCommonStatusName(status int32) string {
-	if name, exists := CommonStatusNames[status]; exists {
 		return name
 	}
 	return "未知"
