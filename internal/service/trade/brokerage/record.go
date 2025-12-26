@@ -263,7 +263,6 @@ func (s *BrokerageRecordService) GetBrokerageUserRankPageByPrice(ctx context.Con
 	}
 
 	// 分组查询需要使用原生 GORM，因为 Gen 不支持 GROUP BY 聚合
-	// 使用 Gen 生成的字段名确保类型安全
 	db := br.WithContext(ctx).UnderlyingDB()
 	offset := (r.PageNo - 1) * r.PageSize
 

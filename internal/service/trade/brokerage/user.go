@@ -7,6 +7,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -235,7 +236,7 @@ func (s *BrokerageUserService) BindBrokerageUser(ctx context.Context, userId int
 	if isNewBrokerageUser {
 		// 获取分销配置，判断是否人人分销
 		config, _ := s.configSvc.GetTradeConfig(ctx)
-		if config != nil && config.BrokerageEnabledCondition == 1 {
+		if config != nil && config.BrokerageEnabledCondition == consts.BrokerageEnabledConditionAll {
 			// 人人分销：用户默认就有分销资格
 			user.BrokerageEnabled = true
 			user.BrokerageTime = &now
@@ -403,7 +404,7 @@ func (s *BrokerageUserService) GetChildUserIdsByLevel(ctx context.Context, bindU
 		return []int64{}, nil
 	}
 
-	if level == 1 {
+	if level == consts.BrokerageUserLevelOne {
 		return level1Ids, nil
 	}
 
@@ -416,7 +417,7 @@ func (s *BrokerageUserService) GetChildUserIdsByLevel(ctx context.Context, bindU
 		}
 	}
 
-	if level == 2 {
+	if level == consts.BrokerageUserLevelTwo {
 		return level2Ids, nil
 	}
 

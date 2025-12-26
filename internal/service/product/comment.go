@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -139,11 +140,11 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 	// Type filter: 0=全部, 1=好评(4-5), 2=中评(3), 3=差评(1-2), 4=有图
 	switch r.Type {
 	case 1:
-		q = q.Where(u.Scores.Gte(4))
+		q = q.Where(u.Scores.Gte(consts.ProductCommentScoreGood))
 	case 2:
-		q = q.Where(u.Scores.Eq(3))
+		q = q.Where(u.Scores.Eq(consts.ProductCommentScoreNormal))
 	case 3:
-		q = q.Where(u.Scores.Lte(2))
+		q = q.Where(u.Scores.Lte(consts.ProductCommentScoreBad))
 	case 4:
 		q = q.Where(u.PicURLs.IsNotNull())
 	}
@@ -167,7 +168,7 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 			PicURLs:       item.PicURLs,
 			ReplyContent:  item.ReplyContent,
 			SkuProperties: s.convertSkuProperties(item.SkuProperties),
-			CreateTime:     item.CreateTime,
+			CreateTime:    item.CreateTime,
 		}
 	})
 
@@ -293,7 +294,7 @@ func (s *ProductCommentService) convertList(list []*product.ProductComment) []*r
 			ReplyUserID:       item.ReplyUserID,
 			ReplyContent:      item.ReplyContent,
 			ReplyTime:         item.ReplyTime,
-			CreateTime:         item.CreateTime,
+			CreateTime:        item.CreateTime,
 		}
 	})
 }

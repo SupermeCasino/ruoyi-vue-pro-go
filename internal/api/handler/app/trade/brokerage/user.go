@@ -41,6 +41,17 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 		return
 	}
 
+	// 如果用户为 nil（分销功能未启用），返回默认值
+	if user == nil {
+		respVO := &tradeResp.AppBrokerageUserRespVO{
+			BrokerageEnabled: false,
+			BrokeragePrice:   0,
+			FrozenPrice:      0,
+		}
+		response.WriteSuccess(c, respVO)
+		return
+	}
+
 	respVO := &tradeResp.AppBrokerageUserRespVO{
 		BrokerageEnabled: user.BrokerageEnabled,
 		BrokeragePrice:   user.BrokeragePrice,

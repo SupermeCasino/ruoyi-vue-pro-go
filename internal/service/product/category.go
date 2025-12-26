@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -148,7 +149,7 @@ func (s *ProductCategoryService) GetCategoryAndChildrenIds(ctx context.Context, 
 
 	// 获取该分类的所有子分类
 	u := s.q.ProductCategory
-	children, err := u.WithContext(ctx).Where(u.ParentID.Eq(categoryID), u.Status.Eq(0)).Find()
+	children, err := u.WithContext(ctx).Where(u.ParentID.Eq(categoryID), u.Status.Eq(consts.CommonStatusDisable)).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -214,6 +215,6 @@ func (s *ProductCategoryService) convertResp(item *product.ProductCategory) *res
 		Sort:        item.Sort,
 		Status:      item.Status,
 		Description: item.Description,
-		CreateTime:   item.CreateTime,
+		CreateTime:  item.CreateTime,
 	}
 }

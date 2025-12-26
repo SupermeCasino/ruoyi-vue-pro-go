@@ -92,9 +92,9 @@ func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.Pro
 
 	result := lo.Map(list, func(item *product.ProductFavorite, _ int) resp.ProductFavoriteResp {
 		r := resp.ProductFavoriteResp{
-			ID:        item.ID,
-			UserID:    item.UserID,
-			SpuID:     item.SpuID,
+			ID:         item.ID,
+			UserID:     item.UserID,
+			SpuID:      item.SpuID,
 			CreateTime: item.CreateTime,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
@@ -136,7 +136,7 @@ func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId 
 	f := s.q.ProductFavorite
 	q := f.WithContext(ctx).Where(f.UserID.Eq(userId))
 
-	list, total, err := q.FindByPage(r.PageNo, r.PageSize)
+	list, total, err := q.FindByPage((r.PageNo-1)*r.PageSize, r.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +152,8 @@ func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId 
 
 	result := lo.Map(list, func(item *product.ProductFavorite, _ int) resp.AppFavoriteResp {
 		r := resp.AppFavoriteResp{
-			ID:        item.ID,
-			SpuID:     item.SpuID,
+			ID:         item.ID,
+			SpuID:      item.SpuID,
 			CreateTime: item.CreateTime,
 		}
 		if spu, ok := spuMap[item.SpuID]; ok {
