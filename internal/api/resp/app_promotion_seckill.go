@@ -7,7 +7,6 @@ import "time"
 // AppSeckillConfigResp App 端 - 秒杀时段响应 (对齐 Java: AppSeckillConfigRespVO)
 type AppSeckillConfigResp struct {
 	ID            int64    `json:"id"`
-	Name          string   `json:"name"`
 	StartTime     string   `json:"startTime"`
 	EndTime       string   `json:"endTime"`
 	SliderPicUrls []string `json:"sliderPicUrls"`

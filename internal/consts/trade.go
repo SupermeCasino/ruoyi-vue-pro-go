@@ -382,3 +382,21 @@ const (
 	// ExpressClientBird 快递鸟
 	ExpressClientBird = "bird"
 )
+
+// 交易配置默认值常量
+const (
+	// DefaultPayTimeoutMinutes 默认支付超时时间（分钟）
+	DefaultPayTimeoutMinutes = 120
+	// DefaultAfterSaleDeadlineDays 默认售后期限（天）
+	DefaultAfterSaleDeadlineDays = 7
+	// DefaultAutoReceiveDays 默认自动收货天数
+	DefaultAutoReceiveDays = 7
+	// DefaultAutoCommentDays 默认自动评价天数
+	DefaultAutoCommentDays = 7
+)
+
+// 分页默认值常量
+const (
+	// DefaultPageNo 默认页码
+	DefaultPageNo = 1
+)

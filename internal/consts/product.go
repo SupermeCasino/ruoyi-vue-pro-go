@@ -45,3 +45,13 @@ func IsProductScopeSpu(scope int) bool {
 func IsProductScopeCategory(scope int) bool {
 	return scope == ProductScopeCategory
 }
+
+// ProductCommentScore 商品评价评分常量
+const (
+	// ProductCommentScoreBad 差评 (1-2分)
+	ProductCommentScoreBad = 2
+	// ProductCommentScoreNormal 中评 (3分)
+	ProductCommentScoreNormal = 3
+	// ProductCommentScoreGood 好评 (4-5分)
+	ProductCommentScoreGood = 4
+)
