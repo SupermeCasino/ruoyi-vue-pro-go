@@ -1,7 +1,7 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 )
 
 // Product Scope Constants (对齐 Java PromotionProductScopeEnum)
@@ -69,13 +69,13 @@ func IsDiscountTypePercent(discountType int) bool {
 }
 
 // Common Status Constants (使用 model.CommonStatus* 常量)
-// 通用状态常量已在 internal/model/consts.go 中定义：
+// 通用状态常量已在 internal/model/pay_consts.go 中定义：
 // - model.CommonStatusEnable = 0  (启用)
 // - model.CommonStatusDisable = 1 (禁用)
 // 这里提供便捷的验证函数
 
 // CommonStatusValues 通用状态值数组 (使用现有的 model 常量)
-var CommonStatusValues = []int{model.CommonStatusEnable, model.CommonStatusDisable}
+var CommonStatusValues = []int{consts.CommonStatusEnable, consts.CommonStatusDisable}
 
 // IsValidCommonStatus 验证通用状态是否有效
 func IsValidCommonStatus(status int) bool {
@@ -89,12 +89,12 @@ func IsValidCommonStatus(status int) bool {
 
 // IsCommonStatusEnable 判断是否为启用状态 (对齐 Java isEnable 方法)
 func IsCommonStatusEnable(status int) bool {
-	return status == model.CommonStatusEnable
+	return status == consts.CommonStatusEnable
 }
 
 // IsCommonStatusDisable 判断是否为禁用状态 (对齐 Java isDisable 方法)
 func IsCommonStatusDisable(status int) bool {
-	return status == model.CommonStatusDisable
+	return status == consts.CommonStatusDisable
 }
 
 // Condition Type Constants (条件类型常量，对齐 Java PromotionConditionTypeEnum)

@@ -1,6 +1,8 @@
 package promotion
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/model"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
+)
 
 // Activity Status Constants (对齐 Java PromotionActivityStatusEnum)
 const (
@@ -64,16 +66,16 @@ func IsValidPromotionType(promotionType int) bool {
 }
 
 // Combination Record Status Constants (使用 model 中现有的常量)
-// 拼团记录状态常量已在 internal/model/consts.go 中定义：
+// 拼团记录状态常量已在 internal/model/pay_consts.go 中定义：
 // - model.PromotionCombinationRecordStatusInProgress = 0 (进行中)
 // - model.PromotionCombinationRecordStatusSuccess = 1    (拼团成功)
 // - model.PromotionCombinationRecordStatusFailed = 2     (拼团失败)
 
 // CombinationRecordStatusValues 拼团记录状态值数组 (使用现有的 model 常量)
 var CombinationRecordStatusValues = []int{
-	model.PromotionCombinationRecordStatusInProgress,
-	model.PromotionCombinationRecordStatusSuccess,
-	model.PromotionCombinationRecordStatusFailed,
+	consts.PromotionCombinationRecordStatusInProgress,
+	consts.PromotionCombinationRecordStatusSuccess,
+	consts.PromotionCombinationRecordStatusFailed,
 }
 
 // IsValidCombinationRecordStatus 验证拼团记录状态是否有效
@@ -87,16 +89,16 @@ func IsValidCombinationRecordStatus(status int) bool {
 }
 
 // Bargain Record Status Constants (使用 model 中现有的常量)
-// 砍价记录状态常量已在 internal/model/consts.go 中定义：
+// 砍价记录状态常量已在 internal/model/pay_consts.go 中定义：
 // - model.BargainRecordStatusInProgress = 0 (砍价中)
 // - model.BargainRecordStatusSuccess = 1    (砍价成功)
 // - model.BargainRecordStatusFailed = 2     (砍价失败)
 
 // BargainRecordStatusValues 砍价记录状态值数组 (使用现有的 model 常量)
 var BargainRecordStatusValues = []int{
-	model.BargainRecordStatusInProgress,
-	model.BargainRecordStatusSuccess,
-	model.BargainRecordStatusFailed,
+	consts.BargainRecordStatusInProgress,
+	consts.BargainRecordStatusSuccess,
+	consts.BargainRecordStatusFailed,
 }
 
 // IsValidBargainRecordStatus 验证砍价记录状态是否有效

@@ -1,5 +1,7 @@
 package model
 
+import "github.com/wxlbd/ruoyi-mall-go/internal/consts"
+
 // SmsSendStatus SMS 短信发送状态常量
 // 对应 Java: SmsSendStatusEnum
 // 与数据库 system_sms_log 表的 send_status 字段对应
@@ -43,8 +45,8 @@ var SmsReceiveStatusNames = map[int32]string{
 
 // CommonStatusNames 通用状态名称映射
 var CommonStatusNames = map[int32]string{
-	CommonStatusEnable:  "启用",
-	CommonStatusDisable: "禁用",
+	consts.CommonStatusEnable:  "启用",
+	consts.CommonStatusDisable: "禁用",
 }
 
 // GetSmsSendStatusName 获取短信发送状态名称

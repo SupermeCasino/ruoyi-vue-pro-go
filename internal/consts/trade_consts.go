@@ -67,26 +67,27 @@ const (
 )
 
 // ============= 促销类型常量 (Promotion Type Constants) =============
+// 对齐 Java: PromotionTypeEnum
 
 const (
 	// PromotionTypeNone 无促销
 	PromotionTypeNone = 0
-	// PromotionTypeDiscountActivity 限时折扣活动
-	PromotionTypeDiscountActivity = 10
-	// PromotionTypeRewardActivity 满减送活动
-	PromotionTypeRewardActivity = 20
-	// PromotionTypeMemberLevel 会员等级折扣
-	PromotionTypeMemberLevel = 30
-	// PromotionTypeCoupon 优惠券
-	PromotionTypeCoupon = 40
-	// PromotionTypeCombination 拼团活动
-	PromotionTypeCombination = 50
-	// PromotionTypeBargain 砍价活动
-	PromotionTypeBargain = 60
 	// PromotionTypeSeckill 秒杀活动
-	PromotionTypeSeckill = 70
+	PromotionTypeSeckill = 1
+	// PromotionTypeBargain 砍价活动
+	PromotionTypeBargain = 2
+	// PromotionTypeCombination 拼团活动
+	PromotionTypeCombination = 3
+	// PromotionTypeDiscountActivity 限时折扣活动
+	PromotionTypeDiscountActivity = 4
+	// PromotionTypeRewardActivity 满减送活动
+	PromotionTypeRewardActivity = 5
 	// PromotionTypePoint 积分抵扣
-	PromotionTypePoint = 80
+	PromotionTypePoint = 6
+	// PromotionTypeMemberLevel 会员等级折扣
+	PromotionTypeMemberLevel = 7
+	// PromotionTypeCoupon 优惠券
+	PromotionTypeCoupon = 8
 )
 
 // ============= 折扣类型常量 (Discount Type Constants) =============

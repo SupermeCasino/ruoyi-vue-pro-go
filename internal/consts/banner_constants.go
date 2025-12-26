@@ -1,6 +1,8 @@
 package promotion
 
-import "github.com/wxlbd/ruoyi-mall-go/internal/model"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
+)
 
 // Banner Position Constants (对齐 Java BannerPositionEnum)
 const (
@@ -58,7 +60,7 @@ func IsBannerPositionReward(position int) bool {
 // - model.CommonStatusDisable = 1 (禁用)
 
 // BannerStatusValues Banner状态值数组 (使用现有的 model 常量)
-var BannerStatusValues = []int{model.CommonStatusEnable, model.CommonStatusDisable}
+var BannerStatusValues = []int{consts.CommonStatusEnable, consts.CommonStatusDisable}
 
 // IsValidBannerStatus 验证Banner状态是否有效
 func IsValidBannerStatus(status int) bool {
@@ -72,12 +74,12 @@ func IsValidBannerStatus(status int) bool {
 
 // IsBannerStatusEnable 判断是否为启用状态 (对齐 Java isEnable 方法)
 func IsBannerStatusEnable(status int) bool {
-	return status == model.CommonStatusEnable
+	return status == consts.CommonStatusEnable
 }
 
 // IsBannerStatusDisable 判断是否为禁用状态 (对齐 Java isDisable 方法)
 func IsBannerStatusDisable(status int) bool {
-	return status == model.CommonStatusDisable
+	return status == consts.CommonStatusDisable
 }
 
 // Banner Display Priority Constants (Banner显示优先级常量，Go特有扩展)
