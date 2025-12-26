@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 
 	"github.com/smartwalle/alipay/v3"
@@ -146,7 +147,7 @@ func (c *AlipayPayClient) tradePagePay(ctx context.Context, req *client.UnifiedO
 		return nil, err
 	}
 	return &client.OrderResp{
-		Status:         0, // WAITING
+		Status:         consts.PayOrderStatusWaiting,
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    client.DisplayModeUrl,
 		DisplayContent: url.String(),
@@ -168,7 +169,7 @@ func (c *AlipayPayClient) tradeWapPay(ctx context.Context, req *client.UnifiedOr
 		return nil, err
 	}
 	return &client.OrderResp{
-		Status:         0,
+		Status:         consts.PayOrderStatusWaiting,
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    client.DisplayModeUrl,
 		DisplayContent: url.String(),
@@ -189,7 +190,7 @@ func (c *AlipayPayClient) tradeAppPay(ctx context.Context, req *client.UnifiedOr
 		return nil, err
 	}
 	return &client.OrderResp{
-		Status:         0,
+		Status:         consts.PayOrderStatusWaiting,
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    client.DisplayModeApp,
 		DisplayContent: orderStr,
@@ -333,9 +334,9 @@ func (c *AlipayPayClient) GetRefund(ctx context.Context, outTradeNo, outRefundNo
 
 	// 支付宝退款查询返回包含 RefundAmount 即可认为成功?
 	// 实际上支付宝退款是同步的，查询主要是确认
-	status := 10
+	status := consts.PayRefundStatusSuccess
 	if resp.RefundAmount == "" || resp.RefundAmount == "0.00" {
-		status = 20
+		status = consts.PayRefundStatusFailure
 	}
 
 	return &client.RefundResp{
@@ -362,11 +363,11 @@ func (c *AlipayPayClient) ParseOrderNotify(req *client.NotifyData) (*client.Orde
 
 	// 3. 构建返回
 	tradeStatus := values.Get("trade_status")
-	status := 0
+	status := consts.PayOrderStatusWaiting
 	if tradeStatus == "TRADE_SUCCESS" || tradeStatus == "TRADE_FINISHED" {
-		status = 10
+		status = consts.PayOrderStatusSuccess
 	} else if tradeStatus == "TRADE_CLOSED" {
-		status = 20
+		status = consts.PayOrderStatusClosed
 	}
 
 	// parse success time
@@ -496,10 +497,10 @@ func (c *AlipayPayClient) ParseTransferNotify(req *client.NotifyData) (*client.T
 		successTime, _ = time.Parse("2006-01-02 15:04:05", payDate)
 	}
 
-	// SUCCESS: 转账成功 (status = 10)
+	// SUCCESS: 转账成功
 	if status == "SUCCESS" {
 		return &client.TransferResp{
-			Status:            10, // PayTransferStatusSuccess
+			Status:            consts.PayTransferStatusSuccess,
 			OutTradeNo:        outBizNo,
 			ChannelTransferNo: orderId,
 			SuccessTime:       successTime,
@@ -507,20 +508,20 @@ func (c *AlipayPayClient) ParseTransferNotify(req *client.NotifyData) (*client.T
 		}, nil
 	}
 
-	// DEALING: 转账处理中 (status = 5)
+	// DEALING: 转账处理中
 	if status == "DEALING" {
 		return &client.TransferResp{
-			Status:            5, // PayTransferStatusProcessing
+			Status:            consts.PayTransferStatusProcessing,
 			OutTradeNo:        outBizNo,
 			ChannelTransferNo: orderId,
 			RawData:           req.Body,
 		}, nil
 	}
 
-	// REFUND/FAIL: 转账关闭 (status = 20)
+	// REFUND/FAIL: 转账关闭
 	if status == "REFUND" || status == "FAIL" {
 		return &client.TransferResp{
-			Status:            20, // PayTransferStatusClosed
+			Status:            consts.PayTransferStatusClosed,
 			OutTradeNo:        outBizNo,
 			ChannelTransferNo: orderId,
 			ChannelErrorCode:  values.Get("sub_code"),
@@ -529,9 +530,9 @@ func (c *AlipayPayClient) ParseTransferNotify(req *client.NotifyData) (*client.T
 		}, nil
 	}
 
-	// 其他状态: 等待中 (status = 0)
+	// 其他状态: 等待中
 	return &client.TransferResp{
-		Status:            0, // PayTransferStatusWaiting
+		Status:            consts.PayTransferStatusWaiting,
 		OutTradeNo:        outBizNo,
 		ChannelTransferNo: orderId,
 		RawData:           req.Body,

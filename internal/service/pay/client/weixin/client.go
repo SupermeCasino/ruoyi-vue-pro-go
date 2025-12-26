@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 
 	"io"
@@ -145,7 +146,7 @@ func (c *WxPayClient) nativeOrder(ctx context.Context, req *client.UnifiedOrderR
 
 	if err != nil {
 		return &client.OrderResp{
-			Status:           20, // CLOSED
+			Status:           consts.PayOrderStatusClosed, // CLOSED
 			OutTradeNo:       req.OutTradeNo,
 			ChannelErrorCode: "NATIVE_PREPAY_ERROR",
 			ChannelErrorMsg:  err.Error(),
@@ -155,7 +156,7 @@ func (c *WxPayClient) nativeOrder(ctx context.Context, req *client.UnifiedOrderR
 	_ = result
 
 	return &client.OrderResp{
-		Status:         0, // WAITING
+		Status:         consts.PayOrderStatusWaiting, // WAITING
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    "qr_code",
 		DisplayContent: *resp.CodeUrl,
@@ -192,7 +193,7 @@ func (c *WxPayClient) jsapiOrder(ctx context.Context, req *client.UnifiedOrderRe
 
 	if err != nil {
 		return &client.OrderResp{
-			Status:           20, // CLOSED
+			Status:           consts.PayOrderStatusClosed, // CLOSED
 			OutTradeNo:       req.OutTradeNo,
 			ChannelErrorCode: "JSAPI_PREPAY_ERROR",
 			ChannelErrorMsg:  err.Error(),
@@ -202,7 +203,7 @@ func (c *WxPayClient) jsapiOrder(ctx context.Context, req *client.UnifiedOrderRe
 	_ = result
 
 	return &client.OrderResp{
-		Status:         0, // WAITING
+		Status:         consts.PayOrderStatusWaiting, // WAITING
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    "app",
 		DisplayContent: *resp.PrepayId,
@@ -245,7 +246,7 @@ func (c *WxPayClient) h5Order(ctx context.Context, req *client.UnifiedOrderReq) 
 
 	if err != nil {
 		return &client.OrderResp{
-			Status:           20, // CLOSED
+			Status:           consts.PayOrderStatusClosed, // CLOSED
 			OutTradeNo:       req.OutTradeNo,
 			ChannelErrorCode: "H5_PREPAY_ERROR",
 			ChannelErrorMsg:  err.Error(),
@@ -254,7 +255,7 @@ func (c *WxPayClient) h5Order(ctx context.Context, req *client.UnifiedOrderReq) 
 	_ = result
 
 	return &client.OrderResp{
-		Status:         0, // WAITING
+		Status:         consts.PayOrderStatusWaiting, // WAITING
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    "url",
 		DisplayContent: *resp.H5Url,
@@ -279,7 +280,7 @@ func (c *WxPayClient) appOrder(ctx context.Context, req *client.UnifiedOrderReq)
 
 	if err != nil {
 		return &client.OrderResp{
-			Status:           20, // CLOSED
+			Status:           consts.PayOrderStatusClosed, // CLOSED
 			OutTradeNo:       req.OutTradeNo,
 			ChannelErrorCode: "APP_PREPAY_ERROR",
 			ChannelErrorMsg:  err.Error(),
@@ -288,7 +289,7 @@ func (c *WxPayClient) appOrder(ctx context.Context, req *client.UnifiedOrderReq)
 	_ = result
 
 	return &client.OrderResp{
-		Status:         0, // WAITING
+		Status:         consts.PayOrderStatusWaiting, // WAITING
 		OutTradeNo:     req.OutTradeNo,
 		DisplayMode:    "app",
 		DisplayContent: *resp.PrepayId,
@@ -313,7 +314,7 @@ func (c *WxPayClient) UnifiedRefund(ctx context.Context, req *client.UnifiedRefu
 
 	if err != nil {
 		return &client.RefundResp{
-			Status:           20, // FALLBACK/FAILURE (Need better mapping)
+			Status:           consts.PayRefundStatusFailure, // FALLBACK/FAILURE (Need better mapping)
 			OutTradeNo:       req.OutTradeNo,
 			OutRefundNo:      req.OutRefundNo,
 			ChannelErrorCode: "REFUND_ERROR",
@@ -321,11 +322,12 @@ func (c *WxPayClient) UnifiedRefund(ctx context.Context, req *client.UnifiedRefu
 		}, nil
 	}
 
-	status := 0 // WAITING
-	if *resp.Status == refunddomestic.STATUS_SUCCESS {
-		status = 10 // SUCCESS
-	} else if *resp.Status == refunddomestic.STATUS_CLOSED || *resp.Status == refunddomestic.STATUS_ABNORMAL {
-		status = 20 // FAILURE
+	status := consts.PayRefundStatusWaiting
+	switch *resp.Status {
+	case refunddomestic.STATUS_SUCCESS:
+		status = consts.PayRefundStatusSuccess
+	case refunddomestic.STATUS_CLOSED, refunddomestic.STATUS_ABNORMAL:
+		status = consts.PayRefundStatusFailure
 	}
 
 	return &client.RefundResp{
@@ -350,13 +352,14 @@ func (c *WxPayClient) GetOrder(ctx context.Context, outTradeNo string) (*client.
 		return nil, err
 	}
 
-	status := 0 // WAITING
+	status := consts.PayOrderStatusWaiting
 	var successTime time.Time
-	if *resp.TradeState == "SUCCESS" {
-		status = 10 // SUCCESS
+	switch *resp.TradeState {
+	case "SUCCESS":
+		status = consts.PayOrderStatusSuccess
 		successTime, _ = time.Parse(time.RFC3339, *resp.SuccessTime)
-	} else if *resp.TradeState == "CLOSED" || *resp.TradeState == "PAYERROR" {
-		status = 20 // CLOSED
+	case "CLOSED", "PAYERROR":
+		status = consts.PayOrderStatusClosed
 	}
 
 	return &client.OrderResp{
@@ -401,10 +404,11 @@ func (c *WxPayClient) ParseOrderNotify(req *client.NotifyData) (*client.OrderRes
 
 	// 4. 转换结果
 	status := 0
-	if *transaction.TradeState == "SUCCESS" {
-		status = 10
-	} else if *transaction.TradeState == "CLOSED" || *transaction.TradeState == "PAYERROR" {
-		status = 20
+	switch *transaction.TradeState {
+	case "SUCCESS":
+		status = consts.PayOrderStatusSuccess
+	case "CLOSED", "PAYERROR":
+		status = consts.PayOrderStatusClosed
 	}
 
 	var successTime time.Time
@@ -446,10 +450,11 @@ func (c *WxPayClient) ParseRefundNotify(req *client.NotifyData) (*client.RefundR
 
 	// 4. 转换结果
 	status := 0
-	if *refundNotify.Status == refunddomestic.STATUS_SUCCESS {
-		status = 10
-	} else {
-		status = 20
+	switch *refundNotify.Status {
+	case refunddomestic.STATUS_SUCCESS:
+		status = consts.PayRefundStatusSuccess
+	default:
+		status = consts.PayRefundStatusFailure
 	}
 
 	var successTime time.Time
@@ -501,7 +506,7 @@ func (c *WxPayClient) UnifiedTransfer(ctx context.Context, req *client.UnifiedTr
 	}
 
 	return &client.TransferResp{
-		Status:            10, // SUCCESS (or PROCESSING)
+		Status:            consts.PayTransferStatusProcessing, // SUCCESS (or PROCESSING)
 		OutTradeNo:        req.OutTradeNo,
 		ChannelTransferNo: *resp.BatchId,
 	}, nil
@@ -528,18 +533,19 @@ func (c *WxPayClient) GetTransfer(ctx context.Context, outTransferNo string) (*c
 	if resp.TransferBatch != nil {
 		channelTransferNo = *resp.TransferBatch.BatchId
 		batchStatus := *resp.TransferBatch.BatchStatus
-		if batchStatus == "FINISHED" {
-			transferStatus = 10
+		switch batchStatus {
+		case "FINISHED":
+			transferStatus = consts.PayTransferStatusSuccess
 			if resp.TransferBatch.UpdateTime != nil {
 				successTime = *resp.TransferBatch.UpdateTime
 			}
-		} else if batchStatus == "CLOSED" {
-			transferStatus = 20
+		case "CLOSED":
+			transferStatus = consts.PayTransferStatusClosed
 			if resp.TransferBatch.CloseReason != nil {
 				channelErrorMsg = string(*resp.TransferBatch.CloseReason)
 			}
-		} else {
-			transferStatus = 5
+		default:
+			transferStatus = consts.PayTransferStatusProcessing
 		}
 	}
 
@@ -594,14 +600,15 @@ func (c *WxPayClient) ParseTransferNotify(req *client.NotifyData) (*client.Trans
 
 	// 6. 根据状态转换 (对齐 Java 的状态判断逻辑)
 	var transferStatus int
-	// ACCEPTED, PROCESSING, WAIT_USER_CONFIRM, TRANSFERING -> 处理中 (5)
-	if state == "ACCEPTED" || state == "PROCESSING" || state == "WAIT_USER_CONFIRM" || state == "TRANSFERING" {
-		transferStatus = 5 // PayTransferStatusProcessing
-	} else if state == "SUCCESS" {
-		transferStatus = 10 // PayTransferStatusSuccess
-	} else {
-		// 其他状态视为关闭 (20)
-		transferStatus = 20 // PayTransferStatusClosed
+	// ACCEPTED, PROCESSING, WAIT_USER_CONFIRM, TRANSFERING -> 处理中
+	switch state {
+	case "ACCEPTED", "PROCESSING", "WAIT_USER_CONFIRM", "TRANSFERING":
+		transferStatus = consts.PayTransferStatusProcessing
+	case "SUCCESS":
+		transferStatus = consts.PayTransferStatusSuccess
+	default:
+		// 其他状态视为关闭
+		transferStatus = consts.PayTransferStatusClosed
 	}
 
 	return &client.TransferResp{
