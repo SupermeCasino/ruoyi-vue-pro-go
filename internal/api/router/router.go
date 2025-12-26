@@ -66,7 +66,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appTradeOrderHandler *tradeApp.AppTradeOrderHandler,
 	tradeAfterSaleHandler *tradeAdmin.TradeAfterSaleHandler,
 	appTradeAfterSaleHandler *tradeApp.AppTradeAfterSaleHandler,
-// Promotion
+	// Promotion
 	couponHandler *promotionAdmin.CouponHandler,
 	combinationActivityHandler *promotionAdmin.CombinationActivityHandler,
 	discountActivityHandler *promotionAdmin.DiscountActivityHandler,
@@ -74,6 +74,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appCombinationRecordHandler *promotionApp.AppCombinationRecordHandler,
 	appCouponHandler *promotionApp.AppCouponHandler,
 	appCouponTemplateHandler *promotionApp.AppCouponTemplateHandler, // 新增
+	appRewardActivityHandler *promotionApp.AppRewardActivityHandler, // 新增
 	deliveryExpressHandler *tradeAdmin.DeliveryExpressHandler,
 	deliveryPickUpStoreHandler *tradeAdmin.DeliveryPickUpStoreHandler,
 	deliveryExpressTemplateHandler *tradeAdmin.DeliveryExpressTemplateHandler,
@@ -100,7 +101,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	payRefundHandler *payAdmin.PayRefundHandler,
 	payNotifyHandler *payAdmin.PayNotifyHandler,
 	payTransferHandler *payAdmin.PayTransferHandler,
-// Wallet
+	// Wallet
 	payWalletHandler *payWallet.PayWalletHandler,
 	payWalletRechargeHandler *payWallet.PayWalletRechargeHandler,
 	payWalletRechargePackageHandler *payWallet.PayWalletRechargePackageHandler,
@@ -120,32 +121,32 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	appBargainRecordHandler *promotionApp.AppBargainRecordHandler,
 	appBargainHelpHandler *promotionApp.AppBargainHelpHandler,
 	appSeckillActivityHandler *promotionApp.AppSeckillActivityHandler, // 新增
-	appSeckillConfigHandler *promotionApp.AppSeckillConfigHandler,     // 新增
-// Article
+	appSeckillConfigHandler *promotionApp.AppSeckillConfigHandler, // 新增
+	// Article
 	articleCategoryHandler *promotionAdmin.ArticleCategoryHandler,
 	articleHandler *promotionAdmin.ArticleHandler,
 	appArticleHandler *promotionApp.AppArticleHandler,
-// DIY
+	// DIY
 	diyTemplateHandler *promotionAdmin.DiyTemplateHandler,
 	diyPageHandler *promotionAdmin.DiyPageHandler,
 	appDiyPageHandler *promotionApp.AppDiyPageHandler,
 	appDiyTemplateHandler *promotionApp.AppDiyTemplateHandler,
-// Kefu
+	// Kefu
 	kefuHandler *promotionAdmin.KefuHandler,
 	appKefuHandler *promotionApp.AppKefuHandler,
-// Point Activity
+	// Point Activity
 	pointActivityHandler *promotionAdmin.PointActivityHandler,
-// Record Handlers (Added Phase 3)
+	// Record Handlers (Added Phase 3)
 	bargainRecordHandler *promotionAdmin.BargainRecordHandler,
 	combinationRecordHandler *promotionAdmin.CombinationRecordHandler,
 	bargainHelpHandler *promotionAdmin.BargainHelpHandler,
-// Trade Config
+	// Trade Config
 	tradeConfigHandler *tradeAdmin.TradeConfigHandler,
 	appTradeConfigHandler *tradeApp.AppTradeConfigHandler,
 	brokerageUserHandler *tradeBrokerageAdmin.BrokerageUserHandler,
 	brokerageRecordHandler *tradeBrokerageAdmin.BrokerageRecordHandler,
 	brokerageWithdrawHandler *tradeBrokerageAdmin.BrokerageWithdrawHandler,
-// Statistics
+	// Statistics
 	tradeStatisticsHandler *adminHandler.TradeStatisticsHandler,
 	productStatisticsHandler *adminHandler.ProductStatisticsHandler,
 	memberStatisticsHandler *adminHandler.MemberStatisticsHandler,
@@ -267,7 +268,9 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 		// Trade
 		appCartHandler, appTradeOrderHandler, appTradeAfterSaleHandler, appTradeConfigHandler,
 		// Promotion
-		appCouponHandler, appCouponTemplateHandler, appBannerHandler, appArticleHandler, // DIY
+		appCouponHandler, appCouponTemplateHandler, appBannerHandler, appArticleHandler,
+		appRewardActivityHandler, // 新增
+		// DIY
 		appDiyPageHandler,
 		appDiyTemplateHandler,
 		// Kefu

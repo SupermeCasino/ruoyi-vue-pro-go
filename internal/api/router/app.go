@@ -41,6 +41,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appCouponTemplateHandler *promotionApp.AppCouponTemplateHandler, // 新增
 	appBannerHandler *promotionApp.AppBannerHandler,
 	appArticleHandler *promotionApp.AppArticleHandler,
+	appRewardActivityHandler *promotionApp.AppRewardActivityHandler, // 新增
 	// DIY
 	appDiyPageHandler *promotionApp.AppDiyPageHandler,
 	appDiyTemplateHandler *promotionApp.AppDiyTemplateHandler,
@@ -314,6 +315,9 @@ func RegisterAppRoutes(engine *gin.Engine,
 
 			// Banner (Public)
 			engine.GET("/app-api/promotion/banner/list", appBannerHandler.GetBannerList)
+
+			// Reward Activity (Public - 对齐 Java @PermitAll)
+			engine.GET("/app-api/promotion/reward-activity/get", appRewardActivityHandler.GetRewardActivity)
 
 			// Article (Public)
 			articleGroup := promotionGroup.Group("/article")
