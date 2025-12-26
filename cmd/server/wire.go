@@ -90,7 +90,6 @@ func InitApp() (*gin.Engine, error) {
 		service.NewApiErrorLogService,          // Added ApiErrorLogService
 		service.NewSocialClientService,         // Added SocialClientService
 		service.NewSocialUserService,           // Added SocialUserService
-		service.NewSensitiveWordService,        // Added SensitiveWordService
 		service.NewMailService,                 // Added MailService
 		service.NewNotifyService,               // Added NotifyService
 		service.NewOAuth2ClientService,         // Added OAuth2ClientService
@@ -141,7 +140,6 @@ func InitApp() (*gin.Engine, error) {
 		handler.NewApiErrorLogHandler,   // Added ApiErrorLogHandler
 		handler.NewSocialClientHandler,  // Added SocialClientHandler
 		handler.NewSocialUserHandler,    // Added SocialUserHandler
-		handler.NewSensitiveWordHandler, // Added SensitiveWordHandler
 		handler.NewMailHandler,          // Added MailHandler
 		handler.NewNotifyHandler,        // Added NotifyHandler
 		handler.NewOAuth2ClientHandler,  // Added OAuth2ClientHandler
@@ -323,6 +321,20 @@ func InitApp() (*gin.Engine, error) {
 		wire.Bind(new(promotionSvc.CombinationSocialClientService), new(*service.SocialClientService)),
 		tradeSvc.NewDefaultPromotionPriceCalculator,
 		wire.Bind(new(tradeSvc.PromotionPriceCalculator), new(*tradeSvc.DefaultPromotionPriceCalculator)),
+
+		// 接口绑定: TradeOrderUpdateService 依赖
+		wire.Bind(new(tradeSvc.PayOrderServiceAPI), new(*paySvc.PayOrderService)),
+		wire.Bind(new(tradeSvc.PayRefundServiceAPI), new(*paySvc.PayRefundService)),
+		wire.Bind(new(tradeSvc.PayAppServiceAPI), new(*paySvc.PayAppService)),
+		wire.Bind(new(tradeSvc.TradeConfigServiceAPI), new(*tradeSvc.TradeConfigService)),
+		wire.Bind(new(tradeSvc.ProductSkuServiceAPI), new(*product.ProductSkuService)),
+		wire.Bind(new(tradeSvc.ProductCommentServiceAPI), new(*product.ProductCommentService)),
+		wire.Bind(new(tradeSvc.CouponUserServiceAPI), new(*promotionSvc.CouponUserService)),
+		wire.Bind(new(tradeSvc.MemberUserServiceAPI), new(*memberSvc.MemberUserService)),
+		wire.Bind(new(tradeSvc.TradeNoRedisDAOAPI), new(*tradeRepo.TradeNoRedisDAO)),
+
+		// 接口绑定: SkuPromotionCalculator 供 CalculateProductPrice 复用
+		wire.Bind(new(tradeSvc.SkuPromotionCalculator), new(*calculators.DiscountActivityPriceCalculator)),
 
 		payAdmin.NewPayAppHandler,
 		payAdmin.NewPayChannelHandler,

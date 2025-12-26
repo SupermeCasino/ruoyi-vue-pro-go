@@ -46,9 +46,10 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
+)
 
+import (
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
-
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 )
 
@@ -151,7 +152,7 @@ func InitApp() (*gin.Engine, error) {
 	seckillActivityService := promotion.NewSeckillActivityService(query, seckillConfigService, productSpuService, productSkuService)
 	seckillActivityPriceCalculator := calculators.NewSeckillActivityPriceCalculator(seckillActivityService, priceCalculatorHelper, zapLogger)
 	v := ProvidePriceCalculators(bargainActivityPriceCalculator, combinationActivityPriceCalculator, couponPriceCalculator, deliveryPriceCalculator, discountActivityPriceCalculator, pointActivityPriceCalculator, pointGivePriceCalculator, pointUsePriceCalculator, rewardActivityPriceCalculator, seckillActivityPriceCalculator)
-	tradePriceService := trade.NewTradePriceService(v, priceCalculatorHelper, productSkuService, productSpuService, zapLogger)
+	tradePriceService := trade.NewTradePriceService(v, priceCalculatorHelper, productSkuService, productSpuService, rewardActivityService, discountActivityPriceCalculator, discountActivityService, memberUserService, memberLevelService, zapLogger)
 	payClientFactory := client.NewPayClientFactory()
 	payChannelService := pay.NewPayChannelService(query, payClientFactory)
 	payAppService := pay.NewPayAppService(query, payChannelService)
@@ -254,8 +255,6 @@ func InitApp() (*gin.Engine, error) {
 	apiErrorLogHandler := handler.NewApiErrorLogHandler(apiErrorLogService)
 	socialClientHandler := handler.NewSocialClientHandler(socialClientService, zapLogger)
 	socialUserHandler := handler.NewSocialUserHandler(socialUserService, zapLogger)
-	sensitiveWordService := service.NewSensitiveWordService(db)
-	sensitiveWordHandler := handler.NewSensitiveWordHandler(sensitiveWordService)
 	mailService := service.NewMailService(db)
 	mailHandler := handler.NewMailHandler(mailService)
 	notifyService := service.NewNotifyService(query)
@@ -332,7 +331,7 @@ func InitApp() (*gin.Engine, error) {
 		return nil, err
 	}
 	casbinMiddleware := middleware.NewCasbinMiddleware(enforcer, permissionService)
-	engine := router.InitRouter(db, redisClient, pluginRegistered, authHandler, userHandler, tenantHandler, dictHandler, deptHandler, postHandler, roleHandler, menuHandler, permissionHandler, noticeHandler, configHandler, smsChannelHandler, smsTemplateHandler, smsLogHandler, fileConfigHandler, fileHandler, appAuthHandler, appMemberUserHandler, appMemberAddressHandler, productCategoryHandler, productPropertyHandler, productBrandHandler, productSpuHandler, productCommentHandler, productFavoriteHandler, productBrowseHistoryHandler, appCategoryHandler, appProductFavoriteHandler, appProductBrowseHistoryHandler, appProductSpuHandler, appProductCommentHandler, appCartHandler, tradeOrderHandler, appTradeOrderHandler, tradeAfterSaleHandler, appTradeAfterSaleHandler, couponHandler, combinationActivityHandler, discountActivityHandler, appCombinationActivityHandler, appCombinationRecordHandler, appCouponHandler, appCouponTemplateHandler, deliveryExpressHandler, deliveryPickUpStoreHandler, deliveryExpressTemplateHandler, bannerHandler, rewardActivityHandler, seckillConfigHandler, seckillActivityHandler, bargainActivityHandler, appBannerHandler, memberLevelHandler, memberGroupHandler, memberTagHandler, memberConfigHandler, memberPointRecordHandler, appMemberPointRecordHandler, memberSignInConfigHandler, memberSignInRecordHandler, appMemberSignInRecordHandler, appSocialUserHandler, memberUserHandler, payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler, payTransferHandler, payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler, loginLogHandler, operateLogHandler, jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler, socialClientHandler, socialUserHandler, sensitiveWordHandler, mailHandler, notifyHandler, oAuth2ClientHandler, appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler, appSeckillActivityHandler, appSeckillConfigHandler, articleCategoryHandler, articleHandler, appArticleHandler, diyTemplateHandler, diyPageHandler, appDiyPageHandler, appDiyTemplateHandler, kefuHandler, appKefuHandler, pointActivityHandler, bargainRecordHandler, combinationRecordHandler, bargainHelpHandler, tradeConfigHandler, appTradeConfigHandler, brokerageUserHandler, brokerageRecordHandler, brokerageWithdrawHandler, tradeStatisticsHandler, productStatisticsHandler, memberStatisticsHandler, payStatisticsHandler, appBrokerageUserHandler, appBrokerageRecordHandler, appBrokerageWithdrawHandler, appPayOrderHandler, appPayWalletHandler, appPayChannelHandler, appPayTransferHandler, appPayWalletTransactionHandler, appPayWalletRechargePackageHandler, appActivityHandler, appPointActivityHandler, webSocketHandler, casbinMiddleware)
+	engine := router.InitRouter(db, redisClient, pluginRegistered, authHandler, userHandler, tenantHandler, dictHandler, deptHandler, postHandler, roleHandler, menuHandler, permissionHandler, noticeHandler, configHandler, smsChannelHandler, smsTemplateHandler, smsLogHandler, fileConfigHandler, fileHandler, appAuthHandler, appMemberUserHandler, appMemberAddressHandler, productCategoryHandler, productPropertyHandler, productBrandHandler, productSpuHandler, productCommentHandler, productFavoriteHandler, productBrowseHistoryHandler, appCategoryHandler, appProductFavoriteHandler, appProductBrowseHistoryHandler, appProductSpuHandler, appProductCommentHandler, appCartHandler, tradeOrderHandler, appTradeOrderHandler, tradeAfterSaleHandler, appTradeAfterSaleHandler, couponHandler, combinationActivityHandler, discountActivityHandler, appCombinationActivityHandler, appCombinationRecordHandler, appCouponHandler, appCouponTemplateHandler, deliveryExpressHandler, deliveryPickUpStoreHandler, deliveryExpressTemplateHandler, bannerHandler, rewardActivityHandler, seckillConfigHandler, seckillActivityHandler, bargainActivityHandler, appBannerHandler, memberLevelHandler, memberGroupHandler, memberTagHandler, memberConfigHandler, memberPointRecordHandler, appMemberPointRecordHandler, memberSignInConfigHandler, memberSignInRecordHandler, appMemberSignInRecordHandler, appSocialUserHandler, memberUserHandler, payAppHandler, payChannelHandler, payOrderHandler, payRefundHandler, payNotifyHandler, payTransferHandler, payWalletHandler, payWalletRechargeHandler, payWalletRechargePackageHandler, payWalletTransactionHandler, loginLogHandler, operateLogHandler, jobHandler, jobLogHandler, apiAccessLogHandler, apiErrorLogHandler, socialClientHandler, socialUserHandler, mailHandler, notifyHandler, oAuth2ClientHandler, appBargainActivityHandler, appBargainRecordHandler, appBargainHelpHandler, appSeckillActivityHandler, appSeckillConfigHandler, articleCategoryHandler, articleHandler, appArticleHandler, diyTemplateHandler, diyPageHandler, appDiyPageHandler, appDiyTemplateHandler, kefuHandler, appKefuHandler, pointActivityHandler, bargainRecordHandler, combinationRecordHandler, bargainHelpHandler, tradeConfigHandler, appTradeConfigHandler, brokerageUserHandler, brokerageRecordHandler, brokerageWithdrawHandler, tradeStatisticsHandler, productStatisticsHandler, memberStatisticsHandler, payStatisticsHandler, appBrokerageUserHandler, appBrokerageRecordHandler, appBrokerageWithdrawHandler, appPayOrderHandler, appPayWalletHandler, appPayChannelHandler, appPayTransferHandler, appPayWalletTransactionHandler, appPayWalletRechargePackageHandler, appActivityHandler, appPointActivityHandler, webSocketHandler, casbinMiddleware)
 	return engine, nil
 }
 
