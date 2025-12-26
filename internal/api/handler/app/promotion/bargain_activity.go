@@ -2,7 +2,7 @@ package promotion
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
@@ -64,7 +64,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
 	result := make([]resp.AppBargainActivityRespVO, 0, len(list))
 	for _, item := range list {
 		spu, ok := spuMap[item.SpuID]
-		if !ok || spu.Status != model.ProductSpuStatusEnable {
+		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
 		result = append(result, h.convertActivityResp(item, spu))
@@ -109,7 +109,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	result := make([]resp.AppBargainActivityRespVO, 0, len(page.List))
 	for _, item := range page.List {
 		spu, ok := spuMap[item.SpuID]
-		if !ok || spu.Status != model.ProductSpuStatusEnable {
+		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
 		result = append(result, h.convertActivityResp(item, spu))
@@ -134,7 +134,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 
 	// Fetch SPU Info
 	spu, _, err := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
-	if err != nil || spu == nil || spu.Status != model.ProductSpuStatusEnable {
+	if err != nil || spu == nil || spu.Status != consts.ProductSpuStatusEnable {
 		response.WriteBizError(c, errors.NewBizError(1001004003, "砍价活动已结束或商品已下架"))
 		return
 	}
@@ -150,7 +150,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 	}
 
 	// Fetch Success Count (Status = 1 = SUCCESS)
-	successCount, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), id, model.BargainRecordStatusSuccess)
+	successCount, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), id, consts.BargainRecordStatusSuccess)
 
 	// 匹配 Java BargainActivityConvert.convert(activity, successUserCount, spu)
 	detail := resp.AppBargainActivityDetailRespVO{

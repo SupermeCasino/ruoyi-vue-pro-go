@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
@@ -150,7 +150,7 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 		}
 		userID := context.GetLoginUserID(c)
 		user := context.GetLoginUser(c)
-		userType := model.UserTypeUnknown // 默认未知用户类型
+		userType := consts.UserTypeUnknown // 默认未知用户类型
 		if user != nil {
 			userType = user.UserType
 		}

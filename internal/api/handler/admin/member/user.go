@@ -3,6 +3,7 @@ package member
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -79,7 +80,7 @@ func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
 	//           MemberPointBizTypeEnum.ADMIN, String.valueOf(getLoginUserId()));
 	bizId := utils.ToString(context.GetLoginUserID(c))
 
-	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, memberModel.MemberPointBizTypeAdmin, bizId)
+	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, consts.MemberPointBizTypeAdmin, bizId)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

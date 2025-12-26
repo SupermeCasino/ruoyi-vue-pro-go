@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -46,7 +46,7 @@ func (h *AppActivityHandler) GetActivityListBySpuId(c *gin.Context) {
 	if err == nil && combinationActivity != nil {
 		activityVOList = append(activityVOList, resp.AppActivityRespVO{
 			Id:        combinationActivity.ID,
-			Type:      promotion.PromotionTypeCombinationActivity,
+			Type:      consts.PromotionTypeCombinationActivity,
 			Name:      combinationActivity.Name,
 			SpuId:     combinationActivity.SpuID,
 			StartTime: &combinationActivity.StartTime,
@@ -59,7 +59,7 @@ func (h *AppActivityHandler) GetActivityListBySpuId(c *gin.Context) {
 	if err == nil && seckillActivity != nil {
 		activityVOList = append(activityVOList, resp.AppActivityRespVO{
 			Id:        seckillActivity.ID,
-			Type:      promotion.PromotionTypeSeckillActivity,
+			Type:      consts.PromotionTypeSeckillActivity,
 			Name:      seckillActivity.Name,
 			SpuId:     seckillActivity.SpuID,
 			StartTime: &seckillActivity.StartTime,
@@ -72,7 +72,7 @@ func (h *AppActivityHandler) GetActivityListBySpuId(c *gin.Context) {
 	if err == nil && bargainActivity != nil {
 		activityVOList = append(activityVOList, resp.AppActivityRespVO{
 			Id:        bargainActivity.ID,
-			Type:      promotion.PromotionTypeBargainActivity,
+			Type:      consts.PromotionTypeBargainActivity,
 			Name:      bargainActivity.Name,
 			SpuId:     bargainActivity.SpuID,
 			StartTime: &bargainActivity.StartTime,

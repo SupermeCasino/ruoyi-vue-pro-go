@@ -8,7 +8,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"

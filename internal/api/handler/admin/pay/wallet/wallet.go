@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -81,7 +82,7 @@ func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
 
 	// 更新钱包余额
 	// walletID, bizID, bizType, price
-	err = h.svc.AddWalletBalance(c, wallet.ID, strconv.FormatInt(r.UserID, 10), pay.PayWalletBizTypeUpdateBalance, r.Balance)
+	err = h.svc.AddWalletBalance(c, wallet.ID, strconv.FormatInt(r.UserID, 10), consts.PayWalletBizTypeUpdateBalance, r.Balance)
 	if err != nil {
 		c.Error(err)
 		return

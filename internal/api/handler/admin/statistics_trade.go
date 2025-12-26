@@ -3,7 +3,7 @@ package admin
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
@@ -132,14 +132,14 @@ func (h *TradeStatisticsHandler) GetTradeStatisticsList(c *gin.Context) {
 func (h *TradeStatisticsHandler) GetOrderCount(c *gin.Context) {
 	// 订单统计
 	// 待发货：Status=Undelivered (10), DeliveryType=Express (1)
-	undeliveredCount, err := h.tradeOrderStatisticsService.GetCountByStatusAndDeliveryType(c, trade.TradeOrderStatusUndelivered, trade.DeliveryTypeExpress)
+	undeliveredCount, err := h.tradeOrderStatisticsService.GetCountByStatusAndDeliveryType(c, consts.TradeOrderStatusUndelivered, consts.DeliveryTypeExpress)
 	if err != nil {
 		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return
 	}
 
 	// 待自提：Status=Delivered (20), DeliveryType=PickUp (2)
-	pickUpCount, err := h.tradeOrderStatisticsService.GetCountByStatusAndDeliveryType(c, trade.TradeOrderStatusDelivered, trade.DeliveryTypePickUp)
+	pickUpCount, err := h.tradeOrderStatisticsService.GetCountByStatusAndDeliveryType(c, consts.TradeOrderStatusDelivered, consts.DeliveryTypePickUp)
 	if err != nil {
 		response.WriteError(c, errors.ServerErrCode, err.Error())
 		return

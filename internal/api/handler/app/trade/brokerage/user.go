@@ -6,7 +6,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	model "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"

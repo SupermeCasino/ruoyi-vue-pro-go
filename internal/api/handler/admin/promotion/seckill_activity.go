@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -245,7 +246,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 	// 过滤禁用状态 (对齐 Java: CommonStatusEnum.isDisable)
 	var activeList []*promotionModel.PromotionSeckillActivity
 	for _, act := range activityList {
-		if act.Status == model.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字 1
+		if act.Status == consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字 1
 			activeList = append(activeList, act)
 		}
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -125,7 +125,7 @@ func (h *SeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
 
 // GetSeckillConfigSimpleList 精简列表
 func (h *SeckillConfigHandler) GetSeckillConfigSimpleList(c *gin.Context) {
-	res, err := h.svc.GetSeckillConfigListByStatus(c.Request.Context(), model.CommonStatusEnable) // 使用启用状态常量替代魔法数字 1
+	res, err := h.svc.GetSeckillConfigListByStatus(c.Request.Context(), consts.CommonStatusEnable) // 使用启用状态常量替代魔法数字 1
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

@@ -6,7 +6,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
-	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
+	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
@@ -70,7 +70,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 				AuditReason: item.AuditReason,
 				AuditTime:   item.AuditTime,
 				Remark:      item.Remark,
-				CreateTime:   item.CreateTime,
+				CreateTime:  item.CreateTime,
 				// TypeName, StatusName -> Dict lookup (Frontend can handle or backend add logic)
 			}
 		}),
@@ -104,7 +104,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
 		AuditReason: withdraw.AuditReason,
 		AuditTime:   withdraw.AuditTime,
 		Remark:      withdraw.Remark,
-		CreateTime:   withdraw.CreateTime,
+		CreateTime:  withdraw.CreateTime,
 	}
 
 	// Wechat Transfer Info Logic

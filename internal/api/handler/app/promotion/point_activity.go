@@ -6,7 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
@@ -193,12 +193,12 @@ func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context
 	for _, activity := range activityList {
 		// ✅ 核心修复: 过滤无效 SPU (不存在或非上架状态)
 		spu, ok := spuMap[activity.SpuID]
-		if !ok || spu.Status != model.ProductSpuStatusEnable {
+		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
 
 		// ✅ 核心修复: 过滤非开启状态的活动 (CommonStatusEnable = 0)
-		if activity.Status != model.CommonStatusEnable {
+		if activity.Status != consts.CommonStatusEnable {
 			continue
 		}
 

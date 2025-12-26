@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"

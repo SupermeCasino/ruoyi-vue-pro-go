@@ -3,7 +3,7 @@ package promotion
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -174,7 +174,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	// 获取统计数据 (忽略统计错误)
 	// 使用砍价记录状态常量
 	recordUserCountMap, _ := h.recordSvc.GetBargainRecordUserCountMap(c.Request.Context(), activityIds, nil)
-	successStatus := model.BargainRecordStatusSuccess // 使用砍价记录成功状态常量替代魔法数字 1
+	successStatus := consts.BargainRecordStatusSuccess // 使用砍价记录成功状态常量替代魔法数字 1
 	recordSuccessUserCountMap, _ := h.recordSvc.GetBargainRecordUserCountMap(c.Request.Context(), activityIds, &successStatus)
 	helpUserCountMap, _ := h.helpSvc.GetBargainHelpUserCountMapByActivity(c.Request.Context(), activityIds)
 

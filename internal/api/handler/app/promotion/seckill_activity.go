@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
@@ -37,7 +38,7 @@ func NewAppSeckillActivityHandler(
 // 对齐 Java: AppSeckillActivityController.getNowSeckillActivity
 func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 	// 1. 获取当前正在进行的秒杀时段
-	configs, err := h.configSvc.GetSeckillConfigListByStatus(c.Request.Context(), model.CommonStatusEnable)
+	configs, err := h.configSvc.GetSeckillConfigListByStatus(c.Request.Context(), consts.CommonStatusEnable)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -98,7 +99,7 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 	actResp := make([]resp.AppSeckillActivityResp, 0, len(activities))
 	for _, act := range activities {
 		spu, ok := spuMap[act.SpuID]
-		if !ok || spu.Status != model.ProductSpuStatusEnable {
+		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
 
@@ -164,7 +165,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 	list := make([]resp.AppSeckillActivityResp, 0, len(result.List))
 	for _, act := range result.List {
 		spu, ok := spuMap[act.SpuID]
-		if !ok || spu.Status != model.ProductSpuStatusEnable {
+		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
 
@@ -212,14 +213,14 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	}
 
 	// 校验状态
-	if act.Status != model.CommonStatusEnable {
+	if act.Status != consts.CommonStatusEnable {
 		response.WriteSuccess(c, nil)
 		return
 	}
 
 	// Fetch SPU Info
 	spu, _, err := h.spuSvc.GetSpuDetail(c.Request.Context(), act.SpuID)
-	if err != nil || spu == nil || spu.Status != model.ProductSpuStatusEnable {
+	if err != nil || spu == nil || spu.Status != consts.ProductSpuStatusEnable {
 		response.WriteBizError(c, errors.NewBizError(1001004003, "秒杀活动已结束或商品已下架"))
 		return
 	}
@@ -311,7 +312,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) 
 	// 过滤启用状态
 	var enabledActivities []*promotionModel.PromotionSeckillActivity
 	for _, act := range activityList {
-		if act.Status == model.CommonStatusEnable {
+		if act.Status == consts.CommonStatusEnable {
 			enabledActivities = append(enabledActivities, act)
 		}
 	}
