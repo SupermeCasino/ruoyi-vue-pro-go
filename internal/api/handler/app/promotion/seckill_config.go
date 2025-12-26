@@ -2,6 +2,7 @@ package promotion
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -21,7 +22,7 @@ func NewAppSeckillConfigHandler(svc *promotion.SeckillConfigService) *AppSeckill
 // GetSeckillConfigList 获得启用的秒杀时段列表
 // 对齐 Java: AppSeckillConfigController.getSeckillConfigList
 func (h *AppSeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
-	list, err := h.svc.GetSeckillConfigListByStatus(c.Request.Context(), 1) // 1 = Enable
+	list, err := h.svc.GetSeckillConfigListByStatus(c.Request.Context(), consts.CommonStatusEnable)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -32,7 +33,6 @@ func (h *AppSeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
 	for i, cfg := range list {
 		result[i] = resp.AppSeckillConfigResp{
 			ID:            cfg.ID,
-			Name:          cfg.Name,
 			StartTime:     cfg.StartTime,
 			EndTime:       cfg.EndTime,
 			SliderPicUrls: cfg.SliderPicUrls,

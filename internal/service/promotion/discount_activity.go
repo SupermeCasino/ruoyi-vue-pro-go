@@ -51,7 +51,7 @@ func (s *discountActivityService) CreateDiscountActivity(ctx context.Context, re
 
 	activity := &promotion.PromotionDiscountActivity{
 		Name:      req.Name,
-		Status:    1, // Enable
+		Status:    consts.CommonStatusEnable,
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
 		Remark:    req.Remark,
@@ -90,7 +90,7 @@ func (s *discountActivityService) UpdateDiscountActivity(ctx context.Context, re
 	if err != nil {
 		return err
 	}
-	if activity.Status == 0 { // Disable
+	if activity.Status == consts.CommonStatusDisable {
 		return errors.NewBizError(1001007001, "活动已关闭，不能修改")
 	}
 
@@ -257,15 +257,15 @@ func (s *discountActivityService) CloseDiscountActivity(ctx context.Context, id 
 	if err != nil {
 		return err
 	}
-	if activity.Status == 0 {
+	if activity.Status == consts.CommonStatusDisable {
 		return errors.NewBizError(1001007002, "活动已关闭，不能重复关闭")
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
-		if _, err := tx.PromotionDiscountActivity.WithContext(ctx).Where(tx.PromotionDiscountActivity.ID.Eq(id)).Update(tx.PromotionDiscountActivity.Status, 0); err != nil {
+		if _, err := tx.PromotionDiscountActivity.WithContext(ctx).Where(tx.PromotionDiscountActivity.ID.Eq(id)).Update(tx.PromotionDiscountActivity.Status, consts.CommonStatusDisable); err != nil {
 			return err
 		}
-		if _, err := tx.PromotionDiscountProduct.WithContext(ctx).Where(tx.PromotionDiscountProduct.ActivityID.Eq(id)).Update(tx.PromotionDiscountProduct.ActivityStatus, 0); err != nil {
+		if _, err := tx.PromotionDiscountProduct.WithContext(ctx).Where(tx.PromotionDiscountProduct.ActivityID.Eq(id)).Update(tx.PromotionDiscountProduct.ActivityStatus, consts.CommonStatusDisable); err != nil {
 			return err
 		}
 		return nil
@@ -277,7 +277,7 @@ func (s *discountActivityService) DeleteDiscountActivity(ctx context.Context, id
 	if err != nil {
 		return err
 	}
-	if activity.Status == 1 {
+	if activity.Status == consts.CommonStatusEnable {
 		return errors.NewBizError(1001007003, "活动进行中，不能删除")
 	}
 
@@ -442,7 +442,7 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 func (s *discountActivityService) validateProductConflict(ctx context.Context, id int64, products []req.DiscountProductReq) error {
 	// 1. Find all ENABLE activities
 	q := s.q.PromotionDiscountActivity
-	query := q.WithContext(ctx).Where(q.Status.Eq(1))
+	query := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable))
 	if id > 0 {
 		query = query.Where(q.ID.Neq(id))
 	}
@@ -486,11 +486,12 @@ func (s *discountActivityService) GetMatchDiscountProductMap(ctx context.Context
 	}
 	now := time.Now()
 	pq := s.q.PromotionDiscountProduct
+
 	products, err := pq.WithContext(ctx).Where(
 		pq.SkuID.In(skuIDs...),
 		pq.ActivityStatus.Eq(consts.CommonStatusEnable), // ENABLE = 0 (Java: CommonStatusEnum.ENABLE = 0)
-		pq.ActivityStartTime.Lt(now),                    // 对齐 Java: lt(ActivityStartTime, now)
-		pq.ActivityEndTime.Gt(now),                      // 对齐 Java: gt(ActivityEndTime, now)
+		pq.ActivityStartTime.Lte(now),                   // 对齐 Java: lte(ActivityStartTime, now) 活动已开始
+		pq.ActivityEndTime.Gte(now),                     // 对齐 Java: gte(ActivityEndTime, now) 活动未结束
 	).Order(pq.CreateTime.Desc()).Find() // 如果有多个活动，取最新的一个
 	if err != nil {
 		return nil, err
@@ -502,5 +503,6 @@ func (s *discountActivityService) GetMatchDiscountProductMap(ctx context.Context
 			res[p.SkuID] = p
 		}
 	}
+
 	return res, nil
 }

@@ -425,7 +425,7 @@ func (s *SeckillActivityService) GetSeckillActivityPageForApp(ctx context.Contex
 	q := s.q.PromotionSeckillActivity
 	now := time.Now()
 	list, err := q.WithContext(ctx).Where(
-		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
+		q.Status.Eq(consts.CommonStatusEnable),
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Order(q.Sort.Desc()).Find()
@@ -466,7 +466,7 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 	// Find all ENABLED activities for this SPU
 	conds := []gen.Condition{
 		q.SpuID.Eq(spuID),
-		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 (Enable)
+		q.Status.Eq(consts.CommonStatusEnable),
 	}
 	if activityID > 0 {
 		conds = append(conds, q.ID.Neq(activityID))
@@ -480,7 +480,7 @@ func (s *SeckillActivityService) validateProductConflict(ctx context.Context, co
 	for _, act := range list {
 		// Check config overlap
 		if len(lo.Intersect(act.ConfigIds, configIds)) > 0 {
-			return errors.NewBizError(1001002002, "该商品已参加其它秒杀活动")
+			return errors.NewBizError(1001005001, "该商品已参加其它秒杀活动")
 		}
 	}
 	return nil
@@ -494,7 +494,7 @@ func (s *SeckillActivityService) GetSeckillActivityAppPage(ctx context.Context, 
 	// Fetch candidates (Status=Enable, Time Valid)
 	now := time.Now()
 	list, err := q.WithContext(ctx).Where(
-		q.Status.Eq(consts.CommonStatusEnable), // 使用 CommonStatusEnable 常量替代魔法数字 1
+		q.Status.Eq(consts.CommonStatusEnable),
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Order(q.Sort.Desc()).Find() // Fetch all active first

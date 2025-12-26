@@ -50,12 +50,13 @@ func (PromotionSeckillProduct) TableName() string {
 }
 
 // PromotionSeckillConfig 秒杀时段 DO
+// 对齐 Java: SeckillConfigDO
 type PromotionSeckillConfig struct {
 	ID            int64                       `gorm:"primaryKey;autoIncrement;comment:编号" json:"id"`
 	Name          string                      `gorm:"size:255;not null;comment:秒杀时段名称" json:"name"`
 	StartTime     string                      `gorm:"size:10;not null;comment:开始时间点" json:"startTime"`
 	EndTime       string                      `gorm:"size:10;not null;comment:结束时间点" json:"endTime"`
-	SliderPicUrls datatypes.JSONSlice[string] `gorm:"serializer:json;type:varchar(2000);comment:秒杀轮播图" json:"sliderPicUrls"`
+	SliderPicUrls datatypes.JSONSlice[string] `gorm:"column:pic_url;serializer:json;type:varchar(2000);comment:秒杀轮播图" json:"sliderPicUrls"`
 	Status        int                         `gorm:"default:0;not null;comment:状态" json:"status"`
 	model.TenantBaseDO
 }

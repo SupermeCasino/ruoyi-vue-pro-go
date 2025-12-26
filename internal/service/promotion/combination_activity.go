@@ -107,7 +107,7 @@ func (s *combinationActivityService) UpdateCombinationActivity(ctx context.Conte
 	if err != nil {
 		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if old.Status == consts.CommonStatusDisable { // 使用 CommonStatusDisable 常量替代魔法数字
+	if old.Status == consts.CommonStatusDisable { // 使用 CommonStatusDisable 常量替代魔法数字 0
 		return errors.NewBizError(1001006010, "拼团活动已关闭，不能修改")
 	}
 
@@ -169,7 +169,7 @@ func (s *combinationActivityService) DeleteCombinationActivity(ctx context.Conte
 	if err != nil {
 		return errors.NewBizError(1001006000, "拼团活动不存在")
 	}
-	if activity.Status == consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字
+	if activity.Status == consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量替代魔法数字 1
 		return errors.NewBizError(1001006011, "拼团活动进行中，无法删除")
 	}
 	_, err = s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).Delete()
@@ -549,7 +549,8 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 
 	// 成功的拼团数量 (Status = 1 && HeadID = 0)
 	qr := s.q.PromotionCombinationRecord
-	successCount, _ := qr.WithContext(ctx).Where(qr.ActivityID.Eq(id), qr.HeadID.Eq(0), qr.Status.Eq(consts.PromotionCombinationRecordStatusSuccess)).Count() // 使用常量替代魔法数字 1
+	successCount, _ := qr.WithContext(ctx).Where(qr.ActivityID.Eq(id), qr.HeadID.Eq(0), qr.Status.Eq(consts.PromotionCombinationRecordStatusSuccess)). // 使用常量替代魔法数字 1
+																				Count() // 使用常量替代魔法数字 1
 
 	detailVo := &resp.AppCombinationActivityDetailRespVO{
 		ID:               activity.ID,

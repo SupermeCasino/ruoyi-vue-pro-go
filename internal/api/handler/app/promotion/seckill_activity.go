@@ -59,7 +59,6 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 		if now.After(todayStart) && now.Before(todayEnd) {
 			currentConfig = &resp.AppSeckillConfigResp{
 				ID:            cfg.ID,
-				Name:          cfg.Name,
 				StartTime:     cfg.StartTime,
 				EndTime:       cfg.EndTime,
 				SliderPicUrls: cfg.SliderPicUrls,
