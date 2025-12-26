@@ -24,6 +24,7 @@ func RegisterAppRoutes(engine *gin.Engine,
 	appMemberAddressHandler *memberApp.AppMemberAddressHandler,
 	appMemberPointRecordHandler *memberApp.AppMemberPointRecordHandler,
 	appMemberSignInRecordHandler *memberApp.AppMemberSignInRecordHandler,
+	appMemberSignInConfigHandler *memberApp.AppMemberSignInConfigHandler,
 	appSocialUserHandler *memberApp.AppSocialUserHandler,
 	// Product
 	appProductCategoryHandler *productApp.AppCategoryHandler,
@@ -147,6 +148,12 @@ func RegisterAppRoutes(engine *gin.Engine,
 				signInGroup.GET("/get-summary", appMemberSignInRecordHandler.GetSignInRecordSummary)
 				signInGroup.POST("/create", appMemberSignInRecordHandler.CreateSignInRecord)
 				signInGroup.GET("/page", appMemberSignInRecordHandler.GetSignInRecordPage)
+			}
+
+			// Sign-in Config (App - Public, 对齐 Java @PermitAll)
+			signInConfigGroup := memberGroup.Group("/sign-in/config")
+			{
+				signInConfigGroup.GET("/list", appMemberSignInConfigHandler.GetSignInConfigList)
 			}
 
 			// Social User
