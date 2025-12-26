@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -202,7 +203,7 @@ func (s *MemberLevelService) GetLevelListByStatus(ctx context.Context, status in
 
 // GetEnableLevelList 获得开启状态的会员等级列表
 func (s *MemberLevelService) GetEnableLevelList(ctx context.Context) ([]*member.MemberLevel, error) {
-	return s.GetLevelListByStatus(ctx, 0) // 0: ENABLE
+	return s.GetLevelListByStatus(ctx, consts.CommonStatusEnable)
 }
 
 // GetLevelSimpleList 获得开启的等级列表 (对齐旧版代码，供 Handler 使用)

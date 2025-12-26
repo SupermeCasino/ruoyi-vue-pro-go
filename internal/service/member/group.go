@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -76,7 +77,7 @@ func (s *MemberGroupService) GetGroupPage(ctx context.Context, r *req.MemberGrou
 
 // GetEnableGroupList 获得开启的用户分组列表
 func (s *MemberGroupService) GetEnableGroupList(ctx context.Context) ([]*member.MemberGroup, error) {
-	return s.q.WithContext(ctx).MemberGroup.Where(s.q.MemberGroup.Status.Eq(0)).Find() // 0 = Enable
+	return s.q.WithContext(ctx).MemberGroup.Where(s.q.MemberGroup.Status.Eq(consts.CommonStatusEnable)).Find()
 }
 
 // GetGroupListByIds 根据 ID 列表获得分组列表

@@ -120,7 +120,7 @@ func (s *MemberSignInRecordService) CreateSignInRecord(ctx context.Context, user
 	}
 
 	// 2. Get Configs
-	status := 0 // Enabled
+	status := consts.CommonStatusEnable
 	configs, err := s.signInConfigSvc.GetSignInConfigList(ctx, &status)
 	if err != nil {
 		return nil, err
