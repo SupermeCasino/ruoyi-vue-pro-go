@@ -377,16 +377,27 @@ func ProvidePriceCalculators(
 	reward *calculators.RewardActivityPriceCalculator,
 	seckill *calculators.SeckillActivityPriceCalculator,
 ) []tradeSvc.PriceCalculator {
+	// 对齐 Java TradePriceCalculator.ORDER_* 常量定义的顺序
+	// ORDER_SECKILL_ACTIVITY = 8
+	// ORDER_BARGAIN_ACTIVITY = 8
+	// ORDER_COMBINATION_ACTIVITY = 8
+	// ORDER_POINT_ACTIVITY = 8
+	// ORDER_DISCOUNT_ACTIVITY = 10  ← 折扣活动必须在优惠券之前！
+	// ORDER_REWARD_ACTIVITY = 20
+	// ORDER_COUPON = 30
+	// ORDER_POINT_USE = 40
+	// ORDER_DELIVERY = 50
+	// ORDER_POINT_GIVE = 999
 	return []tradeSvc.PriceCalculator{
-		bargain,
-		combination,
-		coupon,
-		delivery,
-		discount,
-		pointActivity,
-		pointGive,
-		pointUse,
-		reward,
-		seckill,
+		seckill,       // 8
+		bargain,       // 8
+		combination,   // 8
+		pointActivity, // 8
+		discount,      // 10 ← 关键：discount必须在coupon之前
+		reward,        // 20
+		coupon,        // 30
+		pointUse,      // 40
+		delivery,      // 50
+		pointGive,     // 999
 	}
 }

@@ -351,16 +351,17 @@ func ProvidePriceCalculators(
 	reward *calculators.RewardActivityPriceCalculator,
 	seckill *calculators.SeckillActivityPriceCalculator,
 ) []trade.PriceCalculator {
+
 	return []trade.PriceCalculator{
+		seckill,
 		bargain,
 		combination,
-		coupon,
-		delivery,
-		discount,
 		pointActivity,
-		pointGive,
-		pointUse,
+		discount,
 		reward,
-		seckill,
+		coupon,
+		pointUse,
+		delivery,
+		pointGive,
 	}
 }
