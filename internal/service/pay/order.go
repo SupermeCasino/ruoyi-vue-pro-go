@@ -9,6 +9,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payrepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -117,7 +118,7 @@ func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *req.PayOrderC
 		NotifyURL:       app.OrderNotifyURL, // 对齐 Java: 使用 app 的回调地址
 		Price:           reqDTO.Price,
 		ExpireTime:      reqDTO.ExpireTime, // 对齐 Java: 使用传入的过期时间
-		Status:          PayOrderStatusWaiting,
+		Status:          consts.PayOrderStatusWaiting,
 		RefundPrice:     0,
 		UserIP:          reqDTO.UserIP,
 	}

@@ -207,10 +207,10 @@ func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuP
 	if req.TabType != nil {
 		switch *req.TabType {
 		case 0:
-			// 出售中 (Status = 0)
+			// 下架 (Status = 0)
 			q = q.Where(u.Status.Eq(consts.ProductSpuStatusDisable))
 		case 1:
-			// 仓库中 (Status = 1)
+			// 上架 (Status = 1)
 			q = q.Where(u.Status.Eq(consts.ProductSpuStatusEnable))
 		case 2:
 			// 已售空 (Stock = 0)

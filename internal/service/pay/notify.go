@@ -39,7 +39,8 @@ func (s *PayNotifyService) CreatePayNotifyTask(ctx context.Context, typeVal int,
 	var task *pay.PayNotifyTask
 
 	// 1. Get Data by Type
-	if typeVal == PayNotifyTypeOrder {
+	switch typeVal {
+	case PayNotifyTypeOrder:
 		order, err := s.q.PayOrder.WithContext(ctx).Where(s.q.PayOrder.ID.Eq(dataId)).First()
 		if err != nil {
 			return err
@@ -51,7 +52,7 @@ func (s *PayNotifyService) CreatePayNotifyTask(ctx context.Context, typeVal int,
 			MerchantOrderId: order.MerchantOrderId,
 			NotifyURL:       order.NotifyURL,
 		}
-	} else if typeVal == PayNotifyTypeRefund {
+	case PayNotifyTypeRefund:
 		refund, err := s.q.PayRefund.WithContext(ctx).Where(s.q.PayRefund.ID.Eq(dataId)).First()
 		if err != nil {
 			return err
@@ -64,7 +65,7 @@ func (s *PayNotifyService) CreatePayNotifyTask(ctx context.Context, typeVal int,
 			MerchantRefundId: refund.MerchantRefundId,
 			NotifyURL:        refund.NotifyURL,
 		}
-	} else if typeVal == PayNotifyTypeTransfer {
+	case PayNotifyTypeTransfer:
 		transfer, err := s.q.PayTransfer.WithContext(ctx).Where(s.q.PayTransfer.ID.Eq(dataId)).First()
 		if err != nil {
 			return err
@@ -76,7 +77,7 @@ func (s *PayNotifyService) CreatePayNotifyTask(ctx context.Context, typeVal int,
 			MerchantOrderId: transfer.MerchantTransferID,
 			NotifyURL:       transfer.NotifyURL,
 		}
-	} else {
+	default:
 		return fmt.Errorf("unknown notify type: %d", typeVal)
 	}
 
