@@ -33,7 +33,6 @@ func RegisterSystemRoutes(engine *gin.Engine,
 	apiErrorLogHandler *handler.ApiErrorLogHandler,
 	socialClientHandler *handler.SocialClientHandler,
 	socialUserHandler *handler.SocialUserHandler,
-	sensitiveWordHandler *handler.SensitiveWordHandler,
 	mailHandler *handler.MailHandler,
 	notifyHandler *handler.NotifyHandler,
 	oauth2ClientHandler *handler.OAuth2ClientHandler,
@@ -243,18 +242,6 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				operateLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:operate-log:query"), operateLogHandler.GetOperateLogPage)
 			}
 
-			// Sensitive Word
-			sensitiveWordGroup := systemGroup.Group("/sensitive-word")
-			{
-				sensitiveWordGroup.POST("/create", sensitiveWordHandler.CreateSensitiveWord)
-				sensitiveWordGroup.PUT("/update", sensitiveWordHandler.UpdateSensitiveWord)
-				sensitiveWordGroup.DELETE("/delete", sensitiveWordHandler.DeleteSensitiveWord)
-				sensitiveWordGroup.GET("/get", sensitiveWordHandler.GetSensitiveWord)
-				sensitiveWordGroup.GET("/page", sensitiveWordHandler.GetSensitiveWordPage)
-				sensitiveWordGroup.GET("/validate-text", sensitiveWordHandler.ValidateSensitiveWord)
-				sensitiveWordGroup.GET("/export-excel", sensitiveWordHandler.ExportSensitiveWord)
-			}
-
 			// Mail Account
 			mailAccountGroup := systemGroup.Group("/mail/account")
 			{
@@ -369,7 +356,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 		{
 			smsLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:sms-log:query"), smsLogHandler.GetSmsLogPage)
 			smsLogGroup.GET("/export-excel", casbinMiddleware.RequirePermission("system:sms-log:export"), smsLogHandler.ExportSmsLogExcel)
-			}
+		}
 
 		// ====== Infra Routes (Public) ======
 		infraPublicGroup := api.Group("/infra")

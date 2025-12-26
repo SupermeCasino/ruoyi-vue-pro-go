@@ -104,3 +104,47 @@ func obtainAuthorization(c *gin.Context) string {
 
 	return ""
 }
+
+// OptionalAuth 可选认证中间件
+// 用于公共接口 (@PermitAll)，尝试解析 Token 但不强制要求登录
+// 如果 Token 存在且有效，设置用户信息到上下文；否则继续处理（userId 为 0）
+// 对齐 Java Spring Security 对 @PermitAll 接口的行为
+func OptionalAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := obtainAuthorization(c)
+		if token == "" {
+			// Token 不存在，允许继续（未登录状态）
+			c.Next()
+			return
+		}
+
+		// 1. 验证 JWT 格式和签名
+		claims, err := utils.ParseToken(token)
+		if err != nil {
+			// Token 无效，允许继续（视为未登录）
+			c.Next()
+			return
+		}
+
+		// 2. 检查 Redis 白名单（如果 Redis 可用）
+		if cache.RDB != nil {
+			redisKey := fmt.Sprintf(RedisKeyAccessToken, token)
+			exists, err := cache.RDB.Exists(c.Request.Context(), redisKey).Result()
+			if err != nil || exists == 0 {
+				// Token 已失效，允许继续（视为未登录）
+				c.Next()
+				return
+			}
+		}
+
+		// 3. Token 有效，设置用户信息
+		loginUser := &context.LoginUser{
+			UserID:   claims.UserID,
+			UserType: claims.UserType,
+			TenantID: claims.TenantID,
+			Nickname: claims.Nickname,
+		}
+		context.SetLoginUser(c, loginUser)
+		c.Next()
+	}
+}

@@ -270,7 +270,9 @@ func RegisterAppRoutes(engine *gin.Engine,
 		}
 
 		// ========== Trade (Public) ==========
+		// 使用 OptionalAuth 中间件，允许公开访问但尝试解析 Token 以获取登录用户
 		tradePublicGroup := appGroup.Group("/trade")
+		tradePublicGroup.Use(middleware.OptionalAuth())
 		{
 			orderPublicGroup := tradePublicGroup.Group("/order")
 			{
@@ -300,7 +302,9 @@ func RegisterAppRoutes(engine *gin.Engine,
 			}
 
 			// Coupon Template (Public - 对齐 Java @PermitAll)
+			// 使用 OptionalAuth 中间件，允许公开访问但尝试解析 Token 以获取登录用户
 			couponTemplateGroup := promotionGroup.Group("/coupon-template")
+			couponTemplateGroup.Use(middleware.OptionalAuth())
 			{
 				couponTemplateGroup.GET("/get", appCouponTemplateHandler.GetCouponTemplate)
 				couponTemplateGroup.GET("/list", appCouponTemplateHandler.GetCouponTemplateList)
