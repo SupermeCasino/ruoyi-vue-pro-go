@@ -3,6 +3,7 @@ package promotion
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -12,6 +13,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
 
 	"github.com/samber/lo"
 )
@@ -31,7 +33,7 @@ func (s *RewardActivityService) CreateRewardActivity(ctx context.Context, r *req
 
 	activity := &promotion.PromotionRewardActivity{
 		Name:               r.Name,
-		Status:             0, // Default Open
+		Status:             consts.CommonStatusEnable, // Default Open
 		StartTime:          r.StartTime,
 		EndTime:            r.EndTime,
 		ProductScope:       r.ProductScope,
@@ -134,8 +136,8 @@ func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *re
 func (s *RewardActivityService) convertResp(item *promotion.PromotionRewardActivity) *resp.PromotionRewardActivityResp {
 	var rules []resp.Rule
 	_ = json.Unmarshal([]byte(item.Rules), &rules)
-	var scopeValues []int64
-	_ = json.Unmarshal([]byte(item.ProductScopeValues), &scopeValues)
+	// 解析 productScopeValues（兼容逗号分隔和 JSON 格式）
+	scopeValues, _ := types.ParseListFromCSV[int64](item.ProductScopeValues)
 
 	return &resp.PromotionRewardActivityResp{
 		ID:                 item.ID,
@@ -173,10 +175,10 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 	// 1. Fetch All Active Activities
 	now := time.Now()
 	activities, err := s.q.PromotionRewardActivity.WithContext(ctx).
-		Where(s.q.PromotionRewardActivity.Status.Eq(0)).      // Open
-		Where(s.q.PromotionRewardActivity.StartTime.Lt(now)). // Started
-		Where(s.q.PromotionRewardActivity.EndTime.Gt(now)).   // Not Ended
-		Order(s.q.PromotionRewardActivity.ID.Desc()).Find()   // High Priority First (ID as fallback)
+		Where(s.q.PromotionRewardActivity.Status.Eq(consts.CommonStatusEnable)). // Open
+		Where(s.q.PromotionRewardActivity.StartTime.Lt(now)).                    // Started
+		Where(s.q.PromotionRewardActivity.EndTime.Gt(now)).                      // Not Ended
+		Order(s.q.PromotionRewardActivity.ID.Desc()).Find()                      // High Priority First (ID as fallback)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -202,8 +204,8 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 		var matchedPrice int
 		var matchedCount int
 
-		var scopeValues []int64
-		_ = json.Unmarshal([]byte(activity.ProductScopeValues), &scopeValues)
+		// 解析 productScopeValues（兼容逗号分隔和 JSON 格式）
+		scopeValues, _ := types.ParseListFromCSV[int64](activity.ProductScopeValues)
 
 		for _, item := range items {
 			if skuTaken[item.SkuID] {
@@ -212,13 +214,14 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 
 			// Check Scope
 			isMatch := false
-			if activity.ProductScope == consts.ProductScopeAll { // 全部商品
+			switch activity.ProductScope {
+			case consts.ProductScopeAll: // 全部商品
 				isMatch = true
-			} else if activity.ProductScope == consts.ProductScopeSpu { // 指定商品
+			case consts.ProductScopeSpu: // 指定商品
 				if lo.Contains(scopeValues, item.SpuID) {
 					isMatch = true
 				}
-			} else if activity.ProductScope == consts.ProductScopeCategory { // 指定品类
+			case consts.ProductScopeCategory: // 指定品类
 				if lo.Contains(scopeValues, item.CategoryID) {
 					isMatch = true
 				}
@@ -242,19 +245,20 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 		// Rule Limit: Price or Count.
 		discount := 0
 		for _, rule := range rules {
-			if activity.ConditionType == consts.ConditionTypePrice { // 满金额
+			switch activity.ConditionType {
+			case consts.ConditionTypePrice: // 满金额
 				if matchedPrice >= rule.Limit {
 					// Use the biggest valid limit? Usually rules are ascending or descending.
 					// Assume simplified: Find MAX satisfied limit.
 					// If rules are not sorted, need to find max.
-					if rule.ReducePrice > discount { // Simple assumption: bigger reduction is better
-						discount = rule.ReducePrice
+					if rule.DiscountPrice > discount { // Simple assumption: bigger reduction is better
+						discount = rule.DiscountPrice
 					}
 				}
-			} else if activity.ConditionType == consts.ConditionTypeCount { // 满数量
+			case consts.ConditionTypeCount: // 满数量
 				if matchedCount >= rule.Limit {
-					if rule.ReducePrice > discount {
-						discount = rule.ReducePrice
+					if rule.DiscountPrice > discount {
+						discount = rule.DiscountPrice
 					}
 				}
 			}
@@ -296,7 +300,7 @@ func (s *RewardActivityService) GetRewardActivityMapBySpuIds(ctx context.Context
 	now := time.Now()
 	q := s.q.PromotionRewardActivity
 	activities, err := q.WithContext(ctx).Where(
-		q.Status.Eq(0), // ENABLE
+		q.Status.Eq(consts.CommonStatusEnable), // ENABLE
 		q.StartTime.Lte(now),
 		q.EndTime.Gte(now),
 	).Find()
@@ -322,10 +326,126 @@ func (s *RewardActivityService) isSpuMatchActivity(activity *promotion.Promotion
 	if activity.ProductScope == consts.ProductScopeAll {
 		return true
 	}
-	var scopeValues []int64
-	_ = json.Unmarshal([]byte(activity.ProductScopeValues), &scopeValues)
+	// 解析 productScopeValues（兼容逗号分隔和 JSON 格式）
+	scopeValues, _ := types.ParseListFromCSV[int64](activity.ProductScopeValues)
 	if activity.ProductScope == consts.ProductScopeSpu {
 		return lo.Contains(scopeValues, spuID)
 	}
 	return false
+}
+
+// GetRewardActivityForApp 获得满减送活动（App 端）
+// Java: AppRewardActivityController#getRewardActivity
+func (s *RewardActivityService) GetRewardActivityForApp(ctx context.Context, id int64) (*resp.AppRewardActivityResp, error) {
+	activity, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(id)).First()
+	if err != nil {
+		return nil, nil // 活动不存在返回 null
+	}
+
+	// 解析规则
+	var rules []resp.Rule
+	_ = json.Unmarshal([]byte(activity.Rules), &rules)
+
+	// 解析 productScopeValues（兼容逗号分隔和 JSON 格式）
+	scopeValues, _ := types.ParseListFromCSV[int64](activity.ProductScopeValues)
+
+	// 构建响应，包含规则描述
+	appRules := make([]resp.AppRewardActivityRule, 0, len(rules))
+	for _, rule := range rules {
+		appRule := resp.AppRewardActivityRule{
+			Limit:                    rule.Limit,
+			DiscountPrice:            rule.DiscountPrice,
+			FreeDelivery:             rule.FreeDelivery,
+			Point:                    rule.Point,
+			GiveCouponTemplateCounts: rule.GiveCouponTemplateCounts,
+			Description:              s.GetRewardActivityRuleDescription(activity.ConditionType, &rule),
+		}
+		appRules = append(appRules, appRule)
+	}
+
+	return &resp.AppRewardActivityResp{
+		ID:                 activity.ID,
+		Status:             activity.Status,
+		Name:               activity.Name,
+		StartTime:          activity.StartTime.UnixMilli(), // 转换为毫秒时间戳
+		EndTime:            activity.EndTime.UnixMilli(),   // 转换为毫秒时间戳
+		ConditionType:      activity.ConditionType,
+		ProductScope:       activity.ProductScope,
+		ProductScopeValues: scopeValues,
+		Rules:              appRules,
+	}, nil
+}
+
+// GetRewardActivityRuleDescription 获取满减送活动规则描述
+// Java: RewardActivityService#getRewardActivityRuleDescription
+func (s *RewardActivityService) GetRewardActivityRuleDescription(conditionType int, rule *resp.Rule) string {
+	description := ""
+
+	// 构建条件描述
+	if conditionType == consts.ConditionTypePrice {
+		// 满 N 元（带空格和小数点）
+		description = "满 " + formatMoneyWithDecimal(rule.Limit) + " 元"
+	} else {
+		// 满 N 件
+		description = "满 " + formatInt(rule.Limit) + " 件"
+	}
+
+	// 构建优惠描述
+	tips := make([]string, 0, 4)
+	if rule.DiscountPrice > 0 {
+		tips = append(tips, "减 "+formatMoneyWithDecimal(rule.DiscountPrice))
+	}
+	if rule.FreeDelivery {
+		tips = append(tips, "包邮")
+	}
+	if rule.Point > 0 {
+		tips = append(tips, "送 "+formatInt(rule.Point)+" 积分")
+	}
+	if len(rule.GiveCouponTemplateCounts) > 0 {
+		totalCoupons := 0
+		for _, count := range rule.GiveCouponTemplateCounts {
+			totalCoupons += count
+		}
+		tips = append(tips, "送 "+formatInt(totalCoupons)+" 张优惠券")
+	}
+
+	if len(tips) > 0 {
+		description = description + joinStrings(tips, "、")
+	}
+
+	return description
+}
+
+// formatMoneyWithDecimal 格式化金额（分转元，带小数点）
+func formatMoneyWithDecimal(fen int) string {
+	yuan := float64(fen) / 100.0
+	return strconv.FormatFloat(yuan, 'f', 2, 64)
+}
+
+// formatInt 格式化整数
+func formatInt(n int) string {
+	if n < 0 {
+		return "0"
+	}
+	return strconv.Itoa(n)
+}
+
+// formatFloat 格式化浮点数
+func formatFloat(f float64) string {
+	if f < 0 {
+		return "0"
+	}
+	return strconv.FormatFloat(f, 'f', -1, 64)
+}
+
+// joinStrings 连接字符串数组
+func joinStrings(arr []string, sep string) string {
+	result := ""
+	for i, s := range arr {
+		if i > 0 {
+			result += sep
+		}
+		result += s
+	}
+	return result
 }

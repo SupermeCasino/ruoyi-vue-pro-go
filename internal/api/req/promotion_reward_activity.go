@@ -19,8 +19,8 @@ type PromotionRewardActivityCreateReq struct {
 }
 
 type Rule struct {
-	Limit                    int           `json:"limit"`       // 门槛 (分 or 件)
-	ReducePrice              int           `json:"reducePrice"` // 减多少分
+	Limit                    int           `json:"limit"`         // 门槛 (分 or 件)
+	DiscountPrice            int           `json:"discountPrice"` // 优惠价格，单位：分
 	FreeDelivery             bool          `json:"freeDelivery"`
 	Point                    int           `json:"point"`
 	GiveCouponTemplateCounts map[int64]int `json:"giveCouponTemplateCounts"`
