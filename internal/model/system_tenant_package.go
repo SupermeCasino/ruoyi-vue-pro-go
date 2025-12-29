@@ -2,12 +2,11 @@ package model
 
 // SystemTenantPackage 租户套餐表
 type SystemTenantPackage struct {
-	ID        int64  `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
-	Name      string `gorm:"column:name;not null" json:"name"`
-	PackageID int64  `gorm:"column:package_id;default:0" json:"packageId"` // 某些旧逻辑可能用，通常用 ID
-	Status    int32  `gorm:"column:status;not null;default:0" json:"status"`
-	MenuIDs   string `gorm:"column:menu_ids;type:text" json:"menuIds"` // JSON 数组存储
-	Remark    string `gorm:"column:remark;default:''" json:"remark"`
+	ID      int64   `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
+	Name    string  `gorm:"column:name;not null" json:"name"`
+	Status  int32   `gorm:"column:status;not null;default:0" json:"status"`
+	MenuIDs []int64 `gorm:"column:menu_ids;serializer:json;type:text" json:"menuIds"` // JSON 数组存储
+	Remark  string  `gorm:"column:remark;default:''" json:"remark"`
 	BaseDO
 }
 
