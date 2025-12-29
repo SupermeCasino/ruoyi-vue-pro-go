@@ -120,14 +120,8 @@ func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
 		RandomMinPrice:    act.RandomMinPrice,
 		RandomMaxPrice:    act.RandomMaxPrice,
 		Status:            act.Status,
-		Sort:              act.Sort,
 		CreateTime:        act.CreateTime,
 	}
-	// Note: CreateReq has Remark but DO model logic I used previously didn't output Remark.
-	// But it is there. I should ensure DO has Remark later if needed.
-	// Checked DO: Seckill has Remark. My Bargain DO?
-	// I'll check Bargain DO content again.
-	// If Remark is missing, I'll ignore for now or add later.
 	response.WriteSuccess(c, respVO)
 }
 
@@ -208,7 +202,6 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 				TotalLimitCount:   item.TotalLimitCount,
 				RandomMinPrice:    item.RandomMinPrice,
 				RandomMaxPrice:    item.RandomMaxPrice,
-				Sort:              item.Sort,
 				CreateTime:        item.CreateTime,
 			},
 			SpuName:                spuName,

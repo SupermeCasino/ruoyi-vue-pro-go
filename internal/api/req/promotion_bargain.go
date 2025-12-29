@@ -4,22 +4,22 @@ import "time"
 
 // BargainActivityCreateReq 创建砍价活动 Request
 type BargainActivityCreateReq struct {
-	SpuID             int64     `json:"spuId" binding:"required"`
-	SkuID             int64     `json:"skuId" binding:"required"`
-	Name              string    `json:"name" binding:"required"`
-	StartTime         time.Time `json:"startTime" binding:"required"`
-	EndTime           time.Time `json:"endTime" binding:"required"`
-	BargainFirstPrice int       `json:"bargainFirstPrice" binding:"required,min=0"`
-	BargainMinPrice   int       `json:"bargainMinPrice" binding:"required,min=0"`
-	Stock             int       `json:"stock" binding:"required,min=0"`
-	TotalStock        int       `json:"totalStock" binding:"required,min=0"`
-	HelpMaxCount      int       `json:"helpMaxCount" binding:"required,min=1"`
-	BargainCount      int       `json:"bargainCount" binding:"required,min=1"`
-	TotalLimitCount   int       `json:"totalLimitCount" binding:"required,min=0"`
-	RandomMinPrice    int       `json:"randomMinPrice" binding:"required,min=0"`
-	RandomMaxPrice    int       `json:"randomMaxPrice" binding:"required,min=0"`
-	Sort              int       `json:"sort"`
-	Remark            string    `json:"remark"`
+	SpuID             int64  `json:"spuId" binding:"required"`
+	SkuID             int64  `json:"skuId" binding:"required"`
+	Name              string `json:"name" binding:"required"`
+	StartTime         string `json:"startTime" binding:"required"` // 格式: "2006-01-02 15:04:05"
+	EndTime           string `json:"endTime" binding:"required"`   // 格式: "2006-01-02 15:04:05"
+	BargainFirstPrice int    `json:"bargainFirstPrice" binding:"min=0"`
+	BargainMinPrice   int    `json:"bargainMinPrice" binding:"min=0"`
+	Stock             int    `json:"stock" binding:"min=0"`
+	TotalStock        int    `json:"totalStock" binding:"min=0"`
+	HelpMaxCount      int    `json:"helpMaxCount" binding:"min=1"`
+	BargainCount      int    `json:"bargainCount" binding:"min=1"`
+	TotalLimitCount   int    `json:"totalLimitCount" binding:"min=0"`
+	RandomMinPrice    int    `json:"randomMinPrice" binding:"min=0"`
+	RandomMaxPrice    int    `json:"randomMaxPrice" binding:"min=0"`
+	Sort              int    `json:"sort"`
+	Remark            string `json:"remark"`
 }
 
 // BargainActivityUpdateReq 更新砍价活动 Request

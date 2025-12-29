@@ -29,49 +29,44 @@ func NewBargainActivityService(q *query.Query, spuSvc *product.ProductSpuService
 
 // CreateBargainActivity 创建砍价活动
 func (s *BargainActivityService) CreateBargainActivity(ctx context.Context, r *req.BargainActivityCreateReq) (int64, error) {
-	// 1. Validate SPU/SKU (Optional, but good practice)
-	// TODO: spuSvc.ValidateSpu(r.SpuID)
-	// TODO: skuSvc.ValidateSku(r.SkuID)
+	// 1. 解析时间 (格式: "2006-01-02 15:04:05")
+	startTime, err := time.Parse("2006-01-02 15:04:05", r.StartTime)
+	if err != nil {
+		return 0, errors.NewBizError(1001004001, "开始时间格式错误")
+	}
+	endTime, err := time.Parse("2006-01-02 15:04:05", r.EndTime)
+	if err != nil {
+		return 0, errors.NewBizError(1001004001, "结束时间格式错误")
+	}
 
-	// 2. Validate Conflict
+	// 2. 校验 SKU 存在 (对齐 Java: validateSku)
+	if err := s.validateSku(ctx, r.SkuID); err != nil {
+		return 0, err
+	}
+
+	// 3. 校验商品冲突 (对齐 Java: validateBargainConflict)
 	if err := s.validateBargainConflict(ctx, r.SpuID, 0); err != nil {
 		return 0, err
 	}
 
-	// 3. Insert
+	// 4. 插入活动 (对齐 Java 逻辑)
 	activity := &promotion.PromotionBargainActivity{
-		SpuID:     r.SpuID,
-		SkuID:     r.SkuID,
-		Name:      r.Name,
-		StartTime: r.StartTime,
-		EndTime:   r.EndTime,
-		Status:    consts.CommonStatusEnable, // 使用 CommonStatusEnable 常量 (对齐 Java CommonStatusEnum.ENABLE)
-		// Java Create req doesn't have status. Default might be Enable or Disable.
-		// Let's assume Enable for now or check Java.
-		// Actually typical logic sets specific status or default (0/1).
-		// Assume 1 (Enable) if not specified, since Java `createBargainActivity` usually enables it.
+		SpuID:             r.SpuID,
+		SkuID:             r.SkuID,
+		Name:              r.Name,
+		StartTime:         startTime,
+		EndTime:           endTime,
+		Status:            consts.CommonStatusEnable, // 默认启用状态 (对齐 Java)
 		BargainFirstPrice: r.BargainFirstPrice,
 		BargainMinPrice:   r.BargainMinPrice,
 		Stock:             r.Stock,
-		TotalStock:        r.TotalStock,
+		TotalStock:        r.Stock, // 初始总库存 = 当前库存 (对齐 Java: setTotalStock(req.getStock()))
 		HelpMaxCount:      r.HelpMaxCount,
 		BargainCount:      r.BargainCount,
 		TotalLimitCount:   r.TotalLimitCount,
 		RandomMinPrice:    r.RandomMinPrice,
 		RandomMaxPrice:    r.RandomMaxPrice,
-		Sort:              r.Sort,
 	}
-	// Note: Status might default to 0 (Disable) in DB or Model logic.
-	// Check Java implementation of `create`. It converts req to DO.
-	// If DO status defaults to something?
-	// I'll set it to 0 (Disable) basically, or 1?
-	// Java: `bargainActivityMapper.insert(activity);`
-	// Typically status needs manual set if not in req.
-	// I'll set to 0 (CommonStatusEnum.DISABLE) to be safe, requiring manual enable?
-	// Wait, standard RuoYi Create often just creates it.
-	// I'll set Status = 0 (Disable) or 1 (Enable) based on "Status" field if in Req? No.
-	// Whatever. I'll default to 1 (Enable) for usability or 0 (Disable) for safety.
-	// Defaulting to 1 (Enable) as per Seckill logic.
 
 	if err := s.q.PromotionBargainActivity.WithContext(ctx).Create(activity); err != nil {
 		return 0, err
@@ -79,29 +74,54 @@ func (s *BargainActivityService) CreateBargainActivity(ctx context.Context, r *r
 	return activity.ID, nil
 }
 
+// validateSku 校验 SKU 是否存在 (对齐 Java: validateSku)
+func (s *BargainActivityService) validateSku(ctx context.Context, skuID int64) error {
+	sku, err := s.skuSvc.GetSku(ctx, skuID)
+	if err != nil || sku == nil {
+		return errors.NewBizError(1006001000, "商品SKU不存在")
+	}
+	return nil
+}
+
 // UpdateBargainActivity 更新砍价活动
 func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *req.BargainActivityUpdateReq) error {
+	// 1. 解析时间
+	startTime, err := time.Parse("2006-01-02 15:04:05", r.StartTime)
+	if err != nil {
+		return errors.NewBizError(1001004001, "开始时间格式错误")
+	}
+	endTime, err := time.Parse("2006-01-02 15:04:05", r.EndTime)
+	if err != nil {
+		return errors.NewBizError(1001004001, "结束时间格式错误")
+	}
+
+	// 2. 校验活动存在
 	q := s.q.PromotionBargainActivity
 	old, err := q.WithContext(ctx).Where(q.ID.Eq(r.ID)).First()
 	if err != nil {
 		return errors.NewBizError(1001004000, "砍价活动不存在")
 	}
-	if old.Status == consts.CommonStatusEnable { // 使用 CommonStatusEnable 常量
-		// 通常启用状态下可以更新，这里保留原有逻辑
+	if old.Status == consts.CommonStatusDisable {
+		return errors.NewBizError(1001004003, "砍价活动已关闭，无法修改")
 	}
 
-	// Validate Conflict
+	// 3. 校验 SKU 存在
+	if err := s.validateSku(ctx, r.SkuID); err != nil {
+		return err
+	}
+
+	// 4. 校验商品冲突
 	if err := s.validateBargainConflict(ctx, r.SpuID, r.ID); err != nil {
 		return err
 	}
 
-	// Update
+	// 5. 更新
 	upd := &promotion.PromotionBargainActivity{
 		SpuID:             r.SpuID,
 		SkuID:             r.SkuID,
 		Name:              r.Name,
-		StartTime:         r.StartTime,
-		EndTime:           r.EndTime,
+		StartTime:         startTime,
+		EndTime:           endTime,
 		BargainFirstPrice: r.BargainFirstPrice,
 		BargainMinPrice:   r.BargainMinPrice,
 		HelpMaxCount:      r.HelpMaxCount,
@@ -109,15 +129,12 @@ func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *r
 		TotalLimitCount:   r.TotalLimitCount,
 		RandomMinPrice:    r.RandomMinPrice,
 		RandomMaxPrice:    r.RandomMaxPrice,
-		Sort:              r.Sort,
 		TotalStock:        r.TotalStock,
 	}
-	// Logic for Stock update?
-	// If TotalStock increased, Stock increases.
-	// If decreased?
+	// 库存调整逻辑 (对齐 Java: 如果总库存增加，调整可用库存)
 	diff := r.TotalStock - old.TotalStock
 	if diff != 0 {
-		upd.Stock = old.Stock + diff // Adjust usable stock
+		upd.Stock = old.Stock + diff
 	}
 
 	_, err = q.WithContext(ctx).Where(q.ID.Eq(r.ID)).Updates(upd)
@@ -161,7 +178,6 @@ func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *
 	if r.Status != nil {
 		do = do.Where(q.Status.Eq(*r.Status))
 	}
-	do = do.Order(q.Sort.Desc(), q.ID.Desc())
 	list, count, err := do.FindByPage(r.PageNo, r.PageSize)
 	if err != nil {
 		return nil, err
@@ -172,13 +188,13 @@ func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *
 // GetBargainActivityListByCount 获得指定数量的砍价活动
 func (s *BargainActivityService) GetBargainActivityListByCount(ctx context.Context, count int) ([]*promotion.PromotionBargainActivity, error) {
 	q := s.q.PromotionBargainActivity
-	return q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc()).Limit(count).Find() // 使用 CommonStatusEnable 常量
+	return q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable)).Order(q.ID.Desc()).Limit(count).Find() // 使用 CommonStatusEnable 常量
 }
 
 // GetBargainActivityPageForApp 获得砍价活动分页 (App端，只查询 Status=1 的活动)
 func (s *BargainActivityService) GetBargainActivityPageForApp(ctx context.Context, p *pagination.PageParam) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
 	q := s.q.PromotionBargainActivity
-	do := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable)).Order(q.Sort.Desc(), q.ID.Desc()) // 使用 CommonStatusEnable 常量
+	do := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable)).Order(q.ID.Desc()) // 使用 CommonStatusEnable 常量
 	list, count, err := do.FindByPage(p.GetOffset(), p.PageSize)
 	if err != nil {
 		return nil, err

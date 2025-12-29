@@ -24,7 +24,6 @@ type PromotionBargainActivity struct {
 	TotalLimitCount   int       `gorm:"column:total_limit_count;comment:总限购数量" json:"totalLimitCount"`
 	RandomMinPrice    int       `gorm:"column:random_min_price;comment:用户每次砍价的最小金额" json:"randomMinPrice"`
 	RandomMaxPrice    int       `gorm:"column:random_max_price;comment:用户每次砍价的最大金额" json:"randomMaxPrice"`
-	Sort              int       `gorm:"default:0;comment:排序" json:"sort"`
 	Remark            string    `gorm:"size:255;default:'';comment:备注" json:"remark"`
 
 	model.TenantBaseDO
