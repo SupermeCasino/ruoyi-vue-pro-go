@@ -55,7 +55,7 @@ func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*resp.Ap
 	// 直接查询 trade_brokerage_user 表以避免循环依赖
 	brokerageEnabled := false
 	if brokerageUser, err := s.q.BrokerageUser.WithContext(ctx).Where(s.q.BrokerageUser.ID.Eq(id)).First(); err == nil && brokerageUser != nil {
-		brokerageEnabled = brokerageUser.BrokerageEnabled
+		brokerageEnabled = bool(brokerageUser.BrokerageEnabled)
 	}
 
 	return &resp.AppMemberUserInfoResp{

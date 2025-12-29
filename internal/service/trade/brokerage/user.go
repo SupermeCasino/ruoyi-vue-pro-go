@@ -8,6 +8,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -58,7 +59,7 @@ func (s *BrokerageUserService) GetUserBrokerageEnabled(ctx context.Context, user
 	if err != nil || user == nil {
 		return false, err
 	}
-	return user.BrokerageEnabled, nil
+	return bool(user.BrokerageEnabled), nil
 }
 
 // UpdateUserPrice 更新用户可用佣金
@@ -111,7 +112,7 @@ func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.
 	}
 
 	if r.BrokerageEnabled != nil {
-		q = q.Where(s.q.BrokerageUser.BrokerageEnabled.Is(*r.BrokerageEnabled))
+		q = q.Where(s.q.BrokerageUser.BrokerageEnabled.Eq(model.BitBool(*r.BrokerageEnabled)))
 	}
 
 	// Time ranges
@@ -267,7 +268,7 @@ func (s *BrokerageUserService) UpdateBrokerageUserEnabled(ctx context.Context, i
 	if err != nil {
 		return err
 	}
-	if u.BrokerageEnabled == enabled {
+	if bool(u.BrokerageEnabled) == enabled {
 		return nil
 	}
 
