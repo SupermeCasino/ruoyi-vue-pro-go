@@ -1,6 +1,8 @@
 package req
 
-import "time"
+import (
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+)
 
 // DeliveryExpressPageReq 物流公司分页 Request
 type DeliveryExpressPageReq struct {
@@ -32,17 +34,17 @@ type DeliveryPickUpStorePageReq struct {
 
 // DeliveryPickUpStoreSaveReq 自提门店保存 Request
 type DeliveryPickUpStoreSaveReq struct {
-	ID            *int64     `json:"id"`
-	Name          string     `json:"name" binding:"required"`
-	Introduction  string     `json:"introduction"`
-	Phone         string     `json:"phone" binding:"required"`
-	AreaID        int        `json:"areaId" binding:"required"`
-	DetailAddress string     `json:"detailAddress" binding:"required"`
-	Logo          string     `json:"logo" binding:"required"`
-	OpeningTime   *time.Time `json:"openingTime" binding:"required"`
-	ClosingTime   *time.Time `json:"closingTime" binding:"required"`
-	Latitude      float64    `json:"latitude" binding:"required"`
-	Longitude     float64    `json:"longitude" binding:"required"`
-	Status        int        `json:"status" binding:"required"`
-	Sort          int        `json:"sort"`
+	ID            *int64          `json:"id"`
+	Name          string          `json:"name" binding:"required"`
+	Introduction  string          `json:"introduction"`
+	Phone         string          `json:"phone" binding:"required"`
+	AreaID        int             `json:"areaId" binding:"required"`
+	DetailAddress string          `json:"detailAddress" binding:"required"`
+	Logo          string          `json:"logo" binding:"required"`
+	OpeningTime   model.TimeOfDay `json:"openingTime" binding:"required"`
+	ClosingTime   model.TimeOfDay `json:"closingTime" binding:"required"`
+	Latitude      float64         `json:"latitude" binding:"required"`
+	Longitude     float64         `json:"longitude" binding:"required"`
+	Status        int             `json:"status" binding:"required"`
+	Sort          int             `json:"sort"`
 }

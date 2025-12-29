@@ -1,8 +1,6 @@
 package trade
 
 import (
-	"time"
-
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 )
 
@@ -30,8 +28,8 @@ type TradeDeliveryPickUpStore struct {
 	AreaID        int                  `gorm:"column:area_id;not null;comment:区域编号" json:"areaId"`
 	DetailAddress string               `gorm:"size:256;not null;comment:详细地址" json:"detailAddress"`
 	Logo          string               `gorm:"size:256;not null;comment:门店Logo" json:"logo"`
-	OpeningTime   *time.Time           `gorm:"column:opening_time;comment:营业开始时间" json:"openingTime"`
-	ClosingTime   *time.Time           `gorm:"column:closing_time;comment:营业结束时间" json:"closingTime"`
+	OpeningTime   model.TimeOfDay      `gorm:"column:opening_time;comment:营业开始时间" json:"openingTime"`
+	ClosingTime   model.TimeOfDay      `gorm:"column:closing_time;comment:营业结束时间" json:"closingTime"`
 	Latitude      float64              `gorm:"type:decimal(10,6);comment:纬度" json:"latitude"`
 	Longitude     float64              `gorm:"type:decimal(10,6);comment:经度" json:"longitude"`
 	VerifyUserIds model.IntListFromCSV `gorm:"column:verify_user_ids;type:varchar(500);comment:核销员工用户编号数组" json:"verifyUserIds"`

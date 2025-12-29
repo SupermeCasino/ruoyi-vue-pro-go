@@ -1,6 +1,10 @@
 package resp
 
-import "time"
+import (
+	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+)
 
 // DeliveryExpressResp 物流公司 Response
 type DeliveryExpressResp struct {
@@ -22,8 +26,8 @@ type DeliveryPickUpStoreResp struct {
 	AreaID        int              `json:"areaId"`
 	DetailAddress string           `json:"detailAddress"`
 	Logo          string           `json:"logo"`
-	OpeningTime   *time.Time       `json:"openingTime"`
-	ClosingTime   *time.Time       `json:"closingTime"`
+	OpeningTime   model.TimeOfDay  `json:"openingTime"`
+	ClosingTime   model.TimeOfDay  `json:"closingTime"`
 	Latitude      float64          `json:"latitude"`
 	Longitude     float64          `json:"longitude"`
 	Status        int              `json:"status"`
