@@ -8,19 +8,23 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
+	member_model "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type CouponService struct {
-	q *query.Query
+	q           *query.Query
+	userService *member.MemberUserService
 }
 
-func NewCouponService(q *query.Query) *CouponService {
+func NewCouponService(q *query.Query, userService *member.MemberUserService) *CouponService {
 	return &CouponService{
-		q: q,
+		q:           q,
+		userService: userService,
 	}
 }
 
@@ -76,7 +80,7 @@ func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *req.Coupo
 }
 
 // GetCouponTemplatePage 获得优惠券模板分页 (Admin)
-func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.CouponTemplatePageReq) (*pagination.PageResult[promotion.PromotionCouponTemplate], error) {
+func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.CouponTemplatePageReq) (*pagination.PageResult[*resp.CouponTemplateResp], error) {
 	q := s.q.PromotionCouponTemplate.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PromotionCouponTemplate.Name.Like("%" + req.Name + "%"))
@@ -93,12 +97,67 @@ func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.Coup
 		return nil, err
 	}
 
-	list := make([]promotion.PromotionCouponTemplate, len(result))
-	for i, v := range result {
-		list[i] = *v
+	// 收集模板 IDs 用于批量查询统计
+	templateIDs := make([]int64, len(result))
+	for i, tmpl := range result {
+		templateIDs[i] = tmpl.ID
 	}
 
-	return &pagination.PageResult[promotion.PromotionCouponTemplate]{
+	// 批量查询每个模板的使用数量 (status = 2 表示已使用)
+	useCountMap := make(map[int64]int)
+	if len(templateIDs) > 0 {
+		type UseCountResult struct {
+			TemplateID int64 `gorm:"column:template_id"`
+			UseCount   int   `gorm:"column:use_count"`
+		}
+		var useCountResults []UseCountResult
+		c := s.q.PromotionCoupon
+		err = c.WithContext(ctx).
+			Select(c.TemplateID, c.TemplateID.Count().As("use_count")).
+			Where(c.TemplateID.In(templateIDs...), c.Status.Eq(2)). // 2 = USED
+			Group(c.TemplateID).
+			Scan(&useCountResults)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range useCountResults {
+			useCountMap[r.TemplateID] = r.UseCount
+		}
+	}
+
+	// 转换为 Response DTO
+	list := make([]*resp.CouponTemplateResp, len(result))
+	for i, tmpl := range result {
+		list[i] = &resp.CouponTemplateResp{
+			// RespVO 字段
+			ID:         tmpl.ID,
+			Status:     tmpl.Status,
+			TakeCount:  tmpl.TakeCount,       // 从数据库字段获取
+			UseCount:   useCountMap[tmpl.ID], // 从统计查询获取
+			CreateTime: tmpl.CreateTime,
+
+			// BaseVO 字段
+			Name:               tmpl.Name,
+			Description:        tmpl.Description,
+			TotalCount:         tmpl.TotalCount,
+			TakeLimitCount:     tmpl.TakeLimitCount,
+			TakeType:           tmpl.TakeType,
+			UsePrice:           tmpl.UsePriceMin,
+			ProductScope:       tmpl.ProductScope,
+			ProductScopeValues: tmpl.ProductScopeValues,
+			ValidityType:       tmpl.ValidityType,
+			ValidStartTime:     tmpl.ValidStartTime,
+			ValidEndTime:       tmpl.ValidEndTime,
+			FixedStartTerm:     &tmpl.FixedStartTerm,
+			FixedEndTerm:       &tmpl.FixedEndTerm,
+			DiscountType:       tmpl.DiscountType,
+			DiscountPercent:    &tmpl.DiscountPercent,
+			DiscountPrice:      &tmpl.DiscountPrice,
+			DiscountLimitPrice: &tmpl.DiscountLimitPrice,
+		}
+	}
+
+	return &pagination.PageResult[*resp.CouponTemplateResp]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -158,7 +217,7 @@ func (s *CouponService) GetCouponTemplateList(ctx context.Context, ids []int64) 
 }
 
 // GetCouponPage 获得优惠券分页 (Admin)
-func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageReq) (*pagination.PageResult[promotion.PromotionCoupon], error) {
+func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageReq) (*pagination.PageResult[*resp.CouponPageResp], error) {
 	q := s.q.PromotionCoupon.WithContext(ctx)
 	if req.UserID != nil {
 		q = q.Where(s.q.PromotionCoupon.UserID.Eq(*req.UserID))
@@ -172,12 +231,66 @@ func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageRe
 		return nil, err
 	}
 
-	list := make([]promotion.PromotionCoupon, len(result))
-	for i, v := range result {
-		list[i] = *v
+	// 收集用户 IDs 用于批量查询
+	userIDs := make([]int64, 0, len(result))
+	for _, coupon := range result {
+		userIDs = append(userIDs, coupon.UserID)
 	}
 
-	return &pagination.PageResult[promotion.PromotionCoupon]{
+	// 批量查询用户信息
+	userMap := make(map[int64]*member_model.MemberUser)
+	if len(userIDs) > 0 {
+		var err error
+		userMap, err = s.userService.GetUserMap(ctx, userIDs)
+		if err != nil {
+			// 用户查询失败不影响主流程，只是 nickname 为空
+		}
+	}
+
+	// 转换为 Response DTO
+	list := make([]*resp.CouponPageResp, len(result))
+	for i, coupon := range result {
+		list[i] = &resp.CouponPageResp{
+			// RespVO 字段
+			ID:         coupon.ID,
+			CreateTime: coupon.CreateTime,
+
+			// BaseVO 字段 - 基本信息
+			TemplateID: coupon.TemplateID,
+			Name:       coupon.Name,
+			Status:     coupon.Status,
+
+			// BaseVO 字段 - 领取情况
+			UserID:   coupon.UserID,
+			TakeType: coupon.TakeType,
+
+			// BaseVO 字段 - 使用规则
+			UsePrice:           coupon.UsePrice,
+			ValidStartTime:     coupon.ValidStartTime,
+			ValidEndTime:       coupon.ValidEndTime,
+			ProductScope:       coupon.ProductScope,
+			ProductScopeValues: coupon.ProductScopeValues,
+
+			// BaseVO 字段 - 使用效果
+			DiscountType:       coupon.DiscountType,
+			DiscountPercent:    &coupon.DiscountPercent,
+			DiscountPrice:      &coupon.DiscountPrice,
+			DiscountLimitPrice: &coupon.DiscountLimitPrice,
+
+			// BaseVO 字段 - 使用情况
+			UseOrderID: &coupon.UseOrderID,
+			UseTime:    coupon.UseTime,
+
+			// PageItemRespVO 字段 - 关联字段
+			Nickname: "", // 默认空字符串
+		}
+		// 填充用户昵称
+		if user, ok := userMap[coupon.UserID]; ok {
+			list[i].Nickname = user.Nickname
+		}
+	}
+
+	return &pagination.PageResult[*resp.CouponPageResp]{
 		List:  list,
 		Total: count,
 	}, nil
