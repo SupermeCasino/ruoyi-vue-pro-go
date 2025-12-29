@@ -138,7 +138,8 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 			articleCategoryGroup.DELETE("/delete", articleCategoryHandler.DeleteArticleCategory)
 			articleCategoryGroup.GET("/get", articleCategoryHandler.GetArticleCategory)
 			articleCategoryGroup.GET("/list", articleCategoryHandler.GetArticleCategoryList)
-			articleCategoryGroup.GET("/simple-list", articleCategoryHandler.GetSimpleList)
+			articleCategoryGroup.GET("/list-all-simple", articleCategoryHandler.GetSimpleList)
+			articleCategoryGroup.GET("/page", articleCategoryHandler.GetArticleCategoryPage)
 		}
 
 		// Article

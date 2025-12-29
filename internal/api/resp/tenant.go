@@ -16,9 +16,9 @@ type TenantRespVO struct {
 	ContactName   string    `json:"contactName"`
 	ContactMobile string    `json:"contactMobile"`
 	Status        int       `json:"status"`
-	Domain        string    `json:"domain"`
+	Website       string    `json:"website"`
 	PackageID     int64     `json:"packageId"`
-	ExpireDate    int64     `json:"expireTime"` // Timestamp
+	ExpireTime    int64     `json:"expireTime"` // Timestamp (ms)
 	AccountCount  int       `json:"accountCount"`
 	CreateTime    time.Time `json:"createTime"`
 }

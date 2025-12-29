@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -50,8 +49,8 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			Status:        int32(req.Status),
 			PackageID:     req.PackageID,
 			AccountCount:  int32(req.AccountCount),
-			ExpireDate:    time.Unix(req.ExpireDate, 0),
-			Websites:      req.Domain,
+			ExpireDate:    time.UnixMilli(req.ExpireTime),
+			Websites:      req.Website,
 		}
 		if err := tx.SystemTenant.WithContext(ctx).Create(tenant); err != nil {
 			return err
@@ -95,10 +94,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 		if err := tx.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", req.PackageID).First(&pkg).Error; err != nil {
 			return err
 		}
-		var menuIds []int64
-		if len(pkg.MenuIDs) > 0 {
-			_ = json.Unmarshal([]byte(pkg.MenuIDs), &menuIds)
-		}
+		menuIds := pkg.MenuIDs
 
 		if len(menuIds) > 0 {
 			roleMenus := make([]*model.SystemRoleMenu, len(menuIds))
@@ -147,8 +143,8 @@ func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateR
 		Status:        int32(req.Status),
 		PackageID:     req.PackageID,
 		AccountCount:  int32(req.AccountCount),
-		ExpireDate:    time.Unix(req.ExpireDate, 0),
-		Websites:      req.Domain,
+		ExpireDate:    time.UnixMilli(req.ExpireTime),
+		Websites:      req.Website,
 	}
 	_, err = t.WithContext(ctx).Where(t.ID.Eq(req.ID)).Updates(tenantObj)
 	if err != nil {
@@ -162,10 +158,7 @@ func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateR
 		if err := s.q.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", req.PackageID).First(&pkg).Error; err != nil {
 			return err
 		}
-		var menuIds []int64
-		if len(pkg.MenuIDs) > 0 {
-			_ = json.Unmarshal([]byte(pkg.MenuIDs), &menuIds)
-		}
+		menuIds := pkg.MenuIDs
 		if err := s.updateTenantRoleMenu(ctx, req.ID, menuIds); err != nil {
 			return err
 		}
@@ -195,10 +188,10 @@ func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRe
 		ContactName:   tenant.ContactName,
 		ContactMobile: tenant.ContactMobile,
 		Status:        int(tenant.Status),
-		Domain:        tenant.Websites,
+		Website:       tenant.Websites,
 		PackageID:     tenant.PackageID,
 		AccountCount:  int(tenant.AccountCount),
-		ExpireDate:    tenant.ExpireDate.Unix(),
+		ExpireTime:    tenant.ExpireDate.UnixMilli(),
 		CreateTime:    tenant.CreateTime,
 	}, nil
 }
@@ -246,10 +239,10 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 			ContactName:   item.ContactName,
 			ContactMobile: item.ContactMobile,
 			Status:        int(item.Status),
-			Domain:        item.Websites,
+			Website:       item.Websites,
 			PackageID:     item.PackageID,
 			AccountCount:  int(item.AccountCount),
-			ExpireDate:    item.ExpireDate.Unix(),
+			ExpireTime:    item.ExpireDate.UnixMilli(),
 			CreateTime:    item.CreateTime,
 		})
 	}
@@ -298,9 +291,9 @@ func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExport
 			ContactName:   item.ContactName,
 			ContactMobile: item.ContactMobile,
 			Status:        int(item.Status),
-			Domain:        item.Websites,
+			Website:       item.Websites,
 			PackageID:     item.PackageID,
-			ExpireDate:    item.ExpireDate.UnixMilli(), // 毫秒级时间戳
+			ExpireTime:    item.ExpireDate.UnixMilli(), // 毫秒级时间戳
 			AccountCount:  int(item.AccountCount),
 			CreateTime:    item.CreateTime,
 		})
@@ -419,13 +412,7 @@ func (s *TenantService) HandleTenantMenu(ctx context.Context, handler func(allow
 		return nil
 	}
 
-	// 5. 解析菜单ID列表
-	var allowedMenuIds []int64
-	if len(pkg.MenuIDs) > 0 {
-		if err := json.Unmarshal([]byte(pkg.MenuIDs), &allowedMenuIds); err != nil {
-			return err
-		}
-	}
+	allowedMenuIds := pkg.MenuIDs
 
 	// 6. 执行处理
 	handler(allowedMenuIds)

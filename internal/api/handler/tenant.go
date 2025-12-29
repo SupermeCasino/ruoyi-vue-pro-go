@@ -157,11 +157,11 @@ func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 			statusStr = "关闭"
 		}
 		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), statusStr)
-		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), item.Domain)
+		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), item.Website)
 
 		expireStr := ""
-		if item.ExpireDate > 0 {
-			expireStr = time.UnixMilli(item.ExpireDate).Format("2006-01-02 15:04:05")
+		if item.ExpireTime > 0 {
+			expireStr = time.UnixMilli(item.ExpireTime).Format("2006-01-02 15:04:05")
 		}
 		f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), expireStr)
 

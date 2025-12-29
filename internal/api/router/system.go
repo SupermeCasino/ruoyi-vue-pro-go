@@ -12,6 +12,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 	authHandler *handler.AuthHandler,
 	userHandler *handler.UserHandler,
 	tenantHandler *handler.TenantHandler,
+	tenantPackageHandler *handler.TenantPackageHandler, // 新增租户套餐
 	dictHandler *handler.DictHandler,
 	deptHandler *handler.DeptHandler,
 	postHandler *handler.PostHandler,
@@ -131,6 +132,19 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				tenantProtectedGroup.GET("/get", casbinMiddleware.RequirePermission("system:tenant:query"), tenantHandler.GetTenant)
 				tenantProtectedGroup.GET("/page", casbinMiddleware.RequirePermission("system:tenant:query"), tenantHandler.GetTenantPage)
 				tenantProtectedGroup.GET("/export-excel", casbinMiddleware.RequirePermission("system:tenant:export"), tenantHandler.ExportTenantExcel)
+			}
+
+			// Tenant Package Protected Routes
+			tenantPackageGroup := systemGroup.Group("/tenant-package")
+			{
+				tenantPackageGroup.POST("/create", casbinMiddleware.RequirePermission("system:tenant-package:create"), tenantPackageHandler.CreateTenantPackage)
+				tenantPackageGroup.PUT("/update", casbinMiddleware.RequirePermission("system:tenant-package:update"), tenantPackageHandler.UpdateTenantPackage)
+				tenantPackageGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:tenant-package:delete"), tenantPackageHandler.DeleteTenantPackage)
+				tenantPackageGroup.DELETE("/delete-list", casbinMiddleware.RequirePermission("system:tenant-package:delete"), tenantPackageHandler.DeleteTenantPackageList)
+				tenantPackageGroup.GET("/get", casbinMiddleware.RequirePermission("system:tenant-package:query"), tenantPackageHandler.GetTenantPackage)
+				tenantPackageGroup.GET("/page", casbinMiddleware.RequirePermission("system:tenant-package:query"), tenantPackageHandler.GetTenantPackagePage)
+				tenantPackageGroup.GET("/get-simple-list", tenantPackageHandler.GetTenantPackageSimpleList)
+				tenantPackageGroup.GET("/simple-list", tenantPackageHandler.GetTenantPackageSimpleList)
 			}
 
 			// Dict Type Protected Routes

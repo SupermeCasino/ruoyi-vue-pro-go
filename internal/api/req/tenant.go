@@ -13,8 +13,8 @@ type TenantCreateReq struct {
 	Status        int    `json:"status" binding:"required"`
 	PackageID     int64  `json:"packageId" binding:"required"`
 	AccountCount  int    `json:"accountCount" binding:"required"`
-	ExpireDate    int64  `json:"expireTime" binding:"required"` // Timestamp
-	Domain        string `json:"domain"`
+	ExpireTime    int64  `json:"expireTime" binding:"required"` // Timestamp (ms)
+	Website       string `json:"website"`
 	Username      string `json:"username" binding:"required"` // Admin username
 	Password      string `json:"password" binding:"required"` // Admin password
 }
@@ -27,8 +27,8 @@ type TenantUpdateReq struct {
 	Status        int    `json:"status" binding:"required"`
 	PackageID     int64  `json:"packageId" binding:"required"`
 	AccountCount  int    `json:"accountCount" binding:"required"`
-	ExpireDate    int64  `json:"expireTime" binding:"required"`
-	Domain        string `json:"domain"`
+	ExpireTime    int64  `json:"expireTime" binding:"required"`
+	Website       string `json:"website"`
 }
 
 type TenantPageReq struct {
