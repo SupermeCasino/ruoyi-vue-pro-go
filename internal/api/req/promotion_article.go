@@ -27,6 +27,14 @@ type ArticleCategoryListReq struct {
 	Status *int   `form:"status"` // 0-开启 1-关闭
 }
 
+// ArticleCategoryPageReq 文章分类分页请求
+type ArticleCategoryPageReq struct {
+	pagination.PageParam
+	Name       string   `form:"name"`
+	Status     *int     `form:"status"`
+	CreateTime []string `form:"createTime[]"` // 时间范围
+}
+
 // ArticleCreateReq 文章创建请求
 type ArticleCreateReq struct {
 	CategoryID      int64  `json:"categoryId" binding:"required"`

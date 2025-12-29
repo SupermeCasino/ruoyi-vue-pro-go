@@ -2,6 +2,7 @@ package promotion
 
 import (
 	"context"
+	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
@@ -9,6 +10,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type ArticleCategoryService interface {
@@ -18,6 +20,7 @@ type ArticleCategoryService interface {
 	GetArticleCategory(ctx context.Context, id int64) (*resp.ArticleCategoryRespVO, error)
 	GetArticleCategoryList(ctx context.Context, req req.ArticleCategoryListReq) ([]*resp.ArticleCategoryRespVO, error)
 	GetArticleCategorySimpleList(ctx context.Context) ([]*resp.ArticleCategorySimpleRespVO, error)
+	GetArticleCategoryPage(ctx context.Context, req req.ArticleCategoryPageReq) (*pagination.PageResult[*resp.ArticleCategoryRespVO], error)
 }
 
 type articleCategoryService struct {
@@ -115,7 +118,7 @@ func (s *articleCategoryService) GetArticleCategoryList(ctx context.Context, req
 func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Context) ([]*resp.ArticleCategorySimpleRespVO, error) {
 	list, err := s.q.PromotionArticleCategory.WithContext(ctx).
 		Where(s.q.PromotionArticleCategory.Status.Eq(consts.CommonStatusEnable)). // 使用启用状态常量替代魔法数字 0
-		Order(s.q.PromotionArticleCategory.Sort.Asc()).
+		Order(s.q.PromotionArticleCategory.Sort.Desc()).
 		Find()
 	if err != nil {
 		return nil, err
@@ -129,4 +132,63 @@ func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Contex
 		}
 	}
 	return result, nil
+}
+
+func (s *articleCategoryService) GetArticleCategoryPage(ctx context.Context, req req.ArticleCategoryPageReq) (*pagination.PageResult[*resp.ArticleCategoryRespVO], error) {
+	q := s.q.PromotionArticleCategory
+	do := q.WithContext(ctx)
+
+	// 过滤条件
+	if req.Name != "" {
+		do = do.Where(q.Name.Like("%" + req.Name + "%"))
+	}
+	if req.Status != nil {
+		do = do.Where(q.Status.Eq(*req.Status))
+	}
+	if len(req.CreateTime) == 2 {
+		do = do.Where(q.CreateTime.Between(
+			parseTime(req.CreateTime[0]),
+			parseTime(req.CreateTime[1]),
+		))
+	}
+
+	// 统计总数
+	total, err := do.Count()
+	if err != nil {
+		return nil, err
+	}
+
+	// 分页查询
+	offset := (req.PageNo - 1) * req.PageSize
+	list, err := do.Order(q.Sort.Desc(), q.ID.Desc()).
+		Offset(offset).
+		Limit(req.PageSize).
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为响应 VO
+	result := make([]*resp.ArticleCategoryRespVO, len(list))
+	for i, item := range list {
+		result[i] = &resp.ArticleCategoryRespVO{
+			ID:         item.ID,
+			Name:       item.Name,
+			PicURL:     item.PicURL,
+			Sort:       item.Sort,
+			Status:     item.Status,
+			CreateTime: item.CreateTime,
+		}
+	}
+
+	return &pagination.PageResult[*resp.ArticleCategoryRespVO]{
+		List:  result,
+		Total: total,
+	}, nil
+}
+
+// parseTime 辅助函数：解析时间字符串
+func parseTime(tStr string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", tStr)
+	return t
 }

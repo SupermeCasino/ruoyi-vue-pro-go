@@ -96,3 +96,18 @@ func (h *ArticleCategoryHandler) GetSimpleList(c *gin.Context) {
 	}
 	response.WriteSuccess(c, res)
 }
+
+// GetArticleCategoryPage 获得文章分类分页
+func (h *ArticleCategoryHandler) GetArticleCategoryPage(c *gin.Context) {
+	var r req.ArticleCategoryPageReq
+	if err := c.ShouldBindQuery(&r); err != nil {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	res, err := h.svc.GetArticleCategoryPage(c, r)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, res)
+}
