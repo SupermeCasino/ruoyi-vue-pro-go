@@ -58,6 +58,7 @@ func main() {
 		model.InfraJobLog{},
 		model.InfraApiAccessLog{},
 		model.InfraApiErrorLog{},
+		model.SystemTenantPackage{},
 		// Member
 		member.MemberUser{},
 		member.MemberAddress{},
