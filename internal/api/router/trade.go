@@ -27,7 +27,7 @@ func RegisterTradeRoutes(engine *gin.Engine,
 	{
 		tradeGroup.GET("/page", tradeOrderHandler.GetOrderPage)
 		tradeGroup.GET("/get-detail", tradeOrderHandler.GetOrderDetail)
-		tradeGroup.GET("/get-summary", tradeOrderHandler.GetOrderSummary)
+		tradeGroup.GET("/summary", tradeOrderHandler.GetOrderSummary)
 		tradeGroup.GET("/get-express-track-list", tradeOrderHandler.GetOrderExpressTrackList)
 		tradeGroup.GET("/get-by-pick-up-verify-code", tradeOrderHandler.GetByPickUpVerifyCode)
 		tradeGroup.PUT("/delivery", tradeOrderHandler.DeliveryOrder)

@@ -53,7 +53,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 	}
 
 	respVO := &tradeResp.AppBrokerageUserRespVO{
-		BrokerageEnabled: user.BrokerageEnabled,
+		BrokerageEnabled: bool(user.BrokerageEnabled),
 		BrokeragePrice:   user.BrokeragePrice,
 		FrozenPrice:      user.FrozenPrice,
 	}
