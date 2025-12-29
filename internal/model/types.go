@@ -11,5 +11,8 @@ type IntListFromCSV = types.IntListFromCSV
 // StringListFromCSV handles comma-separated string lists.
 type StringListFromCSV = types.StringListFromCSV
 
+// TimeOfDay handles TIME type from database (HH:MM:SS format)
+type TimeOfDay = types.TimeOfDay
+
 // NewBitBool creates a new BitBool
 var NewBitBool = types.NewBitBool

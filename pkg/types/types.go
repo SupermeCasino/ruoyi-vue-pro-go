@@ -392,3 +392,64 @@ func ToJsonDateTimePtr(t *time.Time) *JsonDateTime {
 	jt := JsonDateTime(*t)
 	return &jt
 }
+
+// TimeOfDay 处理数据库 TIME 类型（仅存储 HH:MM:SS）
+// 存储为 "15:04:05" 格式的字符串
+type TimeOfDay string
+
+const timeOfDayLayout = "15:04:05"
+
+// Scan 实现 Scanner 接口
+func (t *TimeOfDay) Scan(value interface{}) error {
+	if value == nil {
+		*t = ""
+		return nil
+	}
+
+	switch v := value.(type) {
+	case []uint8:
+		*t = TimeOfDay(string(v))
+	case string:
+		*t = TimeOfDay(v)
+	case time.Time:
+		*t = TimeOfDay(v.Format(timeOfDayLayout))
+	default:
+		return fmt.Errorf("incompatible type for TimeOfDay: %T", v)
+	}
+	return nil
+}
+
+// Value 实现 driver.Valuer 接口
+func (t TimeOfDay) Value() (driver.Value, error) {
+	if t == "" {
+		return nil, nil
+	}
+	return string(t), nil
+}
+
+// MarshalJSON 实现 JSON 序列化
+func (t TimeOfDay) MarshalJSON() ([]byte, error) {
+	if t == "" {
+		return []byte("null"), nil
+	}
+	return []byte(fmt.Sprintf("\"%s\"", t)), nil
+}
+
+// UnmarshalJSON 实现 JSON 反序列化
+func (t *TimeOfDay) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" || len(data) == 0 {
+		*t = ""
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*t = TimeOfDay(s)
+	return nil
+}
+
+// String 返回字符串表示
+func (t TimeOfDay) String() string {
+	return string(t)
+}
