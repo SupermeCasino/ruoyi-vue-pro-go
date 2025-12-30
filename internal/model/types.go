@@ -8,6 +8,9 @@ type BitBool = types.BitBool
 // IntListFromCSV handles comma-separated integer lists from MyBatis IntegerListTypeHandler.
 type IntListFromCSV = types.IntListFromCSV
 
+// Int64ListFromCSV handles comma-separated long integer lists.
+type Int64ListFromCSV = types.Int64ListFromCSV
+
 // StringListFromCSV handles comma-separated string lists.
 type StringListFromCSV = types.StringListFromCSV
 
