@@ -6,6 +6,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -22,28 +23,28 @@ func NewFileConfigHandler(svc *service.FileConfigService) *FileConfigHandler {
 func (h *FileConfigHandler) CreateFileConfig(c *gin.Context) {
 	var req req.FileConfigSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateFileConfig(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 func (h *FileConfigHandler) UpdateFileConfig(c *gin.Context) {
 	var req req.FileConfigSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateFileConfig(c, &req); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *FileConfigHandler) UpdateFileConfigMaster(c *gin.Context) {
@@ -58,73 +59,73 @@ func (h *FileConfigHandler) UpdateFileConfigMaster(c *gin.Context) {
 	}
 
 	if req.ID == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if err := h.svc.UpdateFileConfigMaster(c, req.ID); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *FileConfigHandler) DeleteFileConfig(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteFileConfig(c, id); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *FileConfigHandler) GetFileConfig(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetFileConfig(c, id)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 func (h *FileConfigHandler) GetFileConfigPage(c *gin.Context) {
 	var req req.FileConfigPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetFileConfigPage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 func (h *FileConfigHandler) TestFileConfig(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	url, err := h.svc.TestFileConfig(c, id)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(url))
+	response.WriteSuccess(c, url)
 }
 
 // File Handler
@@ -140,93 +141,93 @@ func NewFileHandler(svc *service.FileService) *FileHandler {
 func (h *FileHandler) UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(400, response.Error(400, "文件不能为空"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	path := c.PostForm("path")
 
 	f, err := file.Open()
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 	defer f.Close()
 
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 
 	url, err := h.svc.CreateFile(c, file.Filename, path, content)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(url))
+	response.WriteSuccess(c, url)
 }
 
 func (h *FileHandler) DeleteFile(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteFile(c, id); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *FileHandler) GetFilePage(c *gin.Context) {
 	var req req.FilePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetFilePage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 func (h *FileHandler) GetFilePresignedUrl(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {
-		c.JSON(400, response.Error(400, "path is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetFilePresignedUrl(c, path)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 func (h *FileHandler) CreateFile(c *gin.Context) {
 	var req req.FileCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateFileCallback(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 func (h *FileHandler) GetFileContent(c *gin.Context) {
 	configIdStr := c.Param("configId")
 	configId, _ := strconv.ParseInt(configIdStr, 10, 64)
 	if configId == 0 {
-		c.JSON(400, response.Error(400, "configId is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// Warning: This implementation might need adjustment depending on how "get/**" wildcard is handled in router

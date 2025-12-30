@@ -64,12 +64,12 @@ func NewAreaHandler() *AreaHandler {
 func (h *AreaHandler) GetAreaTree(c *gin.Context) {
 	tree := area.GetAreaTree()
 	if tree == nil {
-		c.JSON(200, response.Success([]*resp.AreaNodeResp{}))
+		response.WriteSuccess(c, []*resp.AreaNodeResp{})
 		return
 	}
 
 	result := convertAreaTree(tree)
-	c.JSON(200, response.Success(result))
+	response.WriteSuccess(c, result)
 }
 
 // GetAreaByIP 获得 IP 对应的地区名
@@ -77,13 +77,13 @@ func (h *AreaHandler) GetAreaTree(c *gin.Context) {
 func (h *AreaHandler) GetAreaByIP(c *gin.Context) {
 	ip := c.Query("ip")
 	if ip == "" {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 如果没有 ip2region 数据库，返回未知
 	if h.searcher == nil {
-		c.JSON(200, response.Success("未知"))
+		response.WriteSuccess(c, "未知")
 		return
 	}
 
@@ -92,25 +92,25 @@ func (h *AreaHandler) GetAreaByIP(c *gin.Context) {
 	regionStr, err := h.searcher.SearchByStr(ip)
 	if err != nil {
 		zap.L().Debug("ip2region search failed", zap.String("ip", ip), zap.Error(err))
-		c.JSON(200, response.Success("未知"))
+		response.WriteSuccess(c, "未知")
 		return
 	}
 
 	// 将区域ID转换为区域名称
 	areaID, err := strconv.Atoi(regionStr)
 	if err != nil {
-		c.JSON(200, response.Success("未知"))
+		response.WriteSuccess(c, "未知")
 		return
 	}
 
 	// 使用 area.Format 获取格式化的地区名
 	formatted := area.Format(areaID)
 	if formatted == "" {
-		c.JSON(200, response.Success("未知"))
+		response.WriteSuccess(c, "未知")
 		return
 	}
 
-	c.JSON(200, response.Success(formatted))
+	response.WriteSuccess(c, formatted)
 }
 
 // convertAreaTree 转换地区树为响应结构

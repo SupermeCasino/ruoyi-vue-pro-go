@@ -24,17 +24,17 @@ func NewAuthHandler(svc *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req req.AuthLoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	resp, err := h.svc.Login(c.Request.Context(), &req)
 	if err != nil {
-		c.Error(err) // 交给 ErrorHandler 中间件处理
+		response.WriteBizError(c, err)
 		return
 	}
 
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
 
 // GetPermissionInfo 获取权限信息
@@ -42,10 +42,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) GetPermissionInfo(c *gin.Context) {
 	resp, err := h.svc.GetPermissionInfo(c)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
 
 // Logout 登出
@@ -59,10 +59,10 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	err := h.svc.Logout(c.Request.Context(), token)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // RefreshToken 刷新令牌
@@ -70,16 +70,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	refreshToken := c.Query("refreshToken")
 	if refreshToken == "" {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	resp, err := h.svc.RefreshToken(c.Request.Context(), refreshToken)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
 
 // SmsLogin 短信登录
@@ -87,16 +87,16 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 func (h *AuthHandler) SmsLogin(c *gin.Context) {
 	var r req.AuthSmsLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	resp, err := h.svc.SmsLogin(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
 
 // SendSmsCode 发送短信验证码
@@ -104,16 +104,16 @@ func (h *AuthHandler) SmsLogin(c *gin.Context) {
 func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 	var r req.AuthSmsSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	err := h.svc.SendSmsCode(c.Request.Context(), &r, c.ClientIP())
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // Register 注册
@@ -121,16 +121,16 @@ func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var r req.AuthRegisterReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	resp, err := h.svc.Register(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
 
 // ResetPassword 重置密码
@@ -138,16 +138,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var r req.AuthResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	err := h.svc.ResetPassword(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // SocialAuthRedirect 社交授权跳转
@@ -157,23 +157,23 @@ func (h *AuthHandler) SocialAuthRedirect(c *gin.Context) {
 	redirectUri := c.Query("redirectUri")
 
 	if socialType == "" {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 转换类型
 	typeInt, err := strconv.Atoi(socialType)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	url, err := h.svc.SocialAuthRedirect(c.Request.Context(), typeInt, redirectUri)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(url))
+	response.WriteSuccess(c, url)
 }
 
 // SocialLogin 社交登录
@@ -181,14 +181,14 @@ func (h *AuthHandler) SocialAuthRedirect(c *gin.Context) {
 func (h *AuthHandler) SocialLogin(c *gin.Context) {
 	var r req.AuthSocialLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	resp, err := h.svc.SocialLogin(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
