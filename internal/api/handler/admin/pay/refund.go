@@ -36,11 +36,11 @@ func (h *PayRefundHandler) GetRefund(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	refund, err := h.svc.GetRefund(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	if refund == nil {
-		c.JSON(200, response.Success(&resp.PayRefundDetailsResp{}))
+		response.WriteSuccess(c, &resp.PayRefundDetailsResp{})
 		return
 	}
 
@@ -53,19 +53,19 @@ func (h *PayRefundHandler) GetRefund(c *gin.Context) {
 	}
 
 	r := convertRefundDetailsResp(refund, app, order)
-	c.JSON(200, response.Success(r))
+	response.WriteSuccess(c, r)
 }
 
 // GetRefundPage 获得退款订单分页
 func (h *PayRefundHandler) GetRefundPage(c *gin.Context) {
 	var r req.PayRefundPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetRefundPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -81,23 +81,23 @@ func (h *PayRefundHandler) GetRefundPage(c *gin.Context) {
 		list = append(list, convertRefundResp(item, appMap[item.AppID]))
 	}
 
-	c.JSON(200, response.Success(pagination.PageResult[*resp.PayRefundResp]{
+	response.WriteSuccess(c, pagination.PageResult[*resp.PayRefundResp]{
 		List:  list,
 		Total: pageResult.Total,
-	}))
+	})
 }
 
 // ExportRefundExcel 导出退款订单 Excel
 func (h *PayRefundHandler) ExportRefundExcel(c *gin.Context) {
 	var r req.PayRefundExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	list, err := h.svc.GetRefundList(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -115,7 +115,7 @@ func (h *PayRefundHandler) ExportRefundExcel(c *gin.Context) {
 	sheetName := "Sheet1"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -167,7 +167,7 @@ func (h *PayRefundHandler) ExportRefundExcel(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Disposition", "attachment; filename=pay_refund_list.xlsx")
 	if err := f.Write(c.Writer); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 }

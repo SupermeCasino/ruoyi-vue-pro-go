@@ -26,30 +26,30 @@ func NewPayWalletRechargePackageHandler(svc *payData.PayWalletRechargePackageSer
 func (h *PayWalletRechargePackageHandler) CreateWalletRechargePackage(c *gin.Context) {
 	var r req.PayWalletRechargePackageCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateWalletRechargePackage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateWalletRechargePackage 更新充值套餐
 func (h *PayWalletRechargePackageHandler) UpdateWalletRechargePackage(c *gin.Context) {
 	var r req.PayWalletRechargePackageUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateWalletRechargePackage(c, &r)
 	if err != nil {
-		c.Error(err)
+				response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteWalletRechargePackage 删除充值套餐
@@ -57,15 +57,15 @@ func (h *PayWalletRechargePackageHandler) DeleteWalletRechargePackage(c *gin.Con
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err = h.svc.DeleteWalletRechargePackage(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetWalletRechargePackage 获得充值套餐
@@ -73,27 +73,27 @@ func (h *PayWalletRechargePackageHandler) GetWalletRechargePackage(c *gin.Contex
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pkg, err := h.svc.GetWalletRechargePackage(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(convertPackageResp(pkg)))
+	response.WriteSuccess(c, convertPackageResp(pkg))
 }
 
 // GetWalletRechargePackagePage 获得充值套餐分页
 func (h *PayWalletRechargePackageHandler) GetWalletRechargePackagePage(c *gin.Context) {
 	var r req.PayWalletRechargePackagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetWalletRechargePackagePage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *PayWalletRechargePackageHandler) GetWalletRechargePackagePage(c *gin.Co
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertPackageResp(item))
 	}
-	c.JSON(200, response.Success(newRes))
+		response.WriteSuccess(c, newRes)
 }
 
 func convertPackageResp(item *pay.PayWalletRechargePackage) *resp.PayWalletRechargePackageResp {

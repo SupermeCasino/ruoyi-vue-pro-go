@@ -24,12 +24,12 @@ func NewPayWalletTransactionHandler(svc *payData.PayWalletTransactionService) *P
 func (h *PayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context) {
 	var r req.PayWalletTransactionPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetWalletTransactionPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -38,7 +38,7 @@ func (h *PayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context) {
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertTransactionResp(item))
 	}
-	c.JSON(200, response.Success(newRes))
+	response.WriteSuccess(c, newRes)
 }
 
 func convertTransactionResp(item *pay.PayWalletTransaction) *resp.PayWalletTransactionResp {

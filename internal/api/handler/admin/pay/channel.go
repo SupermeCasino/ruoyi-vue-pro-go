@@ -25,30 +25,30 @@ func NewPayChannelHandler(svc *paySvc.PayChannelService) *PayChannelHandler {
 func (h *PayChannelHandler) CreateChannel(c *gin.Context) {
 	var r req.PayChannelCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateChannel(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateChannel 更新支付渠道
 func (h *PayChannelHandler) UpdateChannel(c *gin.Context) {
 	var r req.PayChannelUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateChannel(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteChannel 删除支付渠道
@@ -56,15 +56,15 @@ func (h *PayChannelHandler) DeleteChannel(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err = h.svc.DeleteChannel(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetChannel 获得支付渠道
@@ -76,36 +76,36 @@ func (h *PayChannelHandler) GetChannel(c *gin.Context) {
 	if idStr != "" {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			c.JSON(200, errors.ErrParam)
+			response.WriteBizError(c, errors.ErrParam)
 			return
 		}
 		channel, err := h.svc.GetChannel(c, id)
 		if err != nil {
-			c.Error(err)
+			response.WriteBizError(c, err)
 			return
 		}
 		// 对齐Java: 查询不到返回null，Go版本返回nil
-		c.JSON(200, response.Success(convertChannelResp(channel)))
+		response.WriteSuccess(c, convertChannelResp(channel))
 		return
 	}
 
 	if appIdStr != "" && code != "" {
 		appId, err := strconv.ParseInt(appIdStr, 10, 64)
 		if err != nil {
-			c.JSON(200, errors.ErrParam)
+			response.WriteBizError(c, errors.ErrParam)
 			return
 		}
 		channel, err := h.svc.GetChannelByAppIdAndCode(c, appId, code)
 		if err != nil {
-			c.Error(err)
+			response.WriteBizError(c, err)
 			return
 		}
 		// 对齐Java: 查询不到返回null，Go版本返回nil
-		c.JSON(200, response.Success(convertChannelResp(channel)))
+		response.WriteSuccess(c, convertChannelResp(channel))
 		return
 	}
 
-	c.JSON(200, errors.ErrParam)
+	response.WriteBizError(c, errors.ErrParam)
 }
 
 // GetEnableChannelCodeList 获得指定应用的开启的支付渠道编码列表
@@ -113,12 +113,12 @@ func (h *PayChannelHandler) GetEnableChannelCodeList(c *gin.Context) {
 	appIdStr := c.Query("appId")
 	appId, err := strconv.ParseInt(appIdStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	channels, err := h.svc.GetEnableChannelList(c, appId)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *PayChannelHandler) GetEnableChannelCodeList(c *gin.Context) {
 	for _, ch := range channels {
 		codes = append(codes, ch.Code)
 	}
-	c.JSON(200, response.Success(codes))
+	response.WriteSuccess(c, codes)
 }
 
 func convertChannelResp(channel *payModel.PayChannel) *resp.PayChannelResp {

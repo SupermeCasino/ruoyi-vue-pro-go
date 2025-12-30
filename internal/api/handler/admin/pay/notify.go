@@ -59,7 +59,7 @@ func (h *PayNotifyHandler) NotifyOrder(c *gin.Context) {
 	payClient := h.channelSvc.GetPayClient(channelId)
 	if payClient == nil {
 		h.logger.Error("[NotifyOrder] 渠道编号找不到对应的支付客户端", zap.Int64("channelId", channelId))
-		c.String(400, "渠道不存在")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -74,19 +74,19 @@ func (h *PayNotifyHandler) NotifyOrder(c *gin.Context) {
 	orderResp, err := payClient.ParseOrderNotify(notifyData)
 	if err != nil {
 		h.logger.Error("[NotifyOrder] 解析回调数据失败", zap.Error(err))
-		c.String(400, "解析失败: "+err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 3. 处理回调
 	if err := h.orderSvc.NotifyOrder(c.Request.Context(), channelId, orderResp); err != nil {
 		h.logger.Error("[NotifyOrder] 处理回调失败", zap.Error(err))
-		c.String(500, "处理失败: "+err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	h.logger.Info("[NotifyOrder] 支付回调处理成功", zap.Int64("channelId", channelId))
-	c.String(200, "success")
+	response.WriteSuccess(c, "success")
 }
 
 // NotifyRefund 支付渠道的统一【退款】回调
@@ -100,7 +100,7 @@ func (h *PayNotifyHandler) NotifyRefund(c *gin.Context) {
 	payClient := h.channelSvc.GetPayClient(channelId)
 	if payClient == nil {
 		h.logger.Error("[NotifyRefund] 渠道编号找不到对应的支付客户端", zap.Int64("channelId", channelId))
-		c.String(400, "渠道不存在")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -115,14 +115,14 @@ func (h *PayNotifyHandler) NotifyRefund(c *gin.Context) {
 	refundResp, err := payClient.ParseRefundNotify(notifyData)
 	if err != nil {
 		h.logger.Error("[NotifyRefund] 解析回调数据失败", zap.Error(err))
-		c.String(400, "解析失败: "+err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 3. 处理回调
 	if err := h.refundSvc.NotifyRefund(c.Request.Context(), channelId, refundResp); err != nil {
 		h.logger.Error("[NotifyRefund] 处理回调失败", zap.Error(err))
-		c.String(500, "处理失败: "+err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (h *PayNotifyHandler) NotifyTransfer(c *gin.Context) {
 	payClient := h.channelSvc.GetPayClient(channelId)
 	if payClient == nil {
 		h.logger.Error("[NotifyTransfer] 渠道编号找不到对应的支付客户端", zap.Int64("channelId", channelId))
-		c.String(400, "渠道不存在")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (h *PayNotifyHandler) NotifyTransfer(c *gin.Context) {
 	transferResp, err := payClient.ParseTransferNotify(notifyData)
 	if err != nil {
 		h.logger.Error("[NotifyTransfer] 解析回调数据失败", zap.Error(err))
-		c.String(400, "解析失败: "+err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (h *PayNotifyHandler) NotifyTransfer(c *gin.Context) {
 	if h.transferSvc != nil {
 		if err := h.transferSvc.NotifyTransfer(c.Request.Context(), channelId, transferResp); err != nil {
 			h.logger.Error("[NotifyTransfer] 处理回调失败", zap.Error(err))
-			c.String(500, "处理失败: "+err.Error())
+			response.WriteBizError(c, err)
 			return
 		}
 	}
@@ -179,11 +179,11 @@ func (h *PayNotifyHandler) GetNotifyTaskDetail(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	task, err := h.svc.GetNotifyTask(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	if task == nil {
-		c.JSON(200, response.Success(&resp.PayNotifyTaskDetailResp{}))
+		response.WriteSuccess(c, &resp.PayNotifyTaskDetailResp{})
 		return
 	}
 
@@ -204,19 +204,19 @@ func (h *PayNotifyHandler) GetNotifyTaskDetail(c *gin.Context) {
 	}
 	r.Logs = logResps
 
-	c.JSON(200, response.Success(r))
+	response.WriteSuccess(c, r)
 }
 
 // GetNotifyTaskPage 获得回调通知分页
 func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
 	var r req.PayNotifyTaskPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetNotifyTaskPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -236,10 +236,10 @@ func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
 		list = append(list, tr)
 	}
 
-	c.JSON(200, response.Success(pagination.PageResult[*resp.PayNotifyTaskResp]{
+	response.WriteSuccess(c, pagination.PageResult[*resp.PayNotifyTaskResp]{
 		List:  list,
 		Total: pageResult.Total,
-	}))
+	})
 }
 
 // Helpers: 将 query 和 header 转换为 map

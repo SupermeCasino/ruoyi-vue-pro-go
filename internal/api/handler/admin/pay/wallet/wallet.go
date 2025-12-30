@@ -27,12 +27,12 @@ func NewPayWalletHandler(svc *payData.PayWalletService) *PayWalletHandler {
 func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
 	var r req.PayWalletPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetWalletPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertWalletResp(item))
 	}
-	c.JSON(200, response.Success(newRes))
+	response.WriteSuccess(c, newRes)
 }
 
 // GetWallet 获得会员钱包
@@ -49,7 +49,7 @@ func (h *PayWalletHandler) GetWallet(c *gin.Context) {
 	userIdStr := c.Query("userId")
 	userId, err := strconv.ParseInt(userIdStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// 对齐 Java: payWalletService.getOrCreateWallet(reqVO.getUserId(), MEMBER.getValue())
@@ -58,14 +58,14 @@ func (h *PayWalletHandler) GetWallet(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(200, response.Success(convertWalletResp(wallet)))
+	response.WriteSuccess(c, convertWalletResp(wallet))
 }
 
 // UpdateWalletBalance 更新会员用户余额
 func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
 	var r req.PayWalletUpdateBalanceReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
 		return
 	}
 	if wallet == nil {
-		c.JSON(200, errors.ErrNotFound)
+		response.WriteBizError(c, errors.ErrNotFound)
 		return
 	}
 
@@ -84,10 +84,10 @@ func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
 	// walletID, bizID, bizType, price
 	err = h.svc.AddWalletBalance(c, wallet.ID, strconv.FormatInt(r.UserID, 10), consts.PayWalletBizTypeUpdateBalance, r.Balance)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func convertWalletResp(item *pay.PayWallet) *resp.PayWalletResp {

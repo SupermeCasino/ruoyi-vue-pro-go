@@ -26,12 +26,12 @@ func NewPayWalletRechargeHandler(svc *payData.PayWalletRechargeService) *PayWall
 func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
 	var r req.PayWalletRechargePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetWalletRechargePage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertRechargeResp(item))
 	}
-	c.JSON(200, response.Success(newRes))
+	response.WriteSuccess(c, newRes)
 }
 
 // UpdateWalletRechargePaid 更新钱包充值为已支付
@@ -48,21 +48,21 @@ func (h *PayWalletRechargeHandler) UpdateWalletRechargePaid(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	payOrderIdStr := c.Query("payOrderId")
 	payOrderId, err := strconv.ParseInt(payOrderIdStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if err := h.svc.UpdateWalletRechargerPaid(c, id, payOrderId); err != nil {
-		c.Error(err)
+			response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // RefundWalletRecharge 发起钱包充值退款
@@ -77,15 +77,15 @@ func (h *PayWalletRechargeHandler) RefundWalletRecharge(c *gin.Context) {
 	}
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if err := h.svc.RefundWalletRecharge(c, id, c.ClientIP()); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // UpdateWalletRechargeRefunded 更新钱包充值为已退款
@@ -93,21 +93,21 @@ func (h *PayWalletRechargeHandler) UpdateWalletRechargeRefunded(c *gin.Context) 
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	payRefundIdStr := c.Query("payRefundId")
 	payRefundId, err := strconv.ParseInt(payRefundIdStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if err := h.svc.UpdateWalletRechargeRefunded(c, id, payRefundId); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func convertRechargeResp(item *pay.PayWalletRecharge) *resp.PayWalletRechargeResp {

@@ -34,7 +34,7 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 
 	order, err := h.svc.GetOrder(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *PayOrderHandler) GetOrder(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, response.Success(resp))
+	response.WriteSuccess(c, resp)
 }
 
 // GetOrderDetail 获得支付订单详情
@@ -69,16 +69,13 @@ func (h *PayOrderHandler) GetOrderDetail(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	order, err := h.svc.GetOrder(c, id)
 	if err != nil {
-		// If order not found, return Success(nil) as per Java logic?
-		// Or Error? Java: return success(null) if order is null.
-		// Go gorm returns generic error usually.
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -96,20 +93,20 @@ func (h *PayOrderHandler) GetOrderDetail(c *gin.Context) {
 		detail.AppName = app.Name
 	}
 
-	c.JSON(200, response.Success(detail))
+	response.WriteSuccess(c, detail)
 }
 
 // GetOrderPage 获得支付订单分页
 func (h *PayOrderHandler) GetOrderPage(c *gin.Context) {
 	var r req.PayOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	pageResult, err := h.svc.GetOrderPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -129,17 +126,17 @@ func (h *PayOrderHandler) GetOrderPage(c *gin.Context) {
 		list = append(list, r)
 	}
 
-	c.JSON(200, response.Success(pagination.PageResult[resp.PayOrderResp]{
+	response.WriteSuccess(c, pagination.PageResult[resp.PayOrderResp]{
 		List:  list,
 		Total: pageResult.Total,
-	}))
+	})
 }
 
 // SubmitPayOrder 提交支付订单
 func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 	var r req.PayOrderSubmitReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -156,7 +153,7 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 		}
 		wallet, err := h.walletSvc.GetOrCreateWallet(c, userID, userType)
 		if err != nil {
-			c.Error(err)
+			response.WriteBizError(c, err)
 			return
 		}
 		r.ChannelExtras["wallet_id"] = strconv.FormatInt(wallet.ID, 10)
@@ -165,23 +162,23 @@ func (h *PayOrderHandler) SubmitPayOrder(c *gin.Context) {
 	// 2. Submit Order
 	respVO, err := h.svc.SubmitOrder(c, &r, c.ClientIP())
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(respVO))
+	response.WriteSuccess(c, respVO)
 }
 
 // ExportOrderExcel 导出支付订单 Excel
 func (h *PayOrderHandler) ExportOrderExcel(c *gin.Context) {
 	var r req.PayOrderExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	list, err := h.svc.GetOrderList(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -199,7 +196,7 @@ func (h *PayOrderHandler) ExportOrderExcel(c *gin.Context) {
 	sheetName := "Sheet1"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -256,7 +253,7 @@ func (h *PayOrderHandler) ExportOrderExcel(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Disposition", "attachment; filename=pay_order_list.xlsx")
 	if err := f.Write(c.Writer); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 }

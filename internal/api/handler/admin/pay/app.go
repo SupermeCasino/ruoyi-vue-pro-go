@@ -24,45 +24,45 @@ func NewPayAppHandler(svc *paySvc.PayAppService) *PayAppHandler {
 func (h *PayAppHandler) CreateApp(c *gin.Context) {
 	var r req.PayAppCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateApp(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateApp 更新支付应用
 func (h *PayAppHandler) UpdateApp(c *gin.Context) {
 	var r req.PayAppUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateApp(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // UpdateAppStatus 更新支付应用状态
 func (h *PayAppHandler) UpdateAppStatus(c *gin.Context) {
 	var r req.PayAppUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateAppStatus(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteApp 删除支付应用
@@ -70,15 +70,15 @@ func (h *PayAppHandler) DeleteApp(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err = h.svc.DeleteApp(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetApp 获得支付应用
@@ -86,12 +86,12 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	app, err := h.svc.GetApp(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -106,14 +106,14 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 		TransferNotifyURL: app.TransferNotifyURL,
 		CreateTime:        app.CreateTime,
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetAppList 获得支付应用列表
 func (h *PayAppHandler) GetAppList(c *gin.Context) {
 	list, err := h.svc.GetAppList(c)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -132,20 +132,20 @@ func (h *PayAppHandler) GetAppList(c *gin.Context) {
 			CreateTime:        app.CreateTime,
 		})
 	}
-	c.JSON(200, response.Success(resList))
+	response.WriteSuccess(c, resList)
 }
 
 // GetAppPage 获得支付应用分页
 func (h *PayAppHandler) GetAppPage(c *gin.Context) {
 	var r req.PayAppPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAppPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }

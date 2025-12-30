@@ -26,32 +26,32 @@ func (h *PayTransferHandler) GetTransfer(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	transfer, err := h.transferSvc.GetTransfer(c.Request.Context(), id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
-	c.JSON(200, response.Success(transfer))
+	response.WriteSuccess(c, transfer)
 }
 
 // GetTransferPage 获得转账订单分页
 func (h *PayTransferHandler) GetTransferPage(c *gin.Context) {
 	var req reqPay.PayTransferPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	pageResult, err := h.transferSvc.GetTransferPage(c.Request.Context(), &req)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
-	c.JSON(200, response.Success(pageResult))
+	response.WriteSuccess(c, pageResult)
 }
