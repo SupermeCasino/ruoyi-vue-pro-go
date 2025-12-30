@@ -14,7 +14,7 @@ type TenantPackagePageReq struct {
 type TenantPackageSaveReq struct {
 	ID      int64   `json:"id"`
 	Name    string  `json:"name" binding:"required"`
-	Status  int     `json:"status" binding:"required"`
+	Status  *int    `json:"status" binding:"required"`
 	Remark  string  `json:"remark"`
-	MenuIds []int64 `json:"menuIds" binding:"required"`
+	MenuIDs []int64 `json:"menuIds" binding:"required"`
 }

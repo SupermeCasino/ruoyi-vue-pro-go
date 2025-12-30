@@ -14,6 +14,7 @@ type UserPageReq struct {
 	DeptID       int64      `form:"deptId"`
 	CreateTimeGe *time.Time `form:"createTime[0]"` // Helper for time range
 	CreateTimeLe *time.Time `form:"createTime[1]"`
+	RoleID       int64      `form:"roleId"`
 }
 
 type UserSaveReq struct {
