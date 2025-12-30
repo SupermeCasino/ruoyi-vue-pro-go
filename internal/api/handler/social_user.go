@@ -6,6 +6,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -30,7 +31,7 @@ func NewSocialUserHandler(socialUserService *service.SocialUserService, logger *
 func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 	var req req.SocialUserBindReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -41,7 +42,7 @@ func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 
 	if _, err := h.socialUserService.BindSocialUser(c.Request.Context(), userID, userType, &req); err != nil {
 		h.logger.Error("绑定社交用户失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -52,7 +53,7 @@ func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 func (h *SocialUserHandler) UnbindSocialUser(c *gin.Context) {
 	var req req.SocialUserUnbindReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -63,7 +64,7 @@ func (h *SocialUserHandler) UnbindSocialUser(c *gin.Context) {
 
 	if err := h.socialUserService.UnbindSocialUser(c.Request.Context(), userID, userType, req.Type, req.Openid); err != nil {
 		h.logger.Error("解绑社交用户失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -80,7 +81,7 @@ func (h *SocialUserHandler) GetSocialUserList(c *gin.Context) {
 	list, err := h.socialUserService.GetSocialUserList(c.Request.Context(), userID, userType)
 	if err != nil {
 		h.logger.Error("获取社交用户列表失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -109,7 +110,7 @@ func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
 	user, err := h.socialUserService.GetSocialUser(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("获取社交用户失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -132,14 +133,14 @@ func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
 func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
 	var req req.SocialUserPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	page, err := h.socialUserService.GetSocialUserPage(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Error("获取社交用户分页失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 

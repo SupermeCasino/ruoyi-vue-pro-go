@@ -5,6 +5,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -27,14 +28,14 @@ func NewSocialClientHandler(socialClientService *service.SocialClientService, lo
 func (h *SocialClientHandler) CreateSocialClient(c *gin.Context) {
 	var req req.SocialClientSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	id, err := h.socialClientService.CreateSocialClient(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Error("创建社交客户端失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -45,13 +46,13 @@ func (h *SocialClientHandler) CreateSocialClient(c *gin.Context) {
 func (h *SocialClientHandler) UpdateSocialClient(c *gin.Context) {
 	var req req.SocialClientSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if err := h.socialClientService.UpdateSocialClient(c.Request.Context(), &req); err != nil {
 		h.logger.Error("更新社交客户端失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -64,7 +65,7 @@ func (h *SocialClientHandler) DeleteSocialClient(c *gin.Context) {
 
 	if err := h.socialClientService.DeleteSocialClient(c.Request.Context(), id); err != nil {
 		h.logger.Error("删除社交客户端失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -78,7 +79,7 @@ func (h *SocialClientHandler) GetSocialClient(c *gin.Context) {
 	client, err := h.socialClientService.GetSocialClient(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Error("获取社交客户端失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -100,14 +101,14 @@ func (h *SocialClientHandler) GetSocialClient(c *gin.Context) {
 func (h *SocialClientHandler) GetSocialClientPage(c *gin.Context) {
 	var req req.SocialClientPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	page, err := h.socialClientService.GetSocialClientPage(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Error("获取社交客户端分页失败", zap.Error(err))
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
