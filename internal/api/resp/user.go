@@ -8,6 +8,7 @@ type UserRespVO struct {
 	Nickname   string    `json:"nickname"`
 	Remark     string    `json:"remark"`
 	DeptID     int64     `json:"deptId"`
+	DeptName   string    `json:"deptName"`
 	PostIDs    []int64   `json:"postIds"`
 	RoleIDs    []int64   `json:"roleIds"`
 	Email      string    `json:"email"`

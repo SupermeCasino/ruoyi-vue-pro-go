@@ -16,7 +16,7 @@ type TenantRespVO struct {
 	ContactName   string    `json:"contactName"`
 	ContactMobile string    `json:"contactMobile"`
 	Status        int       `json:"status"`
-	Website       string    `json:"website"`
+	Websites      []string  `json:"websites"` // 对齐 Java: List<String>
 	PackageID     int64     `json:"packageId"`
 	ExpireTime    int64     `json:"expireTime"` // Timestamp (ms)
 	AccountCount  int       `json:"accountCount"`
