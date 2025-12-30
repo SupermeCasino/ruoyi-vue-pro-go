@@ -41,28 +41,28 @@ func (h *TradeStatisticsHandler) GetTradeSummaryComparison(c *gin.Context) {
 	// 1.1 昨天的数据
 	yesterdayData, err := h.tradeStatisticsService.GetTradeSummaryByDays(c, -1)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 1.2 前天的数据（用于对照昨天的数据）
 	beforeYesterdayData, err := h.tradeStatisticsService.GetTradeSummaryByDays(c, -2)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 2.1 本月数据
 	monthData, err := h.tradeStatisticsService.GetTradeSummaryByMonths(c, 0)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 2.2 上月数据（用于对照本月的数据）
 	lastMonthData, err := h.tradeStatisticsService.GetTradeSummaryByMonths(c, -1)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -86,18 +86,18 @@ func (h *TradeStatisticsHandler) GetTradeSummaryComparison(c *gin.Context) {
 func (h *TradeStatisticsHandler) GetTradeStatisticsAnalyse(c *gin.Context) {
 	var reqVO req.TradeStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if len(reqVO.Times) != 2 {
-		response.WriteError(c, errors.ParamErrCode, "时间范围参数错误")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	result, err := h.tradeStatisticsService.GetTradeStatisticsAnalyse(c, reqVO.Times[0], reqVO.Times[1])
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -109,18 +109,18 @@ func (h *TradeStatisticsHandler) GetTradeStatisticsAnalyse(c *gin.Context) {
 func (h *TradeStatisticsHandler) GetTradeStatisticsList(c *gin.Context) {
 	var reqVO req.TradeStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if len(reqVO.Times) != 2 {
-		response.WriteError(c, errors.ParamErrCode, "时间范围参数错误")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	result, err := h.tradeStatisticsService.GetTradeStatisticsList(c, reqVO.Times[0], reqVO.Times[1])
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -134,14 +134,14 @@ func (h *TradeStatisticsHandler) GetOrderCount(c *gin.Context) {
 	// 待发货：Status=Undelivered (10), DeliveryType=Express (1)
 	undeliveredCount, err := h.tradeOrderStatisticsService.GetCountByStatusAndDeliveryType(c, consts.TradeOrderStatusUndelivered, consts.DeliveryTypeExpress)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 待自提：Status=Delivered (20), DeliveryType=PickUp (2)
 	pickUpCount, err := h.tradeOrderStatisticsService.GetCountByStatusAndDeliveryType(c, consts.TradeOrderStatusDelivered, consts.DeliveryTypePickUp)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *TradeStatisticsHandler) GetOrderCount(c *gin.Context) {
 	// TODO: Replace magic number 1 with AfterSaleStatus enum constant if available
 	afterSaleApplyCount, err := h.afterSaleStatisticsService.GetCountByStatus(c, 1)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (h *TradeStatisticsHandler) GetOrderCount(c *gin.Context) {
 	// TODO: Replace magic number 1 with BrokerageWithdrawStatus enum constant if available
 	auditingWithdrawCount, err := h.brokerageStatisticsService.GetWithdrawCountByStatus(c, 1)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -176,7 +176,7 @@ func (h *TradeStatisticsHandler) GetOrderCount(c *gin.Context) {
 func (h *TradeStatisticsHandler) GetOrderComparison(c *gin.Context) {
 	result, err := h.tradeOrderStatisticsService.GetOrderComparison(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -188,7 +188,7 @@ func (h *TradeStatisticsHandler) GetOrderComparison(c *gin.Context) {
 func (h *TradeStatisticsHandler) GetOrderCountTrendComparison(c *gin.Context) {
 	result, err := h.tradeOrderStatisticsService.GetOrderCountTrendComparison(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -200,25 +200,25 @@ func (h *TradeStatisticsHandler) GetOrderCountTrendComparison(c *gin.Context) {
 func (h *TradeStatisticsHandler) ExportTradeStatisticsExcel(c *gin.Context) {
 	var reqVO req.TradeStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if len(reqVO.Times) != 2 {
-		response.WriteError(c, errors.ParamErrCode, "时间范围参数错误")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 查询数据
 	data, err := h.tradeStatisticsService.GetTradeStatisticsList(c, reqVO.Times[0], reqVO.Times[1])
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 导出 Excel
 	if err = excel.WriteExcel(c, "交易状况.xlsx", "数据", data); err != nil {
-		response.WriteError(c, errors.ServerErrCode, "导出 Excel 失败: "+err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 }

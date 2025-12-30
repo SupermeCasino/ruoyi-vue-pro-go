@@ -35,7 +35,7 @@ func NewMemberStatisticsHandler(
 func (h *MemberStatisticsHandler) GetMemberSummary(c *gin.Context) {
 	result, err := h.memberStatisticsService.GetMemberSummary(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrUnknown)
 		return
 	}
 
@@ -47,12 +47,12 @@ func (h *MemberStatisticsHandler) GetMemberSummary(c *gin.Context) {
 func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
 	var reqVO req.MemberAnalyseReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if len(reqVO.Times) != 2 {
-		response.WriteError(c, errors.ParamErrCode, "时间范围参数错误")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -62,14 +62,14 @@ func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
 	// 1.1 查询分析对照数据
 	comparisonData, err := h.memberStatisticsService.GetMemberAnalyseComparisonData(c, beginTime, endTime)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 1.2 查询成交用户数量
 	payUserCount, err := h.tradeOrderStatisticsService.GetPayUserCount(c, beginTime, endTime)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
 	if payUserCount > 0 {
 		payPrice, err := h.tradeOrderStatisticsService.GetOrderPayPrice(c, beginTime, endTime)
 		if err != nil {
-			response.WriteError(c, errors.ServerErrCode, err.Error())
+			response.WriteBizError(c, err)
 			return
 		}
 		atv = payPrice / payUserCount
@@ -87,14 +87,14 @@ func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
 	// 1.4 查询访客数量
 	visitUserCount, err := h.apiAccessLogStatisticsService.GetIpCount(c, 0, beginTime, endTime)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
 	// 1.5 下单用户数量
 	orderUserCount, err := h.tradeOrderStatisticsService.GetOrderUserCount(c, beginTime, endTime)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -115,7 +115,7 @@ func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
 func (h *MemberStatisticsHandler) GetMemberAreaStatisticsList(c *gin.Context) {
 	result, err := h.memberStatisticsService.GetMemberAreaStatisticsList(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (h *MemberStatisticsHandler) GetMemberAreaStatisticsList(c *gin.Context) {
 func (h *MemberStatisticsHandler) GetMemberSexStatisticsList(c *gin.Context) {
 	result, err := h.memberStatisticsService.GetMemberSexStatisticsList(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (h *MemberStatisticsHandler) GetMemberSexStatisticsList(c *gin.Context) {
 func (h *MemberStatisticsHandler) GetMemberTerminalStatisticsList(c *gin.Context) {
 	result, err := h.memberStatisticsService.GetMemberTerminalStatisticsList(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -151,7 +151,7 @@ func (h *MemberStatisticsHandler) GetMemberTerminalStatisticsList(c *gin.Context
 func (h *MemberStatisticsHandler) GetUserCountComparison(c *gin.Context) {
 	result, err := h.memberStatisticsService.GetUserCountComparison(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -163,18 +163,18 @@ func (h *MemberStatisticsHandler) GetUserCountComparison(c *gin.Context) {
 func (h *MemberStatisticsHandler) GetMemberRegisterCountList(c *gin.Context) {
 	var reqVO req.MemberAnalyseReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	if len(reqVO.Times) != 2 {
-		response.WriteError(c, errors.ParamErrCode, "时间范围参数错误")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	result, err := h.memberStatisticsService.GetMemberRegisterCountList(c, reqVO.Times[0], reqVO.Times[1])
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 

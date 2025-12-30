@@ -26,7 +26,7 @@ func NewPayStatisticsHandler(payWalletStatisticsService service.PayWalletStatist
 func (h *PayStatisticsHandler) GetWalletRechargePrice(c *gin.Context) {
 	rechargePrice, err := h.payWalletStatisticsService.GetRechargePriceSummary(c)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrUnknown)
 		return
 	}
 

@@ -35,13 +35,13 @@ func NewProductStatisticsHandler(
 func (h *ProductStatisticsHandler) GetProductStatisticsAnalyse(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	result, err := h.productStatisticsService.GetProductStatisticsAnalyse(c, &reqVO)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -53,13 +53,13 @@ func (h *ProductStatisticsHandler) GetProductStatisticsAnalyse(c *gin.Context) {
 func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	result, err := h.productStatisticsService.GetProductStatisticsList(c, &reqVO)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 	if len(spuIds) > 0 {
 		spuList, err := h.productSpuService.GetSpuList(c, spuIds)
 		if err != nil {
-			response.WriteError(c, errors.ServerErrCode, err.Error())
+			response.WriteBizError(c, err)
 			return
 		}
 		spuMap := make(map[int64]*resp.ProductSpuResp)
@@ -94,7 +94,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 	// 1. 获取统计数据
 	pageResult, err := h.productStatisticsService.GetProductStatisticsRankPage(c, &reqVO, &pageParam)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -167,14 +167,14 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) {
 	var reqVO req.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
-		response.WriteError(c, errors.ParamErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 1. 查询数据
 	list, err := h.productStatisticsService.GetProductStatisticsList(c, &reqVO)
 	if err != nil {
-		response.WriteError(c, errors.ServerErrCode, err.Error())
+		response.WriteBizError(c, errors.ErrUnknown)
 		return
 	}
 
@@ -186,7 +186,7 @@ func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) 
 	if len(spuIds) > 0 {
 		spuList, err := h.productSpuService.GetSpuList(c, spuIds)
 		if err != nil {
-			response.WriteError(c, errors.ServerErrCode, err.Error())
+			response.WriteBizError(c, errors.ErrUnknown)
 			return
 		}
 		spuMap := make(map[int64]*resp.ProductSpuResp)
