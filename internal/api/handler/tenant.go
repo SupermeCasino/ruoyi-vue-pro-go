@@ -3,9 +3,11 @@ package handler
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -28,10 +30,10 @@ func NewTenantHandler(svc *service.TenantService) *TenantHandler {
 func (h *TenantHandler) GetTenantSimpleList(c *gin.Context) {
 	list, err := h.svc.GetTenantSimpleList(c.Request.Context())
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(list))
+	response.WriteSuccess(c, list)
 }
 
 // CreateTenant 创建租户
@@ -39,15 +41,15 @@ func (h *TenantHandler) GetTenantSimpleList(c *gin.Context) {
 func (h *TenantHandler) CreateTenant(c *gin.Context) {
 	var r req.TenantCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateTenant(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateTenant 更新租户
@@ -55,14 +57,14 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 	var r req.TenantUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateTenant(c.Request.Context(), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteTenant 删除租户
@@ -70,11 +72,30 @@ func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 func (h *TenantHandler) DeleteTenant(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
-	if err := h.svc.DeleteTenant(c.Request.Context(), id); err != nil {
-		c.Error(err)
+	if id == 0 {
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	if err := h.svc.DeleteTenant(c.Request.Context(), id); err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
+// DeleteTenantList 批量删除租户
+// @Router /system/tenant/delete-list [delete]
+func (h *TenantHandler) DeleteTenantList(c *gin.Context) {
+	ids := utils.ParseIDs(c.QueryArray("ids"))
+	if len(ids) == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	if err := h.svc.DeleteTenantList(c.Request.Context(), ids); err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, true)
 }
 
 // GetTenant 获得租户
@@ -84,10 +105,10 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	item, err := h.svc.GetTenant(c.Request.Context(), id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(item))
+	response.WriteSuccess(c, item)
 }
 
 // GetTenantPage 获得租户分页
@@ -95,15 +116,15 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 func (h *TenantHandler) GetTenantPage(c *gin.Context) {
 	var r req.TenantPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetTenantPage(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(page))
+	response.WriteSuccess(c, page)
 }
 
 // ExportTenantExcel 导出租户 Excel
@@ -111,13 +132,13 @@ func (h *TenantHandler) GetTenantPage(c *gin.Context) {
 func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 	var r req.TenantExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	list, err := h.svc.GetTenantList(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -125,7 +146,7 @@ func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
-			c.Error(err)
+			response.WriteBizError(c, err)
 			return
 		}
 	}()
@@ -133,7 +154,7 @@ func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 	sheetName := "Sheet1"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -157,7 +178,7 @@ func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 			statusStr = "关闭"
 		}
 		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), statusStr)
-		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), item.Website)
+		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), strings.Join(item.Websites, ","))
 
 		expireStr := ""
 		if item.ExpireTime > 0 {
@@ -173,7 +194,7 @@ func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Disposition", "attachment; filename=tenant_list.xlsx")
 	if err := f.Write(c.Writer); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 }
@@ -184,10 +205,10 @@ func (h *TenantHandler) GetTenantByWebsite(c *gin.Context) {
 	website := c.Query("website")
 	tenant, err := h.svc.GetTenantByWebsite(c.Request.Context(), website)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(tenant))
+	response.WriteSuccess(c, tenant)
 }
 
 // GetTenantIdByName 根据租户名获取租户ID
@@ -196,8 +217,8 @@ func (h *TenantHandler) GetTenantIdByName(c *gin.Context) {
 	name := c.Query("name")
 	tenantId, err := h.svc.GetTenantIdByName(c.Request.Context(), name)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(tenantId))
+	response.WriteSuccess(c, tenantId)
 }

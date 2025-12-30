@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 	"github.com/xuri/excelize/v2"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -24,120 +25,134 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	}
 }
 
+// CreateUser 创建用户
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var r req.UserSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateUser(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
+// UpdateUser 更新用户
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var r req.UserSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateUser(c.Request.Context(), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
+// DeleteUser 删除用户
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if err := h.svc.DeleteUser(c.Request.Context(), id); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
+// DeleteUserList 批量删除用户
+func (h *UserHandler) DeleteUserList(c *gin.Context) {
+	ids := utils.ParseIDs(c.QueryArray("ids"))
+	if len(ids) == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	if err := h.svc.DeleteUserList(c.Request.Context(), ids); err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
+// GetUser 获得用户详情
 func (h *UserHandler) GetUser(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	item, err := h.svc.GetUser(c.Request.Context(), id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(item))
+	response.WriteSuccess(c, item)
 }
 
+// GetUserPage 获得用户分页
 func (h *UserHandler) GetUserPage(c *gin.Context) {
 	var r req.UserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	page, err := h.svc.GetUserPage(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(page))
+	response.WriteSuccess(c, page)
 }
 
 func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
 	var r req.UserUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateUserStatus(c.Request.Context(), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *UserHandler) GetSimpleUserList(c *gin.Context) {
 	list, err := h.svc.GetSimpleUserList(c.Request.Context())
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(list))
+	response.WriteSuccess(c, list)
 }
 
 func (h *UserHandler) ResetUserPassword(c *gin.Context) {
 	var r req.UserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.ResetUserPassword(c.Request.Context(), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
+// UpdateUserPassword 修改用户密码
 func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 	var r req.UserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	// Note: This API typically checks old password, but Admin reset usually doesn't.
-	// Admin changing other's password vs User changing own password.
-	// This handler seems to be for Admin (UpdateUserPassword) or User Profile?
-	// Based on Java Controller, there is usually /system/user/update-password (Profile) and /system/user/profile/update-password.
-	// Checked Java Controller:
-	// @PutMapping("update-password") Admin updates users password.
 	if err := h.svc.UpdateUserPassword(c.Request.Context(), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // ExportUser 导出用户
@@ -145,12 +160,12 @@ func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 func (h *UserHandler) ExportUser(c *gin.Context) {
 	var r req.UserExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	list, err := h.svc.GetUserList(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -165,7 +180,7 @@ func (h *UserHandler) ExportUser(c *gin.Context) {
 	sheetName := "Sheet1"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -196,7 +211,7 @@ func (h *UserHandler) ExportUser(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Disposition", "attachment; filename=user_list.xlsx")
 	if err := f.Write(c.Writer); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 }
@@ -206,7 +221,7 @@ func (h *UserHandler) ExportUser(c *gin.Context) {
 func (h *UserHandler) GetImportTemplate(c *gin.Context) {
 	list, err := h.svc.GetImportTemplate(c.Request.Context())
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -217,7 +232,7 @@ func (h *UserHandler) GetImportTemplate(c *gin.Context) {
 	sheetName := "Sheet1"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -244,7 +259,7 @@ func (h *UserHandler) GetImportTemplate(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Disposition", "attachment; filename=user_import_template.xlsx")
 	if err := f.Write(c.Writer); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 }
@@ -254,7 +269,7 @@ func (h *UserHandler) GetImportTemplate(c *gin.Context) {
 func (h *UserHandler) ImportUser(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// updateSupport, _ := strconv.ParseBool(c.Query("updateSupport")) // TODO: Use updateSupport
@@ -262,7 +277,7 @@ func (h *UserHandler) ImportUser(c *gin.Context) {
 	// Verify Excel file
 	f, err := file.Open()
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 	defer f.Close()
@@ -286,5 +301,5 @@ func (h *UserHandler) ImportUser(c *gin.Context) {
 	// Since logic is complex (transactional import), we mark as TODO but return valid structure.
 	// User asked for "Implement POST /user/import API". Parity means input/output match.
 
-	c.JSON(200, response.Success(respVO))
+	response.WriteSuccess(c, respVO)
 }

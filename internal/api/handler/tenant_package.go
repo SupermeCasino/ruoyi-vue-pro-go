@@ -8,6 +8,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type TenantPackageHandler struct {
@@ -63,17 +64,10 @@ func (h *TenantPackageHandler) DeleteTenantPackage(c *gin.Context) {
 
 // DeleteTenantPackageList 批量删除租户套餐
 func (h *TenantPackageHandler) DeleteTenantPackageList(c *gin.Context) {
-	idsStr := c.QueryArray("ids")
-	if len(idsStr) == 0 {
+	ids := utils.ParseIDs(c.QueryArray("ids"))
+	if len(ids) == 0 {
 		response.WriteBizError(c, errors.ErrParam)
 		return
-	}
-	ids := make([]int64, 0, len(idsStr))
-	for _, s := range idsStr {
-		id, _ := strconv.ParseInt(s, 10, 64)
-		if id > 0 {
-			ids = append(ids, id)
-		}
 	}
 	if err := h.svc.DeleteTenantPackageList(c.Request.Context(), ids); err != nil {
 		response.WriteBizError(c, err)
