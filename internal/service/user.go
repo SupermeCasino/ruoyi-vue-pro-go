@@ -287,6 +287,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 
 	// 5. 获取部门信息
 	var dept *resp.DeptSimpleRespVO
+	var deptName string
 	if user.DeptID > 0 {
 		deptInfo, _ := s.q.SystemDept.WithContext(ctx).Where(s.q.SystemDept.ID.Eq(user.DeptID)).First()
 		if deptInfo != nil {
@@ -295,6 +296,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 				Name:     deptInfo.Name,
 				ParentID: deptInfo.ParentID,
 			}
+			deptName = deptInfo.Name
 		}
 	}
 
@@ -305,6 +307,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 			Nickname:   user.Nickname,
 			Remark:     user.Remark,
 			DeptID:     user.DeptID,
+			DeptName:   deptName,
 			PostIDs:    postIds,
 			RoleIDs:    roleIds,
 			Email:      user.Email,
@@ -350,6 +353,23 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 		qb = qb.Where(u.CreateTime.Lte(*req.CreateTimeLe))
 	}
 
+	if req.RoleID > 0 {
+		// 角色过滤
+		ur := s.q.SystemUserRole
+		userRoles, _ := ur.WithContext(ctx).Where(ur.RoleID.Eq(req.RoleID)).Find()
+		if len(userRoles) == 0 {
+			return &pagination.PageResult[*resp.UserRespVO]{
+				List:  []*resp.UserRespVO{},
+				Total: 0,
+			}, nil
+		}
+		userIds := make([]int64, len(userRoles))
+		for i, v := range userRoles {
+			userIds[i] = v.UserID
+		}
+		qb = qb.Where(u.ID.In(userIds...))
+	}
+
 	total, err := qb.Count()
 	if err != nil {
 		return nil, err
@@ -361,12 +381,29 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 	}
 
 	var data []*resp.UserRespVO
+	// 批量获取部门名称
+	deptIDs := make([]int64, 0, len(list))
+	for _, item := range list {
+		if item.DeptID > 0 {
+			deptIDs = append(deptIDs, item.DeptID)
+		}
+	}
+	deptMap := make(map[int64]string)
+	if len(deptIDs) > 0 {
+		depts, _ := s.q.SystemDept.WithContext(ctx).Where(s.q.SystemDept.ID.In(deptIDs...)).Find()
+		for _, d := range depts {
+			deptMap[d.ID] = d.Name
+		}
+	}
+
 	for _, item := range list {
 		data = append(data, &resp.UserRespVO{
 			ID:         item.ID,
 			Username:   item.Username,
 			Nickname:   item.Nickname,
+			Remark:     item.Remark,
 			DeptID:     item.DeptID,
+			DeptName:   deptMap[item.DeptID],
 			Email:      item.Email,
 			Mobile:     item.Mobile,
 			Sex:        item.Sex,
@@ -442,12 +479,29 @@ func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) (
 	}
 
 	var data []*resp.UserRespVO
+	// 批量获取部门名称
+	deptIDs := make([]int64, 0, len(list))
+	for _, item := range list {
+		if item.DeptID > 0 {
+			deptIDs = append(deptIDs, item.DeptID)
+		}
+	}
+	deptMap := make(map[int64]string)
+	if len(deptIDs) > 0 {
+		depts, _ := s.q.SystemDept.WithContext(ctx).Where(s.q.SystemDept.ID.In(deptIDs...)).Find()
+		for _, d := range depts {
+			deptMap[d.ID] = d.Name
+		}
+	}
+
 	for _, item := range list {
 		data = append(data, &resp.UserRespVO{
 			ID:         item.ID,
 			Username:   item.Username,
 			Nickname:   item.Nickname,
+			Remark:     item.Remark,
 			DeptID:     item.DeptID,
+			DeptName:   deptMap[item.DeptID],
 			Email:      item.Email,
 			Mobile:     item.Mobile,
 			Sex:        item.Sex,
@@ -530,6 +584,19 @@ func (s *UserService) checkEmailUnique(ctx context.Context, email string, exclud
 	}
 	if count > 0 {
 		return errors.New("邮箱已存在")
+	}
+	return nil
+}
+
+// DeleteUserList 批量删除用户
+func (s *UserService) DeleteUserList(ctx context.Context, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	for _, id := range ids {
+		if err := s.DeleteUser(ctx, id); err != nil {
+			return err
+		}
 	}
 	return nil
 }

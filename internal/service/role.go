@@ -8,6 +8,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -35,9 +36,9 @@ func (s *RoleService) CreateRole(ctx context.Context, req *req.RoleSaveReq) (int
 		Sort:             req.Sort,
 		Status:           int32(*req.Status),
 		Remark:           req.Remark,
-		Type:             2,         // Default Custom
-		DataScope:        1,         // Default All
-		DataScopeDeptIds: []int64{}, // Initialize to avoid NULL error
+		Type:             consts.RoleTypeCustom,
+		DataScope:        consts.DataScopeAll,
+		DataScopeDeptIds: model.Int64ListFromCSV{}, // Initialize to avoid NULL error
 	}
 
 	err := s.q.SystemRole.WithContext(ctx).Create(role)
@@ -51,7 +52,7 @@ func (s *RoleService) UpdateRole(ctx context.Context, req *req.RoleSaveReq) erro
 	if err != nil {
 		return errors.New("角色不存在")
 	}
-	if role.Type == 1 {
+	if role.Type == consts.RoleTypeSystem {
 		// Allow updating basic info even for system roles, but maybe restricted in some systems.
 		// For now allow it.
 	}
@@ -77,7 +78,7 @@ func (s *RoleService) UpdateRoleStatus(ctx context.Context, req *req.RoleUpdateS
 	if err != nil {
 		return errors.New("角色不存在")
 	}
-	if role.Type == 1 {
+	if role.Type == consts.RoleTypeSystem {
 		return errors.New("内置角色不能修改状态")
 	}
 	_, err = r.WithContext(ctx).Where(r.ID.Eq(req.ID)).Update(r.Status, *req.Status)
@@ -94,7 +95,7 @@ func (s *RoleService) UpdateRoleDataScope(ctx context.Context, roleId int64, dat
 
 	_, err = r.WithContext(ctx).Where(r.ID.Eq(roleId)).Updates(&model.SystemRole{
 		DataScope:        int32(dataScope),
-		DataScopeDeptIds: deptIds, // Handled by serializer:json
+		DataScopeDeptIds: model.Int64ListFromCSV(deptIds), // Handled by serializer:json
 	})
 	return err
 }
@@ -106,7 +107,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int64) error {
 	if err != nil {
 		return errors.New("角色不存在")
 	}
-	if role.Type == 1 {
+	if role.Type == consts.RoleTypeSystem {
 		return errors.New("内置角色不能删除")
 	}
 	// Check assigned users count
@@ -228,13 +229,10 @@ func (s *RoleService) convertResp(item *model.SystemRole) *resp.RoleRespVO {
 		Type:             item.Type,
 		Remark:           item.Remark,
 		DataScope:        item.DataScope,
-		DataScopeDeptIDs: item.DataScopeDeptIds,
+		DataScopeDeptIDs: []int64(item.DataScopeDeptIds),
 		CreateTime:       item.CreateTime,
 	}
 }
-
-// SuperAdminRoleCode 超级管理员角色编码
-const SuperAdminRoleCode = "super_admin"
 
 // HasAnySuperAdmin 判断角色列表中是否包含超级管理员角色
 // 对应 Java: RoleServiceImpl.hasAnySuperAdmin
@@ -250,7 +248,7 @@ func (s *RoleService) HasAnySuperAdmin(ctx context.Context, roleIds []int64) (bo
 	}
 
 	for _, role := range roles {
-		if role.Code == SuperAdminRoleCode {
+		if role.Code == consts.RoleCodeSuperAdmin {
 			return true, nil
 		}
 	}

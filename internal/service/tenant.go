@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -38,40 +38,53 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 		return 0, err
 	}
 
-	// 2. 事务执行
+	// 2. 校验域名是否重复
+	if err := s.validTenantWebsiteDuplicate(ctx, req.Websites, 0); err != nil {
+		return 0, err
+	}
+
+	// 3. 校验套餐是否存在且启用
+	var pkg model.SystemTenantPackage
+	if err := s.q.SystemTenantPackage.WithContext(ctx).UnderlyingDB().Where("id = ? AND status = ?", *req.PackageID, consts.CommonStatusEnable).First(&pkg).Error; err != nil {
+		return 0, errors.New("租户套餐不存在或已禁用")
+	}
+
+	// 4. 事务执行
 	var tenantId int64
 	err := s.q.Transaction(func(tx *query.Query) error {
-		// 2.1 创建租户
+		// 4.1 创建租户
 		tenant := &model.SystemTenant{
 			Name:          req.Name,
 			ContactName:   req.ContactName,
 			ContactMobile: req.ContactMobile,
-			Status:        int32(req.Status),
-			PackageID:     req.PackageID,
+			Status:        int32(*req.Status),
+			PackageID:     *req.PackageID,
 			AccountCount:  int32(req.AccountCount),
 			ExpireDate:    time.UnixMilli(req.ExpireTime),
-			Websites:      req.Website,
+			Websites:      model.StringListFromCSV(req.Websites),
 		}
 		if err := tx.SystemTenant.WithContext(ctx).Create(tenant); err != nil {
 			return err
 		}
 		tenantId = tenant.ID
 
-		// 角色
+		// 4.2 创建角色
 		role := &model.SystemRole{
-			Name:   "租户管理员",
-			Code:   "tenant_admin",
-			Sort:   0,
-			Status: 0, // 启用
-			Type:   2, // 自定义角色
-			Remark: "系统自动生成",
+			Name:             "租户管理员",
+			Code:             consts.RoleCodeTenantAdmin,
+			Sort:             0,
+			DataScope:        consts.DataScopeAll,
+			DataScopeDeptIds: model.Int64ListFromCSV{},
+			Status:           consts.CommonStatusEnable,
+			Type:             consts.RoleTypeSystem,
+			Remark:           "系统自动生成",
 		}
 		role.TenantID = tenantId
 		if err := tx.SystemRole.WithContext(ctx).Create(role); err != nil {
 			return err
 		}
 
-		// 用户
+		// 4.3 创建用户
 		hashedPwd, err := utils.HashPassword(req.Password)
 		if err != nil {
 			return err
@@ -81,21 +94,25 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			Password: hashedPwd,
 			Nickname: req.ContactName,
 			Mobile:   req.ContactMobile,
-			Status:   0, // 启用
+			Status:   consts.CommonStatusEnable,
 		}
 		user.TenantID = tenantId
 		if err := tx.SystemUser.WithContext(ctx).Create(user); err != nil {
 			return err
 		}
 
-		// 赋予套餐中的菜单权限
-		// 获取套餐信息
-		var pkg model.SystemTenantPackage
-		if err := tx.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", req.PackageID).First(&pkg).Error; err != nil {
+		// 4.4 关联用户与角色
+		userRole := &model.SystemUserRole{
+			UserID: user.ID,
+			RoleID: role.ID,
+		}
+		userRole.TenantID = tenantId
+		if err := tx.SystemUserRole.WithContext(ctx).Create(userRole); err != nil {
 			return err
 		}
-		menuIds := pkg.MenuIDs
 
+		// 4.5 赋予角色菜单权限
+		menuIds := pkg.MenuIDs
 		if len(menuIds) > 0 {
 			roleMenus := make([]*model.SystemRoleMenu, len(menuIds))
 			for i, mid := range menuIds {
@@ -110,7 +127,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 			}
 		}
 
-		// 2.3 更新租户的联系人用户ID (ContactUserID)
+		// 4.6 更新租户的联系人用户ID
 		if _, err := tx.SystemTenant.WithContext(ctx).Where(tx.SystemTenant.ID.Eq(tenantId)).Update(tx.SystemTenant.ContactUserID, user.ID); err != nil {
 			return err
 		}
@@ -123,39 +140,51 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 
 // UpdateTenant 更新租户
 func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateReq) error {
-	// 1. 校验存在
-	t := s.q.SystemTenant
-	tenant, err := t.WithContext(ctx).Where(t.ID.Eq(req.ID)).First()
+	// 1. 校验存在及系统租户保护
+	tenant, err := s.validateUpdateTenant(ctx, req.ID)
 	if err != nil {
-		return errors.New("租户不存在")
+		return err
 	}
 
-	// 2. 校验名字唯一
+	// 2. 校验套餐被禁用 (对齐 Java: validTenantPackage)
+	if tenant.PackageID != *req.PackageID && *req.PackageID != 0 {
+		if err := s.q.SystemTenantPackage.WithContext(ctx).UnderlyingDB().Where("id = ? AND status = ?", *req.PackageID, 0).First(&model.SystemTenantPackage{}).Error; err != nil {
+			return errors.New("租户套餐不存在或已禁用")
+		}
+	}
+
+	// 3. 校验名字唯一
 	if err := s.checkNameUnique(ctx, req.Name, req.ID); err != nil {
 		return err
 	}
 
-	// 3. 更新
+	// 3. 校验域名重复
+	if err := s.validTenantWebsiteDuplicate(ctx, req.Websites, req.ID); err != nil {
+		return err
+	}
+
+	// 4. 更新
+	t := s.q.SystemTenant
 	tenantObj := &model.SystemTenant{
 		Name:          req.Name,
 		ContactName:   req.ContactName,
 		ContactMobile: req.ContactMobile,
-		Status:        int32(req.Status),
-		PackageID:     req.PackageID,
+		Status:        int32(*req.Status),
+		PackageID:     *req.PackageID,
 		AccountCount:  int32(req.AccountCount),
 		ExpireDate:    time.UnixMilli(req.ExpireTime),
-		Websites:      req.Website,
+		Websites:      model.StringListFromCSV(req.Websites),
 	}
 	_, err = t.WithContext(ctx).Where(t.ID.Eq(req.ID)).Updates(tenantObj)
 	if err != nil {
 		return err
 	}
 
-	// 4. 如果套餐发生变化，则修改其角色的权限
-	if tenant.PackageID != req.PackageID {
+	// 5. 如果套餐发生变化，则修改其角色的权限
+	if tenant.PackageID != *req.PackageID {
 		// 获得套餐菜单
 		var pkg model.SystemTenantPackage
-		if err := s.q.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", req.PackageID).First(&pkg).Error; err != nil {
+		if err := s.q.SystemTenant.WithContext(ctx).UnderlyingDB().Model(&model.SystemTenantPackage{}).Where("id = ?", *req.PackageID).First(&pkg).Error; err != nil {
 			return err
 		}
 		menuIds := pkg.MenuIDs
@@ -169,8 +198,25 @@ func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateR
 
 // DeleteTenant 删除租户
 func (s *TenantService) DeleteTenant(ctx context.Context, id int64) error {
+	// 校验存在及系统租户保护
+	if _, err := s.validateUpdateTenant(ctx, id); err != nil {
+		return err
+	}
+
 	t := s.q.SystemTenant
 	_, err := t.WithContext(ctx).Where(t.ID.Eq(id)).Delete()
+	return err
+}
+
+// DeleteTenantList 批量删除租户 (对齐 Java: deleteTenantList)
+func (s *TenantService) DeleteTenantList(ctx context.Context, ids []int64) error {
+	for _, id := range ids {
+		if _, err := s.validateUpdateTenant(ctx, id); err != nil {
+			return err
+		}
+	}
+	t := s.q.SystemTenant
+	_, err := t.WithContext(ctx).Where(t.ID.In(ids...)).Delete()
 	return err
 }
 
@@ -188,7 +234,7 @@ func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRe
 		ContactName:   tenant.ContactName,
 		ContactMobile: tenant.ContactMobile,
 		Status:        int(tenant.Status),
-		Website:       tenant.Websites,
+		Websites:      []string(tenant.Websites),
 		PackageID:     tenant.PackageID,
 		AccountCount:  int(tenant.AccountCount),
 		ExpireTime:    tenant.ExpireDate.UnixMilli(),
@@ -239,7 +285,7 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 			ContactName:   item.ContactName,
 			ContactMobile: item.ContactMobile,
 			Status:        int(item.Status),
-			Website:       item.Websites,
+			Websites:      []string(item.Websites),
 			PackageID:     item.PackageID,
 			AccountCount:  int(item.AccountCount),
 			ExpireTime:    item.ExpireDate.UnixMilli(),
@@ -291,7 +337,7 @@ func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExport
 			ContactName:   item.ContactName,
 			ContactMobile: item.ContactMobile,
 			Status:        int(item.Status),
-			Website:       item.Websites,
+			Websites:      []string(item.Websites),
 			PackageID:     item.PackageID,
 			ExpireTime:    item.ExpireDate.UnixMilli(), // 毫秒级时间戳
 			AccountCount:  int(item.AccountCount),
@@ -317,6 +363,22 @@ func (s *TenantService) checkNameUnique(ctx context.Context, name string, exclud
 	return nil
 }
 
+// ValidTenant 校验租户是否合法 (存在、启用、未过期) - 对齐 Java: validTenant
+func (s *TenantService) ValidTenant(ctx context.Context, id int64) error {
+	t := s.q.SystemTenant
+	tenant, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
+	if err != nil {
+		return errors.New("租户不存在")
+	}
+	if tenant.Status != 0 {
+		return errors.New("租户已禁用: " + tenant.Name)
+	}
+	if !tenant.ExpireDate.IsZero() && tenant.ExpireDate.Before(time.Now()) {
+		return errors.New("租户已过期: " + tenant.Name)
+	}
+	return nil
+}
+
 // GetTenantSimpleList 获取启用状态的租户精简列表
 func (s *TenantService) GetTenantSimpleList(ctx context.Context) ([]resp.TenantSimpleResp, error) {
 	tenantRepo := s.q.SystemTenant
@@ -338,21 +400,70 @@ func (s *TenantService) GetTenantSimpleList(ctx context.Context) ([]resp.TenantS
 // GetTenantByWebsite 根据域名查询租户
 func (s *TenantService) GetTenantByWebsite(ctx context.Context, website string) (*resp.TenantSimpleResp, error) {
 	tenantRepo := s.q.SystemTenant
-	list, err := tenantRepo.WithContext(ctx).Find()
+	list, err := tenantRepo.WithContext(ctx).Where(tenantRepo.Status.Eq(0)).Find()
 	if err != nil {
 		return nil, nil
 	}
 
-	// 应用层过滤
+	// 应用层显式匹配
 	for _, t := range list {
-		if t.Status == 0 && strings.Contains(t.Websites, website) {
-			return &resp.TenantSimpleResp{
-				ID:   t.ID,
-				Name: t.Name,
-			}, nil
+		for _, w := range t.Websites {
+			if w == website {
+				return &resp.TenantSimpleResp{
+					ID:   t.ID,
+					Name: t.Name,
+				}, nil
+			}
 		}
 	}
-	return nil, nil // 未找到返回空
+	return nil, nil
+}
+
+// isSystemTenant 判断是否为系统租户 (PackageID=0) - 对齐 Java: isSystemTenant
+func (s *TenantService) isSystemTenant(tenant *model.SystemTenant) bool {
+	return tenant.PackageID == 0
+}
+
+// validateUpdateTenant 校验存在并检查是否为系统租户 (对齐 Java: validateUpdateTenant)
+func (s *TenantService) validateUpdateTenant(ctx context.Context, id int64) (*model.SystemTenant, error) {
+	t := s.q.SystemTenant
+	tenant, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
+	if err != nil {
+		return nil, errors.New("租户不存在")
+	}
+	// 特殊逻辑：系统内置租户，不使用套餐，使用 PackageID=0 标识
+	if s.isSystemTenant(tenant) {
+		return nil, errors.New("系统内置租户，不允许修改或删除")
+	}
+	return tenant, nil
+}
+
+// validTenantWebsiteDuplicate 校验域名唯一性 (对齐 Java: validTenantWebsiteDuplicate)
+func (s *TenantService) validTenantWebsiteDuplicate(ctx context.Context, websites []string, excludeId int64) error {
+	if len(websites) == 0 {
+		return nil
+	}
+	t := s.q.SystemTenant
+	for _, website := range websites {
+		// 这里简单处理：由于 websites 是 JSON 数组，无法直接在 DB 层高效 like 精确匹配（除非用 JSON 函数）
+		// 我们先查出所有数据（通常租户不多）或者优化查询
+		// TODO: 生产环境建议使用数据库 JSON 函数或 ES 索引
+		list, err := t.WithContext(ctx).Find()
+		if err != nil {
+			return err
+		}
+		for _, tenant := range list {
+			if excludeId > 0 && tenant.ID == excludeId {
+				continue
+			}
+			for _, w := range tenant.Websites {
+				if w == website {
+					return errors.New("域名 [" + website + "] 已被其他租户绑定")
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // GetTenantIdByName 根据租户名获取租户ID

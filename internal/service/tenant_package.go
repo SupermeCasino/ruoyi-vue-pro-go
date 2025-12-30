@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
@@ -9,23 +10,33 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type TenantPackageService struct {
-	q *query.Query
+	q         *query.Query
+	tenantSvc *TenantService
 }
 
-func NewTenantPackageService(q *query.Query) *TenantPackageService {
-	return &TenantPackageService{q: q}
+func NewTenantPackageService(q *query.Query, tenantSvc *TenantService) *TenantPackageService {
+	return &TenantPackageService{
+		q:         q,
+		tenantSvc: tenantSvc,
+	}
 }
 
 // CreateTenantPackage 创建租户套餐
 func (s *TenantPackageService) CreateTenantPackage(ctx context.Context, r *req.TenantPackageSaveReq) (int64, error) {
+	// 校验名称唯一
+	if err := s.validateTenantPackageNameUnique(ctx, r.Name, 0); err != nil {
+		return 0, err
+	}
+
 	pkg := &model.SystemTenantPackage{
 		Name:    r.Name,
-		Status:  int32(r.Status),
+		Status:  int32(*r.Status),
 		Remark:  r.Remark,
-		MenuIDs: r.MenuIds,
+		MenuIDs: r.MenuIDs,
 	}
 	if err := s.q.SystemTenantPackage.WithContext(ctx).Create(pkg); err != nil {
 		return 0, err
@@ -37,22 +48,46 @@ func (s *TenantPackageService) CreateTenantPackage(ctx context.Context, r *req.T
 func (s *TenantPackageService) UpdateTenantPackage(ctx context.Context, r *req.TenantPackageSaveReq) error {
 	t := s.q.SystemTenantPackage
 	// 1. 校验存在
-	if _, err := t.WithContext(ctx).Where(t.ID.Eq(r.ID)).First(); err != nil {
+	oldPkg, err := t.WithContext(ctx).Where(t.ID.Eq(r.ID)).First()
+	if err != nil {
+		return errors.New("租户套餐不存在")
+	}
+	// 2. 校验名称唯一
+	if err := s.validateTenantPackageNameUnique(ctx, r.Name, r.ID); err != nil {
 		return err
 	}
-	// TODO: 校验状态，如果从开启变为关闭，需要做一些处理？Java 版通常有校验
-	_, err := t.WithContext(ctx).Where(t.ID.Eq(r.ID)).Updates(&model.SystemTenantPackage{
+
+	// 3. 更新
+	_, err = t.WithContext(ctx).Where(t.ID.Eq(r.ID)).Updates(&model.SystemTenantPackage{
 		Name:    r.Name,
-		Status:  int32(r.Status),
+		Status:  int32(*r.Status),
 		Remark:  r.Remark,
-		MenuIDs: r.MenuIds,
+		MenuIDs: r.MenuIDs,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 4. 如果菜单发生变化，则修改每个租户的权限 - 对齐 Java: updateTenantPackage 数据同步逻辑
+	if !utils.IsEqualList(oldPkg.MenuIDs, r.MenuIDs) {
+		// 查找所有使用该套餐的租户
+		tenants, err := s.q.SystemTenant.WithContext(ctx).Where(s.q.SystemTenant.PackageID.Eq(r.ID)).Find()
+		if err == nil {
+			for _, tenant := range tenants {
+				_ = s.tenantSvc.updateTenantRoleMenu(ctx, tenant.ID, r.MenuIDs)
+			}
+		}
+	}
+	return nil
 }
 
 // DeleteTenantPackage 删除租户套餐
 func (s *TenantPackageService) DeleteTenantPackage(ctx context.Context, id int64) error {
-	// TODO: 校验是否有租户正在使用该套餐
+	// 校验是否有租户正在使用该套餐
+	if err := s.validateTenantUsed(ctx, id); err != nil {
+		return err
+	}
+
 	t := s.q.SystemTenantPackage
 	_, err := t.WithContext(ctx).Where(t.ID.Eq(id)).Delete()
 	return err
@@ -60,10 +95,50 @@ func (s *TenantPackageService) DeleteTenantPackage(ctx context.Context, id int64
 
 // DeleteTenantPackageList 批量删除租户套餐
 func (s *TenantPackageService) DeleteTenantPackageList(ctx context.Context, ids []int64) error {
-	// TODO: 校验是否有租户正在使用这些套餐
+	// 校验是否有租户正在使用这些套餐
+	for _, id := range ids {
+		if err := s.validateTenantUsed(ctx, id); err != nil {
+			return err
+		}
+	}
 	t := s.q.SystemTenantPackage
 	_, err := t.WithContext(ctx).Where(t.ID.In(ids...)).Delete()
 	return err
+}
+
+// validateTenantPackageNameUnique 校验套餐名是否唯一 (对齐 Java: validateTenantPackageNameUnique)
+func (s *TenantPackageService) validateTenantPackageNameUnique(ctx context.Context, name string, id int64) error {
+	t := s.q.SystemTenantPackage
+	pkg, err := t.WithContext(ctx).Where(t.Name.Eq(name)).First()
+	if err == nil && pkg.ID != id {
+		return errors.New("套餐名已存在")
+	}
+	return nil
+}
+
+// validateTenantUsed 校验套餐是否正在被使用 (对齐 Java: validateTenantUsed)
+func (s *TenantPackageService) validateTenantUsed(ctx context.Context, id int64) error {
+	count, err := s.q.SystemTenant.WithContext(ctx).Where(s.q.SystemTenant.PackageID.Eq(id)).Count()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("该套餐正在被使用，无法删除")
+	}
+	return nil
+}
+
+// ValidTenantPackage 校验套餐有效性 (存在且启用) - 对齐 Java: validTenantPackage
+func (s *TenantPackageService) ValidTenantPackage(ctx context.Context, id int64) (*model.SystemTenantPackage, error) {
+	t := s.q.SystemTenantPackage
+	pkg, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
+	if err != nil {
+		return nil, errors.New("租户套餐不存在")
+	}
+	if pkg.Status != 0 {
+		return nil, errors.New("租户套餐已禁用: " + pkg.Name)
+	}
+	return pkg, nil
 }
 
 // GetTenantPackage 获得租户套餐
@@ -78,7 +153,7 @@ func (s *TenantPackageService) GetTenantPackage(ctx context.Context, id int64) (
 		Name:       pkg.Name,
 		Status:     int(pkg.Status),
 		Remark:     pkg.Remark,
-		MenuIds:    pkg.MenuIDs,
+		MenuIDs:    pkg.MenuIDs,
 		CreateTime: pkg.CreateTime,
 	}, nil
 }
@@ -140,7 +215,7 @@ func (s *TenantPackageService) GetTenantPackagePage(ctx context.Context, r *req.
 			Name:       pkg.Name,
 			Status:     int(pkg.Status),
 			Remark:     pkg.Remark,
-			MenuIds:    pkg.MenuIDs,
+			MenuIDs:    pkg.MenuIDs,
 			CreateTime: pkg.CreateTime,
 		}
 	}

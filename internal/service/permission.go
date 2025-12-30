@@ -161,5 +161,5 @@ func (s *PermissionService) GetRoleDeptIdListByRoleId(ctx context.Context, roleI
 	if role.DataScopeDeptIds == nil {
 		return []int64{}, nil
 	}
-	return role.DataScopeDeptIds, nil
+	return []int64(role.DataScopeDeptIds), nil
 }

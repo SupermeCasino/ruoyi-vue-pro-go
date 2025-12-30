@@ -42,9 +42,9 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *req.MenuCreateReq) (i
 		Component:     req.Component,
 		ComponentName: req.ComponentName,
 		Status:        req.Status,
-		Visible:       model.BitBool(req.Visible),
-		KeepAlive:     model.BitBool(req.KeepAlive),
-		AlwaysShow:    model.BitBool(req.AlwaysShow),
+		Visible:       model.BitBool(ptrToBool(req.Visible, true)),
+		KeepAlive:     model.BitBool(ptrToBool(req.KeepAlive, true)),
+		AlwaysShow:    model.BitBool(ptrToBool(req.AlwaysShow, true)),
 	}
 
 	if err := s.q.SystemMenu.WithContext(ctx).Create(menu); err != nil {
@@ -74,21 +74,29 @@ func (s *MenuService) UpdateMenu(ctx context.Context, req *req.MenuUpdateReq) er
 	}
 
 	// 5. 更新
-	_, err := m.WithContext(ctx).Where(m.ID.Eq(req.ID)).Updates(&model.SystemMenu{
-		Name:          req.Name,
-		Permission:    req.Permission,
-		Type:          req.Type,
-		Sort:          req.Sort,
-		ParentID:      req.ParentID,
-		Path:          req.Path,
-		Icon:          req.Icon,
-		Component:     req.Component,
-		ComponentName: req.ComponentName,
-		Status:        req.Status,
-		Visible:       model.BitBool(req.Visible),
-		KeepAlive:     model.BitBool(req.KeepAlive),
-		AlwaysShow:    model.BitBool(req.AlwaysShow),
-	})
+	updateData := map[string]interface{}{
+		"name":           req.Name,
+		"permission":     req.Permission,
+		"type":           req.Type,
+		"sort":           req.Sort,
+		"parent_id":      req.ParentID,
+		"path":           req.Path,
+		"icon":           req.Icon,
+		"component":      req.Component,
+		"component_name": req.ComponentName,
+		"status":         req.Status,
+	}
+	if req.Visible != nil {
+		updateData["visible"] = model.BitBool(*req.Visible)
+	}
+	if req.KeepAlive != nil {
+		updateData["keep_alive"] = model.BitBool(*req.KeepAlive)
+	}
+	if req.AlwaysShow != nil {
+		updateData["always_show"] = model.BitBool(*req.AlwaysShow)
+	}
+
+	_, err := m.WithContext(ctx).Where(m.ID.Eq(req.ID)).Updates(updateData)
 	return err
 }
 
@@ -117,6 +125,13 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id int64) error {
 	// 3. 删除
 	_, err = m.WithContext(ctx).Where(m.ID.Eq(id)).Delete()
 	return err
+}
+
+func ptrToBool(b *bool, def bool) bool {
+	if b == nil {
+		return def
+	}
+	return *b
 }
 
 // Helpers
