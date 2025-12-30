@@ -4,6 +4,14 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
+
+	"github.com/gin-gonic/gin"
+)
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -24,12 +32,12 @@ func NewJobHandler(svc *service.JobService) *JobHandler {
 func (h *JobHandler) CreateJob(c *gin.Context) {
 	var r req.JobSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateJob(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, id)
@@ -39,11 +47,11 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 func (h *JobHandler) UpdateJob(c *gin.Context) {
 	var r req.JobSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateJob(c, &r); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -54,7 +62,7 @@ func (h *JobHandler) UpdateJobStatus(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	status := int(utils.ParseInt64(c.Query("status")))
 	if err := h.svc.UpdateJobStatus(c, id, status); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -64,7 +72,7 @@ func (h *JobHandler) UpdateJobStatus(c *gin.Context) {
 func (h *JobHandler) DeleteJob(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.DeleteJob(c, id); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -75,11 +83,11 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	job, err := h.svc.GetJob(c, id)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	if job == nil {
-		response.WriteError(c, 404, "任务不存在")
+		response.WriteBizError(c, errors.ErrNotFound)
 		return
 	}
 	response.WriteSuccess(c, resp.JobResp{
@@ -100,12 +108,12 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 func (h *JobHandler) GetJobPage(c *gin.Context) {
 	var r req.JobPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetJobPage(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -135,7 +143,7 @@ func (h *JobHandler) GetJobPage(c *gin.Context) {
 func (h *JobHandler) TriggerJob(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	if err := h.svc.TriggerJob(c, id); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -144,7 +152,7 @@ func (h *JobHandler) TriggerJob(c *gin.Context) {
 // SyncJob 同步定时任务
 func (h *JobHandler) SyncJob(c *gin.Context) {
 	if err := h.svc.SyncJob(c); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -154,14 +162,14 @@ func (h *JobHandler) SyncJob(c *gin.Context) {
 func (h *JobHandler) ExportJobExcel(c *gin.Context) {
 	var r req.JobPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// 设置为导出所有数据
 	r.PageSize = 0
 	pageResult, err := h.svc.GetJobPage(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -182,7 +190,7 @@ func (h *JobHandler) ExportJobExcel(c *gin.Context) {
 	}
 
 	if err := excel.WriteExcel(c, "定时任务.xls", "数据", list); err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 	}
 }
 
@@ -195,7 +203,7 @@ func (h *JobHandler) GetJobNextTimes(c *gin.Context) {
 	}
 	times, err := h.svc.GetJobNextTimes(c, id, count)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, times)

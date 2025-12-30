@@ -4,6 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -22,13 +23,13 @@ func NewLoginLogHandler(svc *service.LoginLogService) *LoginLogHandler {
 func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
 	var r req.LoginLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	pageResult, err := h.svc.GetLoginLogPage(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 

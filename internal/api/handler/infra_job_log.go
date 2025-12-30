@@ -4,6 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -25,11 +26,11 @@ func (h *JobLogHandler) GetJobLog(c *gin.Context) {
 	id := utils.ParseInt64(c.Query("id"))
 	log, err := h.svc.GetJobLog(c, id)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	if log == nil {
-		response.WriteError(c, 404, "日志不存在")
+		response.WriteBizError(c, errors.ErrNotFound)
 		return
 	}
 	response.WriteSuccess(c, resp.JobLogResp{
@@ -51,12 +52,12 @@ func (h *JobLogHandler) GetJobLog(c *gin.Context) {
 func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 	var r req.JobLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	pageResult, err := h.svc.GetJobLogPage(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -87,14 +88,14 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 func (h *JobLogHandler) ExportJobLogExcel(c *gin.Context) {
 	var r req.JobLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// 设置为导出所有数据
 	r.PageSize = 0
 	pageResult, err := h.svc.GetJobLogPage(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 
