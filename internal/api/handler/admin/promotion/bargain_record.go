@@ -5,6 +5,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -33,14 +34,14 @@ func NewBargainRecordHandler(
 func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 	var r req.BargainRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 1. Get Page of DOs
 	pageResult, err := h.svc.GetBargainRecordPageAdmin(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	if len(pageResult.List) == 0 {
@@ -91,7 +92,7 @@ func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 			Status:            item.Status,
 			EndTime:           item.EndTime,
 			OrderID:           item.OrderID,
-			CreateTime:         item.CreateTime,
+			CreateTime:        item.CreateTime,
 		}
 	}
 

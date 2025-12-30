@@ -5,6 +5,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -27,14 +28,14 @@ func NewBargainHelpHandler(svc *promotion.BargainHelpService, userSvc *member.Me
 func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
 	var r req.BargainHelpPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	// 1. Get Page
 	pageResult, err := h.svc.GetBargainHelpPage(c, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	if len(pageResult.List) == 0 {
@@ -63,7 +64,7 @@ func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
 			ActivityID:  item.ActivityID,
 			RecordID:    item.RecordID,
 			ReducePrice: item.ReducePrice,
-			CreateTime:   item.CreateTime,
+			CreateTime:  item.CreateTime,
 		}
 		if u, ok := userMap[item.UserID]; ok {
 			vo.UserNickname = u.Nickname

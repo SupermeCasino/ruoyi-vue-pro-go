@@ -29,15 +29,15 @@ func NewBannerHandler(svc *promotion.PromotionBannerService) *BannerHandler {
 func (h *BannerHandler) CreateBanner(c *gin.Context) {
 	var r req.PromotionBannerCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateBanner(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateBanner 更新 Banner
@@ -50,14 +50,14 @@ func (h *BannerHandler) CreateBanner(c *gin.Context) {
 func (h *BannerHandler) UpdateBanner(c *gin.Context) {
 	var r req.PromotionBannerUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateBanner(c, &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteBanner 删除 Banner
@@ -71,14 +71,14 @@ func (h *BannerHandler) DeleteBanner(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteBanner(c, id); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetBanner 获得 Banner
@@ -91,15 +91,15 @@ func (h *BannerHandler) GetBanner(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetBanner(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetBannerPage 获得 Banner 分页
@@ -114,13 +114,13 @@ func (h *BannerHandler) GetBanner(c *gin.Context) {
 func (h *BannerHandler) GetBannerPage(c *gin.Context) {
 	var r req.PromotionBannerPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetBannerPage(c, &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
