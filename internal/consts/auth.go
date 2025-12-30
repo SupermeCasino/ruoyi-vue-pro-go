@@ -74,28 +74,6 @@ const (
 	NotifyTemplateTypeSystemMessage = 2
 )
 
-// DataScopeEnum 数据范围枚举 (对齐 Java: DataScopeEnum)
-const (
-	// DataScopeAll 全部数据权限
-	DataScopeAll = 1
-	// DataScopeDeptCustom 指定部门数据权限
-	DataScopeDeptCustom = 2
-	// DataScopeDeptOnly 部门数据权限
-	DataScopeDeptOnly = 3
-	// DataScopeDeptAndChild 部门及以下数据权限
-	DataScopeDeptAndChild = 4
-	// DataScopeSelf 仅本人数据权限
-	DataScopeSelf = 5
-)
-
-// RoleTypeEnum 角色类型枚举 (对齐 Java: RoleTypeEnum)
-const (
-	// RoleTypeSystem 内置角色
-	RoleTypeSystem = 1
-	// RoleTypeCustom 自定义角色
-	RoleTypeCustom = 2
-)
-
 // SocialTypeEnum 社交平台类型枚举 (对齐 Java: SocialTypeEnum)
 const (
 	// SocialTypeGitee Gitee
