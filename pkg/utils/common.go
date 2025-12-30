@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/pkg/types"
 )
 
 // ParseInt64 将字符串转换为 int64
@@ -63,31 +65,22 @@ func ToString(v interface{}) string {
 	}
 }
 
-// SplitToInt64 split string to int64 slice
+// SplitToInt64 将字符串（CSV 或 JSON 数组格式）解析为 int64 切片
 func SplitToInt64(s string) []int64 {
-	if s == "" {
-		return []int64{}
-	}
-	// split by comma
-	arr := make([]int64, 0)
-	// manual split to avoid loop import if strings is needed
-	// But strings is standard lib.
-	// Re-implementing simplified split by comma.
-	start := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == ',' {
-			val := ParseInt64(s[start:i])
-			if val > 0 {
-				arr = append(arr, val)
-			}
-			start = i + 1
+	list, _ := types.ParseListFromCSV[int64](s)
+	return []int64(list)
+}
+
+// ParseIDs 解析 ID 列表，支持 ?ids=1&ids=2 和 ?ids=1,2 两种格式
+func ParseIDs(strs []string) []int64 {
+	var ids []int64
+	for _, s := range strs {
+		if s == "" {
+			continue
 		}
+		// 处理逗号分隔
+		subIds := SplitToInt64(s)
+		ids = append(ids, subIds...)
 	}
-	if start < len(s) {
-		val := ParseInt64(s[start:])
-		if val > 0 {
-			arr = append(arr, val)
-		}
-	}
-	return arr
+	return ids
 }

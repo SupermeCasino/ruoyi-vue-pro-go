@@ -14,3 +14,21 @@ func Intersect[T comparable](slice1, slice2 []T) []T {
 	}
 	return intersect
 }
+
+// IsEqualList 比较两个切片是否相等（忽略顺序）
+func IsEqualList[T comparable](list1, list2 []T) bool {
+	if len(list1) != len(list2) {
+		return false
+	}
+	m := make(map[T]int)
+	for _, v := range list1 {
+		m[v]++
+	}
+	for _, v := range list2 {
+		if m[v] <= 0 {
+			return false
+		}
+		m[v]--
+	}
+	return true
+}

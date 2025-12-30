@@ -332,6 +332,9 @@ func ParseListFromCSV[T int | int64 | int32 | uint | uint64 | uint32 | float64 |
 // IntListFromCSV 向后兼容的别名 (元素类型为 int)
 type IntListFromCSV = ListFromCSV[int]
 
+// Int64ListFromCSV 处理逗号分隔的 int64 列表 (对齐 Java: List<Long>)
+type Int64ListFromCSV = ListFromCSV[int64]
+
 // StringListFromCSV 处理逗号分隔的字符串列表
 type StringListFromCSV = ListFromCSV[string]
 
