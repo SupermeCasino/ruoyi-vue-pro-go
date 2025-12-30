@@ -8,6 +8,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -30,29 +31,29 @@ func NewSmsTemplateHandler(smsTemplateSvc *service.SmsTemplateService, smsSendSv
 func (h *SmsTemplateHandler) CreateSmsTemplate(c *gin.Context) {
 	var req req.SmsTemplateSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.smsTemplateSvc.CreateSmsTemplate(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateSmsTemplate 更新短信模板
 func (h *SmsTemplateHandler) UpdateSmsTemplate(c *gin.Context) {
 	var req req.SmsTemplateSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.smsTemplateSvc.UpdateSmsTemplate(c, &req); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteSmsTemplate 删除短信模板
@@ -60,14 +61,14 @@ func (h *SmsTemplateHandler) DeleteSmsTemplate(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.smsTemplateSvc.DeleteSmsTemplate(c, id); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetSmsTemplate 获得短信模板
@@ -75,37 +76,37 @@ func (h *SmsTemplateHandler) GetSmsTemplate(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.smsTemplateSvc.GetSmsTemplate(c, id)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetSmsTemplatePage 获得短信模板分页
 func (h *SmsTemplateHandler) GetSmsTemplatePage(c *gin.Context) {
 	var req req.SmsTemplatePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.smsTemplateSvc.GetSmsTemplatePage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // ExportSmsTemplateExcel 导出短信模板 Excel
 func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
 	var req req.SmsTemplatePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -115,7 +116,7 @@ func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
 	// 获取所有数据
 	pageResult, err := h.smsTemplateSvc.GetSmsTemplatePage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -126,7 +127,7 @@ func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
 	sheetName := "短信模板"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -170,7 +171,7 @@ func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
 
 	// 写入 Excel 到响应
 	if err := f.Write(c.Writer); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 }
@@ -179,7 +180,7 @@ func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
 func (h *SmsTemplateHandler) SendSms(c *gin.Context) {
 	var req req.SmsTemplateSendReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -189,10 +190,10 @@ func (h *SmsTemplateHandler) SendSms(c *gin.Context) {
 
 	logId, err := h.smsSendSvc.SendSingleSmsToAdmin(ctx, req.Mobile, userId, req.TemplateCode, req.TemplateParams)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(logId))
+	response.WriteSuccess(c, logId)
 }
 
 // getLoginUserID 从 Context 获取当前登录用户 ID

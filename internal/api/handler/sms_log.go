@@ -7,6 +7,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -27,22 +28,22 @@ func NewSmsLogHandler(smsLogSvc *service.SmsLogService) *SmsLogHandler {
 func (h *SmsLogHandler) GetSmsLogPage(c *gin.Context) {
 	var req req.SmsLogPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.smsLogSvc.GetSmsLogPage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // ExportSmsLogExcel 导出短信日志 Excel
 func (h *SmsLogHandler) ExportSmsLogExcel(c *gin.Context) {
 	var req req.SmsLogPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -52,7 +53,7 @@ func (h *SmsLogHandler) ExportSmsLogExcel(c *gin.Context) {
 	// 获取所有数据
 	pageResult, err := h.smsLogSvc.GetSmsLogPage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 
@@ -63,7 +64,7 @@ func (h *SmsLogHandler) ExportSmsLogExcel(c *gin.Context) {
 	sheetName := "短信日志"
 	index, err := f.NewSheet(sheetName)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 	f.SetActiveSheet(index)
@@ -126,7 +127,7 @@ func (h *SmsLogHandler) ExportSmsLogExcel(c *gin.Context) {
 
 	// 写入 Excel 到响应
 	if err := f.Write(c.Writer); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
 }

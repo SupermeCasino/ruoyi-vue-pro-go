@@ -5,6 +5,7 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -24,15 +25,15 @@ func NewNoticeHandler(noticeSvc *service.NoticeService) *NoticeHandler {
 func (h *NoticeHandler) GetNoticePage(c *gin.Context) {
 	var req req.NoticePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.noticeSvc.GetNoticePage(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetNotice 获得通知公告
@@ -40,44 +41,44 @@ func (h *NoticeHandler) GetNotice(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.noticeSvc.GetNotice(c, id)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // CreateNotice 创建通知公告
 func (h *NoticeHandler) CreateNotice(c *gin.Context) {
 	var req req.NoticeSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.noticeSvc.CreateNotice(c, &req)
 	if err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateNotice 更新通知公告
 func (h *NoticeHandler) UpdateNotice(c *gin.Context) {
 	var req req.NoticeSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, response.Error(400, err.Error()))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.noticeSvc.UpdateNotice(c, &req); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteNotice 删除通知公告
@@ -85,14 +86,14 @@ func (h *NoticeHandler) DeleteNotice(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.noticeSvc.DeleteNotice(c, id); err != nil {
-		c.JSON(500, response.Error(500, err.Error()))
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // Push 推送通知公告
@@ -100,9 +101,9 @@ func (h *NoticeHandler) Push(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
 	if id == 0 {
-		c.JSON(400, response.Error(400, "id is required"))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// TODO: WebSocket push not implemented yet
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
