@@ -28,16 +28,16 @@ func (h *PermissionHandler) GetRoleMenuList(c *gin.Context) {
 	roleId, _ := strconv.ParseInt(roleIdStr, 10, 64)
 	list, err := h.svc.GetRoleMenuListByRoleId(c.Request.Context(), []int64{roleId})
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(list))
+	response.WriteSuccess(c, list)
 }
 
 func (h *PermissionHandler) AssignRoleMenu(c *gin.Context) {
 	var r req.PermissionAssignRoleMenuReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	// Filter menus by tenant
@@ -59,28 +59,28 @@ func (h *PermissionHandler) AssignRoleMenu(c *gin.Context) {
 		r.MenuIDs = filtered
 	})
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
 	if err := h.svc.AssignRoleMenu(c.Request.Context(), r.RoleID, r.MenuIDs); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *PermissionHandler) AssignRoleDataScope(c *gin.Context) {
 	var r req.PermissionAssignRoleDataScopeReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.AssignRoleDataScope(c.Request.Context(), r.RoleID, r.DataScope, r.DataScopeDeptIDs); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 func (h *PermissionHandler) GetUserRoleList(c *gin.Context) {
@@ -88,21 +88,21 @@ func (h *PermissionHandler) GetUserRoleList(c *gin.Context) {
 	userId, _ := strconv.ParseInt(userIdStr, 10, 64)
 	list, err := h.svc.GetUserRoleIdListByUserId(c.Request.Context(), userId)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(list))
+	response.WriteSuccess(c, list)
 }
 
 func (h *PermissionHandler) AssignUserRole(c *gin.Context) {
 	var r req.PermissionAssignUserRoleReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.AssignUserRole(c.Request.Context(), r.UserID, r.RoleIDs); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }

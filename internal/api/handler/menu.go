@@ -26,15 +26,15 @@ func NewMenuHandler(svc *service.MenuService) *MenuHandler {
 func (h *MenuHandler) CreateMenu(c *gin.Context) {
 	var r req.MenuCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateMenu(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateMenu 更新菜单
@@ -42,14 +42,14 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	var r req.MenuUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateMenu(c.Request.Context(), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteMenu 删除菜单
@@ -58,10 +58,10 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 0, 64)
 	if err := h.svc.DeleteMenu(c.Request.Context(), id); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetMenuList 获取菜单列表
@@ -69,15 +69,15 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 func (h *MenuHandler) GetMenuList(c *gin.Context) {
 	var r req.MenuListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	list, err := h.svc.GetMenuList(c.Request.Context(), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(list))
+	response.WriteSuccess(c, list)
 }
 
 // GetMenu 获取菜单详情
@@ -87,10 +87,10 @@ func (h *MenuHandler) GetMenu(c *gin.Context) {
 	id, _ := strconv.ParseInt(idStr, 0, 64)
 	item, err := h.svc.GetMenu(c.Request.Context(), id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(item))
+	response.WriteSuccess(c, item)
 }
 
 // GetSimpleMenuList 获取精简菜单列表
@@ -98,8 +98,8 @@ func (h *MenuHandler) GetMenu(c *gin.Context) {
 func (h *MenuHandler) GetSimpleMenuList(c *gin.Context) {
 	list, err := h.svc.GetSimpleMenuList(c.Request.Context())
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(list))
+	response.WriteSuccess(c, list)
 }
