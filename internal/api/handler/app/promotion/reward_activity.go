@@ -26,15 +26,15 @@ func (h *AppRewardActivityHandler) GetRewardActivity(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, response.Error(errors.ErrParam.Code, errors.ErrParam.Msg))
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	res, err := h.svc.GetRewardActivityForApp(c, id)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
 
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }

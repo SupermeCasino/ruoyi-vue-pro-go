@@ -30,7 +30,7 @@ func (h *AppCouponHandler) TakeCoupon(c *gin.Context) {
 	uid := c.GetInt64(context.CtxUserIDKey)
 	canTakeAgain, err := h.svc.TakeCoupon(c, uid, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, canTakeAgain)
@@ -40,13 +40,13 @@ func (h *AppCouponHandler) TakeCoupon(c *gin.Context) {
 func (h *AppCouponHandler) GetCouponPage(c *gin.Context) {
 	var r req.AppCouponPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	uid := c.GetInt64(context.CtxUserIDKey)
 	list, err := h.svc.GetCouponPage(c, uid, &r)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, list)
@@ -57,13 +57,13 @@ func (h *AppCouponHandler) GetCoupon(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		response.WriteError(c, 400, "参数错误")
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	uid := c.GetInt64(context.CtxUserIDKey)
 	coupon, err := h.svc.GetCoupon(c, uid, id)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, coupon)
@@ -74,7 +74,7 @@ func (h *AppCouponHandler) GetUnusedCouponCount(c *gin.Context) {
 	uid := c.GetInt64(context.CtxUserIDKey)
 	count, err := h.svc.GetUnusedCouponCount(c, uid)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, count)
@@ -84,14 +84,14 @@ func (h *AppCouponHandler) GetUnusedCouponCount(c *gin.Context) {
 func (h *AppCouponHandler) GetCouponMatchList(c *gin.Context) {
 	var r req.AppCouponMatchReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteError(c, 400, err.Error())
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	uid := c.GetInt64(context.CtxUserIDKey)
 
 	list, err := h.svc.GetCouponMatchList(c, uid, r.Price, r.SpuIDs, r.CategoryIDs)
 	if err != nil {
-		response.WriteError(c, 500, err.Error())
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, list)

@@ -38,16 +38,16 @@ func (h *AppMemberUserHandler) GetUserInfo(c *gin.Context) {
 func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 	var r req.AppMemberUserUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
 	userId := c.GetInt64(context.CtxUserIDKey)
 	if err := h.svc.UpdateUser(c, userId, &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // UpdateUserMobile 修改用户手机
@@ -55,7 +55,7 @@ func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 	var r req.AppMemberUserUpdateMobileReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -71,10 +71,10 @@ func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 
 	userId := c.GetInt64(context.CtxUserIDKey)
 	if err := h.svc.UpdateUserMobile(c, userId, &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // UpdateUserPassword 修改用户密码
@@ -82,7 +82,7 @@ func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 	var r req.AppMemberUserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 
@@ -93,10 +93,10 @@ func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 	}
 
 	if err := h.svc.UpdateUserPassword(c, c.GetInt64(context.CtxUserIDKey), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // ResetUserPassword 重置用户密码 (忘记密码)
@@ -104,14 +104,14 @@ func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 func (h *AppMemberUserHandler) ResetUserPassword(c *gin.Context) {
 	var r req.AppMemberUserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.ResetUserPassword(c, &r); err != nil {
-		c.Error(err)
+			response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // UpdateUserMobileByWeixin 微信小程序更新手机号
@@ -121,13 +121,13 @@ func (h *AppMemberUserHandler) UpdateUserMobileByWeixin(c *gin.Context) {
 		Code string `json:"code" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	userId := c.GetInt64(context.CtxUserIDKey)
 	if err := h.svc.UpdateUserMobileByWeixin(c, userId, r.Code); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }

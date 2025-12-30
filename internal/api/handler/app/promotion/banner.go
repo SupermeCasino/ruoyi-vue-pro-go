@@ -26,13 +26,13 @@ func NewAppBannerHandler(svc *promotion.PromotionBannerService) *AppBannerHandle
 func (h *AppBannerHandler) GetBannerList(c *gin.Context) {
 	var r req.AppBannerListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAppBannerList(c, r.Position)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }

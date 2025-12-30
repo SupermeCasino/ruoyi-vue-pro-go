@@ -25,15 +25,15 @@ func NewAppMemberAddressHandler(svc *member.MemberAddressService) *AppMemberAddr
 func (h *AppMemberAddressHandler) CreateAddress(c *gin.Context) {
 	var r req.AppAddressCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	id, err := h.svc.CreateAddress(c, c.GetInt64(context.CtxUserIDKey), &r)
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(id))
+	response.WriteSuccess(c, id)
 }
 
 // UpdateAddress 更新收件地址
@@ -41,14 +41,14 @@ func (h *AppMemberAddressHandler) CreateAddress(c *gin.Context) {
 func (h *AppMemberAddressHandler) UpdateAddress(c *gin.Context) {
 	var r req.AppAddressUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.UpdateAddress(c, c.GetInt64(context.CtxUserIDKey), &r); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // DeleteAddress 删除收件地址
@@ -57,14 +57,14 @@ func (h *AppMemberAddressHandler) DeleteAddress(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.DeleteAddress(c, c.GetInt64(context.CtxUserIDKey), id); err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(true))
+	response.WriteSuccess(c, true)
 }
 
 // GetAddress 获得收件地址
@@ -73,15 +73,15 @@ func (h *AppMemberAddressHandler) GetAddress(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		c.JSON(200, errors.ErrParam)
+		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	res, err := h.svc.GetAddress(c, c.GetInt64(context.CtxUserIDKey), id)
 	if err != nil {
-		c.Error(err)
+			response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetDefaultUserAddress 获得默认收件地址
@@ -89,10 +89,10 @@ func (h *AppMemberAddressHandler) GetAddress(c *gin.Context) {
 func (h *AppMemberAddressHandler) GetDefaultUserAddress(c *gin.Context) {
 	res, err := h.svc.GetDefaultUserAddress(c, c.GetInt64(context.CtxUserIDKey))
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
 
 // GetAddressList 获得收件地址列表
@@ -100,8 +100,8 @@ func (h *AppMemberAddressHandler) GetDefaultUserAddress(c *gin.Context) {
 func (h *AppMemberAddressHandler) GetAddressList(c *gin.Context) {
 	res, err := h.svc.GetAddressList(c, c.GetInt64(context.CtxUserIDKey))
 	if err != nil {
-		c.Error(err)
+		response.WriteBizError(c, err)
 		return
 	}
-	c.JSON(200, response.Success(res))
+	response.WriteSuccess(c, res)
 }
