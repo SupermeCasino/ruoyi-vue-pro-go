@@ -382,7 +382,7 @@ if loginUser != nil {
 
 ```yaml
 app:
-  name: "yudao-backend-go"     # 应用名称
+  name: "ruoyi-mall-go"        # 应用名称
   env: "local"                 # 运行环境
 
 http:
@@ -437,8 +437,8 @@ export REDIS_ADDR=redis:6379
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-repo/yudao-backend-go.git
-cd yudao-backend-go
+git clone https://github.com/wxlbd/ruoyi-mall-go.git
+cd ruoyi-mall-go
 ```
 
 ### 2. 安装依赖
@@ -525,7 +525,7 @@ curl -X GET http://localhost:48080/admin-api/system/user/page \
 ### 项目结构
 
 ```
-yudao-backend-go/
+ruoyi-mall-go/
 ├── cmd/                           # 应用入口
 │   ├── server/                    # 主服务
 │   │   ├── main.go               # 应用启动文件
