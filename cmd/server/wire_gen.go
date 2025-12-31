@@ -32,17 +32,19 @@ import (
 	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	product4 "github.com/wxlbd/ruoyi-mall-go/internal/repo/product"
 	trade3 "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/calculators"
+	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/delivery/client"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/job"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/product"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/calculators"
-	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
@@ -60,49 +62,49 @@ func InitApp() (*gin.Engine, error) {
 	redisClient := cache.InitRedis()
 	zapLogger := logger.NewLogger()
 	query := repo.NewQuery(db)
-	roleService := service.NewRoleService(query)
-	permissionService := service.NewPermissionService(query, roleService)
-	deptService := service.NewDeptService(query)
+	roleService := system.NewRoleService(query)
+	permissionService := system.NewPermissionService(query, roleService)
+	deptService := system.NewDeptService(query)
 	pluginRegistered, err := datascope.RegisterPlugin(db, zapLogger, permissionService, deptService)
 	if err != nil {
 		return nil, err
 	}
-	menuService := service.NewMenuService(query)
-	oAuth2TokenService := service.NewOAuth2TokenService()
-	smsTemplateService := service.NewSmsTemplateService(query)
-	smsLogService := service.NewSmsLogService(query)
-	smsClientFactory := service.NewSmsClientFactory()
-	smsSendService := service.NewSmsSendService(query, smsTemplateService, smsLogService, smsClientFactory)
-	smsCodeService := service.NewSmsCodeService(query, redisClient, smsSendService)
-	loginLogService := service.NewLoginLogService(query)
-	userService := service.NewUserService(query, deptService)
-	socialUserService := service.NewSocialUserService(query)
-	authService := service.NewAuthService(query, permissionService, roleService, menuService, oAuth2TokenService, smsCodeService, loginLogService, userService, socialUserService)
+	menuService := system.NewMenuService(query)
+	oAuth2TokenService := system.NewOAuth2TokenService()
+	smsTemplateService := system.NewSmsTemplateService(query)
+	smsLogService := system.NewSmsLogService(query)
+	smsClientFactory := system.NewSmsClientFactory()
+	smsSendService := system.NewSmsSendService(query, smsTemplateService, smsLogService, smsClientFactory)
+	smsCodeService := system.NewSmsCodeService(query, redisClient, smsSendService)
+	loginLogService := system.NewLoginLogService(query)
+	userService := system.NewUserService(query, deptService)
+	socialUserService := system.NewSocialUserService(query)
+	authService := system.NewAuthService(query, permissionService, roleService, menuService, oAuth2TokenService, smsCodeService, loginLogService, userService, socialUserService)
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
-	tenantService := service.NewTenantService(query, roleService, permissionService)
+	tenantService := system.NewTenantService(query, roleService, permissionService)
 	tenantHandler := handler.NewTenantHandler(tenantService)
-	tenantPackageService := service.NewTenantPackageService(query)
+	tenantPackageService := system.NewTenantPackageService(query, tenantService)
 	tenantPackageHandler := handler.NewTenantPackageHandler(tenantPackageService)
-	dictService := service.NewDictService(query)
+	dictService := system.NewDictService(query)
 	dictHandler := handler.NewDictHandler(dictService)
 	deptHandler := handler.NewDeptHandler(deptService)
-	postService := service.NewPostService(query)
+	postService := system.NewPostService(query)
 	postHandler := handler.NewPostHandler(postService)
 	roleHandler := handler.NewRoleHandler(roleService)
 	menuHandler := handler.NewMenuHandler(menuService)
 	permissionHandler := handler.NewPermissionHandler(permissionService, tenantService)
-	noticeService := service.NewNoticeService(query)
+	noticeService := system.NewNoticeService(query)
 	noticeHandler := handler.NewNoticeHandler(noticeService)
-	configService := service.NewConfigService(query)
+	configService := system.NewConfigService(query)
 	configHandler := handler.NewConfigHandler(configService)
-	smsChannelService := service.NewSmsChannelService(query)
+	smsChannelService := system.NewSmsChannelService(query)
 	smsChannelHandler := handler.NewSmsChannelHandler(smsChannelService)
 	smsTemplateHandler := handler.NewSmsTemplateHandler(smsTemplateService, smsSendService)
 	smsLogHandler := handler.NewSmsLogHandler(smsLogService)
-	fileConfigService := service.NewFileConfigService(query)
+	fileConfigService := infra.NewFileConfigService(query)
 	fileConfigHandler := handler.NewFileConfigHandler(fileConfigService)
-	fileService := service.NewFileService(query, fileConfigService)
+	fileService := infra.NewFileService(query, fileConfigService)
 	fileHandler := handler.NewFileHandler(fileService)
 	memberLevelService := member.NewMemberLevelService(query)
 	memberUserService := member.NewMemberUserService(query, smsCodeService, memberLevelService, socialUserService)
@@ -172,7 +174,7 @@ func InitApp() (*gin.Engine, error) {
 	tradeOrderQueryService := trade.NewTradeOrderQueryService(query, expressClientFactoryImpl, deliveryExpressService)
 	tradeOrderHandler := trade4.NewTradeOrderHandler(tradeOrderUpdateService, tradeOrderQueryService, memberUserService, deliveryExpressTemplateService)
 	combinationActivityService := promotion.NewCombinationActivityService(query, productSpuService, productSkuService)
-	socialClientService := service.NewSocialClientService(query)
+	socialClientService := system.NewSocialClientService(query)
 	combinationRecordService := promotion.NewCombinationRecordService(query, combinationActivityService, memberUserService, productSpuService, productSkuService, tradeOrderUpdateService, socialClientService)
 	afterSaleLogRepository := repo.NewAfterSaleLogRepository(query)
 	afterSaleLogService := trade.NewAfterSaleLogService(afterSaleLogRepository)
@@ -237,33 +239,33 @@ func InitApp() (*gin.Engine, error) {
 	payWalletRechargePackageHandler := wallet2.NewPayWalletRechargePackageHandler(payWalletRechargePackageService)
 	payWalletTransactionHandler := wallet2.NewPayWalletTransactionHandler(payWalletTransactionService)
 	loginLogHandler := handler.NewLoginLogHandler(loginLogService)
-	operateLogService := service.NewOperateLogService(query)
+	operateLogService := system.NewOperateLogService(query)
 	operateLogHandler := handler.NewOperateLogHandler(operateLogService)
-	payTransferSyncJob := service.NewPayTransferSyncJob(payTransferService, zapLogger)
-	payNotifyJob := service.NewPayNotifyJob(payNotifyService)
-	payOrderSyncJob := service.NewPayOrderSyncJob(payOrderService)
-	payOrderExpireJob := service.NewPayOrderExpireJob(payOrderService)
-	payRefundSyncJob := service.NewPayRefundSyncJob(payRefundService)
-	v2 := service.ProvideJobHandlers(payTransferSyncJob, payNotifyJob, payOrderSyncJob, payOrderExpireJob, payRefundSyncJob)
-	scheduler, err := service.NewScheduler(query, zapLogger, v2)
+	payTransferSyncJob := job.NewPayTransferSyncJob(payTransferService, zapLogger)
+	payNotifyJob := job.NewPayNotifyJob(payNotifyService)
+	payOrderSyncJob := job.NewPayOrderSyncJob(payOrderService)
+	payOrderExpireJob := job.NewPayOrderExpireJob(payOrderService)
+	payRefundSyncJob := job.NewPayRefundSyncJob(payRefundService)
+	v2 := ProvideJobHandlers(payTransferSyncJob, payNotifyJob, payOrderSyncJob, payOrderExpireJob, payRefundSyncJob)
+	scheduler, err := infra.NewScheduler(query, zapLogger, v2)
 	if err != nil {
 		return nil, err
 	}
-	jobService := service.NewJobService(query, scheduler)
+	jobService := infra.NewJobService(query, scheduler)
 	jobHandler := handler.NewJobHandler(jobService)
-	jobLogService := service.NewJobLogService(query)
+	jobLogService := infra.NewJobLogService(query)
 	jobLogHandler := handler.NewJobLogHandler(jobLogService)
-	apiAccessLogService := service.NewApiAccessLogService(query)
+	apiAccessLogService := infra.NewApiAccessLogService(query)
 	apiAccessLogHandler := handler.NewApiAccessLogHandler(apiAccessLogService)
-	apiErrorLogService := service.NewApiErrorLogService(query)
+	apiErrorLogService := infra.NewApiErrorLogService(query)
 	apiErrorLogHandler := handler.NewApiErrorLogHandler(apiErrorLogService)
 	socialClientHandler := handler.NewSocialClientHandler(socialClientService, zapLogger)
 	socialUserHandler := handler.NewSocialUserHandler(socialUserService, zapLogger)
-	mailService := service.NewMailService(db)
+	mailService := system.NewMailService(db)
 	mailHandler := handler.NewMailHandler(mailService)
-	notifyService := service.NewNotifyService(query)
+	notifyService := system.NewNotifyService(query)
 	notifyHandler := handler.NewNotifyHandler(notifyService)
-	oAuth2ClientService := service.NewOAuth2ClientService(db)
+	oAuth2ClientService := system.NewOAuth2ClientService(db)
 	oAuth2ClientHandler := handler.NewOAuth2ClientHandler(oAuth2ClientService)
 	appBargainActivityHandler := promotion3.NewAppBargainActivityHandler(bargainActivityService, bargainRecordService, productSpuService)
 	appBargainRecordHandler := promotion3.NewAppBargainRecordHandler(bargainRecordService, bargainActivityService, memberUserService, productSpuService, tradeOrderQueryService, bargainHelpService)
@@ -298,25 +300,25 @@ func InitApp() (*gin.Engine, error) {
 	brokerageRecordHandler := brokerage2.NewBrokerageRecordHandler(zapLogger, brokerageRecordService, memberUserService)
 	brokerageWithdrawService := brokerage.NewBrokerageWithdrawService(query, zapLogger, brokerageRecordService, payTransferService, payWalletService, tradeConfigService, memberUserService)
 	brokerageWithdrawHandler := brokerage2.NewBrokerageWithdrawHandler(brokerageWithdrawService, memberUserService)
-	tradeStatisticsRepository := repo.NewTradeStatisticsRepository(query)
-	tradeOrderStatisticsRepository := repo.NewTradeOrderStatisticsRepository(query)
-	tradeOrderStatisticsService := service.NewTradeOrderStatisticsServiceV2(tradeOrderStatisticsRepository)
-	afterSaleStatisticsRepository := repo.NewAfterSaleStatisticsRepository(query)
-	afterSaleStatisticsService := service.NewAfterSaleStatisticsService(afterSaleStatisticsRepository)
-	brokerageStatisticsRepository := repo.NewBrokerageStatisticsRepository(query)
-	brokerageStatisticsService := service.NewBrokerageStatisticsService(brokerageStatisticsRepository)
-	tradeStatisticsService := service.NewTradeStatisticsService(tradeStatisticsRepository, tradeOrderStatisticsService, afterSaleStatisticsService, brokerageStatisticsService)
+	tradeStatisticsRepositoryImpl := repo.NewTradeStatisticsRepository(query)
+	tradeOrderStatisticsRepositoryImpl := repo.NewTradeOrderStatisticsRepository(query)
+	tradeOrderStatisticsService := trade.NewTradeOrderStatisticsServiceV2(tradeOrderStatisticsRepositoryImpl)
+	afterSaleStatisticsRepositoryImpl := repo.NewAfterSaleStatisticsRepository(query)
+	afterSaleStatisticsService := trade.NewAfterSaleStatisticsService(afterSaleStatisticsRepositoryImpl)
+	brokerageStatisticsRepositoryImpl := repo.NewBrokerageStatisticsRepository(query)
+	brokerageStatisticsService := trade.NewBrokerageStatisticsService(brokerageStatisticsRepositoryImpl)
+	tradeStatisticsService := trade.NewTradeStatisticsService(tradeStatisticsRepositoryImpl, tradeOrderStatisticsService, afterSaleStatisticsService, brokerageStatisticsService)
 	tradeStatisticsHandler := admin.NewTradeStatisticsHandler(tradeStatisticsService, tradeOrderStatisticsService, afterSaleStatisticsService, brokerageStatisticsService)
-	productStatisticsRepository := product4.NewProductStatisticsRepository(query, db)
-	productStatisticsService := service.NewProductStatisticsService(productStatisticsRepository)
+	productStatisticsRepositoryImpl := product4.NewProductStatisticsRepository(query, db)
+	productStatisticsService := product.NewProductStatisticsService(productStatisticsRepositoryImpl)
 	productStatisticsHandler := admin.NewProductStatisticsHandler(productStatisticsService, productSpuService)
-	memberStatisticsRepository := repo.NewMemberStatisticsRepository(query, db)
-	memberStatisticsService := service.NewMemberStatisticsService(memberStatisticsRepository)
-	apiAccessLogStatisticsRepository := repo.NewApiAccessLogStatisticsRepository(query)
-	apiAccessLogStatisticsService := service.NewApiAccessLogStatisticsService(apiAccessLogStatisticsRepository)
+	memberStatisticsRepositoryImpl := repo.NewMemberStatisticsRepository(query, db)
+	memberStatisticsService := member.NewMemberStatisticsService(memberStatisticsRepositoryImpl)
+	apiAccessLogStatisticsRepositoryImpl := repo.NewApiAccessLogStatisticsRepository(query)
+	apiAccessLogStatisticsService := infra.NewApiAccessLogStatisticsService(apiAccessLogStatisticsRepositoryImpl)
 	memberStatisticsHandler := admin.NewMemberStatisticsHandler(memberStatisticsService, tradeOrderStatisticsService, apiAccessLogStatisticsService)
-	payWalletStatisticsRepository := repo.NewPayWalletStatisticsRepository(query)
-	payWalletStatisticsService := service.NewPayWalletStatisticsService(payWalletStatisticsRepository)
+	payWalletStatisticsRepositoryImpl := repo.NewPayWalletStatisticsRepository(query)
+	payWalletStatisticsService := pay.NewPayWalletStatisticsService(payWalletStatisticsRepositoryImpl)
 	payStatisticsHandler := admin.NewPayStatisticsHandler(payWalletStatisticsService)
 	appBrokerageUserHandler := brokerage3.NewAppBrokerageUserHandler(brokerageUserService, brokerageRecordService, brokerageWithdrawService, memberUserService)
 	appBrokerageRecordHandler := brokerage3.NewAppBrokerageRecordHandler(brokerageRecordService)
@@ -366,4 +368,15 @@ func ProvidePriceCalculators(
 		delivery,
 		pointGive,
 	}
+}
+
+// ProvideJobHandlers 聚合所有定时任务处理器，供 Wire 使用
+func ProvideJobHandlers(
+	h1 *job.PayTransferSyncJob,
+	h2 *job.PayNotifyJob,
+	h3 *job.PayOrderSyncJob,
+	h4 *job.PayOrderExpireJob,
+	h5 *job.PayRefundSyncJob,
+) []infra.JobHandler {
+	return []infra.JobHandler{h1, h2, h3, h4, h5}
 }

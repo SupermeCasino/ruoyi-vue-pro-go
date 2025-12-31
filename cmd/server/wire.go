@@ -27,21 +27,23 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo" // Pay Repo
 	payRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/job"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	productRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/product" // Product Statistics Repo
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	product "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
+	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
+	tradeSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
+	tradeBrokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/calculators"
+	deliveryClient "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/delivery/client"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/alipay"
 	_ "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client/weixin"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
-	product "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
-	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
-	tradeSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
-	tradeBrokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/calculators"
-	deliveryClient "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/delivery/client"
 
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/database"
@@ -61,39 +63,39 @@ func InitApp() (*gin.Engine, error) {
 		// Data Scope Plugin (需要在Services之后注册)
 		datascope.RegisterPlugin,
 		// Service
-		service.NewOAuth2TokenService,
-		service.NewAuthService,
-		service.NewMenuService,
-		service.NewRoleService,
-		service.NewPermissionService,
-		service.NewTenantService,
-		service.NewTenantPackageService,
-		service.NewUserService,
-		service.NewDictService,
-		service.NewDeptService,
-		service.NewPostService,
-		service.NewNoticeService,
-		service.NewConfigService,
-		service.NewSmsClientFactory,            // Added SmsClientFactory
-		service.NewSmsChannelService,           // Added SmsChannelService
-		service.NewSmsTemplateService,          // Added SmsTemplateService
-		service.NewSmsLogService,               // Added SmsLogService
-		service.NewSmsSendService,              // Added SmsSendService
-		service.NewFileConfigService,           // Added FileConfigService
-		service.NewFileService,                 // Added FileService
-		service.NewSmsCodeService,              // Added SmsCodeService
-		service.NewLoginLogService,             // Added LoginLogService
-		service.NewOperateLogService,           // Added OperateLogService
-		service.NewScheduler,                   // Added Scheduler
-		service.NewJobService,                  // Added JobService
-		service.NewJobLogService,               // Added JobLogService
-		service.NewApiAccessLogService,         // Added ApiAccessLogService
-		service.NewApiErrorLogService,          // Added ApiErrorLogService
-		service.NewSocialClientService,         // Added SocialClientService
-		service.NewSocialUserService,           // Added SocialUserService
-		service.NewMailService,                 // Added MailService
-		service.NewNotifyService,               // Added NotifyService
-		service.NewOAuth2ClientService,         // Added OAuth2ClientService
+		system.NewOAuth2TokenService,
+		system.NewAuthService,
+		system.NewMenuService,
+		system.NewRoleService,
+		system.NewPermissionService,
+		system.NewTenantService,
+		system.NewTenantPackageService,
+		system.NewUserService,
+		system.NewDictService,
+		system.NewDeptService,
+		system.NewPostService,
+		system.NewNoticeService,
+		system.NewConfigService,
+		system.NewSmsClientFactory,             // Added SmsClientFactory
+		system.NewSmsChannelService,            // Added SmsChannelService
+		system.NewSmsTemplateService,           // Added SmsTemplateService
+		system.NewSmsLogService,                // Added SmsLogService
+		system.NewSmsSendService,               // Added SmsSendService
+		infra.NewFileConfigService,             // Added FileConfigService
+		infra.NewFileService,                   // Added FileService
+		system.NewSmsCodeService,               // Added SmsCodeService
+		system.NewLoginLogService,              // Added LoginLogService
+		system.NewOperateLogService,            // Added OperateLogService
+		infra.NewScheduler,                     // Added Scheduler
+		infra.NewJobService,                    // Added JobService
+		infra.NewJobLogService,                 // Added JobLogService
+		infra.NewApiAccessLogService,           // Added ApiAccessLogService
+		infra.NewApiErrorLogService,            // Added ApiErrorLogService
+		system.NewSocialClientService,          // Added SocialClientService
+		system.NewSocialUserService,            // Added SocialUserService
+		system.NewMailService,                  // Added MailService
+		system.NewNotifyService,                // Added NotifyService
+		system.NewOAuth2ClientService,          // Added OAuth2ClientService
 		memberSvc.NewMemberAuthService,         // Added MemberAuthService
 		memberSvc.NewMemberUserService,         // Added MemberUserService
 		memberSvc.NewMemberAddressService,      // Added MemberAddressService
@@ -233,22 +235,22 @@ func InitApp() (*gin.Engine, error) {
 		repo.NewApiAccessLogStatisticsRepository,
 		repo.NewPayWalletStatisticsRepository,
 		productRepo.NewProductStatisticsRepository, // Product
-		service.NewProductStatisticsService,        // Product
-		service.NewTradeStatisticsService,          // Trade
-		service.NewTradeOrderStatisticsServiceV2,
-		service.NewAfterSaleStatisticsService,
-		service.NewBrokerageStatisticsService,
-		service.NewMemberStatisticsService,
-		service.NewApiAccessLogStatisticsService,
-		service.NewPayWalletStatisticsService,
+		product.NewProductStatisticsService,        // Product
+		tradeSvc.NewTradeStatisticsService,         // Trade
+		tradeSvc.NewTradeOrderStatisticsServiceV2,
+		tradeSvc.NewAfterSaleStatisticsService,
+		tradeSvc.NewBrokerageStatisticsService,
+		memberSvc.NewMemberStatisticsService,
+		infra.NewApiAccessLogStatisticsService,
+		paySvc.NewPayWalletStatisticsService,
 		adminHandler.NewTradeStatisticsHandler,
 		adminHandler.NewProductStatisticsHandler,
 		adminHandler.NewMemberStatisticsHandler,
-		service.NewPayTransferSyncJob, // Added PayTransferSyncJob
-		service.NewPayNotifyJob,       // Added PayNotifyJob
-		service.NewPayOrderSyncJob,    // Added PayOrderSyncJob
-		service.NewPayOrderExpireJob,  // Added PayOrderExpireJob
-		service.NewPayRefundSyncJob,   // Added PayRefundSyncJob
+		job.NewPayTransferSyncJob, // Added PayTransferSyncJob
+		job.NewPayNotifyJob,       // Added PayNotifyJob
+		job.NewPayOrderSyncJob,    // Added PayOrderSyncJob
+		job.NewPayOrderExpireJob,  // Added PayOrderExpireJob
+		job.NewPayRefundSyncJob,   // Added PayRefundSyncJob
 		adminHandler.NewPayStatisticsHandler,
 
 		// Promotion
@@ -321,8 +323,18 @@ func InitApp() (*gin.Engine, error) {
 		deliveryClient.NewExpressClientFactory, // Added ExpressClientFactory
 		wire.Bind(new(deliveryClient.ExpressClientFactory), new(*deliveryClient.ExpressClientFactoryImpl)),
 
+		// Statistics Repository 接口绑定
+		wire.Bind(new(tradeSvc.TradeStatisticsRepository), new(*repo.TradeStatisticsRepositoryImpl)),
+		wire.Bind(new(tradeSvc.TradeOrderStatisticsRepository), new(*repo.TradeOrderStatisticsRepositoryImpl)),
+		wire.Bind(new(tradeSvc.AfterSaleStatisticsRepository), new(*repo.AfterSaleStatisticsRepositoryImpl)),
+		wire.Bind(new(tradeSvc.BrokerageStatisticsRepository), new(*repo.BrokerageStatisticsRepositoryImpl)),
+		wire.Bind(new(memberSvc.MemberStatisticsRepository), new(*repo.MemberStatisticsRepositoryImpl)),
+		wire.Bind(new(infra.ApiAccessLogStatisticsRepository), new(*repo.ApiAccessLogStatisticsRepositoryImpl)),
+		wire.Bind(new(paySvc.PayWalletStatisticsRepository), new(*repo.PayWalletStatisticsRepositoryImpl)),
+		wire.Bind(new(product.ProductStatisticsRepository), new(*productRepo.ProductStatisticsRepositoryImpl)),
+
 		wire.Bind(new(promotionSvc.CombinationTradeOrderService), new(*tradeSvc.TradeOrderUpdateService)),
-		wire.Bind(new(promotionSvc.CombinationSocialClientService), new(*service.SocialClientService)),
+		wire.Bind(new(promotionSvc.CombinationSocialClientService), new(*system.SocialClientService)),
 		tradeSvc.NewDefaultPromotionPriceCalculator,
 		wire.Bind(new(tradeSvc.PromotionPriceCalculator), new(*tradeSvc.DefaultPromotionPriceCalculator)),
 
@@ -362,7 +374,7 @@ func InitApp() (*gin.Engine, error) {
 		router.InitRouter,
 
 		// Job Handlers (Slice Injection for Scheduler)
-		service.ProvideJobHandlers,
+		ProvideJobHandlers,
 	)
 	return &gin.Engine{}, nil
 }
@@ -402,4 +414,15 @@ func ProvidePriceCalculators(
 		delivery,      // 50
 		pointGive,     // 999
 	}
+}
+
+// ProvideJobHandlers 聚合所有定时任务处理器，供 Wire 使用
+func ProvideJobHandlers(
+	h1 *job.PayTransferSyncJob,
+	h2 *job.PayNotifyJob,
+	h3 *job.PayOrderSyncJob,
+	h4 *job.PayOrderExpireJob,
+	h5 *job.PayRefundSyncJob,
+) []infra.JobHandler {
+	return []infra.JobHandler{h1, h2, h3, h4, h5}
 }
