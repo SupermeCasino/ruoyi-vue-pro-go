@@ -9,7 +9,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
@@ -19,14 +19,14 @@ var _ = utils.CheckPasswordHash
 
 type MemberAuthService struct {
 	repo        *query.Query
-	smsCodeSvc  *service.SmsCodeService
+	smsCodeSvc  *system.SmsCodeService
 	userSvc     *MemberUserService
-	socialSvc   *service.SocialUserService
-	tokenSvc    *service.OAuth2TokenService
-	loginLogSvc *service.LoginLogService
+	socialSvc   *system.SocialUserService
+	tokenSvc    *system.OAuth2TokenService
+	loginLogSvc *system.LoginLogService
 }
 
-func NewMemberAuthService(repo *query.Query, smsCodeSvc *service.SmsCodeService, userSvc *MemberUserService, socialSvc *service.SocialUserService, tokenSvc *service.OAuth2TokenService, loginLogSvc *service.LoginLogService) *MemberAuthService {
+func NewMemberAuthService(repo *query.Query, smsCodeSvc *system.SmsCodeService, userSvc *MemberUserService, socialSvc *system.SocialUserService, tokenSvc *system.OAuth2TokenService, loginLogSvc *system.LoginLogService) *MemberAuthService {
 	return &MemberAuthService{
 		repo:        repo,
 		smsCodeSvc:  smsCodeSvc,

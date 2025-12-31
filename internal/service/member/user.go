@@ -9,19 +9,19 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	query "github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type MemberUserService struct {
 	q             *query.Query
-	smsCodeSvc    *service.SmsCodeService
+	smsCodeSvc    *system.SmsCodeService
 	levelSvc      *MemberLevelService
-	socialUserSvc *service.SocialUserService
+	socialUserSvc *system.SocialUserService
 }
 
-func NewMemberUserService(q *query.Query, smsCodeSvc *service.SmsCodeService, levelSvc *MemberLevelService, socialUserSvc *service.SocialUserService) *MemberUserService {
+func NewMemberUserService(q *query.Query, smsCodeSvc *system.SmsCodeService, levelSvc *MemberLevelService, socialUserSvc *system.SocialUserService) *MemberUserService {
 	return &MemberUserService{
 		q:             q,
 		smsCodeSvc:    smsCodeSvc,
@@ -149,7 +149,7 @@ func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.A
 // UpdateUserMobile 修改用户手机
 func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req *req.AppMemberUserUpdateMobileReq) error {
 	// 使用定义的场景值（对应 Java 中的 MEMBER_UPDATE_MOBILE）
-	scene := service.SmsSceneMemberUpdateMob.Scene
+	scene := system.SmsSceneMemberUpdateMob.Scene
 
 	// 1. 校验验证码
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
@@ -174,7 +174,7 @@ func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req 
 // 对齐 Java: MemberUserServiceImpl.resetUserPassword
 func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppMemberUserResetPasswordReq) error {
 	// 1. 校验验证码 (场景: 重置密码 = SmsSceneEnum.MEMBER_RESET_PASSWORD)
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, service.SmsSceneMemberResetPwd.Scene, req.Code); err != nil {
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, system.SmsSceneMemberResetPwd.Scene, req.Code); err != nil {
 		return err
 	}
 
@@ -199,7 +199,7 @@ func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppM
 // UpdateUserPassword 修改用户密码
 func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, req *req.AppMemberUserUpdatePasswordReq) error {
 	// 使用定义的场景值（对应 Java 中的 MEMBER_UPDATE_PASSWORD）
-	scene := service.SmsSceneMemberUpdatePwd.Scene
+	scene := system.SmsSceneMemberUpdatePwd.Scene
 
 	// 1. 校验验证码
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
