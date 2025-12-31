@@ -9,7 +9,7 @@ import (
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
-	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"

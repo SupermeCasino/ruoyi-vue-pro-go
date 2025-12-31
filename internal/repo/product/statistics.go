@@ -7,7 +7,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ type ProductStatisticsRepositoryImpl struct {
 }
 
 // NewProductStatisticsRepository 创建商品统计 Repository
-func NewProductStatisticsRepository(q *query.Query, db *gorm.DB) service.ProductStatisticsRepository {
+func NewProductStatisticsRepository(q *query.Query, db *gorm.DB) *ProductStatisticsRepositoryImpl {
 	return &ProductStatisticsRepositoryImpl{q: q, db: db}
 }
 

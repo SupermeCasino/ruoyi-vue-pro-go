@@ -4,7 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -16,11 +16,11 @@ import (
 )
 
 type SocialUserHandler struct {
-	socialUserService *service.SocialUserService
+	socialUserService *system.SocialUserService
 	logger            *zap.Logger
 }
 
-func NewSocialUserHandler(socialUserService *service.SocialUserService, logger *zap.Logger) *SocialUserHandler {
+func NewSocialUserHandler(socialUserService *system.SocialUserService, logger *zap.Logger) *SocialUserHandler {
 	return &SocialUserHandler{
 		socialUserService: socialUserService,
 		logger:            logger,

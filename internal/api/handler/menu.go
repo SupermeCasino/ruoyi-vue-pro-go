@@ -4,18 +4,18 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type MenuHandler struct {
-	svc *service.MenuService
+	svc *system.MenuService
 }
 
-func NewMenuHandler(svc *service.MenuService) *MenuHandler {
+func NewMenuHandler(svc *system.MenuService) *MenuHandler {
 	return &MenuHandler{
 		svc: svc,
 	}

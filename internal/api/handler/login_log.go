@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -12,10 +12,10 @@ import (
 )
 
 type LoginLogHandler struct {
-	svc *service.LoginLogService
+	svc *system.LoginLogService
 }
 
-func NewLoginLogHandler(svc *service.LoginLogService) *LoginLogHandler {
+func NewLoginLogHandler(svc *system.LoginLogService) *LoginLogHandler {
 	return &LoginLogHandler{svc: svc}
 }
 

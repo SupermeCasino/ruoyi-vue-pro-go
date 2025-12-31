@@ -5,17 +5,17 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AppSocialUserHandler struct {
-	svc *service.SocialUserService
+	svc *system.SocialUserService
 }
 
-func NewAppSocialUserHandler(svc *service.SocialUserService) *AppSocialUserHandler {
+func NewAppSocialUserHandler(svc *system.SocialUserService) *AppSocialUserHandler {
 	return &AppSocialUserHandler{svc: svc}
 }
 

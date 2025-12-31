@@ -7,7 +7,6 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 
 	"gorm.io/gorm"
 )
@@ -21,7 +20,7 @@ type MemberStatisticsRepositoryImpl struct {
 }
 
 // NewMemberStatisticsRepository 创建会员统计 Repository
-func NewMemberStatisticsRepository(q *query.Query, db *gorm.DB) service.MemberStatisticsRepository {
+func NewMemberStatisticsRepository(q *query.Query, db *gorm.DB) *MemberStatisticsRepositoryImpl {
 	return &MemberStatisticsRepositoryImpl{q: q, db: db}
 }
 
@@ -203,7 +202,7 @@ type ApiAccessLogStatisticsRepositoryImpl struct {
 }
 
 // NewApiAccessLogStatisticsRepository 创建API访问日志统计 Repository
-func NewApiAccessLogStatisticsRepository(q *query.Query) service.ApiAccessLogStatisticsRepository {
+func NewApiAccessLogStatisticsRepository(q *query.Query) *ApiAccessLogStatisticsRepositoryImpl {
 	return &ApiAccessLogStatisticsRepositoryImpl{q: q}
 }
 
@@ -233,7 +232,7 @@ type PayWalletStatisticsRepositoryImpl struct {
 }
 
 // NewPayWalletStatisticsRepository 创建支付钱包统计 Repository
-func NewPayWalletStatisticsRepository(q *query.Query) service.PayWalletStatisticsRepository {
+func NewPayWalletStatisticsRepository(q *query.Query) *PayWalletStatisticsRepositoryImpl {
 	return &PayWalletStatisticsRepositoryImpl{q: q}
 }
 

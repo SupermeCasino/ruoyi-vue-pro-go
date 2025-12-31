@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -14,10 +14,10 @@ import (
 )
 
 type JobLogHandler struct {
-	svc *service.JobLogService
+	svc *infra.JobLogService
 }
 
-func NewJobLogHandler(svc *service.JobLogService) *JobLogHandler {
+func NewJobLogHandler(svc *infra.JobLogService) *JobLogHandler {
 	return &JobLogHandler{svc: svc}
 }
 

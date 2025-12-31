@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -13,10 +13,10 @@ import (
 )
 
 type NotifyHandler struct {
-	svc *service.NotifyService
+	svc *system.NotifyService
 }
 
-func NewNotifyHandler(svc *service.NotifyService) *NotifyHandler {
+func NewNotifyHandler(svc *system.NotifyService) *NotifyHandler {
 	return &NotifyHandler{svc: svc}
 }
 

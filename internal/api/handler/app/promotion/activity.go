@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
-	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 

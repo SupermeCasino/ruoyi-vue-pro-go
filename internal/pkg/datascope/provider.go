@@ -1,7 +1,7 @@
 package datascope
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -15,8 +15,8 @@ type PluginRegistered struct{}
 func RegisterPlugin(
 	db *gorm.DB,
 	logger *zap.Logger,
-	permissionSvc *service.PermissionService,
-	deptSvc *service.DeptService,
+	permissionSvc *system.PermissionService,
+	deptSvc *system.DeptService,
 ) (*PluginRegistered, error) {
 	plugin := NewPlugin(logger, permissionSvc, deptSvc)
 	if err := db.Use(plugin); err != nil {

@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -12,10 +12,10 @@ import (
 )
 
 type ConfigHandler struct {
-	configSvc *service.ConfigService
+	configSvc *system.ConfigService
 }
 
-func NewConfigHandler(configSvc *service.ConfigService) *ConfigHandler {
+func NewConfigHandler(configSvc *system.ConfigService) *ConfigHandler {
 	return &ConfigHandler{
 		configSvc: configSvc,
 	}

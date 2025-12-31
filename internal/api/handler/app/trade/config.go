@@ -3,7 +3,7 @@ package trade
 import (
 	"os"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
 	"github.com/gin-gonic/gin"

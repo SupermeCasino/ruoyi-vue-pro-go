@@ -5,17 +5,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 )
 
 type TenantPackageHandler struct {
-	svc *service.TenantPackageService
+	svc *system.TenantPackageService
 }
 
-func NewTenantPackageHandler(svc *service.TenantPackageService) *TenantPackageHandler {
+func NewTenantPackageHandler(svc *system.TenantPackageService) *TenantPackageHandler {
 	return &TenantPackageHandler{svc: svc}
 }
 

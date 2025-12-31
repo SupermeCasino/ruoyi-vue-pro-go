@@ -9,7 +9,7 @@ import (
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	model "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 

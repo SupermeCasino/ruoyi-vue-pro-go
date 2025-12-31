@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -13,11 +13,11 @@ import (
 )
 
 type SocialClientHandler struct {
-	socialClientService *service.SocialClientService
+	socialClientService *system.SocialClientService
 	logger              *zap.Logger
 }
 
-func NewSocialClientHandler(socialClientService *service.SocialClientService, logger *zap.Logger) *SocialClientHandler {
+func NewSocialClientHandler(socialClientService *system.SocialClientService, logger *zap.Logger) *SocialClientHandler {
 	return &SocialClientHandler{
 		socialClientService: socialClientService,
 		logger:              logger,

@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -12,10 +12,10 @@ import (
 )
 
 type OperateLogHandler struct {
-	svc *service.OperateLogService
+	svc *system.OperateLogService
 }
 
-func NewOperateLogHandler(svc *service.OperateLogService) *OperateLogHandler {
+func NewOperateLogHandler(svc *system.OperateLogService) *OperateLogHandler {
 	return &OperateLogHandler{svc: svc}
 }
 

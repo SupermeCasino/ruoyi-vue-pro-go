@@ -4,18 +4,18 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type PostHandler struct {
-	svc *service.PostService
+	svc *system.PostService
 }
 
-func NewPostHandler(svc *service.PostService) *PostHandler {
+func NewPostHandler(svc *system.PostService) *PostHandler {
 	return &PostHandler{
 		svc: svc,
 	}

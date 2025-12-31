@@ -4,19 +4,19 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type PermissionHandler struct {
-	svc       *service.PermissionService
-	tenantSvc *service.TenantService
+	svc       *system.PermissionService
+	tenantSvc *system.TenantService
 }
 
-func NewPermissionHandler(svc *service.PermissionService, tenantSvc *service.TenantService) *PermissionHandler {
+func NewPermissionHandler(svc *system.PermissionService, tenantSvc *system.TenantService) *PermissionHandler {
 	return &PermissionHandler{
 		svc:       svc,
 		tenantSvc: tenantSvc,

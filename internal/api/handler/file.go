@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -13,10 +13,10 @@ import (
 )
 
 type FileConfigHandler struct {
-	svc *service.FileConfigService
+	svc *infra.FileConfigService
 }
 
-func NewFileConfigHandler(svc *service.FileConfigService) *FileConfigHandler {
+func NewFileConfigHandler(svc *infra.FileConfigService) *FileConfigHandler {
 	return &FileConfigHandler{svc: svc}
 }
 
@@ -131,10 +131,10 @@ func (h *FileConfigHandler) TestFileConfig(c *gin.Context) {
 // File Handler
 
 type FileHandler struct {
-	svc *service.FileService
+	svc *infra.FileService
 }
 
-func NewFileHandler(svc *service.FileService) *FileHandler {
+func NewFileHandler(svc *infra.FileService) *FileHandler {
 	return &FileHandler{svc: svc}
 }
 

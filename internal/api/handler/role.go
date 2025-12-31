@@ -4,18 +4,18 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type RoleHandler struct {
-	svc *service.RoleService
+	svc *system.RoleService
 }
 
-func NewRoleHandler(svc *service.RoleService) *RoleHandler {
+func NewRoleHandler(svc *system.RoleService) *RoleHandler {
 	return &RoleHandler{
 		svc: svc,
 	}

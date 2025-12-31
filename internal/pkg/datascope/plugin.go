@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	pkgcontext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -15,15 +15,15 @@ import (
 // Plugin GORM数据权限插件
 type Plugin struct {
 	logger        *zap.Logger
-	permissionSvc *service.PermissionService
-	deptSvc       *service.DeptService
+	permissionSvc *system.PermissionService
+	deptSvc       *system.DeptService
 }
 
 // NewPlugin 创建数据权限插件
 func NewPlugin(
 	logger *zap.Logger,
-	permissionSvc *service.PermissionService,
-	deptSvc *service.DeptService,
+	permissionSvc *system.PermissionService,
+	deptSvc *system.DeptService,
 ) *Plugin {
 	return &Plugin{
 		logger:        logger,

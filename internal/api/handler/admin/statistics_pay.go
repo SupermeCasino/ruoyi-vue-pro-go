@@ -2,7 +2,7 @@ package admin
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -11,11 +11,11 @@ import (
 
 // PayStatisticsHandler 支付统计处理器
 type PayStatisticsHandler struct {
-	payWalletStatisticsService service.PayWalletStatisticsService
+	payWalletStatisticsService pay.PayWalletStatisticsService
 }
 
 // NewPayStatisticsHandler 创建支付统计处理器
-func NewPayStatisticsHandler(payWalletStatisticsService service.PayWalletStatisticsService) *PayStatisticsHandler {
+func NewPayStatisticsHandler(payWalletStatisticsService pay.PayWalletStatisticsService) *PayStatisticsHandler {
 	return &PayStatisticsHandler{
 		payWalletStatisticsService: payWalletStatisticsService,
 	}

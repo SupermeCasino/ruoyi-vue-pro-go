@@ -7,7 +7,7 @@ import (
 	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
 	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/trade/brokerage"
+	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"

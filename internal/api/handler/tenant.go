@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -18,10 +18,10 @@ import (
 )
 
 type TenantHandler struct {
-	svc *service.TenantService
+	svc *system.TenantService
 }
 
-func NewTenantHandler(svc *service.TenantService) *TenantHandler {
+func NewTenantHandler(svc *system.TenantService) *TenantHandler {
 	return &TenantHandler{svc: svc}
 }
 

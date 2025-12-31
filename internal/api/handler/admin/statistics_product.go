@@ -3,8 +3,7 @@ package admin
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
-	productService "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	productService "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -15,13 +14,13 @@ import (
 
 // ProductStatisticsHandler 商品统计处理器
 type ProductStatisticsHandler struct {
-	productStatisticsService service.ProductStatisticsService
+	productStatisticsService productService.ProductStatisticsService
 	productSpuService        *productService.ProductSpuService
 }
 
 // NewProductStatisticsHandler 创建商品统计处理器
 func NewProductStatisticsHandler(
-	productStatisticsService service.ProductStatisticsService,
+	productStatisticsService productService.ProductStatisticsService,
 	productSpuService *productService.ProductSpuService,
 ) *ProductStatisticsHandler {
 	return &ProductStatisticsHandler{

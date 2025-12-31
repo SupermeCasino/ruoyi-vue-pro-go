@@ -10,7 +10,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
-	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
+	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"

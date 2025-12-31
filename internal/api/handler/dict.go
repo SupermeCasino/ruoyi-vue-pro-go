@@ -4,18 +4,18 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
 
 type DictHandler struct {
-	svc *service.DictService
+	svc *system.DictService
 }
 
-func NewDictHandler(svc *service.DictService) *DictHandler {
+func NewDictHandler(svc *system.DictService) *DictHandler {
 	return &DictHandler{
 		svc: svc,
 	}

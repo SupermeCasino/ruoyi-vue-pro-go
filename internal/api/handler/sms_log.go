@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -15,10 +15,10 @@ import (
 )
 
 type SmsLogHandler struct {
-	smsLogSvc *service.SmsLogService
+	smsLogSvc *system.SmsLogService
 }
 
-func NewSmsLogHandler(smsLogSvc *service.SmsLogService) *SmsLogHandler {
+func NewSmsLogHandler(smsLogSvc *system.SmsLogService) *SmsLogHandler {
 	return &SmsLogHandler{
 		smsLogSvc: smsLogSvc,
 	}

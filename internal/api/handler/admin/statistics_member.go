@@ -3,7 +3,9 @@ package admin
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -12,16 +14,16 @@ import (
 
 // MemberStatisticsHandler 会员统计处理器
 type MemberStatisticsHandler struct {
-	memberStatisticsService       service.MemberStatisticsService
-	tradeOrderStatisticsService   service.TradeOrderStatisticsService
-	apiAccessLogStatisticsService service.ApiAccessLogStatisticsService
+	memberStatisticsService       member.MemberStatisticsService
+	tradeOrderStatisticsService   trade.TradeOrderStatisticsService
+	apiAccessLogStatisticsService infra.ApiAccessLogStatisticsService
 }
 
 // NewMemberStatisticsHandler 创建会员统计处理器
 func NewMemberStatisticsHandler(
-	memberStatisticsService service.MemberStatisticsService,
-	tradeOrderStatisticsService service.TradeOrderStatisticsService,
-	apiAccessLogStatisticsService service.ApiAccessLogStatisticsService,
+	memberStatisticsService member.MemberStatisticsService,
+	tradeOrderStatisticsService trade.TradeOrderStatisticsService,
+	apiAccessLogStatisticsService infra.ApiAccessLogStatisticsService,
 ) *MemberStatisticsHandler {
 	return &MemberStatisticsHandler{
 		memberStatisticsService:       memberStatisticsService,

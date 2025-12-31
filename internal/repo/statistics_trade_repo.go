@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/dto"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
 )
 
 // ============ TradeStatisticsRepository 实现 ============
@@ -17,12 +17,12 @@ type TradeStatisticsRepositoryImpl struct {
 }
 
 // NewTradeStatisticsRepository 创建交易统计 Repository
-func NewTradeStatisticsRepository(q *query.Query) service.TradeStatisticsRepository {
+func NewTradeStatisticsRepository(q *query.Query) *TradeStatisticsRepositoryImpl {
 	return &TradeStatisticsRepositoryImpl{q: q}
 }
 
 // GetByDateRange 获取指定日期范围的统计汇总
-func (r *TradeStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, beginTime, endTime time.Time) (*service.TradeStatisticsModel, error) {
+func (r *TradeStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, beginTime, endTime time.Time) (*dto.TradeStatisticsDTO, error) {
 	ts := r.q.TradeStatistics
 
 	var result struct {
@@ -61,7 +61,7 @@ func (r *TradeStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, begi
 		return nil, err
 	}
 
-	return &service.TradeStatisticsModel{
+	return &dto.TradeStatisticsDTO{
 		StatisticsTime:           beginTime,
 		OrderCreateCount:         int(result.OrderCreateCount),
 		OrderPayCount:            int(result.OrderPayCount),
@@ -78,12 +78,12 @@ func (r *TradeStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, begi
 }
 
 // GetByMonthRange 获取指定月份范围的统计汇总
-func (r *TradeStatisticsRepositoryImpl) GetByMonthRange(ctx context.Context, beginTime, endTime time.Time) (*service.TradeStatisticsModel, error) {
+func (r *TradeStatisticsRepositoryImpl) GetByMonthRange(ctx context.Context, beginTime, endTime time.Time) (*dto.TradeStatisticsDTO, error) {
 	return r.GetByDateRange(ctx, beginTime, endTime)
 }
 
 // GetListByDateRange 获取指定日期范围的统计列表
-func (r *TradeStatisticsRepositoryImpl) GetListByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*service.TradeStatisticsModel, error) {
+func (r *TradeStatisticsRepositoryImpl) GetListByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*dto.TradeStatisticsDTO, error) {
 	ts := r.q.TradeStatistics
 
 	list, err := ts.WithContext(ctx).
@@ -96,9 +96,9 @@ func (r *TradeStatisticsRepositoryImpl) GetListByDateRange(ctx context.Context, 
 		return nil, err
 	}
 
-	result := make([]*service.TradeStatisticsModel, 0, len(list))
+	result := make([]*dto.TradeStatisticsDTO, 0, len(list))
 	for _, item := range list {
-		result = append(result, &service.TradeStatisticsModel{
+		result = append(result, &dto.TradeStatisticsDTO{
 			StatisticsTime:           item.Time,
 			OrderCreateCount:         item.OrderCreateCount,
 			OrderPayCount:            item.OrderPayCount,
@@ -117,7 +117,7 @@ func (r *TradeStatisticsRepositoryImpl) GetListByDateRange(ctx context.Context, 
 }
 
 // Insert 插入统计记录
-func (r *TradeStatisticsRepositoryImpl) Insert(ctx context.Context, stats *service.TradeStatisticsModel) error {
+func (r *TradeStatisticsRepositoryImpl) Insert(ctx context.Context, stats *dto.TradeStatisticsDTO) error {
 	ts := r.q.TradeStatistics
 
 	record := &trade.TradeStatistics{
@@ -146,7 +146,7 @@ type TradeOrderStatisticsRepositoryImpl struct {
 }
 
 // NewTradeOrderStatisticsRepository 创建交易订单统计 Repository
-func NewTradeOrderStatisticsRepository(q *query.Query) service.TradeOrderStatisticsRepository {
+func NewTradeOrderStatisticsRepository(q *query.Query) *TradeOrderStatisticsRepositoryImpl {
 	return &TradeOrderStatisticsRepositoryImpl{q: q}
 }
 
@@ -228,7 +228,7 @@ type AfterSaleStatisticsRepositoryImpl struct {
 }
 
 // NewAfterSaleStatisticsRepository 创建售后统计 Repository
-func NewAfterSaleStatisticsRepository(q *query.Query) service.AfterSaleStatisticsRepository {
+func NewAfterSaleStatisticsRepository(q *query.Query) *AfterSaleStatisticsRepositoryImpl {
 	return &AfterSaleStatisticsRepositoryImpl{q: q}
 }
 
@@ -267,7 +267,7 @@ type BrokerageStatisticsRepositoryImpl struct {
 }
 
 // NewBrokerageStatisticsRepository 创建佣金统计 Repository
-func NewBrokerageStatisticsRepository(q *query.Query) service.BrokerageStatisticsRepository {
+func NewBrokerageStatisticsRepository(q *query.Query) *BrokerageStatisticsRepositoryImpl {
 	return &BrokerageStatisticsRepositoryImpl{q: q}
 }
 

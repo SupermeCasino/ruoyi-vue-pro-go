@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -15,10 +15,10 @@ import (
 // CasbinMiddleware Casbin 权限中间件
 type CasbinMiddleware struct {
 	enforcer *casbin.Enforcer
-	permSvc  *service.PermissionService
+	permSvc  *system.PermissionService
 }
 
-func NewCasbinMiddleware(enforcer *casbin.Enforcer, permSvc *service.PermissionService) *CasbinMiddleware {
+func NewCasbinMiddleware(enforcer *casbin.Enforcer, permSvc *system.PermissionService) *CasbinMiddleware {
 	return &CasbinMiddleware{
 		enforcer: enforcer,
 		permSvc:  permSvc,

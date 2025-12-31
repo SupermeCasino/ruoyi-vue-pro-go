@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -12,10 +12,10 @@ import (
 )
 
 type AuthHandler struct {
-	svc *service.AuthService
+	svc *system.AuthService
 }
 
-func NewAuthHandler(svc *service.AuthService) *AuthHandler {
+func NewAuthHandler(svc *system.AuthService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 

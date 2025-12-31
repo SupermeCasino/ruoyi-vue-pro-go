@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -16,11 +16,11 @@ import (
 )
 
 type SmsTemplateHandler struct {
-	smsTemplateSvc *service.SmsTemplateService
-	smsSendSvc     *service.SmsSendService
+	smsTemplateSvc *system.SmsTemplateService
+	smsSendSvc     *system.SmsSendService
 }
 
-func NewSmsTemplateHandler(smsTemplateSvc *service.SmsTemplateService, smsSendSvc *service.SmsSendService) *SmsTemplateHandler {
+func NewSmsTemplateHandler(smsTemplateSvc *system.SmsTemplateService, smsSendSvc *system.SmsSendService) *SmsTemplateHandler {
 	return &SmsTemplateHandler{
 		smsTemplateSvc: smsTemplateSvc,
 		smsSendSvc:     smsSendSvc,

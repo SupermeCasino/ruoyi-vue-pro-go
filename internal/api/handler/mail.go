@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -12,10 +12,10 @@ import (
 )
 
 type MailHandler struct {
-	svc *service.MailService
+	svc *system.MailService
 }
 
-func NewMailHandler(svc *service.MailService) *MailHandler {
+func NewMailHandler(svc *system.MailService) *MailHandler {
 	return &MailHandler{svc: svc}
 }
 

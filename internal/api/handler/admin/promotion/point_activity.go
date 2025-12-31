@@ -6,8 +6,8 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/product"
-	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
+	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 

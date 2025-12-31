@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -12,10 +12,10 @@ import (
 )
 
 type ApiAccessLogHandler struct {
-	svc *service.ApiAccessLogService
+	svc *infra.ApiAccessLogService
 }
 
-func NewApiAccessLogHandler(svc *service.ApiAccessLogService) *ApiAccessLogHandler {
+func NewApiAccessLogHandler(svc *infra.ApiAccessLogService) *ApiAccessLogHandler {
 	return &ApiAccessLogHandler{svc: svc}
 }
 

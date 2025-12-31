@@ -5,7 +5,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"

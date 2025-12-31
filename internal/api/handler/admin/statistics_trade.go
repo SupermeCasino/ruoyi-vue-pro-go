@@ -4,7 +4,7 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -14,18 +14,18 @@ import (
 
 // TradeStatisticsHandler 交易统计处理器
 type TradeStatisticsHandler struct {
-	tradeStatisticsService      service.TradeStatisticsService
-	tradeOrderStatisticsService service.TradeOrderStatisticsService
-	afterSaleStatisticsService  service.AfterSaleStatisticsService
-	brokerageStatisticsService  service.BrokerageStatisticsService
+	tradeStatisticsService      trade.TradeStatisticsService
+	tradeOrderStatisticsService trade.TradeOrderStatisticsService
+	afterSaleStatisticsService  trade.AfterSaleStatisticsService
+	brokerageStatisticsService  trade.BrokerageStatisticsService
 }
 
 // NewTradeStatisticsHandler 创建交易统计处理器
 func NewTradeStatisticsHandler(
-	tradeStatisticsService service.TradeStatisticsService,
-	tradeOrderStatisticsService service.TradeOrderStatisticsService,
-	afterSaleStatisticsService service.AfterSaleStatisticsService,
-	brokerageStatisticsService service.BrokerageStatisticsService,
+	tradeStatisticsService trade.TradeStatisticsService,
+	tradeOrderStatisticsService trade.TradeOrderStatisticsService,
+	afterSaleStatisticsService trade.AfterSaleStatisticsService,
+	brokerageStatisticsService trade.BrokerageStatisticsService,
 ) *TradeStatisticsHandler {
 	return &TradeStatisticsHandler{
 		tradeStatisticsService:      tradeStatisticsService,
