@@ -4,24 +4,9 @@
 package main
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
-	adminHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin" // Statistics Handlers
-	memberAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/member"
-	payAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay"
-	payWallet "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay/wallet"
-	productHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/product"
-	promotionAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/promotion"
-	tradeAdmin "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade"
-	brokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/trade/brokerage"
-	memberHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
-	payApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
-	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
-	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
-	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
-	appBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler" // Statistics Handlers
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
-	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/datascope"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo" // Pay Repo
@@ -60,8 +45,6 @@ func InitApp() (*gin.Engine, error) {
 		logger.NewLogger,
 		// Repo (GORM Gen)
 		repo.NewQuery,
-		// Data Scope Plugin (需要在Services之后注册)
-		datascope.RegisterPlugin,
 		// Service
 		system.NewOAuth2TokenService,
 		system.NewAuthService,
@@ -117,65 +100,9 @@ func InitApp() (*gin.Engine, error) {
 		memberSvc.NewMemberSignInConfigService,
 		memberSvc.NewMemberSignInRecordService,
 
-		// Handler
-		handler.NewAuthHandler,
-		handler.NewUserHandler,
-		handler.NewTenantHandler,
-		handler.NewTenantPackageHandler,
-		handler.NewDictHandler,
-		handler.NewDeptHandler,
-		handler.NewPostHandler,
-		handler.NewRoleHandler,
-		handler.NewMenuHandler, // Added MenuHandler
-		handler.NewPermissionHandler,
-		handler.NewNoticeHandler,
-		handler.NewConfigHandler,
-		handler.NewSmsChannelHandler,    // Added SmsChannelHandler
-		handler.NewSmsTemplateHandler,   // Added SmsTemplateHandler
-		handler.NewSmsLogHandler,        // Added SmsLogHandler
-		handler.NewFileConfigHandler,    // Added FileConfigHandler
-		handler.NewFileHandler,          // Added FileHandler
-		memberHandler.NewAppAuthHandler, // Added AppAuthHandler
-		handler.NewLoginLogHandler,      // Added LoginLogHandler
-		handler.NewOperateLogHandler,    // Added OperateLogHandler
-		handler.NewJobHandler,           // Added JobHandler
-		handler.NewJobLogHandler,        // Added JobLogHandler
-		handler.NewApiAccessLogHandler,  // Added ApiAccessLogHandler
-		handler.NewApiErrorLogHandler,   // Added ApiErrorLogHandler
-		handler.NewSocialClientHandler,  // Added SocialClientHandler
-		handler.NewSocialUserHandler,    // Added SocialUserHandler
-		handler.NewMailHandler,          // Added MailHandler
-		handler.NewNotifyHandler,        // Added NotifyHandler
-		handler.NewOAuth2ClientHandler,  // Added OAuth2ClientHandler
-		// Member
-		memberAdmin.NewMemberLevelHandler,             // Added MemberLevelHandler for admin
-		memberAdmin.NewMemberGroupHandler,             // Added MemberGroupHandler for admin
-		memberAdmin.NewMemberTagHandler,               // Added MemberTagHandler for admin
-		memberAdmin.NewMemberConfigHandler,            // Added MemberConfigHandler for admin
-		memberAdmin.NewMemberPointRecordHandler,       // Added MemberPointRecordHandler for admin
-		memberAdmin.NewMemberSignInConfigHandler,      // Added MemberSignInConfigHandler
-		memberAdmin.NewMemberSignInRecordHandler,      // Added MemberSignInRecordHandler
-		memberAdmin.NewMemberUserHandler,              // Added MemberUserHandler
-		memberHandler.NewAppMemberUserHandler,         // Added AppMemberUserHandler
-		memberHandler.NewAppMemberAddressHandler,      // Added AppMemberAddressHandler
-		memberHandler.NewAppMemberPointRecordHandler,  // Added AppMemberPointRecordHandler
-		memberHandler.NewAppMemberSignInRecordHandler, // Added AppMemberSignInRecordHandler
-		memberHandler.NewAppMemberSignInConfigHandler, // Added AppMemberSignInConfigHandler
-		memberHandler.NewAppSocialUserHandler,         // Added AppSocialUserHandler
-		productHandler.NewProductCategoryHandler,      // Added ProductCategoryHandler
-		productHandler.NewProductPropertyHandler,      // Added ProductPropertyHandler
-		productHandler.NewProductBrandHandler,         // Added ProductBrandHandler
-		productHandler.NewProductSpuHandler,           // Added ProductSpuHandler
-		productHandler.NewProductCommentHandler,
-		productHandler.NewProductFavoriteHandler,
-		productHandler.NewProductBrowseHistoryHandler,
+		// Handlers
+		handler.ProviderSet,
 
-		// App handlers
-		productApp.NewAppCategoryHandler,
-		productApp.NewAppProductFavoriteHandler,
-		productApp.NewAppProductBrowseHistoryHandler,
-		productApp.NewAppProductSpuHandler,
-		productApp.NewAppProductCommentHandler,
 		// Trade
 		tradeSvc.NewCartService,
 		tradeSvc.NewTradeOrderQueryService,
@@ -188,20 +115,12 @@ func InitApp() (*gin.Engine, error) {
 		tradeSvc.NewAfterSaleLogService,  // Added
 		tradeSvc.NewTradeConfigService,   // Added Config
 		tradeSvc.NewTradeOrderLogService, // Added Log
-		tradeApp.NewAppCartHandler,
-		tradeApp.NewAppTradeOrderHandler,
-		tradeApp.NewAppTradeAfterSaleHandler,
-		tradeApp.NewAppTradeConfigHandler, // Added Config
-		tradeAdmin.NewTradeOrderHandler,
-		tradeAdmin.NewTradeAfterSaleHandler,
-		tradeAdmin.NewTradeConfigHandler, // Added Config
+
 		// Delivery
 		tradeSvc.NewDeliveryExpressService,
 		tradeSvc.NewDeliveryPickUpStoreService,
 		tradeSvc.NewDeliveryExpressTemplateService,
-		tradeAdmin.NewDeliveryExpressHandler,
-		tradeAdmin.NewDeliveryPickUpStoreHandler,
-		tradeAdmin.NewDeliveryExpressTemplateHandler,
+
 		tradeBrokerageSvc.NewBrokerageUserService,
 		// Brokerage
 		tradeBrokerageSvc.NewBrokerageRecordService,
@@ -212,12 +131,6 @@ func InitApp() (*gin.Engine, error) {
 		payWalletSvc.NewPayWalletRechargeService,
 		payWalletSvc.NewPayWalletRechargePackageService,
 		payWalletSvc.NewPayWalletTransactionService,
-		brokerage.NewBrokerageUserHandler,
-		brokerage.NewBrokerageRecordHandler,
-		brokerage.NewBrokerageWithdrawHandler,
-		appBrokerage.NewAppBrokerageUserHandler, // Added
-		appBrokerage.NewAppBrokerageRecordHandler,
-		appBrokerage.NewAppBrokerageWithdrawHandler,
 
 		// Pay Repositories
 		payRepo.NewPayTransferRepository,
@@ -243,15 +156,11 @@ func InitApp() (*gin.Engine, error) {
 		memberSvc.NewMemberStatisticsService,
 		infra.NewApiAccessLogStatisticsService,
 		paySvc.NewPayWalletStatisticsService,
-		adminHandler.NewTradeStatisticsHandler,
-		adminHandler.NewProductStatisticsHandler,
-		adminHandler.NewMemberStatisticsHandler,
 		job.NewPayTransferSyncJob, // Added PayTransferSyncJob
 		job.NewPayNotifyJob,       // Added PayNotifyJob
 		job.NewPayOrderSyncJob,    // Added PayOrderSyncJob
 		job.NewPayOrderExpireJob,  // Added PayOrderExpireJob
 		job.NewPayRefundSyncJob,   // Added PayRefundSyncJob
-		adminHandler.NewPayStatisticsHandler,
 
 		// Promotion
 		promotionSvc.NewCouponService,
@@ -271,41 +180,9 @@ func InitApp() (*gin.Engine, error) {
 		promotionSvc.NewDiyTemplateService,         // Added Diy Template
 		promotionSvc.NewDiyPageService,             // Added Diy Page
 		promotionSvc.NewPointActivityService, promotionSvc.NewKefuService,
-		promotionAdmin.NewCouponHandler,
-		promotionAdmin.NewBannerHandler,              // Added Banner
-		promotionAdmin.NewRewardActivityHandler,      // Added Activity
-		promotionAdmin.NewSeckillConfigHandler,       // Added Seckill Config
-		promotionAdmin.NewSeckillActivityHandler,     // Added Seckill Activity
-		promotionAdmin.NewBargainActivityHandler,     // Added Bargain Activity
-		promotionAdmin.NewCombinationActivityHandler, // Added Combination Activity
-		promotionAdmin.NewDiscountActivityHandler,    // Added Discount Activity
-		promotionAdmin.NewArticleCategoryHandler,     // Added Article Category
-		promotionAdmin.NewArticleHandler,             // Added Article
-		promotionAdmin.NewDiyTemplateHandler,         // Added Diy Template
-		promotionAdmin.NewDiyPageHandler,             // Added Diy Page
-		promotionAdmin.NewPointActivityHandler, promotionAdmin.NewKefuHandler,
-		promotionAdmin.NewBargainRecordHandler,
-		promotionAdmin.NewCombinationRecordHandler,
-		promotionAdmin.NewBargainHelpHandler, promotionApp.NewAppKefuHandler,
-		promotionApp.NewAppCouponHandler,
-		promotionApp.NewAppCouponTemplateHandler, // 新增
-		promotionApp.NewAppBannerHandler,         // Added Banner
-		promotionApp.NewAppRewardActivityHandler, // 新增
-		promotionApp.NewAppBargainActivityHandler,
-		promotionApp.NewAppBargainRecordHandler,
-		promotionApp.NewAppBargainHelpHandler,
-		promotionApp.NewAppSeckillActivityHandler,     // 新增
-		promotionApp.NewAppSeckillConfigHandler,       // 新增
-		promotionApp.NewAppCombinationActivityHandler, // Added Combination Activity
-		promotionApp.NewAppCombinationRecordHandler,   // Added Combination Record
-		promotionApp.NewAppArticleHandler,             // Added Article
-		promotionApp.NewAppDiyPageHandler,             // Added Diy Page
-		promotionApp.NewAppDiyTemplateHandler,
-		promotionApp.NewAppActivityHandler,
-		promotionApp.NewAppPointActivityHandler,
+
 		// WebSocket
 		ws.ProviderSet,
-		handler.NewWebSocketHandler,
 
 		// Casbin
 		permission.InitEnforcer,
@@ -351,24 +228,6 @@ func InitApp() (*gin.Engine, error) {
 
 		// 接口绑定: SkuPromotionCalculator 供 CalculateProductPrice 复用
 		wire.Bind(new(tradeSvc.SkuPromotionCalculator), new(*calculators.DiscountActivityPriceCalculator)),
-
-		payAdmin.NewPayAppHandler,
-		payAdmin.NewPayChannelHandler,
-		payAdmin.NewPayOrderHandler,
-		payAdmin.NewPayRefundHandler,
-		payAdmin.NewPayNotifyHandler,
-		payAdmin.NewPayTransferHandler,
-		// Wallet Handlers
-		payWallet.NewPayWalletHandler,
-		payWallet.NewPayWalletRechargeHandler,
-		payWallet.NewPayWalletRechargePackageHandler,
-		payWallet.NewPayWalletTransactionHandler,
-		payApp.NewAppPayOrderHandler,
-		payApp.NewAppPayWalletHandler,
-		payApp.NewAppPayChannelHandler,
-		payApp.NewAppPayTransferHandler,
-		payApp.NewAppPayWalletTransactionHandler,
-		payApp.NewAppPayWalletRechargePackageHandler,
 
 		// Router
 		router.InitRouter,

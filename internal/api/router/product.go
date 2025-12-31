@@ -1,7 +1,7 @@
 package router
 
 import (
-	productHandler "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/product"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -9,13 +9,7 @@ import (
 
 // RegisterProductRoutes 注册商品管理模块路由
 func RegisterProductRoutes(engine *gin.Engine,
-	productCategoryHandler *productHandler.ProductCategoryHandler,
-	productBrandHandler *productHandler.ProductBrandHandler,
-	productPropertyHandler *productHandler.ProductPropertyHandler,
-	productSpuHandler *productHandler.ProductSpuHandler,
-	productCommentHandler *productHandler.ProductCommentHandler,
-	productFavoriteHandler *productHandler.ProductFavoriteHandler,
-	productBrowseHistoryHandler *productHandler.ProductBrowseHistoryHandler,
+	handlers *product.Handlers,
 	casbinMiddleware *middleware.CasbinMiddleware,
 ) {
 	productGroup := engine.Group("/admin-api/product")
@@ -24,82 +18,82 @@ func RegisterProductRoutes(engine *gin.Engine,
 		// Category Routes
 		categoryGroup := productGroup.Group("/category")
 		{
-			categoryGroup.POST("/create", casbinMiddleware.RequirePermission("product:category:create"), productCategoryHandler.CreateCategory)
-			categoryGroup.PUT("/update", casbinMiddleware.RequirePermission("product:category:update"), productCategoryHandler.UpdateCategory)
-			categoryGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:category:delete"), productCategoryHandler.DeleteCategory)
-			categoryGroup.GET("/get", casbinMiddleware.RequirePermission("product:category:query"), productCategoryHandler.GetCategory)
-			categoryGroup.GET("/list", casbinMiddleware.RequirePermission("product:category:query"), productCategoryHandler.GetCategoryList)
+			categoryGroup.POST("/create", casbinMiddleware.RequirePermission("product:category:create"), handlers.Category.CreateCategory)
+			categoryGroup.PUT("/update", casbinMiddleware.RequirePermission("product:category:update"), handlers.Category.UpdateCategory)
+			categoryGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:category:delete"), handlers.Category.DeleteCategory)
+			categoryGroup.GET("/get", casbinMiddleware.RequirePermission("product:category:query"), handlers.Category.GetCategory)
+			categoryGroup.GET("/list", casbinMiddleware.RequirePermission("product:category:query"), handlers.Category.GetCategoryList)
 		}
 
 		// Property Routes
 		propertyGroup := productGroup.Group("/property")
 		{
-			propertyGroup.POST("/create", casbinMiddleware.RequirePermission("product:property:create"), productPropertyHandler.CreateProperty)
-			propertyGroup.PUT("/update", casbinMiddleware.RequirePermission("product:property:update"), productPropertyHandler.UpdateProperty)
-			propertyGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:property:delete"), productPropertyHandler.DeleteProperty)
-			propertyGroup.GET("/get", casbinMiddleware.RequirePermission("product:property:query"), productPropertyHandler.GetProperty)
-			propertyGroup.GET("/page", casbinMiddleware.RequirePermission("product:property:query"), productPropertyHandler.GetPropertyPage)
-			propertyGroup.GET("/simple-list", productPropertyHandler.GetPropertySimpleList)
+			propertyGroup.POST("/create", casbinMiddleware.RequirePermission("product:property:create"), handlers.Property.CreateProperty)
+			propertyGroup.PUT("/update", casbinMiddleware.RequirePermission("product:property:update"), handlers.Property.UpdateProperty)
+			propertyGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:property:delete"), handlers.Property.DeleteProperty)
+			propertyGroup.GET("/get", casbinMiddleware.RequirePermission("product:property:query"), handlers.Property.GetProperty)
+			propertyGroup.GET("/page", casbinMiddleware.RequirePermission("product:property:query"), handlers.Property.GetPropertyPage)
+			propertyGroup.GET("/simple-list", handlers.Property.GetPropertySimpleList)
 
 			// Property Value Routes
 			valueGroup := propertyGroup.Group("/value")
 			{
-				valueGroup.POST("/create", casbinMiddleware.RequirePermission("product:property:create"), productPropertyHandler.CreatePropertyValue)
-				valueGroup.PUT("/update", casbinMiddleware.RequirePermission("product:property:update"), productPropertyHandler.UpdatePropertyValue)
-				valueGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:property:delete"), productPropertyHandler.DeletePropertyValue)
-				valueGroup.GET("/get", casbinMiddleware.RequirePermission("product:property:query"), productPropertyHandler.GetPropertyValue)
-				valueGroup.GET("/page", casbinMiddleware.RequirePermission("product:property:query"), productPropertyHandler.GetPropertyValuePage)
-				valueGroup.GET("/simple-list", productPropertyHandler.GetPropertyValueSimpleList)
+				valueGroup.POST("/create", casbinMiddleware.RequirePermission("product:property:create"), handlers.Property.CreatePropertyValue)
+				valueGroup.PUT("/update", casbinMiddleware.RequirePermission("product:property:update"), handlers.Property.UpdatePropertyValue)
+				valueGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:property:delete"), handlers.Property.DeletePropertyValue)
+				valueGroup.GET("/get", casbinMiddleware.RequirePermission("product:property:query"), handlers.Property.GetPropertyValue)
+				valueGroup.GET("/page", casbinMiddleware.RequirePermission("product:property:query"), handlers.Property.GetPropertyValuePage)
+				valueGroup.GET("/simple-list", handlers.Property.GetPropertyValueSimpleList)
 			}
 		}
 
 		// Brand Routes
 		brandGroup := productGroup.Group("/brand")
 		{
-			brandGroup.POST("/create", casbinMiddleware.RequirePermission("product:brand:create"), productBrandHandler.CreateBrand)
-			brandGroup.PUT("/update", casbinMiddleware.RequirePermission("product:brand:update"), productBrandHandler.UpdateBrand)
-			brandGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:brand:delete"), productBrandHandler.DeleteBrand)
-			brandGroup.GET("/get", casbinMiddleware.RequirePermission("product:brand:query"), productBrandHandler.GetBrand)
-			brandGroup.GET("/page", casbinMiddleware.RequirePermission("product:brand:query"), productBrandHandler.GetBrandPage)
-			brandGroup.GET("/list", productBrandHandler.GetBrandList)
-			brandGroup.GET("/list-all-simple", productBrandHandler.GetBrandList)
+			brandGroup.POST("/create", casbinMiddleware.RequirePermission("product:brand:create"), handlers.Brand.CreateBrand)
+			brandGroup.PUT("/update", casbinMiddleware.RequirePermission("product:brand:update"), handlers.Brand.UpdateBrand)
+			brandGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:brand:delete"), handlers.Brand.DeleteBrand)
+			brandGroup.GET("/get", casbinMiddleware.RequirePermission("product:brand:query"), handlers.Brand.GetBrand)
+			brandGroup.GET("/page", casbinMiddleware.RequirePermission("product:brand:query"), handlers.Brand.GetBrandPage)
+			brandGroup.GET("/list", handlers.Brand.GetBrandList)
+			brandGroup.GET("/list-all-simple", handlers.Brand.GetBrandList)
 		}
 
 		// SPU Routes
 		spuGroup := productGroup.Group("/spu")
 		spuGroup.Use(middleware.ProductErrorHandler()) // 使用商品模块错误处理中间件
 		{
-			spuGroup.POST("/create", casbinMiddleware.RequirePermission("product:spu:create"), productSpuHandler.CreateSpu)
-			spuGroup.PUT("/update", casbinMiddleware.RequirePermission("product:spu:update"), productSpuHandler.UpdateSpu)
-			spuGroup.PUT("/update-status", casbinMiddleware.RequirePermission("product:spu:update"), productSpuHandler.UpdateSpuStatus)
-			spuGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:spu:delete"), productSpuHandler.DeleteSpu)
-			spuGroup.GET("/get-detail", casbinMiddleware.RequirePermission("product:spu:query"), productSpuHandler.GetSpuDetail)
-			spuGroup.GET("/page", casbinMiddleware.RequirePermission("product:spu:query"), productSpuHandler.GetSpuPage)
-			spuGroup.GET("/get-count", casbinMiddleware.RequirePermission("product:spu:query"), productSpuHandler.GetTabsCount)
-			spuGroup.GET("/list-all-simple", productSpuHandler.GetSpuSimpleList)
-			spuGroup.GET("/list", productSpuHandler.GetSpuList)
-			spuGroup.GET("/export", casbinMiddleware.RequirePermission("product:spu:export"), productSpuHandler.ExportSpuList)
+			spuGroup.POST("/create", casbinMiddleware.RequirePermission("product:spu:create"), handlers.Spu.CreateSpu)
+			spuGroup.PUT("/update", casbinMiddleware.RequirePermission("product:spu:update"), handlers.Spu.UpdateSpu)
+			spuGroup.PUT("/update-status", casbinMiddleware.RequirePermission("product:spu:update"), handlers.Spu.UpdateSpuStatus)
+			spuGroup.DELETE("/delete", casbinMiddleware.RequirePermission("product:spu:delete"), handlers.Spu.DeleteSpu)
+			spuGroup.GET("/get-detail", casbinMiddleware.RequirePermission("product:spu:query"), handlers.Spu.GetSpuDetail)
+			spuGroup.GET("/page", casbinMiddleware.RequirePermission("product:spu:query"), handlers.Spu.GetSpuPage)
+			spuGroup.GET("/get-count", casbinMiddleware.RequirePermission("product:spu:query"), handlers.Spu.GetTabsCount)
+			spuGroup.GET("/list-all-simple", handlers.Spu.GetSpuSimpleList)
+			spuGroup.GET("/list", handlers.Spu.GetSpuList)
+			spuGroup.GET("/export", casbinMiddleware.RequirePermission("product:spu:export"), handlers.Spu.ExportSpuList)
 		}
 
 		// Comment Routes
 		commentGroup := productGroup.Group("/comment")
 		{
-			commentGroup.GET("/page", casbinMiddleware.RequirePermission("product:comment:query"), productCommentHandler.GetCommentPage)
-			commentGroup.PUT("/update-visible", casbinMiddleware.RequirePermission("product:comment:update"), productCommentHandler.UpdateCommentVisible)
-			commentGroup.PUT("/reply", casbinMiddleware.RequirePermission("product:comment:update"), productCommentHandler.ReplyComment)
-			commentGroup.POST("/create", casbinMiddleware.RequirePermission("product:comment:create"), productCommentHandler.CreateComment)
+			commentGroup.GET("/page", casbinMiddleware.RequirePermission("product:comment:query"), handlers.Comment.GetCommentPage)
+			commentGroup.PUT("/update-visible", casbinMiddleware.RequirePermission("product:comment:update"), handlers.Comment.UpdateCommentVisible)
+			commentGroup.PUT("/reply", casbinMiddleware.RequirePermission("product:comment:update"), handlers.Comment.ReplyComment)
+			commentGroup.POST("/create", casbinMiddleware.RequirePermission("product:comment:create"), handlers.Comment.CreateComment)
 		}
 
 		// Favorite Routes (Admin)
 		favoriteGroup := productGroup.Group("/favorite")
 		{
-			favoriteGroup.GET("/page", casbinMiddleware.RequirePermission("product:favorite:query"), productFavoriteHandler.GetFavoritePage)
+			favoriteGroup.GET("/page", casbinMiddleware.RequirePermission("product:favorite:query"), handlers.Favorite.GetFavoritePage)
 		}
 
 		// Browse History Routes (Admin)
 		browseHistoryGroup := productGroup.Group("/browse-history")
 		{
-			browseHistoryGroup.GET("/page", casbinMiddleware.RequirePermission("product:browse-history:query"), productBrowseHistoryHandler.GetBrowseHistoryPage)
+			browseHistoryGroup.GET("/page", casbinMiddleware.RequirePermission("product:browse-history:query"), handlers.BrowseHistory.GetBrowseHistoryPage)
 		}
 	}
 }

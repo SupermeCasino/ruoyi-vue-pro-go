@@ -1,13 +1,7 @@
 package router
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler"
-	memberApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
-	payApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
-	productApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/product"
-	promotionApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/promotion"
-	tradeApp "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade"
-	appBrokerage "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -15,156 +9,87 @@ import (
 
 // RegisterAppRoutes 注册 App 端路由
 func RegisterAppRoutes(engine *gin.Engine,
-	// System
-	tenantHandler *handler.TenantHandler,
-	areaHandler *handler.AreaHandler,
-	// Member
-	appAuthHandler *memberApp.AppAuthHandler,
-	appMemberUserHandler *memberApp.AppMemberUserHandler,
-	appMemberAddressHandler *memberApp.AppMemberAddressHandler,
-	appMemberPointRecordHandler *memberApp.AppMemberPointRecordHandler,
-	appMemberSignInRecordHandler *memberApp.AppMemberSignInRecordHandler,
-	appMemberSignInConfigHandler *memberApp.AppMemberSignInConfigHandler,
-	appSocialUserHandler *memberApp.AppSocialUserHandler,
-	// Product
-	appProductCategoryHandler *productApp.AppCategoryHandler,
-	appProductFavoriteHandler *productApp.AppProductFavoriteHandler,
-	appProductBrowseHistoryHandler *productApp.AppProductBrowseHistoryHandler,
-	appProductSpuHandler *productApp.AppProductSpuHandler,
-	appProductCommentHandler *productApp.AppProductCommentHandler,
-	// Trade
-	appCartHandler *tradeApp.AppCartHandler,
-	appTradeOrderHandler *tradeApp.AppTradeOrderHandler,
-	appTradeAfterSaleHandler *tradeApp.AppTradeAfterSaleHandler,
-	appTradeConfigHandler *tradeApp.AppTradeConfigHandler,
-	// Promotion
-	appCouponHandler *promotionApp.AppCouponHandler,
-	appCouponTemplateHandler *promotionApp.AppCouponTemplateHandler, // 新增
-	appBannerHandler *promotionApp.AppBannerHandler,
-	appArticleHandler *promotionApp.AppArticleHandler,
-	appRewardActivityHandler *promotionApp.AppRewardActivityHandler, // 新增
-	// DIY
-	appDiyPageHandler *promotionApp.AppDiyPageHandler,
-	appDiyTemplateHandler *promotionApp.AppDiyTemplateHandler,
-	// Kefu
-	appKefuHandler *promotionApp.AppKefuHandler,
-	appCombinationActivityHandler *promotionApp.AppCombinationActivityHandler,
-	appCombinationRecordHandler *promotionApp.AppCombinationRecordHandler,
-	appBargainActivityHandler *promotionApp.AppBargainActivityHandler,
-	appBargainRecordHandler *promotionApp.AppBargainRecordHandler,
-	appBargainHelpHandler *promotionApp.AppBargainHelpHandler,
-	appSeckillActivityHandler *promotionApp.AppSeckillActivityHandler, // 新增
-	appSeckillConfigHandler *promotionApp.AppSeckillConfigHandler, // 新增
-	// Brokerage
-	appBrokerageUserHandler *appBrokerage.AppBrokerageUserHandler,
-	appBrokerageRecordHandler *appBrokerage.AppBrokerageRecordHandler,
-	appBrokerageWithdrawHandler *appBrokerage.AppBrokerageWithdrawHandler,
-	// Pay
-	appPayOrderHandler *payApp.AppPayOrderHandler,
-	appPayWalletHandler *payApp.AppPayWalletHandler,
-	appPayChannelHandler *payApp.AppPayChannelHandler,
-	appPayTransferHandler *payApp.AppPayTransferHandler,
-	appPayWalletTransactionHandler *payApp.AppPayWalletTransactionHandler,
-	appPayWalletRechargePackageHandler *payApp.AppPayWalletRechargePackageHandler,
-	appActivityHandler *promotionApp.AppActivityHandler,
-	appPointActivityHandler *promotionApp.AppPointActivityHandler,
+	handlers *app.AppHandlers,
 ) {
 	appGroup := engine.Group("/app-api")
 	{
-		// ========== System ==========
-		systemGroup := appGroup.Group("/system")
-		{
-			// Tenant
-			tenantGroup := systemGroup.Group("/tenant")
-			{
-				tenantGroup.GET("/get-by-website", tenantHandler.GetTenantByWebsite)
-			}
-
-			// Area (Public - 对齐 Java)
-			areaGroup := systemGroup.Group("/area")
-			{
-				areaGroup.GET("/tree", areaHandler.GetAreaTree)
-				areaGroup.GET("/get-by-ip", areaHandler.GetAreaByIP)
-			}
-		}
-
 		// ========== Member ==========
 		memberGroup := appGroup.Group("/member")
 		{
 			// Auth
 			authGroup := memberGroup.Group("/auth")
 			{
-				authGroup.POST("/login", appAuthHandler.Login)
-				authGroup.POST("/sms-login", appAuthHandler.SmsLogin)
-				authGroup.POST("/social-login", appAuthHandler.SocialLogin)
-				authGroup.POST("/send-sms-code", appAuthHandler.SendSmsCode)
-				authGroup.POST("/validate-sms-code", appAuthHandler.ValidateSmsCode)
-				authGroup.POST("/logout", appAuthHandler.Logout)
-				authGroup.POST("/refresh-token", appAuthHandler.RefreshToken)
-				authGroup.GET("/social-auth-redirect", appAuthHandler.SocialAuthRedirect)
-				authGroup.POST("/weixin-mini-app-login", appAuthHandler.WeixinMiniAppLogin)
-				authGroup.POST("/create-weixin-jsapi-signature", appAuthHandler.CreateWeixinMpJsapiSignature)
+				authGroup.POST("/login", handlers.Member.Auth.Login)
+				authGroup.POST("/sms-login", handlers.Member.Auth.SmsLogin)
+				authGroup.POST("/social-login", handlers.Member.Auth.SocialLogin)
+				authGroup.POST("/send-sms-code", handlers.Member.Auth.SendSmsCode)
+				authGroup.POST("/validate-sms-code", handlers.Member.Auth.ValidateSmsCode)
+				authGroup.POST("/logout", handlers.Member.Auth.Logout)
+				authGroup.POST("/refresh-token", handlers.Member.Auth.RefreshToken)
+				authGroup.GET("/social-auth-redirect", handlers.Member.Auth.SocialAuthRedirect)
+				authGroup.POST("/weixin-mini-app-login", handlers.Member.Auth.WeixinMiniAppLogin)
+				authGroup.POST("/create-weixin-jsapi-signature", handlers.Member.Auth.CreateWeixinMpJsapiSignature)
 			}
 
 			// User (Auth Required)
 			userGroup := memberGroup.Group("/user")
 			userGroup.Use(middleware.Auth())
 			{
-				userGroup.GET("/get", appMemberUserHandler.GetUserInfo)
-				userGroup.PUT("/update", appMemberUserHandler.UpdateUser)
-				userGroup.PUT("/update-mobile", appMemberUserHandler.UpdateUserMobile)
-				userGroup.PUT("/update-password", appMemberUserHandler.UpdateUserPassword)
-				userGroup.PUT("/update-mobile-by-weixin", appMemberUserHandler.UpdateUserMobileByWeixin)
+				userGroup.GET("/get", handlers.Member.User.GetUserInfo)
+				userGroup.PUT("/update", handlers.Member.User.UpdateUser)
+				userGroup.PUT("/update-mobile", handlers.Member.User.UpdateUserMobile)
+				userGroup.PUT("/update-password", handlers.Member.User.UpdateUserPassword)
+				userGroup.PUT("/update-mobile-by-weixin", handlers.Member.User.UpdateUserMobileByWeixin)
 			}
 
 			// User (Public)
 			userPublicGroup := memberGroup.Group("/user")
 			{
-				userPublicGroup.PUT("/reset-password", appMemberUserHandler.ResetUserPassword)
+				userPublicGroup.PUT("/reset-password", handlers.Member.User.ResetUserPassword)
 			}
 
 			// Address (Auth Required)
 			addressGroup := memberGroup.Group("/address")
 			addressGroup.Use(middleware.Auth())
 			{
-				addressGroup.POST("/create", appMemberAddressHandler.CreateAddress)
-				addressGroup.PUT("/update", appMemberAddressHandler.UpdateAddress)
-				addressGroup.DELETE("/delete", appMemberAddressHandler.DeleteAddress)
-				addressGroup.GET("/get", appMemberAddressHandler.GetAddress)
-				addressGroup.GET("/get-default", appMemberAddressHandler.GetDefaultUserAddress)
-				addressGroup.GET("/list", appMemberAddressHandler.GetAddressList)
+				addressGroup.POST("/create", handlers.Member.Address.CreateAddress)
+				addressGroup.PUT("/update", handlers.Member.Address.UpdateAddress)
+				addressGroup.DELETE("/delete", handlers.Member.Address.DeleteAddress)
+				addressGroup.GET("/get", handlers.Member.Address.GetAddress)
+				addressGroup.GET("/get-default", handlers.Member.Address.GetDefaultUserAddress)
+				addressGroup.GET("/list", handlers.Member.Address.GetAddressList)
 			}
 
 			// Point Record (Auth Required)
 			pointRecordGroup := memberGroup.Group("/point/record")
 			pointRecordGroup.Use(middleware.Auth())
 			{
-				pointRecordGroup.GET("/page", appMemberPointRecordHandler.GetPointRecordPage)
+				pointRecordGroup.GET("/page", handlers.Member.PointRecord.GetPointRecordPage)
 			}
 
 			// Sign-in Record (App)
 			signInGroup := memberGroup.Group("/sign-in/record")
 			{
-				signInGroup.GET("/get-summary", appMemberSignInRecordHandler.GetSignInRecordSummary)
-				signInGroup.POST("/create", appMemberSignInRecordHandler.CreateSignInRecord)
-				signInGroup.GET("/page", appMemberSignInRecordHandler.GetSignInRecordPage)
+				signInGroup.GET("/get-summary", handlers.Member.SignInRecord.GetSignInRecordSummary)
+				signInGroup.POST("/create", handlers.Member.SignInRecord.CreateSignInRecord)
+				signInGroup.GET("/page", handlers.Member.SignInRecord.GetSignInRecordPage)
 			}
 
 			// Sign-in Config (App - Public, 对齐 Java @PermitAll)
 			signInConfigGroup := memberGroup.Group("/sign-in/config")
 			{
-				signInConfigGroup.GET("/list", appMemberSignInConfigHandler.GetSignInConfigList)
+				signInConfigGroup.GET("/list", handlers.Member.SignInConfig.GetSignInConfigList)
 			}
 
 			// Social User
 			socialUserGroup := memberGroup.Group("/social-user")
 			socialUserGroup.Use(middleware.Auth())
 			{
-				socialUserGroup.POST("/bind", appSocialUserHandler.Bind)
-				socialUserGroup.DELETE("/unbind", appSocialUserHandler.Unbind)
-				socialUserGroup.GET("/get", appSocialUserHandler.Get)
-				socialUserGroup.POST("/wxa-qrcode", appSocialUserHandler.GetWxaQrcode)
-				socialUserGroup.GET("/get-subscribe-template-list", appSocialUserHandler.GetSubscribeTemplateList)
+				socialUserGroup.POST("/bind", handlers.Member.SocialUser.Bind)
+				socialUserGroup.DELETE("/unbind", handlers.Member.SocialUser.Unbind)
+				socialUserGroup.GET("/get", handlers.Member.SocialUser.Get)
+				socialUserGroup.POST("/wxa-qrcode", handlers.Member.SocialUser.GetWxaQrcode)
+				socialUserGroup.GET("/get-subscribe-template-list", handlers.Member.SocialUser.GetSubscribeTemplateList)
 			}
 		}
 
@@ -174,44 +99,44 @@ func RegisterAppRoutes(engine *gin.Engine,
 			// Category
 			categoryGroup := productGroup.Group("/category")
 			{
-				categoryGroup.GET("/list", appProductCategoryHandler.GetCategoryList)
-				categoryGroup.GET("/list-by-ids", appProductCategoryHandler.GetCategoryListByIds)
+				categoryGroup.GET("/list", handlers.Mall.Product.Category.GetCategoryList)
+				categoryGroup.GET("/list-by-ids", handlers.Mall.Product.Category.GetCategoryListByIds)
 			}
 
 			// Favorite (Auth Required)
 			favoriteGroup := productGroup.Group("/favorite")
 			favoriteGroup.Use(middleware.Auth())
 			{
-				favoriteGroup.POST("/create", appProductFavoriteHandler.CreateFavorite)
-				favoriteGroup.DELETE("/delete", appProductFavoriteHandler.DeleteFavorite)
-				favoriteGroup.GET("/page", appProductFavoriteHandler.GetFavoritePage)
-				favoriteGroup.GET("/exits", appProductFavoriteHandler.IsFavoriteExists)
-				favoriteGroup.GET("/get-count", appProductFavoriteHandler.GetFavoriteCount)
+				favoriteGroup.POST("/create", handlers.Mall.Product.Favorite.CreateFavorite)
+				favoriteGroup.DELETE("/delete", handlers.Mall.Product.Favorite.DeleteFavorite)
+				favoriteGroup.GET("/page", handlers.Mall.Product.Favorite.GetFavoritePage)
+				favoriteGroup.GET("/exits", handlers.Mall.Product.Favorite.IsFavoriteExists)
+				favoriteGroup.GET("/get-count", handlers.Mall.Product.Favorite.GetFavoriteCount)
 			}
 
 			// Browse History (Auth Required)
 			browseHistoryGroup := productGroup.Group("/browse-history")
 			browseHistoryGroup.Use(middleware.Auth())
 			{
-				browseHistoryGroup.DELETE("/delete", appProductBrowseHistoryHandler.DeleteBrowseHistory)
-				browseHistoryGroup.DELETE("/clean", appProductBrowseHistoryHandler.CleanBrowseHistory)
-				browseHistoryGroup.GET("/page", appProductBrowseHistoryHandler.GetBrowseHistoryPage)
+				browseHistoryGroup.DELETE("/delete", handlers.Mall.Product.BrowseHistory.DeleteBrowseHistory)
+				browseHistoryGroup.DELETE("/clean", handlers.Mall.Product.BrowseHistory.CleanBrowseHistory)
+				browseHistoryGroup.GET("/page", handlers.Mall.Product.BrowseHistory.GetBrowseHistoryPage)
 			}
 
 			// SPU
 			spuGroup := productGroup.Group("/spu")
 			spuGroup.Use(middleware.ProductErrorHandler()) // 使用商品模块错误处理中间件
 			{
-				spuGroup.GET("/get-detail", appProductSpuHandler.GetSpuDetail)
-				spuGroup.GET("/page", appProductSpuHandler.GetSpuPage)
-				spuGroup.GET("/list-by-ids", appProductSpuHandler.GetSpuListByIds)
+				spuGroup.GET("/get-detail", handlers.Mall.Product.Spu.GetSpuDetail)
+				spuGroup.GET("/page", handlers.Mall.Product.Spu.GetSpuPage)
+				spuGroup.GET("/list-by-ids", handlers.Mall.Product.Spu.GetSpuListByIds)
 			}
 
 			// Comment
 			commentGroup := productGroup.Group("/comment")
 			{
-				commentGroup.GET("/page", appProductCommentHandler.GetCommentPage)
-				commentGroup.POST("/create", middleware.Auth(), appProductCommentHandler.CreateComment)
+				commentGroup.GET("/page", handlers.Mall.Product.Comment.GetCommentPage)
+				commentGroup.POST("/create", middleware.Auth(), handlers.Mall.Product.Comment.CreateComment)
 			}
 		}
 
@@ -222,58 +147,58 @@ func RegisterAppRoutes(engine *gin.Engine,
 			// Cart
 			cartGroup := tradeGroup.Group("/cart")
 			{
-				cartGroup.POST("/add", appCartHandler.AddCart)
-				cartGroup.PUT("/update-count", appCartHandler.UpdateCartCount)
-				cartGroup.PUT("/update-selected", appCartHandler.UpdateCartSelected)
-				cartGroup.PUT("/reset", appCartHandler.ResetCart)
-				cartGroup.DELETE("/delete", appCartHandler.DeleteCart)
-				cartGroup.GET("/get-count", appCartHandler.GetCartCount)
-				cartGroup.GET("/list", appCartHandler.GetCartList)
+				cartGroup.POST("/add", handlers.Mall.Trade.Cart.AddCart)
+				cartGroup.PUT("/update-count", handlers.Mall.Trade.Cart.UpdateCartCount)
+				cartGroup.PUT("/update-selected", handlers.Mall.Trade.Cart.UpdateCartSelected)
+				cartGroup.PUT("/reset", handlers.Mall.Trade.Cart.ResetCart)
+				cartGroup.DELETE("/delete", handlers.Mall.Trade.Cart.DeleteCart)
+				cartGroup.GET("/get-count", handlers.Mall.Trade.Cart.GetCartCount)
+				cartGroup.GET("/list", handlers.Mall.Trade.Cart.GetCartList)
 			}
 
 			// Order
 			orderGroup := tradeGroup.Group("/order")
 			{
-				orderGroup.GET("/settlement", appTradeOrderHandler.SettlementOrder)
+				orderGroup.GET("/settlement", handlers.Mall.Trade.Order.SettlementOrder)
 				// settlement-product 移至公开路由组 (对齐 Java @PermitAll)
-				orderGroup.POST("/create", appTradeOrderHandler.CreateOrder)
-				orderGroup.GET("/get-detail", appTradeOrderHandler.GetOrderDetail)
-				orderGroup.GET("/item/get", appTradeOrderHandler.GetOrderItem)
-				orderGroup.GET("/page", appTradeOrderHandler.GetOrderPage)
-				orderGroup.GET("/get-count", appTradeOrderHandler.GetOrderCount)
-				orderGroup.PUT("/receive", appTradeOrderHandler.ReceiveOrder)
-				orderGroup.DELETE("/cancel", appTradeOrderHandler.CancelOrder)
-				orderGroup.GET("/get-express-track-list", appTradeOrderHandler.GetOrderExpressTrackList)
+				orderGroup.POST("/create", handlers.Mall.Trade.Order.CreateOrder)
+				orderGroup.GET("/get-detail", handlers.Mall.Trade.Order.GetOrderDetail)
+				orderGroup.GET("/item/get", handlers.Mall.Trade.Order.GetOrderItem)
+				orderGroup.GET("/page", handlers.Mall.Trade.Order.GetOrderPage)
+				orderGroup.GET("/get-count", handlers.Mall.Trade.Order.GetOrderCount)
+				orderGroup.PUT("/receive", handlers.Mall.Trade.Order.ReceiveOrder)
+				orderGroup.DELETE("/cancel", handlers.Mall.Trade.Order.CancelOrder)
+				orderGroup.GET("/get-express-track-list", handlers.Mall.Trade.Order.GetOrderExpressTrackList)
 			}
 
 			// AfterSale
 			afterSaleGroup := tradeGroup.Group("/after-sale")
 			{
-				afterSaleGroup.POST("/create", appTradeAfterSaleHandler.CreateAfterSale)
-				afterSaleGroup.GET("/page", appTradeAfterSaleHandler.GetAfterSalePage)
-				afterSaleGroup.GET("/get", appTradeAfterSaleHandler.GetAfterSale)
-				afterSaleGroup.DELETE("/cancel", appTradeAfterSaleHandler.CancelAfterSale)
-				afterSaleGroup.POST("/delivery", appTradeAfterSaleHandler.DeliveryAfterSale)
+				afterSaleGroup.POST("/create", handlers.Mall.Trade.AfterSale.CreateAfterSale)
+				afterSaleGroup.GET("/page", handlers.Mall.Trade.AfterSale.GetAfterSalePage)
+				afterSaleGroup.GET("/get", handlers.Mall.Trade.AfterSale.GetAfterSale)
+				afterSaleGroup.DELETE("/cancel", handlers.Mall.Trade.AfterSale.CancelAfterSale)
+				afterSaleGroup.POST("/delivery", handlers.Mall.Trade.AfterSale.DeliveryAfterSale)
 			}
 
 			// Brokerage User
 			brokerageUserGroup := tradeGroup.Group("/brokerage-user")
 			{
-				brokerageUserGroup.GET("/get", appBrokerageUserHandler.GetBrokerageUser)
-				brokerageUserGroup.GET("/get-summary", appBrokerageUserHandler.GetBrokerageUserSummary)
-				brokerageUserGroup.GET("/child-summary-page", appBrokerageUserHandler.GetBrokerageUserChildSummaryPage)
-				brokerageUserGroup.PUT("/bind", appBrokerageUserHandler.BindBrokerageUser)
+				brokerageUserGroup.GET("/get", handlers.Mall.Trade.Brokerage.BrokerageUser.GetBrokerageUser)
+				brokerageUserGroup.GET("/get-summary", handlers.Mall.Trade.Brokerage.BrokerageUser.GetBrokerageUserSummary)
+				brokerageUserGroup.GET("/child-summary-page", handlers.Mall.Trade.Brokerage.BrokerageUser.GetBrokerageUserChildSummaryPage)
+				brokerageUserGroup.PUT("/bind", handlers.Mall.Trade.Brokerage.BrokerageUser.BindBrokerageUser)
 			}
 			brokerageRecordGroup := tradeGroup.Group("/brokerage-record")
 			{
-				brokerageRecordGroup.GET("/page", appBrokerageRecordHandler.GetBrokerageRecordPage)
-				brokerageRecordGroup.GET("/get-product-brokerage-price", appBrokerageRecordHandler.GetProductBrokeragePrice)
+				brokerageRecordGroup.GET("/page", handlers.Mall.Trade.Brokerage.BrokerageRecord.GetBrokerageRecordPage)
+				brokerageRecordGroup.GET("/get-product-brokerage-price", handlers.Mall.Trade.Brokerage.BrokerageRecord.GetProductBrokeragePrice)
 			}
 			brokerageWithdrawGroup := tradeGroup.Group("/brokerage-withdraw")
 			{
-				brokerageWithdrawGroup.GET("/page", appBrokerageWithdrawHandler.GetBrokerageWithdrawPage)
-				brokerageWithdrawGroup.GET("/get", appBrokerageWithdrawHandler.GetBrokerageWithdraw) // GET /get?id=...
-				brokerageWithdrawGroup.POST("/create", appBrokerageWithdrawHandler.CreateBrokerageWithdraw)
+				brokerageWithdrawGroup.GET("/page", handlers.Mall.Trade.Brokerage.BrokerageWithdraw.GetBrokerageWithdrawPage)
+				brokerageWithdrawGroup.GET("/get", handlers.Mall.Trade.Brokerage.BrokerageWithdraw.GetBrokerageWithdraw) // GET /get?id=...
+				brokerageWithdrawGroup.POST("/create", handlers.Mall.Trade.Brokerage.BrokerageWithdraw.CreateBrokerageWithdraw)
 			}
 		}
 
@@ -284,15 +209,15 @@ func RegisterAppRoutes(engine *gin.Engine,
 		{
 			orderPublicGroup := tradePublicGroup.Group("/order")
 			{
-				orderPublicGroup.POST("/update-paid", appTradeOrderHandler.UpdateOrderPaid)
-				orderPublicGroup.GET("/settlement-product", appTradeOrderHandler.SettlementProduct) // @PermitAll - 获得商品结算信息
+				orderPublicGroup.POST("/update-paid", handlers.Mall.Trade.Order.UpdateOrderPaid)
+				orderPublicGroup.GET("/settlement-product", handlers.Mall.Trade.Order.SettlementProduct) // @PermitAll - 获得商品结算信息
 			}
 		}
 
 		// Trade Config (Public)
 		tradeConfigGroup := appGroup.Group("/trade/config")
 		{
-			tradeConfigGroup.GET("/get", appTradeConfigHandler.GetTradeConfig)
+			tradeConfigGroup.GET("/get", handlers.Mall.Trade.Config.GetTradeConfig)
 		}
 
 		// ========== Promotion ==========
@@ -302,11 +227,11 @@ func RegisterAppRoutes(engine *gin.Engine,
 			couponGroup := promotionGroup.Group("/coupon")
 			couponGroup.Use(middleware.Auth())
 			{
-				couponGroup.POST("/take", appCouponHandler.TakeCoupon)
-				couponGroup.GET("/page", appCouponHandler.GetCouponPage)
-				couponGroup.GET("/get", appCouponHandler.GetCoupon)                         // 新增: 获得优惠劵
-				couponGroup.GET("/get-unused-count", appCouponHandler.GetUnusedCouponCount) // 新增: 获得未使用数量
-				couponGroup.POST("/match-list", appCouponHandler.GetCouponMatchList)
+				couponGroup.POST("/take", handlers.Mall.Promotion.Coupon.TakeCoupon)
+				couponGroup.GET("/page", handlers.Mall.Promotion.Coupon.GetCouponPage)
+				couponGroup.GET("/get", handlers.Mall.Promotion.Coupon.GetCoupon)                         // 新增: 获得优惠劵
+				couponGroup.GET("/get-unused-count", handlers.Mall.Promotion.Coupon.GetUnusedCouponCount) // 新增: 获得未使用数量
+				couponGroup.POST("/match-list", handlers.Mall.Promotion.Coupon.GetCouponMatchList)
 			}
 
 			// Coupon Template (Public - 对齐 Java @PermitAll)
@@ -314,114 +239,114 @@ func RegisterAppRoutes(engine *gin.Engine,
 			couponTemplateGroup := promotionGroup.Group("/coupon-template")
 			couponTemplateGroup.Use(middleware.OptionalAuth())
 			{
-				couponTemplateGroup.GET("/get", appCouponTemplateHandler.GetCouponTemplate)
-				couponTemplateGroup.GET("/list", appCouponTemplateHandler.GetCouponTemplateList)
-				couponTemplateGroup.GET("/list-by-ids", appCouponTemplateHandler.GetCouponTemplateListByIds)
-				couponTemplateGroup.GET("/page", appCouponTemplateHandler.GetCouponTemplatePage)
+				couponTemplateGroup.GET("/get", handlers.Mall.Promotion.CouponTemplate.GetCouponTemplate)
+				couponTemplateGroup.GET("/list", handlers.Mall.Promotion.CouponTemplate.GetCouponTemplateList)
+				couponTemplateGroup.GET("/list-by-ids", handlers.Mall.Promotion.CouponTemplate.GetCouponTemplateListByIds)
+				couponTemplateGroup.GET("/page", handlers.Mall.Promotion.CouponTemplate.GetCouponTemplatePage)
 			}
 
 			// Banner (Public)
-			engine.GET("/app-api/promotion/banner/list", appBannerHandler.GetBannerList)
+			engine.GET("/app-api/promotion/banner/list", handlers.Mall.Promotion.Banner.GetBannerList)
 
 			// Reward Activity (Public - 对齐 Java @PermitAll)
-			engine.GET("/app-api/promotion/reward-activity/get", appRewardActivityHandler.GetRewardActivity)
+			engine.GET("/app-api/promotion/reward-activity/get", handlers.Mall.Promotion.RewardActivity.GetRewardActivity)
 
 			// Article (Public)
 			articleGroup := promotionGroup.Group("/article")
 			{
-				articleGroup.GET("/list-category", appArticleHandler.GetArticleCategoryList)
-				articleGroup.GET("/page", appArticleHandler.GetArticlePage)
-				articleGroup.GET("/get", appArticleHandler.GetArticle)
+				articleGroup.GET("/list-category", handlers.Mall.Promotion.Article.GetArticleCategoryList)
+				articleGroup.GET("/page", handlers.Mall.Promotion.Article.GetArticlePage)
+				articleGroup.GET("/get", handlers.Mall.Promotion.Article.GetArticle)
 			}
 
 			// DIY Page (Public)			// DIY
 			diyTemplateGroup := promotionGroup.Group("/diy-template")
 			{
-				diyTemplateGroup.GET("/used", appDiyTemplateHandler.GetUsedDiyTemplate)
-				diyTemplateGroup.GET("/get", appDiyTemplateHandler.GetDiyTemplate)
+				diyTemplateGroup.GET("/used", handlers.Mall.Promotion.DiyTemplate.GetUsedDiyTemplate)
+				diyTemplateGroup.GET("/get", handlers.Mall.Promotion.DiyTemplate.GetDiyTemplate)
 			}
 			diyPageGroup := promotionGroup.Group("/diy-page")
 			{
-				diyPageGroup.GET("/get", appDiyPageHandler.GetDiyPage)
+				diyPageGroup.GET("/get", handlers.Mall.Promotion.DiyPage.GetDiyPage)
 			}
 
 			// Kefu Message
 			kefuMessageGroup := promotionGroup.Group("/kefu-message")
 			{
-				kefuMessageGroup.POST("/send", appKefuHandler.SendMessage)
-				kefuMessageGroup.PUT("/update-read-status", appKefuHandler.UpdateMessageReadStatus)
-				kefuMessageGroup.GET("/list", appKefuHandler.GetMessageList)
+				kefuMessageGroup.POST("/send", handlers.Mall.Promotion.Kefu.SendMessage)
+				kefuMessageGroup.PUT("/update-read-status", handlers.Mall.Promotion.Kefu.UpdateMessageReadStatus)
+				kefuMessageGroup.GET("/list", handlers.Mall.Promotion.Kefu.GetMessageList)
 			}
 
 			// Activity
 			activityGroup := promotionGroup.Group("/activity")
 			{
-				activityGroup.GET("/list-by-spu-id", appActivityHandler.GetActivityListBySpuId)
+				activityGroup.GET("/list-by-spu-id", handlers.Mall.Promotion.Activity.GetActivityListBySpuId)
 			}
 
 			// Combination Activity
 			combinationActivityGroup := promotionGroup.Group("/combination-activity")
 			{
-				combinationActivityGroup.GET("/list-by-ids", appCombinationActivityHandler.GetCombinationActivityListByIds)
-				combinationActivityGroup.GET("/get-detail", appCombinationActivityHandler.GetCombinationActivityDetail)
-				combinationActivityGroup.GET("/page", appCombinationActivityHandler.GetCombinationActivityPage)
+				combinationActivityGroup.GET("/list-by-ids", handlers.Mall.Promotion.CombinationActivity.GetCombinationActivityListByIds)
+				combinationActivityGroup.GET("/get-detail", handlers.Mall.Promotion.CombinationActivity.GetCombinationActivityDetail)
+				combinationActivityGroup.GET("/page", handlers.Mall.Promotion.CombinationActivity.GetCombinationActivityPage)
 			}
 
 			// Combination Record
 			combinationRecordGroup := promotionGroup.Group("/combination-record")
 			{
-				combinationRecordGroup.GET("/get-summary", appCombinationRecordHandler.GetCombinationRecordSummary)
-				combinationRecordGroup.GET("/get-head-list", appCombinationRecordHandler.GetHeadCombinationRecordList)
-				combinationRecordGroup.GET("/get-detail", appCombinationRecordHandler.GetCombinationRecordDetail)
+				combinationRecordGroup.GET("/get-summary", handlers.Mall.Promotion.CombinationRecord.GetCombinationRecordSummary)
+				combinationRecordGroup.GET("/get-head-list", handlers.Mall.Promotion.CombinationRecord.GetHeadCombinationRecordList)
+				combinationRecordGroup.GET("/get-detail", handlers.Mall.Promotion.CombinationRecord.GetCombinationRecordDetail)
 				combinationRecordGroup.Use(middleware.Auth())
-				combinationRecordGroup.GET("/page", appCombinationRecordHandler.GetCombinationRecordPage)
+				combinationRecordGroup.GET("/page", handlers.Mall.Promotion.CombinationRecord.GetCombinationRecordPage)
 			}
 
 			// Bargain Activity (Public)
 			bargainActivityGroup := promotionGroup.Group("/bargain-activity")
 			{
-				bargainActivityGroup.GET("/list", appBargainActivityHandler.GetBargainActivityList)
-				bargainActivityGroup.GET("/page", appBargainActivityHandler.GetBargainActivityPage)
-				bargainActivityGroup.GET("/get-detail", appBargainActivityHandler.GetBargainActivityDetail)
+				bargainActivityGroup.GET("/list", handlers.Mall.Promotion.BargainActivity.GetBargainActivityList)
+				bargainActivityGroup.GET("/page", handlers.Mall.Promotion.BargainActivity.GetBargainActivityPage)
+				bargainActivityGroup.GET("/get-detail", handlers.Mall.Promotion.BargainActivity.GetBargainActivityDetail)
 			}
 
 			// Bargain Record
 			bargainRecordGroup := promotionGroup.Group("/bargain-record")
 			{
-				bargainRecordGroup.GET("/get-summary", appBargainRecordHandler.GetBargainRecordSummary)
-				bargainRecordGroup.GET("/get-detail", appBargainRecordHandler.GetBargainRecordDetail)
+				bargainRecordGroup.GET("/get-summary", handlers.Mall.Promotion.BargainRecord.GetBargainRecordSummary)
+				bargainRecordGroup.GET("/get-detail", handlers.Mall.Promotion.BargainRecord.GetBargainRecordDetail)
 				// Auth Required
-				bargainRecordGroup.POST("/create", middleware.Auth(), appBargainRecordHandler.CreateBargainRecord)
+				bargainRecordGroup.POST("/create", middleware.Auth(), handlers.Mall.Promotion.BargainRecord.CreateBargainRecord)
 			}
 
 			// Bargain Help
 			bargainHelpGroup := promotionGroup.Group("/bargain-help")
 			{
-				bargainHelpGroup.GET("/list", appBargainHelpHandler.GetBargainHelpList)
-				bargainHelpGroup.POST("/create", middleware.Auth(), appBargainHelpHandler.CreateBargainHelp)
+				bargainHelpGroup.GET("/list", handlers.Mall.Promotion.BargainHelp.GetBargainHelpList)
+				bargainHelpGroup.POST("/create", middleware.Auth(), handlers.Mall.Promotion.BargainHelp.CreateBargainHelp)
 			}
 
 			// Seckill Activity (Public - 对齐 Java @PermitAll)
 			seckillActivityGroup := promotionGroup.Group("/seckill-activity")
 			{
-				seckillActivityGroup.GET("/get-now", appSeckillActivityHandler.GetNowSeckillActivity)
-				seckillActivityGroup.GET("/page", appSeckillActivityHandler.GetSeckillActivityPage)
-				seckillActivityGroup.GET("/get", appSeckillActivityHandler.GetSeckillActivity)
-				seckillActivityGroup.GET("/get-detail", appSeckillActivityHandler.GetSeckillActivityDetail)
-				seckillActivityGroup.GET("/list-by-ids", appSeckillActivityHandler.GetSeckillActivityListByIds)
+				seckillActivityGroup.GET("/get-now", handlers.Mall.Promotion.SeckillActivity.GetNowSeckillActivity)
+				seckillActivityGroup.GET("/page", handlers.Mall.Promotion.SeckillActivity.GetSeckillActivityPage)
+				seckillActivityGroup.GET("/get", handlers.Mall.Promotion.SeckillActivity.GetSeckillActivity)
+				seckillActivityGroup.GET("/get-detail", handlers.Mall.Promotion.SeckillActivity.GetSeckillActivityDetail)
+				seckillActivityGroup.GET("/list-by-ids", handlers.Mall.Promotion.SeckillActivity.GetSeckillActivityListByIds)
 			}
 
 			seckillConfigGroup := promotionGroup.Group("/seckill-config")
 			{
-				seckillConfigGroup.GET("/list", appSeckillConfigHandler.GetSeckillConfigList)
+				seckillConfigGroup.GET("/list", handlers.Mall.Promotion.SeckillConfig.GetSeckillConfigList)
 			}
 
 			// Point Activity (Public)
 			pointActivityGroup := promotionGroup.Group("/point-activity")
 			{
-				pointActivityGroup.GET("/page", appPointActivityHandler.GetPointActivityPage)
-				pointActivityGroup.GET("/get-detail", appPointActivityHandler.GetPointActivity)
-				pointActivityGroup.GET("/list-by-ids", appPointActivityHandler.GetPointActivityListByIds)
+				pointActivityGroup.GET("/page", handlers.Mall.Promotion.PointActivity.GetPointActivityPage)
+				pointActivityGroup.GET("/get-detail", handlers.Mall.Promotion.PointActivity.GetPointActivity)
+				pointActivityGroup.GET("/list-by-ids", handlers.Mall.Promotion.PointActivity.GetPointActivityListByIds)
 			}
 		}
 
@@ -432,40 +357,40 @@ func RegisterAppRoutes(engine *gin.Engine,
 			// Order
 			orderGroup := payGroup.Group("/order")
 			{
-				orderGroup.GET("/get", appPayOrderHandler.GetOrder)
-				orderGroup.POST("/submit", appPayOrderHandler.Submit)
+				orderGroup.GET("/get", handlers.Pay.Order.GetOrder)
+				orderGroup.POST("/submit", handlers.Pay.Order.Submit)
 			}
 			// Wallet
 			walletGroup := payGroup.Group("/wallet")
 			{
-				walletGroup.GET("/get", appPayWalletHandler.GetWallet)
+				walletGroup.GET("/get", handlers.Pay.Wallet.GetWallet)
 			}
 			// Wallet Transaction
 			walletTransactionGroup := payGroup.Group("/wallet-transaction")
 			{
-				walletTransactionGroup.GET("/page", appPayWalletTransactionHandler.GetWalletTransactionPage)
-				walletTransactionGroup.GET("/get-summary", appPayWalletTransactionHandler.GetWalletTransactionSummary)
+				walletTransactionGroup.GET("/page", handlers.Pay.WalletTransaction.GetWalletTransactionPage)
+				walletTransactionGroup.GET("/get-summary", handlers.Pay.WalletTransaction.GetWalletTransactionSummary)
 			}
 			// Wallet Recharge
 			rechargeGroup := payGroup.Group("/wallet-recharge")
 			{
-				rechargeGroup.POST("/create", appPayWalletHandler.CreateRecharge)
-				rechargeGroup.GET("/page", appPayWalletHandler.GetRechargePage)
+				rechargeGroup.POST("/create", handlers.Pay.Wallet.CreateRecharge)
+				rechargeGroup.GET("/page", handlers.Pay.Wallet.GetRechargePage)
 			}
 			// Wallet Recharge Package
 			rechargePackageGroup := payGroup.Group("/wallet-recharge-package")
 			{
-				rechargePackageGroup.GET("/list", appPayWalletRechargePackageHandler.GetWalletRechargePackageList)
+				rechargePackageGroup.GET("/list", handlers.Pay.WalletRechargePackage.GetWalletRechargePackageList)
 			}
 			// Channel
 			channelGroup := payGroup.Group("/channel")
 			{
-				channelGroup.GET("/get-enable-code-list", appPayChannelHandler.GetEnableChannelCodeList)
+				channelGroup.GET("/get-enable-code-list", handlers.Pay.Channel.GetEnableChannelCodeList)
 			}
 			// Transfer
 			transferGroup := payGroup.Group("/transfer")
 			{
-				transferGroup.GET("/sync", appPayTransferHandler.SyncTransfer)
+				transferGroup.GET("/sync", handlers.Pay.Transfer.SyncTransfer)
 			}
 		}
 	}
