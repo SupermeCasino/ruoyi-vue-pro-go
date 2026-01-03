@@ -225,18 +225,21 @@ HTTP Request
 ```
 /
 ├── /admin-api/           # 后台管理API
+│   ├── /infra/          # 基础设施
 │   ├── /system/         # 系统管理
 │   ├── /member/         # 会员管理
 │   ├── /product/        # 商品管理
 │   ├── /trade/          # 交易管理
 │   ├── /pay/            # 支付管理
-│   └── /promotion/      # 促销管理
+│   ├── /promotion/      # 促销管理
+│   └── /statistics/     # 统计报表
 │
-└── /app-api/            # 移动端/用户端API
+└── /app-api/            # 移动端/用户API
     ├── /member/         # 会员中心
     ├── /product/        # 商品中心
     ├── /trade/          # 交易中心
-    └── /promotion/      # 营销中心
+    ├── /promotion/      # 营销中心
+    └── /pay/            # 支付相关
 ```
 
 ### 核心组件架构
@@ -542,22 +545,36 @@ ruoyi-mall-go/
 │   ├── api/                      # HTTP API 层
 │   │   ├── handler/             # 请求处理器 (Controller)
 │   │   │   ├── admin/           # 后台管理 API handlers
+│   │   │   │   ├── infra/       # 基础设施管理处理器
 │   │   │   │   ├── member/      # 会员管理处理器
 │   │   │   │   ├── pay/         # 支付管理处理器
 │   │   │   │   ├── product/     # 商品管理处理器
 │   │   │   │   ├── promotion/   # 促销管理处理器
+│   │   │   │   ├── statistics/  # 统计管理处理器
+│   │   │   │   ├── system/      # 系统管理处理器
 │   │   │   │   ├── trade/       # 交易管理处理器
 │   │   │   │   └── *_handler.go # 单个模块处理器
 │   │   │   ├── app/             # 移动端/用户 API handlers
+│   │   │   │   ├── mall/        # 商城应用处理器
 │   │   │   │   ├── member/      # 用户中心处理器
-│   │   │   │   ├── product/     # 产品浏览处理器
-│   │   │   │   ├── promotion/   # 营销中心处理器
-│   │   │   │   └── trade/       # 交易处理器
+│   │   │   │   ├── pay/         # 支付处理器
+│   │   │   │   └── *_handler.go # 单个模块处理器
 │   │   │   └── *_handler.go     # 通用处理器
-│   │   ├── req/                 # 请求对象 (VO/DTO)
-│   │   │   └── *.go             # 各模块请求结构体
-│   │   ├── resp/                # 响应对象 (VO/DTO)
-│   │   │   └── *.go             # 各模块响应结构体
+│   │   ├── contract/            # API 契约 (请求响应对象)
+│   │   │   ├── admin/           # 后台 API 契约
+│   │   │   │   ├── infra/       # 基础设施 contracts
+│   │   │   │   ├── mall/        # 商城模块 contracts
+│   │   │   │   │   ├── product/ # 商品相关 contracts
+│   │   │   │   │   ├── promotion/ # 促销相关 contracts
+│   │   │   │   │   └── trade/   # 交易相关 contracts
+│   │   │   │   ├── member/      # 会员 contracts
+│   │   │   │   ├── pay/         # 支付 contracts
+│   │   │   │   ├── statistics/  # 统计 contracts
+│   │   │   │   └── system/      # 系统 contracts
+│   │   │   ├── app/             # 移动端 API 契约
+│   │   │   │   ├── mall/        # 商城应用 contracts
+│   │   │   │   └── pay/         # 支付相关 contracts
+│   │   │   └── common/          # 通用 contracts
 │   │   └── router/              # 路由定义
 │   │       ├── admin.go         # 后台管理路由
 │   │       ├── app.go           # 用户端路由
@@ -651,6 +668,27 @@ ruoyi-mall-go/
 | **数据层** | `internal/repo/` | 数据访问、数据库操作 | `UserRepository.Create()` |
 | **模型层** | `internal/model/` | 数据结构定义 | `type User struct` |
 
+#### API 契约设计 (Contract)
+
+`internal/api/contract/` 目录包含所有 API 的请求和响应对象，按业务域和 API 类型组织：
+
+**结构说明**：
+- `contract/admin/` - 后台管理 API 的请求/响应对象
+  - 按业务模块组织：`member/`、`pay/`、`product/`、`promotion/`、`system/` 等
+  - 文件命名：`{entity}_{type}.go` (如 `user_req.go`、`user_resp.go`) 或 `{domain}.go`
+
+- `contract/app/` - 移动端/用户 API 的请求/响应对象
+  - 按业务模块组织：`mall/`、`pay/` 等
+  - 同样遵循文件命名规范
+
+- `contract/common/` - 通用的请求/响应对象
+
+**优点**：
+- 集中管理所有 API 契约，清晰直观
+- 请求/响应对象与对应的 API 处理器紧密关联
+- 便于维护 API 版本和向后兼容性
+- 减少文件碎片化
+
 #### 模块划分
 
 **按业务模块组织**（横向）：
@@ -704,7 +742,39 @@ type User struct {
 make gen
 ```
 
-#### 3. 实现 Repository 层
+#### 3. 定义 API 契约（请求/响应对象）
+
+在 `internal/api/contract/` 下按模块创建请求/响应对象。例如创建用户相关的 API 契约：
+
+```go
+// internal/api/contract/admin/system/user.go
+package system
+
+// 创建用户请求
+type CreateUserReq struct {
+    Username string `json:"username" binding:"required,min=3,max=50"`
+    Email    string `json:"email" binding:"required,email"`
+    Password string `json:"password" binding:"required,min=6,max=30"`
+}
+
+// 创建用户响应
+type CreateUserResp struct {
+    ID       int64  `json:"id"`
+    Username string `json:"username"`
+    Email    string `json:"email"`
+    CreatedAt string `json:"createdAt"`
+}
+
+// 用户详情响应
+type UserDetail struct {
+    ID       int64  `json:"id"`
+    Username string `json:"username"`
+    Email    string `json:"email"`
+    Status   int    `json:"status"`
+}
+```
+
+#### 4. 实现 Repository 层
 
 在 `internal/repo/` 下创建 Repository：
 
@@ -715,35 +785,36 @@ type UserRepository interface {
 }
 ```
 
-#### 4. 实现 Service 层
+#### 5. 实现 Service 层
 
 在 `internal/service/` 下创建 Service：
 
 ```go
 type UserService interface {
-    CreateUser(ctx context.Context, req *req.CreateUserReq) error
-    GetUser(ctx context.Context, id int64) (*resp.UserInfo, error)
+    CreateUser(ctx context.Context, req *contract.CreateUserReq) (*contract.CreateUserResp, error)
+    GetUser(ctx context.Context, id int64) (*contract.UserDetail, error)
 }
 ```
 
-#### 5. 实现 Handler 层
+#### 6. 实现 Handler 层
 
-在 `internal/api/handler/` 下创建 Handler：
+在 `internal/api/handler/admin/system/` 下创建 Handler：
 
 ```go
 func (h *UserHandler) CreateUser(c *gin.Context) {
-    var req req.CreateUserReq
+    var req contract.CreateUserReq
     if err := c.ShouldBindJSON(&req); err != nil {
         core.WriteError(c, core.ParamErrCode, err.Error())
         return
     }
 
-    if err := h.userService.CreateUser(c.Request.Context(), &req); err != nil {
+    resp, err := h.userService.CreateUser(c.Request.Context(), &req)
+    if err != nil {
         core.WriteError(c, core.ServerErrCode, err.Error())
         return
     }
 
-    core.WriteSuccess(c, nil)
+    core.WriteSuccess(c, resp)
 }
 ```
 
@@ -1146,4 +1217,4 @@ Copyright (c) 2025 wxlbd
 
 ---
 
-*最后更新：2025-12-16*
+*最后更新：2025-01-03*
