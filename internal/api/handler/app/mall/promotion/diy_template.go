@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	appPromotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -47,7 +47,7 @@ func (h *AppDiyTemplateHandler) GetDiyTemplate(c *gin.Context) {
 }
 
 // buildVo 构建响应 (对齐 Java: AppDiyTemplateController.buildVo)
-func (h *AppDiyTemplateHandler) buildVo(c *gin.Context, diyTemplate *promotionModel.PromotionDiyTemplate) *resp.AppDiyTemplatePropertyResp {
+func (h *AppDiyTemplateHandler) buildVo(c *gin.Context, diyTemplate *promotionModel.PromotionDiyTemplate) *appPromotionContract.AppDiyTemplatePropertyResp {
 	if diyTemplate == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (h *AppDiyTemplateHandler) buildVo(c *gin.Context, diyTemplate *promotionMo
 	}
 
 	// 拼接返回 (对齐 Java: DiyTemplateConvert.convertPropertyVo2)
-	return &resp.AppDiyTemplatePropertyResp{
+	return &appPromotionContract.AppDiyTemplatePropertyResp{
 		ID:       diyTemplate.ID,
 		Name:     diyTemplate.Name,
 		Property: diyTemplate.Property,

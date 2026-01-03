@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -22,7 +22,7 @@ func NewPostHandler(svc *system.PostService) *PostHandler {
 }
 
 func (h *PostHandler) CreatePost(c *gin.Context) {
-	var r req.PostSaveReq
+	var r system2.PostSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 }
 
 func (h *PostHandler) UpdatePost(c *gin.Context) {
-	var r req.PostSaveReq
+	var r system2.PostSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -70,7 +70,7 @@ func (h *PostHandler) GetPost(c *gin.Context) {
 }
 
 func (h *PostHandler) GetPostPage(c *gin.Context) {
-	var r req.PostPageReq
+	var r system2.PostPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

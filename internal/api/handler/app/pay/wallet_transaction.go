@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/pay"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -34,7 +34,7 @@ func (h *AppPayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context
 	}
 
 	// 2. 查询流水
-	var r req.PayWalletTransactionPageReq
+	var r pay.PayWalletTransactionPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -48,9 +48,9 @@ func (h *AppPayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context
 	}
 
 	// 3. 转换返回
-	list := make([]resp.AppPayWalletTransactionResp, len(pageResult.List))
+	list := make([]pay2.AppPayWalletTransactionResp, len(pageResult.List))
 	for i, item := range pageResult.List {
-		list[i] = resp.AppPayWalletTransactionResp{
+		list[i] = pay2.AppPayWalletTransactionResp{
 			BizType:    item.BizType,
 			Price:      int64(item.Price),
 			Title:      item.Title,
@@ -58,7 +58,7 @@ func (h *AppPayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.AppPayWalletTransactionResp]{
+	response.WriteSuccess(c, pagination.PageResult[pay2.AppPayWalletTransactionResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -87,7 +87,7 @@ func (h *AppPayWalletTransactionHandler) GetWalletTransactionSummary(c *gin.Cont
 		return
 	}
 
-	response.WriteSuccess(c, resp.AppPayWalletTransactionSummaryResp{
+	response.WriteSuccess(c, pay2.AppPayWalletTransactionSummaryResp{
 		TotalIncome:  totalIncome,
 		TotalExpense: totalExpense,
 	})

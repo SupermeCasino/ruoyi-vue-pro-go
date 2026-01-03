@@ -1,8 +1,8 @@
 package pay
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -41,7 +41,7 @@ func (h *AppPayWalletHandler) GetWallet(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, resp.AppPayWalletResp{
+	response.WriteSuccess(c, pay.AppPayWalletResp{
 		Balance:       wallet.Balance,
 		TotalExpense:  wallet.TotalExpense,
 		TotalRecharge: wallet.TotalRecharge,
@@ -50,7 +50,7 @@ func (h *AppPayWalletHandler) GetWallet(c *gin.Context) {
 
 // CreateRecharge 创建钱包充值记录
 func (h *AppPayWalletHandler) CreateRecharge(c *gin.Context) {
-	var r req.AppPayWalletRechargeCreateReq
+	var r pay.AppPayWalletRechargeCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -59,7 +59,7 @@ func (h *AppPayWalletHandler) CreateRecharge(c *gin.Context) {
 	userId := context.GetUserId(c)
 	userType := context.GetUserType(c)
 	userIP := c.ClientIP()
-	recharge, err := h.rechargeSvc.CreateWalletRecharge(c, &req.PayWalletRechargeCreateReq{
+	recharge, err := h.rechargeSvc.CreateWalletRecharge(c, &pay2.PayWalletRechargeCreateReq{
 		UserID:    userId,
 		UserType:  userType,
 		PayPrice:  *r.PayPrice,
@@ -70,7 +70,7 @@ func (h *AppPayWalletHandler) CreateRecharge(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, resp.AppPayWalletRechargeCreateResp{
+	response.WriteSuccess(c, pay.AppPayWalletRechargeCreateResp{
 		ID:         recharge.ID,
 		PayOrderID: recharge.PayOrderID,
 	})
@@ -84,7 +84,7 @@ func (h *AppPayWalletHandler) GetRechargePage(c *gin.Context) {
 		return
 	}
 
-	pageResult, err := h.rechargeSvc.GetWalletRechargePage(c, &req.PayWalletRechargePageReq{
+	pageResult, err := h.rechargeSvc.GetWalletRechargePage(c, &pay2.PayWalletRechargePageReq{
 		PageParam: r,
 	})
 	if err != nil {
@@ -93,8 +93,8 @@ func (h *AppPayWalletHandler) GetRechargePage(c *gin.Context) {
 	}
 
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.AppPayWalletRechargeResp]{
-			List:  []resp.AppPayWalletRechargeResp{},
+		response.WriteSuccess(c, pagination.PageResult[pay.AppPayWalletRechargeResp]{
+			List:  []pay.AppPayWalletRechargeResp{},
 			Total: pageResult.Total,
 		})
 		return
@@ -107,9 +107,9 @@ func (h *AppPayWalletHandler) GetRechargePage(c *gin.Context) {
 	}
 	payOrderMap, _ := h.payOrderSvc.GetOrderMap(c, payOrderIDs)
 
-	list := make([]resp.AppPayWalletRechargeResp, len(pageResult.List))
+	list := make([]pay.AppPayWalletRechargeResp, len(pageResult.List))
 	for i, item := range pageResult.List {
-		r := resp.AppPayWalletRechargeResp{
+		r := pay.AppPayWalletRechargeResp{
 			ID:           item.ID,
 			TotalPrice:   item.TotalPrice,
 			PayPrice:     item.PayPrice,
@@ -127,7 +127,7 @@ func (h *AppPayWalletHandler) GetRechargePage(c *gin.Context) {
 		list[i] = r
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.AppPayWalletRechargeResp]{
+	response.WriteSuccess(c, pagination.PageResult[pay.AppPayWalletRechargeResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

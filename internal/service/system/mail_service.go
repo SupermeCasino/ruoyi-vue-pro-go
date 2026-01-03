@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -59,7 +59,7 @@ func (s *MailService) RefreshCache() {
 
 // ================= Mail Account CRUD =================
 
-func (s *MailService) CreateMailAccount(ctx context.Context, r *req.MailAccountCreateReq) (int64, error) {
+func (s *MailService) CreateMailAccount(ctx context.Context, r *system.MailAccountCreateReq) (int64, error) {
 	account := &model.SystemMailAccount{
 		Mail:           r.Mail,
 		Username:       r.Username,
@@ -76,7 +76,7 @@ func (s *MailService) CreateMailAccount(ctx context.Context, r *req.MailAccountC
 	return account.ID, nil
 }
 
-func (s *MailService) UpdateMailAccount(ctx context.Context, r *req.MailAccountUpdateReq) error {
+func (s *MailService) UpdateMailAccount(ctx context.Context, r *system.MailAccountUpdateReq) error {
 	account := &model.SystemMailAccount{
 		ID:             r.ID,
 		Mail:           r.Mail,
@@ -110,7 +110,7 @@ func (s *MailService) GetMailAccount(ctx context.Context, id int64) (*model.Syst
 	return &account, nil
 }
 
-func (s *MailService) GetMailAccountPage(ctx context.Context, r *req.MailAccountPageReq) (*pagination.PageResult[*model.SystemMailAccount], error) {
+func (s *MailService) GetMailAccountPage(ctx context.Context, r *system.MailAccountPageReq) (*pagination.PageResult[*model.SystemMailAccount], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemMailAccount{})
 	if r.Mail != "" {
 		db = db.Where("mail LIKE ?", "%"+r.Mail+"%")
@@ -140,7 +140,7 @@ func (s *MailService) GetSimpleMailAccountList(ctx context.Context) ([]*model.Sy
 
 // ================= Mail Template CRUD =================
 
-func (s *MailService) CreateMailTemplate(ctx context.Context, r *req.MailTemplateCreateReq) (int64, error) {
+func (s *MailService) CreateMailTemplate(ctx context.Context, r *system.MailTemplateCreateReq) (int64, error) {
 	template := &model.SystemMailTemplate{
 		Name:      r.Name,
 		Code:      r.Code,
@@ -158,7 +158,7 @@ func (s *MailService) CreateMailTemplate(ctx context.Context, r *req.MailTemplat
 	return template.ID, nil
 }
 
-func (s *MailService) UpdateMailTemplate(ctx context.Context, r *req.MailTemplateUpdateReq) error {
+func (s *MailService) UpdateMailTemplate(ctx context.Context, r *system.MailTemplateUpdateReq) error {
 	template := &model.SystemMailTemplate{
 		ID:        r.ID,
 		Name:      r.Name,
@@ -193,7 +193,7 @@ func (s *MailService) GetMailTemplate(ctx context.Context, id int64) (*model.Sys
 	return &template, nil
 }
 
-func (s *MailService) GetMailTemplatePage(ctx context.Context, r *req.MailTemplatePageReq) (*pagination.PageResult[*model.SystemMailTemplate], error) {
+func (s *MailService) GetMailTemplatePage(ctx context.Context, r *system.MailTemplatePageReq) (*pagination.PageResult[*model.SystemMailTemplate], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemMailTemplate{})
 	if r.Name != "" {
 		db = db.Where("name LIKE ?", "%"+r.Name+"%")
@@ -300,7 +300,7 @@ func (s *MailService) doSend(account *model.SystemMailAccount, to string, subjec
 
 // ================= Mail Log =================
 
-func (s *MailService) GetMailLogPage(ctx context.Context, r *req.MailLogPageReq) (*pagination.PageResult[*model.SystemMailLog], error) {
+func (s *MailService) GetMailLogPage(ctx context.Context, r *system.MailLogPageReq) (*pagination.PageResult[*model.SystemMailLog], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemMailLog{})
 	if r.ToMail != "" {
 		db = db.Where("to_mail LIKE ?", "%"+r.ToMail+"%")

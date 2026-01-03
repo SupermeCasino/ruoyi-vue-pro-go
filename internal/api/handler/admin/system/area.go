@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -64,7 +64,7 @@ func NewAreaHandler() *AreaHandler {
 func (h *AreaHandler) GetAreaTree(c *gin.Context) {
 	tree := area.GetAreaTree()
 	if tree == nil {
-		response.WriteSuccess(c, []*resp.AreaNodeResp{})
+		response.WriteSuccess(c, []*system.AreaNodeResp{})
 		return
 	}
 
@@ -114,14 +114,14 @@ func (h *AreaHandler) GetAreaByIP(c *gin.Context) {
 }
 
 // convertAreaTree 转换地区树为响应结构
-func convertAreaTree(areas []*area.Area) []*resp.AreaNodeResp {
+func convertAreaTree(areas []*area.Area) []*system.AreaNodeResp {
 	if areas == nil {
 		return nil
 	}
 
-	result := make([]*resp.AreaNodeResp, 0, len(areas))
+	result := make([]*system.AreaNodeResp, 0, len(areas))
 	for _, a := range areas {
-		node := &resp.AreaNodeResp{
+		node := &system.AreaNodeResp{
 			ID:   a.ID,
 			Name: a.Name,
 		}

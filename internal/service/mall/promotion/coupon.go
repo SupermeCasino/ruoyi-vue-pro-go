@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion3 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	member_model "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -29,7 +29,7 @@ func NewCouponService(q *query.Query, userService *member.MemberUserService) *Co
 }
 
 // CreateCouponTemplate 创建优惠券模板 (Admin)
-func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *req.CouponTemplateCreateReq) (int64, error) {
+func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *promotion3.CouponTemplateCreateReq) (int64, error) {
 	t := &promotion.PromotionCouponTemplate{
 		Name:               req.Name,
 		Description:        req.Description,
@@ -55,7 +55,7 @@ func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *req.Coupo
 }
 
 // UpdateCouponTemplate 更新优惠券模板 (Admin)
-func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *req.CouponTemplateUpdateReq) error {
+func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *promotion3.CouponTemplateUpdateReq) error {
 	_, err := s.q.PromotionCouponTemplate.WithContext(ctx).Where(s.q.PromotionCouponTemplate.ID.Eq(req.ID)).Updates(promotion.PromotionCouponTemplate{
 		Name:               req.Name,
 		Description:        req.Description,
@@ -80,7 +80,7 @@ func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *req.Coupo
 }
 
 // GetCouponTemplatePage 获得优惠券模板分页 (Admin)
-func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.CouponTemplatePageReq) (*pagination.PageResult[*resp.CouponTemplateResp], error) {
+func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *promotion3.CouponTemplatePageReq) (*pagination.PageResult[*promotion3.CouponTemplateResp], error) {
 	q := s.q.PromotionCouponTemplate.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PromotionCouponTemplate.Name.Like("%" + req.Name + "%"))
@@ -126,9 +126,9 @@ func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.Coup
 	}
 
 	// 转换为 Response DTO
-	list := make([]*resp.CouponTemplateResp, len(result))
+	list := make([]*promotion3.CouponTemplateResp, len(result))
 	for i, tmpl := range result {
-		list[i] = &resp.CouponTemplateResp{
+		list[i] = &promotion3.CouponTemplateResp{
 			// RespVO 字段
 			ID:         tmpl.ID,
 			Status:     tmpl.Status,
@@ -157,7 +157,7 @@ func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *req.Coup
 		}
 	}
 
-	return &pagination.PageResult[*resp.CouponTemplateResp]{
+	return &pagination.PageResult[*promotion3.CouponTemplateResp]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -217,7 +217,7 @@ func (s *CouponService) GetCouponTemplateList(ctx context.Context, ids []int64) 
 }
 
 // GetCouponPage 获得优惠券分页 (Admin)
-func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageReq) (*pagination.PageResult[*resp.CouponPageResp], error) {
+func (s *CouponService) GetCouponPage(ctx context.Context, req *promotion3.CouponPageReq) (*pagination.PageResult[*promotion3.CouponPageResp], error) {
 	q := s.q.PromotionCoupon.WithContext(ctx)
 	if req.UserID != nil {
 		q = q.Where(s.q.PromotionCoupon.UserID.Eq(*req.UserID))
@@ -248,9 +248,9 @@ func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageRe
 	}
 
 	// 转换为 Response DTO
-	list := make([]*resp.CouponPageResp, len(result))
+	list := make([]*promotion3.CouponPageResp, len(result))
 	for i, coupon := range result {
-		list[i] = &resp.CouponPageResp{
+		list[i] = &promotion3.CouponPageResp{
 			// RespVO 字段
 			ID:         coupon.ID,
 			CreateTime: coupon.CreateTime,
@@ -290,7 +290,7 @@ func (s *CouponService) GetCouponPage(ctx context.Context, req *req.CouponPageRe
 		}
 	}
 
-	return &pagination.PageResult[*resp.CouponPageResp]{
+	return &pagination.PageResult[*promotion3.CouponPageResp]{
 		List:  list,
 		Total: count,
 	}, nil
@@ -373,7 +373,7 @@ func (s *CouponService) TakeCouponByAdmin(ctx context.Context, templateId int64,
 
 // GetCouponTemplateForApp 获取单个优惠券模板 (App 端)
 // 对齐 Java: AppCouponTemplateController.getCouponTemplate
-func (s *CouponService) GetCouponTemplateForApp(ctx context.Context, id int64, userId int64) (*resp.AppCouponTemplateResp, error) {
+func (s *CouponService) GetCouponTemplateForApp(ctx context.Context, id int64, userId int64) (*promotion2.AppCouponTemplateResp, error) {
 	t := s.q.PromotionCouponTemplate
 	template, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
@@ -391,7 +391,7 @@ func (s *CouponService) GetCouponTemplateForApp(ctx context.Context, id int64, u
 
 // GetCouponTemplateListForApp 获取优惠券模板列表 (App 端)
 // 对齐 Java: AppCouponTemplateController.getCouponTemplateList (带条件)
-func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *int64, productScope *int, count int, userId int64) ([]*resp.AppCouponTemplateResp, error) {
+func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *int64, productScope *int, count int, userId int64) ([]*promotion2.AppCouponTemplateResp, error) {
 	t := s.q.PromotionCouponTemplate
 	q := t.WithContext(ctx).Where(t.Status.Eq(consts.CommonStatusEnable)) // 只查询启用状态
 	q = q.Where(t.TakeType.Eq(consts.CouponTakeTypeUser))                 // 领取方式 = 直接领取 (CouponTakeTypeEnum.USER)
@@ -423,7 +423,7 @@ func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *
 	}
 
 	// 转换响应
-	result := make([]*resp.AppCouponTemplateResp, len(templates))
+	result := make([]*promotion2.AppCouponTemplateResp, len(templates))
 	for i, tmpl := range templates {
 		result[i] = s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
 	}
@@ -432,9 +432,9 @@ func (s *CouponService) GetCouponTemplateListForApp(ctx context.Context, spuId *
 
 // GetCouponTemplateListByIdsForApp 按 ID 获取优惠券模板列表 (App 端)
 // 对齐 Java: AppCouponTemplateController.getCouponTemplateList (按ids)
-func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, ids []int64, userId int64) ([]*resp.AppCouponTemplateResp, error) {
+func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, ids []int64, userId int64) ([]*promotion2.AppCouponTemplateResp, error) {
 	if len(ids) == 0 {
-		return []*resp.AppCouponTemplateResp{}, nil
+		return []*promotion2.AppCouponTemplateResp{}, nil
 	}
 	t := s.q.PromotionCouponTemplate
 	templates, err := t.WithContext(ctx).Where(t.ID.In(ids...)).Find()
@@ -449,7 +449,7 @@ func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, id
 	}
 
 	// 转换响应
-	result := make([]*resp.AppCouponTemplateResp, len(templates))
+	result := make([]*promotion2.AppCouponTemplateResp, len(templates))
 	for i, tmpl := range templates {
 		result[i] = s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
 	}
@@ -458,7 +458,7 @@ func (s *CouponService) GetCouponTemplateListByIdsForApp(ctx context.Context, id
 
 // GetCouponTemplatePageForApp 获取优惠券模板分页 (App 端)
 // 对齐 Java: AppCouponTemplateController.getCouponTemplatePage
-func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.AppCouponTemplatePageReq, userId int64) (*pagination.PageResult[*resp.AppCouponTemplateResp], error) {
+func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *promotion2.AppCouponTemplatePageReq, userId int64) (*pagination.PageResult[*promotion2.AppCouponTemplateResp], error) {
 	t := s.q.PromotionCouponTemplate
 	q := t.WithContext(ctx).Where(t.Status.Eq(consts.CommonStatusEnable)) // 只查询启用状态
 	q = q.Where(t.TakeType.Eq(consts.CouponTakeTypeUser))                 // 领取方式 = 直接领取
@@ -484,18 +484,18 @@ func (s *CouponService) GetCouponTemplatePageForApp(ctx context.Context, r *req.
 	}
 
 	// 转换响应
-	result := lo.Map(templates, func(tmpl *promotion.PromotionCouponTemplate, _ int) *resp.AppCouponTemplateResp {
+	result := lo.Map(templates, func(tmpl *promotion.PromotionCouponTemplate, _ int) *promotion2.AppCouponTemplateResp {
 		return s.convertToAppCouponTemplateResp(tmpl, canTakeMap[tmpl.ID])
 	})
 
-	return &pagination.PageResult[*resp.AppCouponTemplateResp]{
+	return &pagination.PageResult[*promotion2.AppCouponTemplateResp]{
 		List:  result,
 		Total: count,
 	}, nil
 }
 
 // convertToAppCouponTemplateResp 转换模板 Model 到 App 响应 VO
-func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCouponTemplate, canTake bool) *resp.AppCouponTemplateResp {
+func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCouponTemplate, canTake bool) *promotion2.AppCouponTemplateResp {
 	// 处理ProductScopeValues，如果为空则返回空数组而不是null
 	productScopeValues := t.ProductScopeValues
 	if len(productScopeValues) == 0 {
@@ -518,7 +518,7 @@ func (s *CouponService) convertToAppCouponTemplateResp(t *promotion.PromotionCou
 		fixedEndTerm = &t.FixedEndTerm
 	}
 
-	return &resp.AppCouponTemplateResp{
+	return &promotion2.AppCouponTemplateResp{
 		ID:                 t.ID,
 		Name:               t.Name,
 		Description:        t.Description,

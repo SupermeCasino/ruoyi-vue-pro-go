@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -76,7 +75,9 @@ func (s *ProductBrowseHistoryService) HideUserBrowseHistory(ctx context.Context,
 
 // GetBrowseHistoryPage (Admin & App share similar logic but differing reqs?)
 // Java has separate ReqVOs but logic is similar. Admin uses BrowseHistoryPageReqVO, App uses AppBrowseHistoryPageReqVO
-func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, r *req.ProductBrowseHistoryPageReq) (*pagination.PageResult[resp.ProductBrowseHistoryResp], error) {
+// GetBrowseHistoryPage (Admin & App share similar logic but differing reqs?)
+// Java has separate ReqVOs but logic is similar. Admin uses BrowseHistoryPageReqVO, App uses AppBrowseHistoryPageReqVO
+func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, r *product2.ProductBrowseHistoryPageReq) (*pagination.PageResult[product2.ProductBrowseHistoryResp], error) {
 	h := s.q.ProductBrowseHistory
 	q := h.WithContext(ctx)
 
@@ -106,10 +107,10 @@ func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 { return item.ID })
+	spuMap := lo.KeyBy(spuList, func(item *product2.ProductSpuResp) int64 { return item.ID })
 
-	result := lo.Map(list, func(item *product.ProductBrowseHistory, _ int) resp.ProductBrowseHistoryResp {
-		r := resp.ProductBrowseHistoryResp{
+	result := lo.Map(list, func(item *product.ProductBrowseHistory, _ int) product2.ProductBrowseHistoryResp {
+		r := product2.ProductBrowseHistoryResp{
 			ID:     item.ID,
 			UserID: item.UserID,
 			SpuID:  item.SpuID,
@@ -124,14 +125,14 @@ func (s *ProductBrowseHistoryService) GetBrowseHistoryPage(ctx context.Context, 
 		return r
 	})
 
-	return &pagination.PageResult[resp.ProductBrowseHistoryResp]{
+	return &pagination.PageResult[product2.ProductBrowseHistoryResp]{
 		List:  result,
 		Total: total,
 	}, nil
 }
 
 // GetAppBrowseHistoryPage
-func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Context, userId int64, r *req.AppProductBrowseHistoryPageReq) (*pagination.PageResult[resp.AppProductBrowseHistoryResp], error) {
+func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Context, userId int64, r *product2.AppProductBrowseHistoryPageReq) (*pagination.PageResult[product2.AppProductBrowseHistoryResp], error) {
 	h := s.q.ProductBrowseHistory
 	q := h.WithContext(ctx).Where(h.UserID.Eq(userId)).Where(h.UserDeleted.Eq(model.BitBool(false)))
 
@@ -147,10 +148,10 @@ func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 { return item.ID })
+	spuMap := lo.KeyBy(spuList, func(item *product2.ProductSpuResp) int64 { return item.ID })
 
-	result := lo.Map(list, func(item *product.ProductBrowseHistory, _ int) resp.AppProductBrowseHistoryResp {
-		r := resp.AppProductBrowseHistoryResp{
+	result := lo.Map(list, func(item *product.ProductBrowseHistory, _ int) product2.AppProductBrowseHistoryResp {
+		r := product2.AppProductBrowseHistoryResp{
 			ID:    item.ID,
 			SpuID: item.SpuID,
 		}
@@ -164,7 +165,7 @@ func (s *ProductBrowseHistoryService) GetAppBrowseHistoryPage(ctx context.Contex
 		return r
 	})
 
-	return &pagination.PageResult[resp.AppProductBrowseHistoryResp]{
+	return &pagination.PageResult[product2.AppProductBrowseHistoryResp]{
 		List:  result,
 		Total: total,
 	}, nil

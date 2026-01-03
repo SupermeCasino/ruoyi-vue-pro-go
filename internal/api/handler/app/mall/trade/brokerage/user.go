@@ -3,13 +3,12 @@ package brokerage
 import (
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
-	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	tradeDto "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/trade"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	model "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -43,7 +42,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 
 	// 如果用户为 nil（分销功能未启用），返回默认值
 	if user == nil {
-		respVO := &tradeResp.AppBrokerageUserRespVO{
+		respVO := &tradeDto.AppBrokerageUserRespVO{
 			BrokerageEnabled: false,
 			BrokeragePrice:   0,
 			FrozenPrice:      0,
@@ -52,7 +51,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 		return
 	}
 
-	respVO := &tradeResp.AppBrokerageUserRespVO{
+	respVO := &tradeDto.AppBrokerageUserRespVO{
 		BrokerageEnabled: bool(user.BrokerageEnabled),
 		BrokeragePrice:   user.BrokeragePrice,
 		FrozenPrice:      user.FrozenPrice,
@@ -62,7 +61,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 
 // BindBrokerageUser 绑定推广员
 func (h *AppBrokerageUserHandler) BindBrokerageUser(c *gin.Context) {
-	var r tradeReq.AppBrokerageUserBindReqVO
+	var r tradeDto.AppBrokerageUserBindReqVO
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -119,7 +118,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 	firstCount, _ := h.userSvc.GetBrokerageUserCountByBindUserId(c, userId, tradeModel.BrokerageUserLevelOne)
 	secondCount, _ := h.userSvc.GetBrokerageUserCountByBindUserId(c, userId, tradeModel.BrokerageUserLevelTwo)
 
-	respVO := &tradeResp.AppBrokerageUserMySummaryRespVO{
+	respVO := &tradeDto.AppBrokerageUserMySummaryRespVO{
 		YesterdayPrice:           yesterdayPrice,
 		WithdrawPrice:            withdrawPrice,
 		FirstBrokerageUserCount:  int(firstCount),
@@ -132,7 +131,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserSummary(c *gin.Context) {
 
 // GetBrokerageUserChildSummaryPage 获得下级分销统计分页
 func (h *AppBrokerageUserHandler) GetBrokerageUserChildSummaryPage(c *gin.Context) {
-	var r tradeReq.AppBrokerageUserChildSummaryPageReqVO
+	var r tradeDto.AppBrokerageUserChildSummaryPageReqVO
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -145,16 +144,16 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserChildSummaryPage(c *gin.Contex
 	}
 	// Convert to RESP VO (Fetch User Info)
 	// Placeholder conversion
-	list := make([]tradeResp.AppBrokerageUserChildSummaryRespVO, len(pageResult.List))
+	list := make([]tradeDto.AppBrokerageUserChildSummaryRespVO, len(pageResult.List))
 	for i, u := range pageResult.List {
-		list[i] = tradeResp.AppBrokerageUserChildSummaryRespVO{
+		list[i] = tradeDto.AppBrokerageUserChildSummaryRespVO{
 			ID:             u.ID,
 			BrokeragePrice: u.BrokeragePrice,
 			// Nickname/Avatar need member service
 		}
 	}
 
-	response.WriteSuccess(c, &pagination.PageResult[tradeResp.AppBrokerageUserChildSummaryRespVO]{
+	response.WriteSuccess(c, &pagination.PageResult[tradeDto.AppBrokerageUserChildSummaryRespVO]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -162,7 +161,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserChildSummaryPage(c *gin.Contex
 
 // GetBrokerageUserRankPageByUserCount 获得分销用户排行分页（基于用户量）
 func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByUserCount(c *gin.Context) {
-	var r tradeReq.AppBrokerageUserRankPageReqVO
+	var r tradeDto.AppBrokerageUserRankPageReqVO
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -184,9 +183,9 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByUserCount(c *gin.Con
 	userMap, _ := h.memberSvc.GetUserMap(c, userIds)
 
 	// 转换为 VO
-	list := make([]tradeResp.AppBrokerageUserRankByUserCountRespVO, len(pageResult.List))
+	list := make([]tradeDto.AppBrokerageUserRankByUserCountRespVO, len(pageResult.List))
 	for i, u := range pageResult.List {
-		vo := tradeResp.AppBrokerageUserRankByUserCountRespVO{
+		vo := tradeDto.AppBrokerageUserRankByUserCountRespVO{
 			ID:                 u.ID,
 			BrokerageUserCount: u.BrokerageUserCount,
 		}
@@ -197,7 +196,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByUserCount(c *gin.Con
 		list[i] = vo
 	}
 
-	response.WriteSuccess(c, &pagination.PageResult[tradeResp.AppBrokerageUserRankByUserCountRespVO]{
+	response.WriteSuccess(c, &pagination.PageResult[tradeDto.AppBrokerageUserRankByUserCountRespVO]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -205,7 +204,7 @@ func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByUserCount(c *gin.Con
 
 // GetBrokerageUserRankPageByPrice 获得分销用户排行分页（基于佣金）
 func (h *AppBrokerageUserHandler) GetBrokerageUserRankPageByPrice(c *gin.Context) {
-	var r req.AppBrokerageUserRankPageReq
+	var r trade.AppBrokerageUserRankPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return

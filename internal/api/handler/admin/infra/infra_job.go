@@ -2,8 +2,7 @@ package infra
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
@@ -22,7 +21,7 @@ func NewJobHandler(svc *infra.JobService) *JobHandler {
 
 // CreateJob 创建定时任务
 func (h *JobHandler) CreateJob(c *gin.Context) {
-	var r req.JobSaveReq
+	var r infra2.JobSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -37,7 +36,7 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 
 // UpdateJob 更新定时任务
 func (h *JobHandler) UpdateJob(c *gin.Context) {
-	var r req.JobSaveReq
+	var r infra2.JobSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -82,7 +81,7 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrNotFound)
 		return
 	}
-	response.WriteSuccess(c, resp.JobResp{
+	response.WriteSuccess(c, infra2.JobResp{
 		ID:             job.ID,
 		Name:           job.Name,
 		Status:         job.Status,
@@ -98,7 +97,7 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 
 // GetJobPage 获取定时任务分页
 func (h *JobHandler) GetJobPage(c *gin.Context) {
-	var r req.JobPageReq
+	var r infra2.JobPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -109,9 +108,9 @@ func (h *JobHandler) GetJobPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.JobResp, len(pageResult.List))
+	list := make([]infra2.JobResp, len(pageResult.List))
 	for i, job := range pageResult.List {
-		list[i] = resp.JobResp{
+		list[i] = infra2.JobResp{
 			ID:             job.ID,
 			Name:           job.Name,
 			Status:         job.Status,
@@ -125,7 +124,7 @@ func (h *JobHandler) GetJobPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.JobResp]{
+	response.WriteSuccess(c, pagination.PageResult[infra2.JobResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -152,7 +151,7 @@ func (h *JobHandler) SyncJob(c *gin.Context) {
 
 // ExportJobExcel 导出定时任务 Excel
 func (h *JobHandler) ExportJobExcel(c *gin.Context) {
-	var r req.JobPageReq
+	var r infra2.JobPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -165,9 +164,9 @@ func (h *JobHandler) ExportJobExcel(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.JobResp, len(pageResult.List))
+	list := make([]infra2.JobResp, len(pageResult.List))
 	for i, job := range pageResult.List {
-		list[i] = resp.JobResp{
+		list[i] = infra2.JobResp{
 			ID:             job.ID,
 			Name:           job.Name,
 			Status:         job.Status,

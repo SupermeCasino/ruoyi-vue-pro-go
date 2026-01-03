@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -39,12 +39,12 @@ func (h *AppActivityHandler) GetActivityListBySpuId(c *gin.Context) {
 	}
 	spuId, _ := strconv.ParseInt(spuIdStr, 10, 64)
 
-	var activityVOList = make([]resp.AppActivityRespVO, 0)
+	var activityVOList = make([]promotion.AppActivityRespVO, 0)
 
 	// 1. 拼团活动
 	combinationActivity, err := h.combinationActivitySvc.GetMatchCombinationActivityBySpuId(c.Request.Context(), spuId)
 	if err == nil && combinationActivity != nil {
-		activityVOList = append(activityVOList, resp.AppActivityRespVO{
+		activityVOList = append(activityVOList, promotion.AppActivityRespVO{
 			Id:        combinationActivity.ID,
 			Type:      consts.PromotionTypeCombinationActivity,
 			Name:      combinationActivity.Name,
@@ -57,7 +57,7 @@ func (h *AppActivityHandler) GetActivityListBySpuId(c *gin.Context) {
 	// 2. 秒杀活动
 	seckillActivity, err := h.seckillActivitySvc.GetMatchSeckillActivityBySpuId(c.Request.Context(), spuId)
 	if err == nil && seckillActivity != nil {
-		activityVOList = append(activityVOList, resp.AppActivityRespVO{
+		activityVOList = append(activityVOList, promotion.AppActivityRespVO{
 			Id:        seckillActivity.ID,
 			Type:      consts.PromotionTypeSeckillActivity,
 			Name:      seckillActivity.Name,
@@ -70,7 +70,7 @@ func (h *AppActivityHandler) GetActivityListBySpuId(c *gin.Context) {
 	// 3. 砍价活动
 	bargainActivity, err := h.bargainActivitySvc.GetMatchBargainActivityBySpuId(c.Request.Context(), spuId)
 	if err == nil && bargainActivity != nil {
-		activityVOList = append(activityVOList, resp.AppActivityRespVO{
+		activityVOList = append(activityVOList, promotion.AppActivityRespVO{
 			Id:        bargainActivity.ID,
 			Type:      consts.PromotionTypeBargainActivity,
 			Name:      bargainActivity.Name,

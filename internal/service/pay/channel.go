@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
@@ -26,7 +26,7 @@ func NewPayChannelService(q *query.Query, clientFactory *client.PayClientFactory
 }
 
 // CreateChannel 创建支付渠道
-func (s *PayChannelService) CreateChannel(ctx context.Context, req *req.PayChannelCreateReq) (int64, error) {
+func (s *PayChannelService) CreateChannel(ctx context.Context, req *pay2.PayChannelCreateReq) (int64, error) {
 	// 1. 校验是否重复 (AppID + Code)
 	exists, err := s.GetChannelByAppIdAndCode(ctx, req.AppID, req.Code)
 	if err != nil {
@@ -53,7 +53,7 @@ func (s *PayChannelService) CreateChannel(ctx context.Context, req *req.PayChann
 }
 
 // UpdateChannel 更新支付渠道
-func (s *PayChannelService) UpdateChannel(ctx context.Context, req *req.PayChannelUpdateReq) error {
+func (s *PayChannelService) UpdateChannel(ctx context.Context, req *pay2.PayChannelUpdateReq) error {
 	// 1. 校验存在
 	_, err := s.validateChannelExists(ctx, req.ID)
 	if err != nil {

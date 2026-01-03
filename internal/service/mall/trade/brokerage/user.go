@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
@@ -96,7 +96,7 @@ func parseTime(t string) time.Time {
 }
 
 // GetBrokerageUserPage 获得分销用户分页
-func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.BrokerageUserPageReq) (*pagination.PageResult[*brokerage.BrokerageUser], error) {
+func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *trade2.BrokerageUserPageReq) (*pagination.PageResult[*brokerage.BrokerageUser], error) {
 	q := s.q.BrokerageUser.WithContext(ctx)
 
 	// Filter by BindUserId and Level
@@ -142,7 +142,7 @@ func (s *BrokerageUserService) GetBrokerageUserPage(ctx context.Context, r *req.
 }
 
 // CreateBrokerageUser 创建分销用户（Admin 手动创建）
-func (s *BrokerageUserService) CreateBrokerageUser(ctx context.Context, r *req.BrokerageUserCreateReq) (int64, error) {
+func (s *BrokerageUserService) CreateBrokerageUser(ctx context.Context, r *trade2.BrokerageUserCreateReq) (int64, error) {
 	// 1.1 校验分销用户是否已存在
 	exists, _ := s.GetBrokerageUser(ctx, r.UserID)
 	if exists != nil {

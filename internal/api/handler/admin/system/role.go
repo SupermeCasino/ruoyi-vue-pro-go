@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -22,7 +22,7 @@ func NewRoleHandler(svc *system.RoleService) *RoleHandler {
 }
 
 func (h *RoleHandler) CreateRole(c *gin.Context) {
-	var r req.RoleSaveReq
+	var r system2.RoleSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 }
 
 func (h *RoleHandler) UpdateRole(c *gin.Context) {
-	var r req.RoleSaveReq
+	var r system2.RoleSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -49,7 +49,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 }
 
 func (h *RoleHandler) UpdateRoleStatus(c *gin.Context) {
-	var r req.RoleUpdateStatusReq
+	var r system2.RoleUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +83,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 }
 
 func (h *RoleHandler) GetRolePage(c *gin.Context) {
-	var r req.RolePageReq
+	var r system2.RolePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

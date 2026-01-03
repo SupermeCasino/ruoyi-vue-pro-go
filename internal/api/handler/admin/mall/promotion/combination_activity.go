@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
@@ -29,7 +29,7 @@ func NewCombinationActivityHandler(
 
 // CreateCombinationActivity 创建拼团活动
 func (h *CombinationActivityHandler) CreateCombinationActivity(c *gin.Context) {
-	var r req.CombinationActivityCreateReq
+	var r promotion2.CombinationActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.NewBizError(400, "Invalid Request"))
 		return
@@ -45,7 +45,7 @@ func (h *CombinationActivityHandler) CreateCombinationActivity(c *gin.Context) {
 
 // UpdateCombinationActivity 更新拼团活动
 func (h *CombinationActivityHandler) UpdateCombinationActivity(c *gin.Context) {
-	var r req.CombinationActivityUpdateReq
+	var r promotion2.CombinationActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.NewBizError(400, "Invalid Request"))
 		return
@@ -134,7 +134,7 @@ func (h *CombinationActivityHandler) GetCombinationActivityListByIds(c *gin.Cont
 
 // GetCombinationActivityPage 获得拼团活动分页
 func (h *CombinationActivityHandler) GetCombinationActivityPage(c *gin.Context) {
-	var r req.CombinationActivityPageReq
+	var r promotion2.CombinationActivityPageReq
 	// Bind Query
 	if err := c.ShouldBindQuery(&r); err != nil {
 		// default bindings might fail for int, manually bind if needed

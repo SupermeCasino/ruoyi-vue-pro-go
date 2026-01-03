@@ -3,8 +3,7 @@ package product
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -27,7 +26,7 @@ func (s *ProductPropertyValueService) SetSkuService(skuSvc *ProductSkuService) {
 }
 
 // CreatePropertyValue 创建属性值
-func (s *ProductPropertyValueService) CreatePropertyValue(ctx context.Context, req *req.ProductPropertyValueCreateReq) (int64, error) {
+func (s *ProductPropertyValueService) CreatePropertyValue(ctx context.Context, req *product2.ProductPropertyValueCreateReq) (int64, error) {
 	u := s.q.ProductPropertyValue
 	// 如果已经添加过该属性值，直接返回
 	exist, err := u.WithContext(ctx).Where(u.PropertyID.Eq(req.PropertyID), u.Name.Eq(req.Name)).First()
@@ -45,7 +44,7 @@ func (s *ProductPropertyValueService) CreatePropertyValue(ctx context.Context, r
 }
 
 // UpdatePropertyValue 更新属性值
-func (s *ProductPropertyValueService) UpdatePropertyValue(ctx context.Context, req *req.ProductPropertyValueUpdateReq) error {
+func (s *ProductPropertyValueService) UpdatePropertyValue(ctx context.Context, req *product2.ProductPropertyValueUpdateReq) error {
 	if err := s.validatePropertyValueExists(ctx, req.ID); err != nil {
 		return err
 	}
@@ -81,7 +80,7 @@ func (s *ProductPropertyValueService) DeletePropertyValue(ctx context.Context, i
 }
 
 // GetPropertyValue 获得属性值
-func (s *ProductPropertyValueService) GetPropertyValue(ctx context.Context, id int64) (*resp.ProductPropertyValueResp, error) {
+func (s *ProductPropertyValueService) GetPropertyValue(ctx context.Context, id int64) (*product2.ProductPropertyValueResp, error) {
 	u := s.q.ProductPropertyValue
 	value, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
@@ -91,7 +90,7 @@ func (s *ProductPropertyValueService) GetPropertyValue(ctx context.Context, id i
 }
 
 // GetPropertyValuePage 获得属性值分页
-func (s *ProductPropertyValueService) GetPropertyValuePage(ctx context.Context, req *req.ProductPropertyValuePageReq) (*pagination.PageResult[*resp.ProductPropertyValueResp], error) {
+func (s *ProductPropertyValueService) GetPropertyValuePage(ctx context.Context, req *product2.ProductPropertyValuePageReq) (*pagination.PageResult[*product2.ProductPropertyValueResp], error) {
 	u := s.q.ProductPropertyValue
 	q := u.WithContext(ctx)
 	if req.PropertyID != 0 {
@@ -106,10 +105,10 @@ func (s *ProductPropertyValueService) GetPropertyValuePage(ctx context.Context, 
 		return nil, err
 	}
 
-	resList := lo.Map(list, func(item *product.ProductPropertyValue, _ int) *resp.ProductPropertyValueResp {
+	resList := lo.Map(list, func(item *product.ProductPropertyValue, _ int) *product2.ProductPropertyValueResp {
 		return s.convertResp(item)
 	})
-	return &pagination.PageResult[*resp.ProductPropertyValueResp]{
+	return &pagination.PageResult[*product2.ProductPropertyValueResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -147,12 +146,12 @@ func (s *ProductPropertyValueService) GetPropertyValueListByPropertyIds(ctx cont
 	return u.WithContext(ctx).Where(u.PropertyID.In(propertyIds...)).Find()
 }
 
-func (s *ProductPropertyValueService) convertResp(item *product.ProductPropertyValue) *resp.ProductPropertyValueResp {
-	return &resp.ProductPropertyValueResp{
+func (s *ProductPropertyValueService) convertResp(item *product.ProductPropertyValue) *product2.ProductPropertyValueResp {
+	return &product2.ProductPropertyValueResp{
 		ID:         item.ID,
 		PropertyID: item.PropertyID,
 		Name:       item.Name,
 		Remark:     item.Remark,
-		CreateTime:  item.CreateTime,
+		CreateTime: item.CreateTime,
 	}
 }

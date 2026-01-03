@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
@@ -63,14 +63,14 @@ func (p *CreateOrderProcessor) AfterOrderCreate(ctx context.Context, handleReq *
 
 	// 1. 扣减库存
 	if len(orderItems) > 0 {
-		stockItems := make([]req.ProductSkuUpdateStockItemReq, len(orderItems))
+		stockItems := make([]product.ProductSkuUpdateStockItemReq, len(orderItems))
 		for i, item := range orderItems {
-			stockItems[i] = req.ProductSkuUpdateStockItemReq{
+			stockItems[i] = product.ProductSkuUpdateStockItemReq{
 				ID:        item.SkuID,
 				IncrCount: -int(item.Count), // 负数表示扣减
 			}
 		}
-		if err := p.skuSvc.UpdateSkuStock(ctx, &req.ProductSkuUpdateStockReq{Items: stockItems}); err != nil {
+		if err := p.skuSvc.UpdateSkuStock(ctx, &product.ProductSkuUpdateStockReq{Items: stockItems}); err != nil {
 			p.logger.Error("扣减库存失败", zap.Error(err), zap.Int64("orderId", order.ID))
 			return err
 		}
@@ -510,14 +510,14 @@ func (p *CancelOrderProcessor) AfterCancelOrder(ctx context.Context, handleReq *
 
 	// 1. 退还库存
 	if len(orderItems) > 0 {
-		stockItems := make([]req.ProductSkuUpdateStockItemReq, len(orderItems))
+		stockItems := make([]product.ProductSkuUpdateStockItemReq, len(orderItems))
 		for i, item := range orderItems {
-			stockItems[i] = req.ProductSkuUpdateStockItemReq{
+			stockItems[i] = product.ProductSkuUpdateStockItemReq{
 				ID:        item.SkuID,
 				IncrCount: int(item.Count), // 正数表示增加（退还）
 			}
 		}
-		if err := p.skuSvc.UpdateSkuStock(ctx, &req.ProductSkuUpdateStockReq{Items: stockItems}); err != nil {
+		if err := p.skuSvc.UpdateSkuStock(ctx, &product.ProductSkuUpdateStockReq{Items: stockItems}); err != nil {
 			p.logger.Error("退还库存失败", zap.Error(err), zap.Int64("orderId", order.ID))
 			return err
 		}

@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -23,7 +22,7 @@ func NewDictService(q *query.Query) *DictService {
 
 // --- DictType ---
 
-func (s *DictService) CreateDictType(ctx context.Context, req *req.DictTypeSaveReq) (int64, error) {
+func (s *DictService) CreateDictType(ctx context.Context, req *system.DictTypeSaveReq) (int64, error) {
 	t := s.q.SystemDictType
 	// Check if type exists
 	count, err := t.WithContext(ctx).Where(t.Type.Eq(req.Type)).Count()
@@ -44,7 +43,7 @@ func (s *DictService) CreateDictType(ctx context.Context, req *req.DictTypeSaveR
 	return dictType.ID, err
 }
 
-func (s *DictService) UpdateDictType(ctx context.Context, req *req.DictTypeSaveReq) error {
+func (s *DictService) UpdateDictType(ctx context.Context, req *system.DictTypeSaveReq) error {
 	t := s.q.SystemDictType
 	// Check existence
 	_, err := t.WithContext(ctx).Where(t.ID.Eq(req.ID)).First()
@@ -75,13 +74,13 @@ func (s *DictService) DeleteDictType(ctx context.Context, id int64) error {
 	return err
 }
 
-func (s *DictService) GetDictType(ctx context.Context, id int64) (*resp.DictTypeRespVO, error) {
+func (s *DictService) GetDictType(ctx context.Context, id int64) (*system.DictTypeRespVO, error) {
 	t := s.q.SystemDictType
 	item, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.DictTypeRespVO{
+	return &system.DictTypeRespVO{
 		ID:         item.ID,
 		Name:       item.Name,
 		Type:       item.Type,
@@ -91,7 +90,7 @@ func (s *DictService) GetDictType(ctx context.Context, id int64) (*resp.DictType
 	}, nil
 }
 
-func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePageReq) (*pagination.PageResult[*resp.DictTypeRespVO], error) {
+func (s *DictService) GetDictTypePage(ctx context.Context, req *system.DictTypePageReq) (*pagination.PageResult[*system.DictTypeRespVO], error) {
 	t := s.q.SystemDictType
 	qb := t.WithContext(ctx)
 
@@ -115,9 +114,9 @@ func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePage
 		return nil, err
 	}
 
-	var data []*resp.DictTypeRespVO
+	var data []*system.DictTypeRespVO
 	for _, item := range list {
-		data = append(data, &resp.DictTypeRespVO{
+		data = append(data, &system.DictTypeRespVO{
 			ID:         item.ID,
 			Name:       item.Name,
 			Type:       item.Type,
@@ -127,22 +126,22 @@ func (s *DictService) GetDictTypePage(ctx context.Context, req *req.DictTypePage
 		})
 	}
 
-	return &pagination.PageResult[*resp.DictTypeRespVO]{
+	return &pagination.PageResult[*system.DictTypeRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
 }
 
-func (s *DictService) GetSimpleDictTypeList(ctx context.Context) ([]*resp.DictTypeSimpleRespVO, error) {
+func (s *DictService) GetSimpleDictTypeList(ctx context.Context) ([]*system.DictTypeSimpleRespVO, error) {
 	t := s.q.SystemDictType
 	list, err := t.WithContext(ctx).Order(t.ID).Find() // Return all, frontend filters? Or Java returns all. Java returns all actually.
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*resp.DictTypeSimpleRespVO
+	var res []*system.DictTypeSimpleRespVO
 	for _, item := range list {
-		res = append(res, &resp.DictTypeSimpleRespVO{
+		res = append(res, &system.DictTypeSimpleRespVO{
 			ID:   item.ID,
 			Type: item.Type,
 			Name: item.Name,
@@ -153,7 +152,7 @@ func (s *DictService) GetSimpleDictTypeList(ctx context.Context) ([]*resp.DictTy
 
 // --- DictData ---
 
-func (s *DictService) CreateDictData(ctx context.Context, req *req.DictDataSaveReq) (int64, error) {
+func (s *DictService) CreateDictData(ctx context.Context, req *system.DictDataSaveReq) (int64, error) {
 	d := s.q.SystemDictData
 	dictData := &model.SystemDictData{
 		Sort:      req.Sort,
@@ -169,7 +168,7 @@ func (s *DictService) CreateDictData(ctx context.Context, req *req.DictDataSaveR
 	return dictData.ID, err
 }
 
-func (s *DictService) UpdateDictData(ctx context.Context, req *req.DictDataSaveReq) error {
+func (s *DictService) UpdateDictData(ctx context.Context, req *system.DictDataSaveReq) error {
 	d := s.q.SystemDictData
 	_, err := d.WithContext(ctx).Where(d.ID.Eq(req.ID)).Updates(&model.SystemDictData{
 		Sort:      req.Sort,
@@ -190,13 +189,13 @@ func (s *DictService) DeleteDictData(ctx context.Context, id int64) error {
 	return err
 }
 
-func (s *DictService) GetDictData(ctx context.Context, id int64) (*resp.DictDataRespVO, error) {
+func (s *DictService) GetDictData(ctx context.Context, id int64) (*system.DictDataRespVO, error) {
 	d := s.q.SystemDictData
 	item, err := d.WithContext(ctx).Where(d.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.DictDataRespVO{
+	return &system.DictDataRespVO{
 		ID:         item.ID,
 		Sort:       item.Sort,
 		Label:      item.Label,
@@ -210,7 +209,7 @@ func (s *DictService) GetDictData(ctx context.Context, id int64) (*resp.DictData
 	}, nil
 }
 
-func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPageReq) (*pagination.PageResult[*resp.DictDataRespVO], error) {
+func (s *DictService) GetDictDataPage(ctx context.Context, req *system.DictDataPageReq) (*pagination.PageResult[*system.DictDataRespVO], error) {
 	d := s.q.SystemDictData
 	qb := d.WithContext(ctx)
 
@@ -234,9 +233,9 @@ func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPage
 		return nil, err
 	}
 
-	var data []*resp.DictDataRespVO
+	var data []*system.DictDataRespVO
 	for _, item := range list {
-		data = append(data, &resp.DictDataRespVO{
+		data = append(data, &system.DictDataRespVO{
 			ID:         item.ID,
 			Sort:       item.Sort,
 			Label:      item.Label,
@@ -250,22 +249,22 @@ func (s *DictService) GetDictDataPage(ctx context.Context, req *req.DictDataPage
 		})
 	}
 
-	return &pagination.PageResult[*resp.DictDataRespVO]{
+	return &pagination.PageResult[*system.DictDataRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
 }
 
-func (s *DictService) GetSimpleDictDataList(ctx context.Context) ([]*resp.DictDataSimpleRespVO, error) {
+func (s *DictService) GetSimpleDictDataList(ctx context.Context) ([]*system.DictDataSimpleRespVO, error) {
 	d := s.q.SystemDictData
 	list, err := d.WithContext(ctx).Where(d.Status.Eq(0)).Order(d.DictType, d.Sort).Find()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*resp.DictDataSimpleRespVO
+	var res []*system.DictDataSimpleRespVO
 	for _, item := range list {
-		res = append(res, &resp.DictDataSimpleRespVO{
+		res = append(res, &system.DictDataSimpleRespVO{
 			DictType:  item.DictType,
 			Value:     item.Value,
 			Label:     item.Label,

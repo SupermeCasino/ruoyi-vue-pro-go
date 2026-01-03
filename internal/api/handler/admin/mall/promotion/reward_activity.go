@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -23,7 +23,7 @@ func NewRewardActivityHandler(svc *promotion.RewardActivityService) *RewardActiv
 // @Summary 创建活动
 // @Router /admin-api/promotion/reward-activity/create [post]
 func (h *RewardActivityHandler) CreateRewardActivity(c *gin.Context) {
-	var r req.PromotionRewardActivityCreateReq
+	var r promotion2.PromotionRewardActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -40,7 +40,7 @@ func (h *RewardActivityHandler) CreateRewardActivity(c *gin.Context) {
 // @Summary 更新活动
 // @Router /admin-api/promotion/reward-activity/update [put]
 func (h *RewardActivityHandler) UpdateRewardActivity(c *gin.Context) {
-	var r req.PromotionRewardActivityUpdateReq
+	var r promotion2.PromotionRewardActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -109,7 +109,7 @@ func (h *RewardActivityHandler) GetRewardActivity(c *gin.Context) {
 // @Summary 获得活动分页
 // @Router /admin-api/promotion/reward-activity/page [get]
 func (h *RewardActivityHandler) GetRewardActivityPage(c *gin.Context) {
-	var r req.PromotionRewardActivityPageReq
+	var r promotion2.PromotionRewardActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

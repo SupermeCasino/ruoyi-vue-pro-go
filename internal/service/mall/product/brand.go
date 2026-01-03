@@ -3,8 +3,7 @@ package product
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -22,7 +21,7 @@ func NewProductBrandService(q *query.Query) *ProductBrandService {
 }
 
 // CreateBrand 创建品牌
-func (s *ProductBrandService) CreateBrand(ctx context.Context, req *req.ProductBrandCreateReq) (int64, error) {
+func (s *ProductBrandService) CreateBrand(ctx context.Context, req *product2.ProductBrandCreateReq) (int64, error) {
 	// 校验名称唯一
 	if err := s.validateBrandNameUnique(ctx, 0, req.Name); err != nil {
 		return 0, err
@@ -40,7 +39,7 @@ func (s *ProductBrandService) CreateBrand(ctx context.Context, req *req.ProductB
 }
 
 // UpdateBrand 更新品牌
-func (s *ProductBrandService) UpdateBrand(ctx context.Context, req *req.ProductBrandUpdateReq) error {
+func (s *ProductBrandService) UpdateBrand(ctx context.Context, req *product2.ProductBrandUpdateReq) error {
 	// 校验存在
 	if err := s.ValidateProductBrand(ctx, req.ID); err != nil {
 		return err
@@ -71,7 +70,7 @@ func (s *ProductBrandService) DeleteBrand(ctx context.Context, id int64) error {
 }
 
 // GetBrand 获得品牌
-func (s *ProductBrandService) GetBrand(ctx context.Context, id int64) (*resp.ProductBrandResp, error) {
+func (s *ProductBrandService) GetBrand(ctx context.Context, id int64) (*product2.ProductBrandResp, error) {
 	u := s.q.ProductBrand
 	brand, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
@@ -81,7 +80,7 @@ func (s *ProductBrandService) GetBrand(ctx context.Context, id int64) (*resp.Pro
 }
 
 // GetBrandPage 获得品牌分页
-func (s *ProductBrandService) GetBrandPage(ctx context.Context, req *req.ProductBrandPageReq) (*pagination.PageResult[*resp.ProductBrandResp], error) {
+func (s *ProductBrandService) GetBrandPage(ctx context.Context, req *product2.ProductBrandPageReq) (*pagination.PageResult[*product2.ProductBrandResp], error) {
 	u := s.q.ProductBrand
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -96,17 +95,17 @@ func (s *ProductBrandService) GetBrandPage(ctx context.Context, req *req.Product
 		return nil, err
 	}
 
-	resList := lo.Map(list, func(item *product.ProductBrand, _ int) *resp.ProductBrandResp {
+	resList := lo.Map(list, func(item *product.ProductBrand, _ int) *product2.ProductBrandResp {
 		return s.convertResp(item)
 	})
-	return &pagination.PageResult[*resp.ProductBrandResp]{
+	return &pagination.PageResult[*product2.ProductBrandResp]{
 		List:  resList,
 		Total: total,
 	}, nil
 }
 
 // GetBrandList 获得品牌列表
-func (s *ProductBrandService) GetBrandList(ctx context.Context, req *req.ProductBrandListReq) ([]*resp.ProductBrandResp, error) {
+func (s *ProductBrandService) GetBrandList(ctx context.Context, req *product2.ProductBrandListReq) ([]*product2.ProductBrandResp, error) {
 	u := s.q.ProductBrand
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -116,7 +115,7 @@ func (s *ProductBrandService) GetBrandList(ctx context.Context, req *req.Product
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *product.ProductBrand, _ int) *resp.ProductBrandResp {
+	return lo.Map(list, func(item *product.ProductBrand, _ int) *product2.ProductBrandResp {
 		return s.convertResp(item)
 	}), nil
 }
@@ -146,14 +145,14 @@ func (s *ProductBrandService) validateBrandNameUnique(ctx context.Context, id in
 	return nil
 }
 
-func (s *ProductBrandService) convertResp(item *product.ProductBrand) *resp.ProductBrandResp {
-	return &resp.ProductBrandResp{
+func (s *ProductBrandService) convertResp(item *product.ProductBrand) *product2.ProductBrandResp {
+	return &product2.ProductBrandResp{
 		ID:          item.ID,
 		Name:        item.Name,
 		PicURL:      item.PicURL,
 		Sort:        item.Sort,
 		Description: item.Description,
 		Status:      item.Status,
-		CreateTime:   item.CreateTime,
+		CreateTime:  item.CreateTime,
 	}
 }

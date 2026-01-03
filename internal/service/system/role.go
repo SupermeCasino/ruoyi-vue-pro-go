@@ -5,9 +5,8 @@ import (
 	"errors"
 
 	"github.com/samber/lo"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -25,7 +24,7 @@ func NewRoleService(q *query.Query) *RoleService {
 }
 
 // CreateRole 创建角色
-func (s *RoleService) CreateRole(ctx context.Context, req *req.RoleSaveReq) (int64, error) {
+func (s *RoleService) CreateRole(ctx context.Context, req *system.RoleSaveReq) (int64, error) {
 	if err := s.checkDuplicate(ctx, req.Name, req.Code, 0); err != nil {
 		return 0, err
 	}
@@ -46,7 +45,7 @@ func (s *RoleService) CreateRole(ctx context.Context, req *req.RoleSaveReq) (int
 }
 
 // UpdateRole 更新角色
-func (s *RoleService) UpdateRole(ctx context.Context, req *req.RoleSaveReq) error {
+func (s *RoleService) UpdateRole(ctx context.Context, req *system.RoleSaveReq) error {
 	r := s.q.SystemRole
 	role, err := r.WithContext(ctx).Where(r.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -72,7 +71,7 @@ func (s *RoleService) UpdateRole(ctx context.Context, req *req.RoleSaveReq) erro
 }
 
 // UpdateRoleStatus 更新角色状态
-func (s *RoleService) UpdateRoleStatus(ctx context.Context, req *req.RoleUpdateStatusReq) error {
+func (s *RoleService) UpdateRoleStatus(ctx context.Context, req *system.RoleUpdateStatusReq) error {
 	r := s.q.SystemRole
 	role, err := r.WithContext(ctx).Where(r.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -123,7 +122,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int64) error {
 }
 
 // GetRole 获得角色
-func (s *RoleService) GetRole(ctx context.Context, id int64) (*resp.RoleRespVO, error) {
+func (s *RoleService) GetRole(ctx context.Context, id int64) (*system.RoleRespVO, error) {
 	r := s.q.SystemRole
 	item, err := r.WithContext(ctx).Where(r.ID.Eq(id)).First()
 	if err != nil {
@@ -133,7 +132,7 @@ func (s *RoleService) GetRole(ctx context.Context, id int64) (*resp.RoleRespVO, 
 }
 
 // GetRolePage 分页
-func (s *RoleService) GetRolePage(ctx context.Context, req *req.RolePageReq) (*pagination.PageResult[*resp.RoleRespVO], error) {
+func (s *RoleService) GetRolePage(ctx context.Context, req *system.RolePageReq) (*pagination.PageResult[*system.RoleRespVO], error) {
 	r := s.q.SystemRole
 	qb := r.WithContext(ctx)
 
@@ -162,20 +161,20 @@ func (s *RoleService) GetRolePage(ctx context.Context, req *req.RolePageReq) (*p
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.RoleRespVO]{
-		List:  lo.Map(list, func(item *model.SystemRole, _ int) *resp.RoleRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*system.RoleRespVO]{
+		List:  lo.Map(list, func(item *model.SystemRole, _ int) *system.RoleRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
 // GetRoleListByStatus 获取全列表
-func (s *RoleService) GetRoleListByStatus(ctx context.Context, status int) ([]*resp.RoleRespVO, error) {
+func (s *RoleService) GetRoleListByStatus(ctx context.Context, status int) ([]*system.RoleRespVO, error) {
 	r := s.q.SystemRole
 	list, err := r.WithContext(ctx).Where(r.Status.Eq(int32(status))).Order(r.Sort, r.ID).Find()
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *model.SystemRole, _ int) *resp.RoleRespVO { return s.convertResp(item) }), nil
+	return lo.Map(list, func(item *model.SystemRole, _ int) *system.RoleRespVO { return s.convertResp(item) }), nil
 }
 
 // GetRoleList IDs (Already existed, keep it)
@@ -219,8 +218,8 @@ func (s *RoleService) checkDuplicate(ctx context.Context, name, code string, exc
 	return nil
 }
 
-func (s *RoleService) convertResp(item *model.SystemRole) *resp.RoleRespVO {
-	return &resp.RoleRespVO{
+func (s *RoleService) convertResp(item *model.SystemRole) *system.RoleRespVO {
+	return &system.RoleRespVO{
 		ID:               item.ID,
 		Name:             item.Name,
 		Code:             item.Code,

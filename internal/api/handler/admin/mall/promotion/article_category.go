@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -20,7 +20,7 @@ func NewArticleCategoryHandler(svc promotion.ArticleCategoryService) *ArticleCat
 }
 
 func (h *ArticleCategoryHandler) CreateArticleCategory(c *gin.Context) {
-	var r req.ArticleCategoryCreateReq
+	var r promotion2.ArticleCategoryCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,7 +34,7 @@ func (h *ArticleCategoryHandler) CreateArticleCategory(c *gin.Context) {
 }
 
 func (h *ArticleCategoryHandler) UpdateArticleCategory(c *gin.Context) {
-	var r req.ArticleCategoryUpdateReq
+	var r promotion2.ArticleCategoryUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -74,7 +74,7 @@ func (h *ArticleCategoryHandler) GetArticleCategory(c *gin.Context) {
 }
 
 func (h *ArticleCategoryHandler) GetArticleCategoryList(c *gin.Context) {
-	var r req.ArticleCategoryListReq
+	var r promotion2.ArticleCategoryListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -99,7 +99,7 @@ func (h *ArticleCategoryHandler) GetSimpleList(c *gin.Context) {
 
 // GetArticleCategoryPage 获得文章分类分页
 func (h *ArticleCategoryHandler) GetArticleCategoryPage(c *gin.Context) {
-	var r req.ArticleCategoryPageReq
+	var r promotion2.ArticleCategoryPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

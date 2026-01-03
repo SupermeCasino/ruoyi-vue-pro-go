@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -20,7 +20,7 @@ func NewPayWalletTransactionService(q *query.Query) *PayWalletTransactionService
 }
 
 // GetWalletTransactionPage 获得会员钱包流水分页
-func (s *PayWalletTransactionService) GetWalletTransactionPage(ctx context.Context, req *req.PayWalletTransactionPageReq) (*pagination.PageResult[*pay.PayWalletTransaction], error) {
+func (s *PayWalletTransactionService) GetWalletTransactionPage(ctx context.Context, req *pay2.PayWalletTransactionPageReq) (*pagination.PageResult[*pay.PayWalletTransaction], error) {
 	q := s.q.PayWalletTransaction.WithContext(ctx)
 	if req.WalletID > 0 {
 		q = q.Where(s.q.PayWalletTransaction.WalletID.Eq(req.WalletID))

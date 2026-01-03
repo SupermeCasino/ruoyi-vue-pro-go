@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -24,7 +24,7 @@ func NewMenuHandler(svc *system.MenuService) *MenuHandler {
 // CreateMenu 创建菜单
 // @Router /system/menu/create [post]
 func (h *MenuHandler) CreateMenu(c *gin.Context) {
-	var r req.MenuCreateReq
+	var r system2.MenuCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -40,7 +40,7 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 // UpdateMenu 更新菜单
 // @Router /system/menu/update [put]
 func (h *MenuHandler) UpdateMenu(c *gin.Context) {
-	var r req.MenuUpdateReq
+	var r system2.MenuUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -67,7 +67,7 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 // GetMenuList 获取菜单列表
 // @Router /system/menu/list [get]
 func (h *MenuHandler) GetMenuList(c *gin.Context) {
-	var r req.MenuListReq
+	var r system2.MenuListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

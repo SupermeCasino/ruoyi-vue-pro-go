@@ -1,8 +1,7 @@
 package trade
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -27,7 +26,7 @@ func NewDeliveryExpressHandler(svc *trade.DeliveryExpressService, logger *zap.Lo
 
 // CreateDeliveryExpress 创建物流公司
 func (h *DeliveryExpressHandler) CreateDeliveryExpress(c *gin.Context) {
-	var r req.DeliveryExpressSaveReq
+	var r trade2.DeliveryExpressSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -45,7 +44,7 @@ func (h *DeliveryExpressHandler) CreateDeliveryExpress(c *gin.Context) {
 
 // UpdateDeliveryExpress 更新物流公司
 func (h *DeliveryExpressHandler) UpdateDeliveryExpress(c *gin.Context) {
-	var r req.DeliveryExpressSaveReq
+	var r trade2.DeliveryExpressSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -82,7 +81,7 @@ func (h *DeliveryExpressHandler) GetDeliveryExpress(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, resp.DeliveryExpressResp{
+	response.WriteSuccess(c, trade2.DeliveryExpressResp{
 		ID:         express.ID,
 		Code:       express.Code,
 		Name:       express.Name,
@@ -95,7 +94,7 @@ func (h *DeliveryExpressHandler) GetDeliveryExpress(c *gin.Context) {
 
 // GetDeliveryExpressPage 获取物流公司分页
 func (h *DeliveryExpressHandler) GetDeliveryExpressPage(c *gin.Context) {
-	var r req.DeliveryExpressPageReq
+	var r trade2.DeliveryExpressPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -108,9 +107,9 @@ func (h *DeliveryExpressHandler) GetDeliveryExpressPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.DeliveryExpressResp, len(page.List))
+	list := make([]trade2.DeliveryExpressResp, len(page.List))
 	for i, item := range page.List {
-		list[i] = resp.DeliveryExpressResp{
+		list[i] = trade2.DeliveryExpressResp{
 			ID:         item.ID,
 			Code:       item.Code,
 			Name:       item.Name,
@@ -121,7 +120,7 @@ func (h *DeliveryExpressHandler) GetDeliveryExpressPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.DeliveryExpressResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade2.DeliveryExpressResp]{
 		List:  list,
 		Total: page.Total,
 	})
@@ -136,9 +135,9 @@ func (h *DeliveryExpressHandler) GetSimpleDeliveryExpressList(c *gin.Context) {
 		return
 	}
 
-	res := make([]resp.DeliveryExpressResp, len(list))
+	res := make([]trade2.DeliveryExpressResp, len(list))
 	for i, item := range list {
-		res[i] = resp.DeliveryExpressResp{
+		res[i] = trade2.DeliveryExpressResp{
 			ID:         item.ID,
 			Code:       item.Code,
 			Name:       item.Name,
@@ -154,7 +153,7 @@ func (h *DeliveryExpressHandler) GetSimpleDeliveryExpressList(c *gin.Context) {
 // ExportDeliveryExpress 导出物流公司列表
 // @Router /admin-api/trade/delivery/express/export-excel [get]
 func (h *DeliveryExpressHandler) ExportDeliveryExpress(c *gin.Context) {
-	var r req.DeliveryExpressPageReq
+	var r trade2.DeliveryExpressPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -169,9 +168,9 @@ func (h *DeliveryExpressHandler) ExportDeliveryExpress(c *gin.Context) {
 		return
 	}
 
-	list := make([]*resp.DeliveryExpressExcelVO, len(page.List))
+	list := make([]*trade2.DeliveryExpressExcelVO, len(page.List))
 	for i, item := range page.List {
-		list[i] = &resp.DeliveryExpressExcelVO{
+		list[i] = &trade2.DeliveryExpressExcelVO{
 			ID:         item.ID,
 			Code:       item.Code,
 			Name:       item.Name,
@@ -202,7 +201,7 @@ func NewDeliveryPickUpStoreHandler(svc *trade.DeliveryPickUpStoreService, logger
 
 // CreateDeliveryPickUpStore 创建自提门店
 func (h *DeliveryPickUpStoreHandler) CreateDeliveryPickUpStore(c *gin.Context) {
-	var r req.DeliveryPickUpStoreSaveReq
+	var r trade2.DeliveryPickUpStoreSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -220,7 +219,7 @@ func (h *DeliveryPickUpStoreHandler) CreateDeliveryPickUpStore(c *gin.Context) {
 
 // UpdateDeliveryPickUpStore 更新自提门店
 func (h *DeliveryPickUpStoreHandler) UpdateDeliveryPickUpStore(c *gin.Context) {
-	var r req.DeliveryPickUpStoreSaveReq
+	var r trade2.DeliveryPickUpStoreSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -257,7 +256,7 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, resp.DeliveryPickUpStoreResp{
+	response.WriteSuccess(c, trade2.DeliveryPickUpStoreResp{
 		ID:            store.ID,
 		Name:          store.Name,
 		Introduction:  store.Introduction,
@@ -276,7 +275,7 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStore(c *gin.Context) {
 
 // GetDeliveryPickUpStorePage 获取自提门店分页
 func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) {
-	var r req.DeliveryPickUpStorePageReq
+	var r trade2.DeliveryPickUpStorePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -289,9 +288,9 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 		return
 	}
 
-	list := make([]resp.DeliveryPickUpStoreResp, len(page.List))
+	list := make([]trade2.DeliveryPickUpStoreResp, len(page.List))
 	for i, item := range page.List {
-		list[i] = resp.DeliveryPickUpStoreResp{
+		list[i] = trade2.DeliveryPickUpStoreResp{
 			ID:            item.ID,
 			Name:          item.Name,
 			Introduction:  item.Introduction,
@@ -308,7 +307,7 @@ func (h *DeliveryPickUpStoreHandler) GetDeliveryPickUpStorePage(c *gin.Context) 
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.DeliveryPickUpStoreResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade2.DeliveryPickUpStoreResp]{
 		List:  list,
 		Total: page.Total,
 	})
@@ -323,9 +322,9 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 		return
 	}
 
-	res := make([]resp.DeliveryPickUpStoreResp, len(list))
+	res := make([]trade2.DeliveryPickUpStoreResp, len(list))
 	for i, item := range list {
-		res[i] = resp.DeliveryPickUpStoreResp{
+		res[i] = trade2.DeliveryPickUpStoreResp{
 			ID:            item.ID,
 			Name:          item.Name,
 			Introduction:  item.Introduction,
@@ -346,7 +345,7 @@ func (h *DeliveryPickUpStoreHandler) GetSimpleDeliveryPickUpStoreList(c *gin.Con
 
 // BindDeliveryPickUpStore 绑定自提门店核销员工
 func (h *DeliveryPickUpStoreHandler) BindDeliveryPickUpStore(c *gin.Context) {
-	var r req.DeliveryPickUpBindReq
+	var r trade2.DeliveryPickUpBindReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -375,7 +374,7 @@ func NewDeliveryExpressTemplateHandler(svc *trade.DeliveryExpressTemplateService
 
 // CreateDeliveryExpressTemplate 创建运费模板
 func (h *DeliveryExpressTemplateHandler) CreateDeliveryExpressTemplate(c *gin.Context) {
-	var r req.DeliveryFreightTemplateSaveReq
+	var r trade2.DeliveryFreightTemplateSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -393,7 +392,7 @@ func (h *DeliveryExpressTemplateHandler) CreateDeliveryExpressTemplate(c *gin.Co
 
 // UpdateDeliveryExpressTemplate 更新运费模板
 func (h *DeliveryExpressTemplateHandler) UpdateDeliveryExpressTemplate(c *gin.Context) {
-	var r req.DeliveryFreightTemplateSaveReq
+	var r trade2.DeliveryFreightTemplateSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -435,7 +434,7 @@ func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplate(c *gin.Conte
 
 // GetDeliveryExpressTemplatePage 获取运费模板分页
 func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.Context) {
-	var r req.DeliveryFreightTemplatePageReq
+	var r trade2.DeliveryFreightTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -448,9 +447,9 @@ func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.C
 		return
 	}
 
-	list := make([]resp.DeliveryFreightTemplateResp, len(page.List))
+	list := make([]trade2.DeliveryFreightTemplateResp, len(page.List))
 	for i, item := range page.List {
-		list[i] = resp.DeliveryFreightTemplateResp{
+		list[i] = trade2.DeliveryFreightTemplateResp{
 			ID:         item.ID,
 			Name:       item.Name,
 			ChargeMode: item.ChargeMode,
@@ -459,7 +458,7 @@ func (h *DeliveryExpressTemplateHandler) GetDeliveryExpressTemplatePage(c *gin.C
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.DeliveryFreightTemplateResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade2.DeliveryFreightTemplateResp]{
 		List:  list,
 		Total: page.Total,
 	})

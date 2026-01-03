@@ -3,13 +3,12 @@ package brokerage
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
-	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	tradeDto "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/trade"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -32,7 +31,7 @@ func NewAppBrokerageWithdrawHandler(withdrawSvc *brokerageSvc.BrokerageWithdrawS
 
 // GetBrokerageWithdrawPage 获得分销提现分页
 func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
-	var reqVO tradeReq.AppBrokerageWithdrawPageReqVO
+	var reqVO tradeDto.AppBrokerageWithdrawPageReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -40,7 +39,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 
 	// userId := context.GetLoginUserId(c)
 	userId := context.GetLoginUserID(c)
-	pageReq := &req.BrokerageWithdrawPageReq{
+	pageReq := &trade.BrokerageWithdrawPageReq{
 		PageParam: reqVO.PageParam,
 		UserID:    userId,
 		Type:      reqVO.Type,
@@ -53,10 +52,10 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 		return
 	}
 
-	writeResp := pagination.PageResult[*tradeResp.AppBrokerageWithdrawRespVO]{
+	writeResp := pagination.PageResult[*tradeDto.AppBrokerageWithdrawRespVO]{
 		Total: pageResult.Total,
-		List: lo.Map(pageResult.List, func(item *brokerage.BrokerageWithdraw, _ int) *tradeResp.AppBrokerageWithdrawRespVO {
-			return &tradeResp.AppBrokerageWithdrawRespVO{
+		List: lo.Map(pageResult.List, func(item *brokerage.BrokerageWithdraw, _ int) *tradeDto.AppBrokerageWithdrawRespVO {
+			return &tradeDto.AppBrokerageWithdrawRespVO{
 				ID:          item.ID,
 				UserID:      item.UserID,
 				Price:       item.Price,
@@ -99,7 +98,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
 	}
 
 	// VO Conversion
-	respVO := &tradeResp.AppBrokerageWithdrawRespVO{
+	respVO := &tradeDto.AppBrokerageWithdrawRespVO{
 		Status:      withdraw.Status,
 		AuditReason: withdraw.AuditReason,
 		AuditTime:   withdraw.AuditTime,
@@ -133,7 +132,7 @@ func (h *AppBrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
 
 // CreateBrokerageWithdraw 创建分销提现
 func (h *AppBrokerageWithdrawHandler) CreateBrokerageWithdraw(c *gin.Context) {
-	var reqVO tradeReq.AppBrokerageWithdrawCreateReqVO
+	var reqVO tradeDto.AppBrokerageWithdrawCreateReqVO
 	if err := c.ShouldBindJSON(&reqVO); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return

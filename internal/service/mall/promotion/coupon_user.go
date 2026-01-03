@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -28,7 +27,7 @@ func NewCouponUserService(q *query.Query) *CouponUserService {
 
 // TakeCoupon 用户领取优惠券 (对齐 Java: AppCouponController.takeCoupon)
 // 返回值: canTakeAgain - 是否可继续领取
-func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *req.AppCouponTakeReq) (bool, error) {
+func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *promotion2.AppCouponTakeReq) (bool, error) {
 	// 1. 校验模板
 	template, err := s.q.PromotionCouponTemplate.WithContext(ctx).Where(s.q.PromotionCouponTemplate.ID.Eq(int64(req.TemplateID))).First()
 	if err != nil {
@@ -121,7 +120,7 @@ func (s *CouponUserService) TakeCoupon(ctx context.Context, userId int64, req *r
 }
 
 // GetCouponPage 用户优惠券分页 (对齐 Java: AppCouponController.getCouponPage)
-func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req *req.AppCouponPageReq) (*pagination.PageResult[*resp.AppCouponResp], error) {
+func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req *promotion2.AppCouponPageReq) (*pagination.PageResult[*promotion2.AppCouponResp], error) {
 	q := s.q.PromotionCoupon.WithContext(ctx).Where(s.q.PromotionCoupon.UserID.Eq(userId))
 	if req.Status != nil {
 		q = q.Where(s.q.PromotionCoupon.Status.Eq(*req.Status))
@@ -135,8 +134,8 @@ func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req
 	}
 
 	// 转换为响应对象
-	list := lo.Map(result, func(coupon *promotion.PromotionCoupon, _ int) *resp.AppCouponResp {
-		return &resp.AppCouponResp{
+	list := lo.Map(result, func(coupon *promotion.PromotionCoupon, _ int) *promotion2.AppCouponResp {
+		return &promotion2.AppCouponResp{
 			ID:                 coupon.ID,
 			Name:               coupon.Name,
 			Status:             coupon.Status,
@@ -152,7 +151,7 @@ func (s *CouponUserService) GetCouponPage(ctx context.Context, userId int64, req
 		}
 	})
 
-	return &pagination.PageResult[*resp.AppCouponResp]{
+	return &pagination.PageResult[*promotion2.AppCouponResp]{
 		List:  list,
 		Total: count,
 	}, nil

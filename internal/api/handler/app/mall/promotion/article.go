@@ -4,9 +4,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -33,7 +32,7 @@ func (h *AppArticleHandler) GetArticleCategoryList(c *gin.Context) {
 
 // GetArticlePage 获得文章分页
 func (h *AppArticleHandler) GetArticlePage(c *gin.Context) {
-	var r req.ArticlePageReq
+	var r promotion2.ArticlePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -57,7 +56,7 @@ func (h *AppArticleHandler) GetArticle(c *gin.Context) {
 	}
 
 	// 1. Get Detail
-	var res *resp.ArticleRespVO
+	var res *promotion2.ArticleRespVO
 	var err error
 	if id > 0 {
 		res, err = h.articleSvc.GetArticle(c, id)

@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -20,7 +20,7 @@ func NewDiscountActivityHandler(svc promotion.DiscountActivityService) *Discount
 }
 
 func (h *DiscountActivityHandler) CreateDiscountActivity(c *gin.Context) {
-	var r req.DiscountActivityCreateReq
+	var r promotion2.DiscountActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.NewBizError(400, "参数错误"))
 		return
@@ -34,7 +34,7 @@ func (h *DiscountActivityHandler) CreateDiscountActivity(c *gin.Context) {
 }
 
 func (h *DiscountActivityHandler) UpdateDiscountActivity(c *gin.Context) {
-	var r req.DiscountActivityUpdateReq
+	var r promotion2.DiscountActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.NewBizError(400, "参数错误"))
 		return
@@ -87,7 +87,7 @@ func (h *DiscountActivityHandler) GetDiscountActivity(c *gin.Context) {
 }
 
 func (h *DiscountActivityHandler) GetDiscountActivityPage(c *gin.Context) {
-	var r req.DiscountActivityPageReq
+	var r promotion2.DiscountActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

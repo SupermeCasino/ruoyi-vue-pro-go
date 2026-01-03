@@ -6,8 +6,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
@@ -35,14 +34,14 @@ func (s *ProductSkuService) SetSpuService(spuSvc *ProductSpuService) {
 }
 
 // ValidateSkuList 校验 SKU 列表
-func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.ProductSkuSaveReq, specType bool) error {
+func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*product2.ProductSkuSaveReq, specType bool) error {
 	if len(skus) == 0 {
 		return product.ErrSkuNotExists // 使用商品模块错误码
 	}
 
 	// 单规格，覆盖默认属性
 	if !specType {
-		skus[0].Properties = []req.ProductSkuPropertyReq{
+		skus[0].Properties = []product2.ProductSkuPropertyReq{
 			{PropertyID: 0, PropertyName: "默认", ValueID: 0, ValueName: "默认"},
 		}
 		return nil
@@ -132,15 +131,15 @@ func (s *ProductSkuService) ValidateSkuList(ctx context.Context, skus []*req.Pro
 }
 
 // CreateSkuList 批量创建 SKU
-func (s *ProductSkuService) CreateSkuList(ctx context.Context, spuID int64, skuReqs []*req.ProductSkuSaveReq) error {
-	skus := lo.Map(skuReqs, func(req *req.ProductSkuSaveReq, _ int) *product.ProductSku {
+func (s *ProductSkuService) CreateSkuList(ctx context.Context, spuID int64, skuReqs []*product2.ProductSkuSaveReq) error {
+	skus := lo.Map(skuReqs, func(req *product2.ProductSkuSaveReq, _ int) *product.ProductSku {
 		return s.convertSkuReqToModel(spuID, req)
 	})
 	return s.q.ProductSku.WithContext(ctx).Create(skus...)
 }
 
 // UpdateSkuList 批量更新 SKU（完全对齐Java实现）
-func (s *ProductSkuService) UpdateSkuList(ctx context.Context, spuID int64, skuReqs []*req.ProductSkuSaveReq) error {
+func (s *ProductSkuService) UpdateSkuList(ctx context.Context, spuID int64, skuReqs []*product2.ProductSkuSaveReq) error {
 	// 构建属性与 SKU 的映射关系（对齐Java第222-223行）
 	existingSkus, err := s.q.ProductSku.WithContext(ctx).Where(s.q.ProductSku.SpuID.Eq(spuID)).Find()
 	if err != nil {
@@ -158,7 +157,7 @@ func (s *ProductSkuService) UpdateSkuList(ctx context.Context, spuID int64, skuR
 	var insertSkus []*product.ProductSku
 	var updateSkus []*product.ProductSku
 
-	allUpdateSkus := lo.Map(skuReqs, func(req *req.ProductSkuSaveReq, _ int) *product.ProductSku {
+	allUpdateSkus := lo.Map(skuReqs, func(req *product2.ProductSkuSaveReq, _ int) *product.ProductSku {
 		return s.convertSkuReqToModel(spuID, req)
 	})
 
@@ -244,7 +243,7 @@ func (s *ProductSkuService) GetSkuListBySpuId(ctx context.Context, spuID int64) 
 }
 
 // GetSkuListBySpuIdForResp 获得 SPU 的 SKU 列表（返回响应格式）
-func (s *ProductSkuService) GetSkuListBySpuIdForResp(ctx context.Context, spuID int64) ([]*resp.ProductSkuResp, error) {
+func (s *ProductSkuService) GetSkuListBySpuIdForResp(ctx context.Context, spuID int64) ([]*product2.ProductSkuResp, error) {
 	// 查询SKU列表
 	skus, err := s.q.ProductSku.WithContext(ctx).Where(s.q.ProductSku.SpuID.Eq(spuID)).Find()
 	if err != nil {
@@ -253,11 +252,11 @@ func (s *ProductSkuService) GetSkuListBySpuIdForResp(ctx context.Context, spuID 
 
 	// 如果没有SKU，返回空数组而不是null（对齐Java版本）
 	if len(skus) == 0 {
-		return []*resp.ProductSkuResp{}, nil
+		return []*product2.ProductSkuResp{}, nil
 	}
 
 	// 转换为响应格式，确保规格属性数组的完整性
-	result := make([]*resp.ProductSkuResp, len(skus))
+	result := make([]*product2.ProductSkuResp, len(skus))
 	for i, sku := range skus {
 		result[i] = s.convertSkuResp(sku)
 	}
@@ -271,15 +270,15 @@ func (s *ProductSkuService) GetSkuListBySpuIds(ctx context.Context, spuIDs []int
 }
 
 // GetSkuList 获得 SKU 列表
-func (s *ProductSkuService) GetSkuList(ctx context.Context, ids []int64) ([]*resp.ProductSkuResp, error) {
+func (s *ProductSkuService) GetSkuList(ctx context.Context, ids []int64) ([]*product2.ProductSkuResp, error) {
 	if len(ids) == 0 {
-		return []*resp.ProductSkuResp{}, nil
+		return []*product2.ProductSkuResp{}, nil
 	}
 	skus, err := s.q.ProductSku.WithContext(ctx).Where(s.q.ProductSku.ID.In(ids...)).Find()
 	if err != nil {
 		return nil, err
 	}
-	result := lo.Map(skus, func(item *product.ProductSku, _ int) *resp.ProductSkuResp {
+	result := lo.Map(skus, func(item *product.ProductSku, _ int) *product2.ProductSkuResp {
 		return s.convertSkuResp(item)
 	})
 	return result, nil
@@ -356,7 +355,7 @@ func (s *ProductSkuService) UpdateSkuPropertyValue(ctx context.Context, valueID 
 }
 
 // UpdateSkuStock 更新 SKU 库存（完全对齐Java实现）
-func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *req.ProductSkuUpdateStockReq) error {
+func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *product2.ProductSkuUpdateStockReq) error {
 	// 更新 SKU 库存（对齐Java第259-268行）
 	for _, item := range updateReq.Items {
 		if item.IncrCount > 0 {
@@ -394,7 +393,7 @@ func (s *ProductSkuService) UpdateSkuStock(ctx context.Context, updateReq *req.P
 	// 更新 SPU 库存（对齐Java第270-275行）
 	if s.spuSvc != nil {
 		// 获取SKU列表
-		skuIDs := lo.Map(updateReq.Items, func(item req.ProductSkuUpdateStockItemReq, _ int) int64 {
+		skuIDs := lo.Map(updateReq.Items, func(item product2.ProductSkuUpdateStockItemReq, _ int) int64 {
 			return item.ID
 		})
 		skus, err := s.q.ProductSku.WithContext(ctx).Where(s.q.ProductSku.ID.In(skuIDs...)).Find()
@@ -431,7 +430,7 @@ func (s *ProductSkuService) GetSku(ctx context.Context, id int64) (*product.Prod
 }
 
 // GetSkuDetail 获得 SKU 详情信息（返回响应格式）
-func (s *ProductSkuService) GetSkuDetail(ctx context.Context, id int64) (*resp.ProductSkuResp, error) {
+func (s *ProductSkuService) GetSkuDetail(ctx context.Context, id int64) (*product2.ProductSkuResp, error) {
 	// 查询SKU信息
 	sku, err := s.q.ProductSku.WithContext(ctx).Where(s.q.ProductSku.ID.Eq(id)).First()
 	if err != nil {
@@ -442,7 +441,7 @@ func (s *ProductSkuService) GetSkuDetail(ctx context.Context, id int64) (*resp.P
 	return s.convertSkuResp(sku), nil
 }
 
-func (s *ProductSkuService) convertSkuReqToModel(spuID int64, req *req.ProductSkuSaveReq) *product.ProductSku {
+func (s *ProductSkuService) convertSkuReqToModel(spuID int64, req *product2.ProductSkuSaveReq) *product.ProductSku {
 	properties := make([]product.ProductSkuProperty, len(req.Properties))
 	for i, p := range req.Properties {
 		properties[i] = product.ProductSkuProperty{
@@ -470,13 +469,13 @@ func (s *ProductSkuService) convertSkuReqToModel(spuID int64, req *req.ProductSk
 	}
 }
 
-func (s *ProductSkuService) convertSkuResp(sku *product.ProductSku) *resp.ProductSkuResp {
+func (s *ProductSkuService) convertSkuResp(sku *product.ProductSku) *product2.ProductSkuResp {
 	// 确保规格属性数组的完整性，空数组返回[]而不是null
-	properties := make([]resp.ProductSkuPropertyResp, 0)
+	properties := make([]product2.ProductSkuPropertyResp, 0)
 	if len(sku.Properties) > 0 {
-		properties = make([]resp.ProductSkuPropertyResp, len(sku.Properties))
+		properties = make([]product2.ProductSkuPropertyResp, len(sku.Properties))
 		for i, p := range sku.Properties {
-			properties[i] = resp.ProductSkuPropertyResp{
+			properties[i] = product2.ProductSkuPropertyResp{
 				PropertyID:   p.PropertyID,
 				PropertyName: p.PropertyName,
 				ValueID:      p.ValueID,
@@ -514,7 +513,7 @@ func (s *ProductSkuService) convertSkuResp(sku *product.ProductSku) *resp.Produc
 		barCode = ""
 	}
 
-	return &resp.ProductSkuResp{
+	return &product2.ProductSkuResp{
 		ID:                   sku.ID,
 		Name:                 skuName,
 		SpuID:                sku.SpuID,

@@ -1,7 +1,8 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	productContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	appPromotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
@@ -43,7 +44,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
 	}
 
 	if len(list) == 0 {
-		response.WriteSuccess(c, []resp.AppBargainActivityRespVO{})
+		response.WriteSuccess(c, []appPromotionContract.AppBargainActivityRespVO{})
 		return
 	}
 
@@ -52,7 +53,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
 	for i, item := range list {
 		spuIds[i] = item.SpuID
 	}
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*productContract.ProductSpuResp)
 	spuList, err := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
 	if err == nil {
 		for _, spu := range spuList {
@@ -61,7 +62,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityList(c *gin.Context) {
 	}
 
 	// Convert to Response (匹配 Java BargainActivityConvert.convertAppList)并过滤
-	result := make([]resp.AppBargainActivityRespVO, 0, len(list))
+	result := make([]appPromotionContract.AppBargainActivityRespVO, 0, len(list))
 	for _, item := range list {
 		spu, ok := spuMap[item.SpuID]
 		if !ok || spu.Status != consts.ProductSpuStatusEnable {
@@ -88,7 +89,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	}
 
 	if page.Total == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.AppBargainActivityRespVO]{List: []resp.AppBargainActivityRespVO{}, Total: 0})
+		response.WriteSuccess(c, pagination.PageResult[appPromotionContract.AppBargainActivityRespVO]{List: []appPromotionContract.AppBargainActivityRespVO{}, Total: 0})
 		return
 	}
 
@@ -97,7 +98,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	for i, item := range page.List {
 		spuIds[i] = item.SpuID
 	}
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*productContract.ProductSpuResp)
 	spuList, err := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
 	if err == nil {
 		for _, spu := range spuList {
@@ -106,7 +107,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	}
 
 	// Convert to Response 并过滤
-	result := make([]resp.AppBargainActivityRespVO, 0, len(page.List))
+	result := make([]appPromotionContract.AppBargainActivityRespVO, 0, len(page.List))
 	for _, item := range page.List {
 		spu, ok := spuMap[item.SpuID]
 		if !ok || spu.Status != consts.ProductSpuStatusEnable {
@@ -114,7 +115,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 		}
 		result = append(result, h.convertActivityResp(item, spu))
 	}
-	response.WriteSuccess(c, pagination.PageResult[resp.AppBargainActivityRespVO]{List: result, Total: page.Total})
+	response.WriteSuccess(c, pagination.PageResult[appPromotionContract.AppBargainActivityRespVO]{List: result, Total: page.Total})
 }
 
 // GetBargainActivityDetail 获得砍价活动详情
@@ -140,7 +141,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 	}
 
 	// 将模型数据转换为VO
-	spuResp := &resp.ProductSpuResp{
+	spuResp := &productContract.ProductSpuResp{
 		ID:          spu.ID,
 		Name:        spu.Name,
 		PicURL:      spu.PicURL,
@@ -153,7 +154,7 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 	successCount, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), id, consts.BargainRecordStatusSuccess)
 
 	// 匹配 Java BargainActivityConvert.convert(activity, successUserCount, spu)
-	detail := resp.AppBargainActivityDetailRespVO{
+	detail := appPromotionContract.AppBargainActivityDetailRespVO{
 		AppBargainActivityRespVO: h.convertActivityResp(act, spuResp),
 		BargainFirstPrice:        act.BargainFirstPrice,
 		HelpMaxCount:             act.HelpMaxCount,
@@ -168,8 +169,8 @@ func (h *AppBargainActivityHandler) GetBargainActivityDetail(c *gin.Context) {
 }
 
 // convertActivityResp 转换活动响应 (匹配 Java BargainActivityConvert)
-func (h *AppBargainActivityHandler) convertActivityResp(item *promotionModel.PromotionBargainActivity, spu *resp.ProductSpuResp) resp.AppBargainActivityRespVO {
-	r := resp.AppBargainActivityRespVO{
+func (h *AppBargainActivityHandler) convertActivityResp(item *promotionModel.PromotionBargainActivity, spu *productContract.ProductSpuResp) appPromotionContract.AppBargainActivityRespVO {
+	r := appPromotionContract.AppBargainActivityRespVO{
 		ID:              item.ID,
 		Name:            item.Name,
 		StartTime:       item.StartTime,

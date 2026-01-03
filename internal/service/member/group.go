@@ -3,7 +3,7 @@ package member
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -19,7 +19,7 @@ func NewMemberGroupService(q *query.Query) *MemberGroupService {
 }
 
 // CreateGroup 创建用户分组
-func (s *MemberGroupService) CreateGroup(ctx context.Context, r *req.MemberGroupCreateReq) (int64, error) {
+func (s *MemberGroupService) CreateGroup(ctx context.Context, r *member2.MemberGroupCreateReq) (int64, error) {
 	// TODO: 校验名字是否重复? (Optional)
 	g := &member.MemberGroup{
 		Name:   r.Name,
@@ -34,7 +34,7 @@ func (s *MemberGroupService) CreateGroup(ctx context.Context, r *req.MemberGroup
 }
 
 // UpdateGroup 更新用户分组
-func (s *MemberGroupService) UpdateGroup(ctx context.Context, r *req.MemberGroupUpdateReq) error {
+func (s *MemberGroupService) UpdateGroup(ctx context.Context, r *member2.MemberGroupUpdateReq) error {
 	_, err := s.q.WithContext(ctx).MemberGroup.Where(s.q.MemberGroup.ID.Eq(r.ID)).Updates(&member.MemberGroup{
 		Name:   r.Name,
 		Remark: r.Remark,
@@ -55,7 +55,7 @@ func (s *MemberGroupService) GetGroup(ctx context.Context, id int64) (*member.Me
 }
 
 // GetGroupPage 获得用户分组分页
-func (s *MemberGroupService) GetGroupPage(ctx context.Context, r *req.MemberGroupPageReq) (*pagination.PageResult[*member.MemberGroup], error) {
+func (s *MemberGroupService) GetGroupPage(ctx context.Context, r *member2.MemberGroupPageReq) (*pagination.PageResult[*member.MemberGroup], error) {
 	q := s.q.MemberGroup.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.MemberGroup.Name.Like("%" + r.Name + "%"))

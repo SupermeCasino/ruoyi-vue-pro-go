@@ -3,8 +3,7 @@ package pay
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -22,7 +21,7 @@ func NewPayAppHandler(svc *paySvc.PayAppService) *PayAppHandler {
 
 // CreateApp 创建支付应用
 func (h *PayAppHandler) CreateApp(c *gin.Context) {
-	var r req.PayAppCreateReq
+	var r pay.PayAppCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -37,7 +36,7 @@ func (h *PayAppHandler) CreateApp(c *gin.Context) {
 
 // UpdateApp 更新支付应用
 func (h *PayAppHandler) UpdateApp(c *gin.Context) {
-	var r req.PayAppUpdateReq
+	var r pay.PayAppUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -52,7 +51,7 @@ func (h *PayAppHandler) UpdateApp(c *gin.Context) {
 
 // UpdateAppStatus 更新支付应用状态
 func (h *PayAppHandler) UpdateAppStatus(c *gin.Context) {
-	var r req.PayAppUpdateStatusReq
+	var r pay.PayAppUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -95,7 +94,7 @@ func (h *PayAppHandler) GetApp(c *gin.Context) {
 		return
 	}
 
-	res := &resp.PayAppResp{
+	res := &pay.PayAppResp{
 		ID:                app.ID,
 		AppKey:            app.AppKey,
 		Name:              app.Name,
@@ -118,9 +117,9 @@ func (h *PayAppHandler) GetAppList(c *gin.Context) {
 	}
 
 	// Convert
-	resList := make([]*resp.PayAppResp, 0, len(list))
+	resList := make([]*pay.PayAppResp, 0, len(list))
 	for _, app := range list {
-		resList = append(resList, &resp.PayAppResp{
+		resList = append(resList, &pay.PayAppResp{
 			ID:                app.ID,
 			AppKey:            app.AppKey,
 			Name:              app.Name,
@@ -137,7 +136,7 @@ func (h *PayAppHandler) GetAppList(c *gin.Context) {
 
 // GetAppPage 获得支付应用分页
 func (h *PayAppHandler) GetAppPage(c *gin.Context) {
-	var r req.PayAppPageReq
+	var r pay.PayAppPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

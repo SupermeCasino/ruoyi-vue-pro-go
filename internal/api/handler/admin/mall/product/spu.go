@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -31,7 +30,7 @@ func NewProductSpuHandler(svc *productSvc.ProductSpuService, propertySvc *produc
 // CreateSpu 创建 SPU
 // @Router /admin-api/product/spu/create [post]
 func (h *ProductSpuHandler) CreateSpu(c *gin.Context) {
-	var r req.ProductSpuSaveReq
+	var r product2.ProductSpuSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -47,7 +46,7 @@ func (h *ProductSpuHandler) CreateSpu(c *gin.Context) {
 // UpdateSpu 更新 SPU
 // @Router /admin-api/product/spu/update [put]
 func (h *ProductSpuHandler) UpdateSpu(c *gin.Context) {
-	var r req.ProductSpuSaveReq
+	var r product2.ProductSpuSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -62,7 +61,7 @@ func (h *ProductSpuHandler) UpdateSpu(c *gin.Context) {
 // UpdateSpuStatus 更新 SPU 状态
 // @Router /admin-api/product/spu/update-status [put]
 func (h *ProductSpuHandler) UpdateSpuStatus(c *gin.Context) {
-	var r req.ProductSpuUpdateStatusReq
+	var r product2.ProductSpuUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -112,7 +111,7 @@ func (h *ProductSpuHandler) GetSpuDetail(c *gin.Context) {
 // GetSpuPage 获得 SPU 分页
 // @Router /admin-api/product/spu/page [get]
 func (h *ProductSpuHandler) GetSpuPage(c *gin.Context) {
-	var r req.ProductSpuPageReq
+	var r product2.ProductSpuPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -150,7 +149,7 @@ func (h *ProductSpuHandler) GetSpuSimpleList(c *gin.Context) {
 // GetSpuList 根据 ID 列表获得 SPU 详情列表
 // @Router /admin-api/product/spu/list [get]
 func (h *ProductSpuHandler) GetSpuList(c *gin.Context) {
-	var r req.ProductSpuListReq
+	var r product2.ProductSpuListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -166,7 +165,7 @@ func (h *ProductSpuHandler) GetSpuList(c *gin.Context) {
 // ExportSpuList 导出商品列表
 // @Router /admin-api/product/spu/export [get]
 func (h *ProductSpuHandler) ExportSpuList(c *gin.Context) {
-	var r req.ProductSpuPageReq
+	var r product2.ProductSpuPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -182,9 +181,9 @@ func (h *ProductSpuHandler) ExportSpuList(c *gin.Context) {
 	}
 
 	// 转换为导出 VO
-	exportList := make([]*resp.ProductSpuExportVO, len(res.List))
+	exportList := make([]*product2.ProductSpuExportVO, len(res.List))
 	for i, spu := range res.List {
-		exportList[i] = &resp.ProductSpuExportVO{
+		exportList[i] = &product2.ProductSpuExportVO{
 			ID:         spu.ID,
 			Name:       spu.Name,
 			CategoryID: spu.CategoryID,
@@ -259,7 +258,7 @@ func (h *ProductSpuHandler) getPropertyName(propertyID int64, propertyMap map[in
 }
 
 // convertSpuDetailResp 在Admin Handler层组装SPU详情响应VO
-func (h *ProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus []*product.ProductSku) *resp.ProductSpuResp {
+func (h *ProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus []*product.ProductSku) *product2.ProductSpuResp {
 	// 确保数组字段返回[]而不是null
 	sliderPicURLs := spu.SliderPicURLs
 	if sliderPicURLs == nil {
@@ -278,14 +277,14 @@ func (h *ProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus [
 	propertyMap := h.getPropertyNameMap(context.Background(), propertyIDs)
 
 	// 3. 转换SKU数组，填充PropertyName
-	skuResps := make([]*resp.ProductSkuResp, 0, len(skus))
+	skuResps := make([]*product2.ProductSkuResp, 0, len(skus))
 	for _, sku := range skus {
 		// 转换SKU属性数组
-		properties := make([]resp.ProductSkuPropertyResp, 0)
+		properties := make([]product2.ProductSkuPropertyResp, 0)
 		if sku.Properties != nil {
 			for _, prop := range sku.Properties {
 				propertyName := h.getPropertyName(prop.PropertyID, propertyMap)
-				properties = append(properties, resp.ProductSkuPropertyResp{
+				properties = append(properties, product2.ProductSkuPropertyResp{
 					PropertyID:   prop.PropertyID,
 					PropertyName: propertyName,
 					ValueID:      prop.ValueID,
@@ -294,7 +293,7 @@ func (h *ProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus [
 			}
 		}
 
-		skuResps = append(skuResps, &resp.ProductSkuResp{
+		skuResps = append(skuResps, &product2.ProductSkuResp{
 			ID:          sku.ID,
 			SpuID:       sku.SpuID,
 			Properties:  properties,
@@ -309,7 +308,7 @@ func (h *ProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus [
 		})
 	}
 
-	return &resp.ProductSpuResp{
+	return &product2.ProductSpuResp{
 		ID:                 spu.ID,
 		Name:               spu.Name,
 		Keyword:            spu.Keyword,

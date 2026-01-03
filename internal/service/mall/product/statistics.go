@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // ProductStatisticsService 商品统计服务接口
 type ProductStatisticsService interface {
 	// GetProductStatisticsRankPage 获得商品统计排行榜分页
-	GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error)
+	GetProductStatisticsRankPage(ctx context.Context, reqVO *product.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error)
 	// GetProductStatisticsAnalyse 获得商品统计分析（含环比对照）
-	GetProductStatisticsAnalyse(ctx context.Context, reqVO *req.ProductStatisticsReqVO) (*resp.DataComparisonRespVO[resp.ProductStatisticsRespVO], error)
+	GetProductStatisticsAnalyse(ctx context.Context, reqVO *product.ProductStatisticsReqVO) (*product.DataComparisonRespVO[product.ProductStatisticsRespVO], error)
 	// GetProductStatisticsList 获得商品统计列表
-	GetProductStatisticsList(ctx context.Context, reqVO *req.ProductStatisticsReqVO) ([]*resp.ProductStatisticsRespVO, error)
+	GetProductStatisticsList(ctx context.Context, reqVO *product.ProductStatisticsReqVO) ([]*product.ProductStatisticsRespVO, error)
 	// StatisticsProduct 统计指定天数的商品数据
 	StatisticsProduct(ctx context.Context, days int) (string, error)
 }
@@ -25,11 +24,11 @@ type ProductStatisticsService interface {
 // ProductStatisticsRepository 商品统计数据访问接口
 type ProductStatisticsRepository interface {
 	// GetByDateRange 根据日期范围获取统计数据
-	GetByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*resp.ProductStatisticsRespVO, error)
+	GetByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*product.ProductStatisticsRespVO, error)
 	// GetSummaryByDateRange 根据日期范围获取汇总统计数据
-	GetSummaryByDateRange(ctx context.Context, beginTime, endTime time.Time) (*resp.ProductStatisticsRespVO, error)
+	GetSummaryByDateRange(ctx context.Context, beginTime, endTime time.Time) (*product.ProductStatisticsRespVO, error)
 	// GetPageGroupBySpuId 分页获取按 SPU 分组的统计数据
-	GetPageGroupBySpuId(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[*resp.ProductStatisticsRespVO], error)
+	GetPageGroupBySpuId(ctx context.Context, reqVO *product.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[*product.ProductStatisticsRespVO], error)
 	// CountByDateRange 统计指定日期范围内的记录数
 	CountByDateRange(ctx context.Context, beginTime, endTime time.Time) (int64, error)
 	// StatisticsProductByDateRange 统计指定日期范围内的商品数据并入库
@@ -50,7 +49,7 @@ func NewProductStatisticsService(repo ProductStatisticsRepository) ProductStatis
 
 // GetProductStatisticsRankPage 获得商品统计排行榜分页
 // 对应 Java: ProductStatisticsServiceImpl.getProductStatisticsRankPage
-func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error) {
+func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.Context, reqVO *product.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[interface{}], error) {
 	// 调用仓储层分页查询（按 SPU 分组聚合）
 	pageResult, err := s.productStatisticsRepo.GetPageGroupBySpuId(ctx, reqVO, pageParam)
 	if err != nil {
@@ -71,7 +70,7 @@ func (s *ProductStatisticsServiceImpl) GetProductStatisticsRankPage(ctx context.
 
 // GetProductStatisticsAnalyse 获得商品统计分析
 // 对应 Java: ProductStatisticsServiceImpl.getProductStatisticsAnalyse
-func (s *ProductStatisticsServiceImpl) GetProductStatisticsAnalyse(ctx context.Context, reqVO *req.ProductStatisticsReqVO) (*resp.DataComparisonRespVO[resp.ProductStatisticsRespVO], error) {
+func (s *ProductStatisticsServiceImpl) GetProductStatisticsAnalyse(ctx context.Context, reqVO *product.ProductStatisticsReqVO) (*product.DataComparisonRespVO[product.ProductStatisticsRespVO], error) {
 	beginTime := reqVO.Times[0]
 	endTime := reqVO.Times[1]
 
@@ -81,7 +80,7 @@ func (s *ProductStatisticsServiceImpl) GetProductStatisticsAnalyse(ctx context.C
 		return nil, err
 	}
 	if value == nil {
-		value = &resp.ProductStatisticsRespVO{}
+		value = &product.ProductStatisticsRespVO{}
 	}
 
 	// 2. 对照数据：环比，时长一致
@@ -94,10 +93,10 @@ func (s *ProductStatisticsServiceImpl) GetProductStatisticsAnalyse(ctx context.C
 		return nil, err
 	}
 	if reference == nil {
-		reference = &resp.ProductStatisticsRespVO{}
+		reference = &product.ProductStatisticsRespVO{}
 	}
 
-	return &resp.DataComparisonRespVO[resp.ProductStatisticsRespVO]{
+	return &product.DataComparisonRespVO[product.ProductStatisticsRespVO]{
 		Summary:    value,
 		Comparison: reference,
 	}, nil
@@ -105,7 +104,7 @@ func (s *ProductStatisticsServiceImpl) GetProductStatisticsAnalyse(ctx context.C
 
 // GetProductStatisticsList 获得商品统计列表
 // 对应 Java: ProductStatisticsServiceImpl.getProductStatisticsList
-func (s *ProductStatisticsServiceImpl) GetProductStatisticsList(ctx context.Context, reqVO *req.ProductStatisticsReqVO) ([]*resp.ProductStatisticsRespVO, error) {
+func (s *ProductStatisticsServiceImpl) GetProductStatisticsList(ctx context.Context, reqVO *product.ProductStatisticsReqVO) ([]*product.ProductStatisticsRespVO, error) {
 	return s.productStatisticsRepo.GetByDateRange(ctx, reqVO.Times[0], reqVO.Times[1])
 }
 

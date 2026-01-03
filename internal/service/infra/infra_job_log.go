@@ -3,7 +3,7 @@ package infra
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -23,7 +23,7 @@ func (s *JobLogService) GetJobLog(ctx context.Context, id int64) (*model.InfraJo
 }
 
 // GetJobLogPage 获取定时任务日志分页
-func (s *JobLogService) GetJobLogPage(ctx context.Context, r *req.JobLogPageReq) (*pagination.PageResult[*model.InfraJobLog], error) {
+func (s *JobLogService) GetJobLogPage(ctx context.Context, r *infra.JobLogPageReq) (*pagination.PageResult[*model.InfraJobLog], error) {
 	q := s.q.InfraJobLog.WithContext(ctx)
 
 	if r.JobID != nil {

@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -35,7 +35,7 @@ func (h *PermissionHandler) GetRoleMenuList(c *gin.Context) {
 }
 
 func (h *PermissionHandler) AssignRoleMenu(c *gin.Context) {
-	var r req.PermissionAssignRoleMenuReq
+	var r system2.PermissionAssignRoleMenuReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -71,7 +71,7 @@ func (h *PermissionHandler) AssignRoleMenu(c *gin.Context) {
 }
 
 func (h *PermissionHandler) AssignRoleDataScope(c *gin.Context) {
-	var r req.PermissionAssignRoleDataScopeReq
+	var r system2.PermissionAssignRoleDataScopeReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -95,7 +95,7 @@ func (h *PermissionHandler) GetUserRoleList(c *gin.Context) {
 }
 
 func (h *PermissionHandler) AssignUserRole(c *gin.Context) {
-	var r req.PermissionAssignUserRoleReq
+	var r system2.PermissionAssignUserRoleReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

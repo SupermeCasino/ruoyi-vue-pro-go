@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
@@ -20,7 +19,7 @@ func NewDeptService(q *query.Query) *DeptService {
 	}
 }
 
-func (s *DeptService) CreateDept(ctx context.Context, req *req.DeptSaveReq) (int64, error) {
+func (s *DeptService) CreateDept(ctx context.Context, req *system.DeptSaveReq) (int64, error) {
 	d := s.q.SystemDept
 	if req.ParentID > 0 {
 		_, err := d.WithContext(ctx).Where(d.ID.Eq(req.ParentID)).First()
@@ -42,7 +41,7 @@ func (s *DeptService) CreateDept(ctx context.Context, req *req.DeptSaveReq) (int
 	return dept.ID, err
 }
 
-func (s *DeptService) UpdateDept(ctx context.Context, req *req.DeptSaveReq) error {
+func (s *DeptService) UpdateDept(ctx context.Context, req *system.DeptSaveReq) error {
 	d := s.q.SystemDept
 	if req.ID == req.ParentID {
 		return errors.New("父部门不能是自己")
@@ -94,13 +93,13 @@ func (s *DeptService) DeleteDept(ctx context.Context, id int64) error {
 	return err
 }
 
-func (s *DeptService) GetDept(ctx context.Context, id int64) (*resp.DeptRespVO, error) {
+func (s *DeptService) GetDept(ctx context.Context, id int64) (*system.DeptRespVO, error) {
 	d := s.q.SystemDept
 	item, err := d.WithContext(ctx).Where(d.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.DeptRespVO{
+	return &system.DeptRespVO{
 		ID:           item.ID,
 		Name:         item.Name,
 		ParentID:     item.ParentID,
@@ -113,7 +112,7 @@ func (s *DeptService) GetDept(ctx context.Context, id int64) (*resp.DeptRespVO, 
 	}, nil
 }
 
-func (s *DeptService) GetDeptList(ctx context.Context, req *req.DeptListReq) ([]*resp.DeptRespVO, error) {
+func (s *DeptService) GetDeptList(ctx context.Context, req *system.DeptListReq) ([]*system.DeptRespVO, error) {
 	d := s.q.SystemDept
 	qb := d.WithContext(ctx)
 
@@ -129,9 +128,9 @@ func (s *DeptService) GetDeptList(ctx context.Context, req *req.DeptListReq) ([]
 		return nil, err
 	}
 
-	var res []*resp.DeptRespVO
+	var res []*system.DeptRespVO
 	for _, item := range list {
-		res = append(res, &resp.DeptRespVO{
+		res = append(res, &system.DeptRespVO{
 			ID:           item.ID,
 			Name:         item.Name,
 			ParentID:     item.ParentID,
@@ -146,16 +145,16 @@ func (s *DeptService) GetDeptList(ctx context.Context, req *req.DeptListReq) ([]
 	return res, nil
 }
 
-func (s *DeptService) GetSimpleDeptList(ctx context.Context) ([]*resp.DeptSimpleRespVO, error) {
+func (s *DeptService) GetSimpleDeptList(ctx context.Context) ([]*system.DeptSimpleRespVO, error) {
 	d := s.q.SystemDept
 	list, err := d.WithContext(ctx).Where(d.Status.Eq(0)).Order(d.Sort, d.ID).Find()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*resp.DeptSimpleRespVO
+	var res []*system.DeptSimpleRespVO
 	for _, item := range list {
-		res = append(res, &resp.DeptSimpleRespVO{
+		res = append(res, &system.DeptSimpleRespVO{
 			ID:       item.ID,
 			Name:     item.Name,
 			ParentID: item.ParentID,

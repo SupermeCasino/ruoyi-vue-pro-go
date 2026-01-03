@@ -1,8 +1,7 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -26,7 +25,7 @@ func NewBargainHelpHandler(svc *promotion.BargainHelpService, userSvc *member.Me
 
 // GetBargainHelpPage 获得砍价助力分页
 func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
-	var r req.BargainHelpPageReq
+	var r promotion2.BargainHelpPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -39,8 +38,8 @@ func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
 		return
 	}
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.BargainHelpResp]{
-			List:  []resp.BargainHelpResp{},
+		response.WriteSuccess(c, pagination.PageResult[promotion2.BargainHelpResp]{
+			List:  []promotion2.BargainHelpResp{},
 			Total: pageResult.Total,
 		})
 		return
@@ -56,9 +55,9 @@ func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
 	userMap, _ := h.userSvc.GetUserMap(c, userIds)
 
 	// 4. Assemble
-	list := make([]resp.BargainHelpResp, len(pageResult.List))
+	list := make([]promotion2.BargainHelpResp, len(pageResult.List))
 	for i, item := range pageResult.List {
-		vo := resp.BargainHelpResp{
+		vo := promotion2.BargainHelpResp{
 			ID:          item.ID,
 			UserID:      item.UserID,
 			ActivityID:  item.ActivityID,
@@ -73,7 +72,7 @@ func (h *BargainHelpHandler) GetBargainHelpPage(c *gin.Context) {
 		list[i] = vo
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.BargainHelpResp]{
+	response.WriteSuccess(c, pagination.PageResult[promotion2.BargainHelpResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

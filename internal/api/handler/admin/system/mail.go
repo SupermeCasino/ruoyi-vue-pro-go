@@ -3,7 +3,7 @@ package system
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -22,7 +22,7 @@ func NewMailHandler(svc *system.MailService) *MailHandler {
 // ================= Mail Account Request Handlers =================
 
 func (h *MailHandler) CreateMailAccount(c *gin.Context) {
-	var r req.MailAccountCreateReq
+	var r system2.MailAccountCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *MailHandler) CreateMailAccount(c *gin.Context) {
 }
 
 func (h *MailHandler) UpdateMailAccount(c *gin.Context) {
-	var r req.MailAccountUpdateReq
+	var r system2.MailAccountUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -78,7 +78,7 @@ func (h *MailHandler) GetMailAccount(c *gin.Context) {
 }
 
 func (h *MailHandler) GetMailAccountPage(c *gin.Context) {
-	var r req.MailAccountPageReq
+	var r system2.MailAccountPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -103,7 +103,7 @@ func (h *MailHandler) GetSimpleMailAccountList(c *gin.Context) {
 // ================= Mail Template Request Handlers =================
 
 func (h *MailHandler) CreateMailTemplate(c *gin.Context) {
-	var r req.MailTemplateCreateReq
+	var r system2.MailTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -117,7 +117,7 @@ func (h *MailHandler) CreateMailTemplate(c *gin.Context) {
 }
 
 func (h *MailHandler) UpdateMailTemplate(c *gin.Context) {
-	var r req.MailTemplateUpdateReq
+	var r system2.MailTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -159,7 +159,7 @@ func (h *MailHandler) GetMailTemplate(c *gin.Context) {
 }
 
 func (h *MailHandler) GetMailTemplatePage(c *gin.Context) {
-	var r req.MailTemplatePageReq
+	var r system2.MailTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -173,7 +173,7 @@ func (h *MailHandler) GetMailTemplatePage(c *gin.Context) {
 }
 
 func (h *MailHandler) SendMail(c *gin.Context) {
-	var r req.MailTemplateSendReq
+	var r system2.MailTemplateSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -201,7 +201,7 @@ func (h *MailHandler) SendMail(c *gin.Context) {
 // ================= Mail Log Request Handlers =================
 
 func (h *MailHandler) GetMailLogPage(c *gin.Context) {
-	var r req.MailLogPageReq
+	var r system2.MailLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

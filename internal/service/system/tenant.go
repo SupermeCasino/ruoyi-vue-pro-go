@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -31,7 +30,7 @@ func NewTenantService(q *query.Query, roleSvc *RoleService, permissionSvc *Permi
 }
 
 // CreateTenant 创建租户
-func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateReq) (int64, error) {
+func (s *TenantService) CreateTenant(ctx context.Context, req *system.TenantCreateReq) (int64, error) {
 	// 1. 校验租户名是否重复
 	if err := s.checkNameUnique(ctx, req.Name, 0); err != nil {
 		return 0, err
@@ -138,7 +137,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *req.TenantCreateR
 }
 
 // UpdateTenant 更新租户
-func (s *TenantService) UpdateTenant(ctx context.Context, req *req.TenantUpdateReq) error {
+func (s *TenantService) UpdateTenant(ctx context.Context, req *system.TenantUpdateReq) error {
 	// 1. 校验存在及系统租户保护
 	tenant, err := s.validateUpdateTenant(ctx, req.ID)
 	if err != nil {
@@ -220,13 +219,13 @@ func (s *TenantService) DeleteTenantList(ctx context.Context, ids []int64) error
 }
 
 // GetTenant 获得租户
-func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRespVO, error) {
+func (s *TenantService) GetTenant(ctx context.Context, id int64) (*system.TenantRespVO, error) {
 	t := s.q.SystemTenant
 	tenant, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.TenantRespVO{
+	return &system.TenantRespVO{
 		ID:            tenant.ID,
 		Name:          tenant.Name,
 		ContactUserID: tenant.ContactUserID,
@@ -242,7 +241,7 @@ func (s *TenantService) GetTenant(ctx context.Context, id int64) (*resp.TenantRe
 }
 
 // GetTenantPage 获得租户分页
-func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageReq) (*pagination.PageResult[*resp.TenantRespVO], error) {
+func (s *TenantService) GetTenantPage(ctx context.Context, req *system.TenantPageReq) (*pagination.PageResult[*system.TenantRespVO], error) {
 	t := s.q.SystemTenant
 	qb := t.WithContext(ctx)
 
@@ -275,9 +274,9 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 		return nil, err
 	}
 
-	var data []*resp.TenantRespVO
+	var data []*system.TenantRespVO
 	for _, item := range list {
-		data = append(data, &resp.TenantRespVO{
+		data = append(data, &system.TenantRespVO{
 			ID:            item.ID,
 			Name:          item.Name,
 			ContactUserID: item.ContactUserID,
@@ -292,14 +291,14 @@ func (s *TenantService) GetTenantPage(ctx context.Context, req *req.TenantPageRe
 		})
 	}
 
-	return &pagination.PageResult[*resp.TenantRespVO]{
+	return &pagination.PageResult[*system.TenantRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
 }
 
 // GetTenantList 获得租户列表 (用于导出)
-func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExportReq) ([]*resp.TenantRespVO, error) {
+func (s *TenantService) GetTenantList(ctx context.Context, req *system.TenantExportReq) ([]*system.TenantRespVO, error) {
 	t := s.q.SystemTenant
 	qb := t.WithContext(ctx)
 
@@ -327,9 +326,9 @@ func (s *TenantService) GetTenantList(ctx context.Context, req *req.TenantExport
 		return nil, err
 	}
 
-	var data []*resp.TenantRespVO
+	var data []*system.TenantRespVO
 	for _, item := range list {
-		data = append(data, &resp.TenantRespVO{
+		data = append(data, &system.TenantRespVO{
 			ID:            item.ID,
 			Name:          item.Name,
 			ContactUserID: item.ContactUserID,
@@ -379,16 +378,16 @@ func (s *TenantService) ValidTenant(ctx context.Context, id int64) error {
 }
 
 // GetTenantSimpleList 获取启用状态的租户精简列表
-func (s *TenantService) GetTenantSimpleList(ctx context.Context) ([]resp.TenantSimpleResp, error) {
+func (s *TenantService) GetTenantSimpleList(ctx context.Context) ([]system.TenantSimpleResp, error) {
 	tenantRepo := s.q.SystemTenant
 	list, err := tenantRepo.WithContext(ctx).Where(tenantRepo.Status.Eq(0)).Find() // 0 = 启用
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]resp.TenantSimpleResp, 0, len(list))
+	result := make([]system.TenantSimpleResp, 0, len(list))
 	for _, t := range list {
-		result = append(result, resp.TenantSimpleResp{
+		result = append(result, system.TenantSimpleResp{
 			ID:   t.ID,
 			Name: t.Name,
 		})
@@ -397,7 +396,7 @@ func (s *TenantService) GetTenantSimpleList(ctx context.Context) ([]resp.TenantS
 }
 
 // GetTenantByWebsite 根据域名查询租户
-func (s *TenantService) GetTenantByWebsite(ctx context.Context, website string) (*resp.TenantSimpleResp, error) {
+func (s *TenantService) GetTenantByWebsite(ctx context.Context, website string) (*system.TenantSimpleResp, error) {
 	tenantRepo := s.q.SystemTenant
 	list, err := tenantRepo.WithContext(ctx).Where(tenantRepo.Status.Eq(0)).Find()
 	if err != nil {
@@ -408,7 +407,7 @@ func (s *TenantService) GetTenantByWebsite(ctx context.Context, website string) 
 	for _, t := range list {
 		for _, w := range t.Websites {
 			if w == website {
-				return &resp.TenantSimpleResp{
+				return &system.TenantSimpleResp{
 					ID:   t.ID,
 					Name: t.Name,
 				}, nil
@@ -476,13 +475,13 @@ func (s *TenantService) GetTenantIdByName(ctx context.Context, name string) (*in
 }
 
 // GetTenantByName 根据租户名获取租户（供 AuthService 使用）
-func (s *TenantService) GetTenantByName(ctx context.Context, name string) (*resp.TenantSimpleResp, error) {
+func (s *TenantService) GetTenantByName(ctx context.Context, name string) (*system.TenantSimpleResp, error) {
 	tenantRepo := s.q.SystemTenant
 	tenant, err := tenantRepo.WithContext(ctx).Where(tenantRepo.Name.Eq(name)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.TenantSimpleResp{
+	return &system.TenantSimpleResp{
 		ID:   tenant.ID,
 		Name: tenant.Name,
 	}, nil

@@ -3,8 +3,7 @@ package system
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -72,7 +71,7 @@ func (s *SmsLogService) UpdateSmsLogFields(ctx context.Context, logId int64, upd
 }
 
 // GetSmsLogPage 获得短信日志分页
-func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *req.SmsLogPageReq) (*pagination.PageResult[*resp.SmsLogRespVO], error) {
+func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *system.SmsLogPageReq) (*pagination.PageResult[*system.SmsLogRespVO], error) {
 	l := s.q.SystemSmsLog
 	qb := l.WithContext(ctx)
 
@@ -102,14 +101,14 @@ func (s *SmsLogService) GetSmsLogPage(ctx context.Context, req *req.SmsLogPageRe
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.SmsLogRespVO]{
-		List:  lo.Map(list, func(item *model.SystemSmsLog, _ int) *resp.SmsLogRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*system.SmsLogRespVO]{
+		List:  lo.Map(list, func(item *model.SystemSmsLog, _ int) *system.SmsLogRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
-func (s *SmsLogService) convertResp(item *model.SystemSmsLog) *resp.SmsLogRespVO {
-	return &resp.SmsLogRespVO{
+func (s *SmsLogService) convertResp(item *model.SystemSmsLog) *system.SmsLogRespVO {
+	return &system.SmsLogRespVO{
 		ID:              item.ID,
 		ChannelId:       item.ChannelId,
 		ChannelCode:     item.ChannelCode,

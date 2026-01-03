@@ -1,8 +1,7 @@
 package infra
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -21,7 +20,7 @@ func NewApiAccessLogHandler(svc *infra.ApiAccessLogService) *ApiAccessLogHandler
 
 // GetApiAccessLogPage 获取API访问日志分页
 func (h *ApiAccessLogHandler) GetApiAccessLogPage(c *gin.Context) {
-	var r req.ApiAccessLogPageReq
+	var r infra2.ApiAccessLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -33,9 +32,9 @@ func (h *ApiAccessLogHandler) GetApiAccessLogPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.ApiAccessLogResp, len(pageResult.List))
+	list := make([]infra2.ApiAccessLogResp, len(pageResult.List))
 	for i, log := range pageResult.List {
-		list[i] = resp.ApiAccessLogResp{
+		list[i] = infra2.ApiAccessLogResp{
 			ID:              log.ID,
 			TraceID:         log.TraceID,
 			UserID:          log.UserID,
@@ -59,7 +58,7 @@ func (h *ApiAccessLogHandler) GetApiAccessLogPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.ApiAccessLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[infra2.ApiAccessLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

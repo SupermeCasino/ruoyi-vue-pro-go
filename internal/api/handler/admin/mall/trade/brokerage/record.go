@@ -1,8 +1,7 @@
 package brokerage
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -45,7 +44,7 @@ func (h *BrokerageRecordHandler) GetBrokerageRecord(c *gin.Context) {
 		return
 	}
 
-	res := resp.BrokerageRecordResp{
+	res := trade.BrokerageRecordResp{
 		ID:              record.ID,
 		UserID:          record.UserID,
 		BizType:         record.BizType,
@@ -66,7 +65,7 @@ func (h *BrokerageRecordHandler) GetBrokerageRecord(c *gin.Context) {
 
 // GetBrokerageRecordPage 获得分销记录分页
 func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
-	var r req.BrokerageRecordPageReq
+	var r trade.BrokerageRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -88,9 +87,9 @@ func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 	}
 	userMap, _ := h.memberUserSvc.GetUserMap(c, userIds)
 
-	list := make([]resp.BrokerageRecordResp, len(pageResult.List))
+	list := make([]trade.BrokerageRecordResp, len(pageResult.List))
 	for i, item := range pageResult.List {
-		res := resp.BrokerageRecordResp{
+		res := trade.BrokerageRecordResp{
 			ID:              item.ID,
 			UserID:          item.UserID,
 			BizType:         item.BizType,
@@ -118,7 +117,7 @@ func (h *BrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 		list[i] = res
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.BrokerageRecordResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade.BrokerageRecordResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -38,7 +37,7 @@ func (s *TradeOrderQueryService) GetOrder(ctx context.Context, id int64) (*trade
 }
 
 // GetOrderPage 获得交易订单分页
-func (s *TradeOrderQueryService) GetOrderPage(ctx context.Context, uId int64, r *req.AppTradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
+func (s *TradeOrderQueryService) GetOrderPage(ctx context.Context, uId int64, r *trade2.AppTradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
 	q := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.UserID.Eq(uId))
 
 	if r.Status != nil {
@@ -88,7 +87,7 @@ func (s *TradeOrderQueryService) GetOrderItem(ctx context.Context, userId int64,
 }
 
 // GetOrderPageForAdmin 获得交易订单分页 (Admin)
-func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *req.TradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
+func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *trade2.TradeOrderPageReq) (*pagination.PageResult[*trade.TradeOrder], error) {
 	// 1. 构建查询条件
 	q := s.buildOrderQuery(ctx, r)
 
@@ -112,7 +111,7 @@ func (s *TradeOrderQueryService) GetOrderPageForAdmin(ctx context.Context, r *re
 }
 
 // GetExpressTrackList 获得物流轨迹 (App - requires UserId)
-func (s *TradeOrderQueryService) GetExpressTrackList(ctx context.Context, id int64, userId int64) ([]*resp.ExpressTrackRespVO, error) {
+func (s *TradeOrderQueryService) GetExpressTrackList(ctx context.Context, id int64, userId int64) ([]*trade2.ExpressTrackRespVO, error) {
 	// 查询订单
 	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(id), s.q.TradeOrder.UserID.Eq(userId)).First()
 	if err != nil {
@@ -122,7 +121,7 @@ func (s *TradeOrderQueryService) GetExpressTrackList(ctx context.Context, id int
 }
 
 // GetExpressTrackListById 获得物流轨迹 (Admin - no UserId check)
-func (s *TradeOrderQueryService) GetExpressTrackListById(ctx context.Context, id int64) ([]*resp.ExpressTrackRespVO, error) {
+func (s *TradeOrderQueryService) GetExpressTrackListById(ctx context.Context, id int64) ([]*trade2.ExpressTrackRespVO, error) {
 	// 查询订单
 	order, err := s.q.TradeOrder.WithContext(ctx).Where(s.q.TradeOrder.ID.Eq(id)).First()
 	if err != nil {
@@ -131,9 +130,9 @@ func (s *TradeOrderQueryService) GetExpressTrackListById(ctx context.Context, id
 	return s.getExpressTrackList(ctx, order)
 }
 
-func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order *trade.TradeOrder) ([]*resp.ExpressTrackRespVO, error) {
+func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order *trade.TradeOrder) ([]*trade2.ExpressTrackRespVO, error) {
 	if order.LogisticsID == 0 {
-		return []*resp.ExpressTrackRespVO{}, nil
+		return []*trade2.ExpressTrackRespVO{}, nil
 	}
 	// 查询物流公司
 	express, err := s.deliveryExpressSvc.GetDeliveryExpress(ctx, order.LogisticsID)
@@ -157,10 +156,10 @@ func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order 
 		return nil, err
 	}
 
-	// Convert to []resp.ExpressTrackRespVO
-	var res []*resp.ExpressTrackRespVO
+	// Convert to []trade2.ExpressTrackRespVO
+	var res []*trade2.ExpressTrackRespVO
 	for _, t := range tracks {
-		res = append(res, &resp.ExpressTrackRespVO{
+		res = append(res, &trade2.ExpressTrackRespVO{
 			Time:    t.Time,
 			Content: t.Context,
 		})
@@ -169,7 +168,7 @@ func (s *TradeOrderQueryService) getExpressTrackList(ctx context.Context, order 
 }
 
 // GetOrderSummary 获得交易订单统计
-func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.TradeOrderPageReq) (*resp.TradeOrderSummaryResp, error) {
+func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *trade2.TradeOrderPageReq) (*trade2.TradeOrderSummaryResp, error) {
 	// 1. 构建查询条件 (复用逻辑)
 	q := s.buildOrderQuery(ctx, r)
 
@@ -194,7 +193,7 @@ func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.Tra
 	}
 
 	// 4. 聚合到响应结构
-	summary := &resp.TradeOrderSummaryResp{}
+	summary := &trade2.TradeOrderSummaryResp{}
 	for _, res := range results {
 		if res.RefundStatus == 0 { // None (Unrefunded)
 			summary.OrderCount += res.Count
@@ -209,7 +208,7 @@ func (s *TradeOrderQueryService) GetOrderSummary(ctx context.Context, r *req.Tra
 }
 
 // buildOrderQuery 构建订单查询条件
-func (s *TradeOrderQueryService) buildOrderQuery(ctx context.Context, r *req.TradeOrderPageReq) query.ITradeOrderDo {
+func (s *TradeOrderQueryService) buildOrderQuery(ctx context.Context, r *trade2.TradeOrderPageReq) query.ITradeOrderDo {
 	q := s.q.TradeOrder.WithContext(ctx)
 
 	// 1. 用户信息过滤 (Nickname/Mobile) -> 转换为 UserID 列表

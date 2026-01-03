@@ -1,8 +1,7 @@
 package infra
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
@@ -33,7 +32,7 @@ func (h *JobLogHandler) GetJobLog(c *gin.Context) {
 		response.WriteBizError(c, errors.ErrNotFound)
 		return
 	}
-	response.WriteSuccess(c, resp.JobLogResp{
+	response.WriteSuccess(c, infra2.JobLogResp{
 		ID:           log.ID,
 		JobID:        log.JobID,
 		HandlerName:  log.HandlerName,
@@ -50,7 +49,7 @@ func (h *JobLogHandler) GetJobLog(c *gin.Context) {
 
 // GetJobLogPage 获取定时任务日志分页
 func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
-	var r req.JobLogPageReq
+	var r infra2.JobLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -61,9 +60,9 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.JobLogResp, len(pageResult.List))
+	list := make([]infra2.JobLogResp, len(pageResult.List))
 	for i, log := range pageResult.List {
-		list[i] = resp.JobLogResp{
+		list[i] = infra2.JobLogResp{
 			ID:           log.ID,
 			JobID:        log.JobID,
 			HandlerName:  log.HandlerName,
@@ -78,7 +77,7 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.JobLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[infra2.JobLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -86,7 +85,7 @@ func (h *JobLogHandler) GetJobLogPage(c *gin.Context) {
 
 // ExportJobLogExcel 导出定时任务日志 Excel
 func (h *JobLogHandler) ExportJobLogExcel(c *gin.Context) {
-	var r req.JobLogPageReq
+	var r infra2.JobLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -99,9 +98,9 @@ func (h *JobLogHandler) ExportJobLogExcel(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.JobLogResp, len(pageResult.List))
+	list := make([]infra2.JobLogResp, len(pageResult.List))
 	for i, log := range pageResult.List {
-		list[i] = resp.JobLogResp{
+		list[i] = infra2.JobLogResp{
 			ID:           log.ID,
 			JobID:        log.JobID,
 			HandlerName:  log.HandlerName,

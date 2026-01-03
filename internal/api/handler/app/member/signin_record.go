@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -45,18 +44,18 @@ func (h *AppMemberSignInRecordHandler) CreateSignInRecord(c *gin.Context) {
 	// Convert record to resp (simplified, or just return record)
 	// Java doesn't return much? It returns the full record.
 	// We'll return simplified App resp.
-	response.WriteSuccess(c, resp.AppMemberSignInRecordResp{
+	response.WriteSuccess(c, member.AppMemberSignInRecordResp{
 		ID:         record.ID,
 		Day:        record.Day,
 		Point:      record.Point,
 		Experience: record.Experience,
-		CreateTime:  record.CreateTime,
+		CreateTime: record.CreateTime,
 	})
 }
 
 // GetSignInRecordPage 获得个人签到分页
 func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
-	var r req.AppMemberSignInRecordPageReq
+	var r member.AppMemberSignInRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -64,7 +63,7 @@ func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 	userId := c.GetInt64(context.CtxUserIDKey)
 
 	// Reuse service method but fill UserID
-	pageReq := req.MemberSignInRecordPageReq{
+	pageReq := member.MemberSignInRecordPageReq{
 		PageParam: pagination.PageParam{
 			PageNo:   r.PageNo,
 			PageSize: r.PageSize,
@@ -78,13 +77,13 @@ func (h *AppMemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 		return
 	}
 
-	respList := lo.Map(pageResult.List, func(item *memberModel.MemberSignInRecord, _ int) resp.AppMemberSignInRecordResp {
-		return resp.AppMemberSignInRecordResp{
+	respList := lo.Map(pageResult.List, func(item *memberModel.MemberSignInRecord, _ int) member.AppMemberSignInRecordResp {
+		return member.AppMemberSignInRecordResp{
 			ID:         item.ID,
 			Day:        item.Day,
 			Point:      item.Point,
 			Experience: item.Experience,
-			CreateTime:  item.CreateTime,
+			CreateTime: item.CreateTime,
 		}
 	})
 	response.WriteSuccess(c, pagination.NewPageResult(respList, pageResult.Total))

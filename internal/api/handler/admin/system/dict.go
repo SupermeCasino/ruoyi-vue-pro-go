@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -24,7 +24,7 @@ func NewDictHandler(svc *system.DictService) *DictHandler {
 // --- DictType ---
 
 func (h *DictHandler) CreateDictType(c *gin.Context) {
-	var r req.DictTypeSaveReq
+	var r system2.DictTypeSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +38,7 @@ func (h *DictHandler) CreateDictType(c *gin.Context) {
 }
 
 func (h *DictHandler) UpdateDictType(c *gin.Context) {
-	var r req.DictTypeSaveReq
+	var r system2.DictTypeSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -72,7 +72,7 @@ func (h *DictHandler) GetDictType(c *gin.Context) {
 }
 
 func (h *DictHandler) GetDictTypePage(c *gin.Context) {
-	var r req.DictTypePageReq
+	var r system2.DictTypePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -96,7 +96,7 @@ func (h *DictHandler) GetSimpleDictTypeList(c *gin.Context) {
 
 // ExportDictTypeExcel 导出字典类型 Excel
 func (h *DictHandler) ExportDictTypeExcel(c *gin.Context) {
-	var r req.DictTypePageReq
+	var r system2.DictTypePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -111,7 +111,7 @@ func (h *DictHandler) ExportDictTypeExcel(c *gin.Context) {
 // --- DictData ---
 
 func (h *DictHandler) CreateDictData(c *gin.Context) {
-	var r req.DictDataSaveReq
+	var r system2.DictDataSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -125,7 +125,7 @@ func (h *DictHandler) CreateDictData(c *gin.Context) {
 }
 
 func (h *DictHandler) UpdateDictData(c *gin.Context) {
-	var r req.DictDataSaveReq
+	var r system2.DictDataSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -159,7 +159,7 @@ func (h *DictHandler) GetDictData(c *gin.Context) {
 }
 
 func (h *DictHandler) GetDictDataPage(c *gin.Context) {
-	var r req.DictDataPageReq
+	var r system2.DictDataPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

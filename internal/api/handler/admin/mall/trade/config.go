@@ -3,7 +3,7 @@ package trade
 import (
 	"os"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -38,7 +38,7 @@ func (h *TradeConfigHandler) GetTradeConfig(c *gin.Context) {
 // SaveTradeConfig @Summary 保存交易配置
 // @Router /admin-api/trade/config/save [PUT]
 func (h *TradeConfigHandler) SaveTradeConfig(c *gin.Context) {
-	var r req.TradeConfigSaveReq
+	var r trade2.TradeConfigSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

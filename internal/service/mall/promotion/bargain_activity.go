@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -28,7 +28,7 @@ func NewBargainActivityService(q *query.Query, spuSvc *product.ProductSpuService
 }
 
 // CreateBargainActivity 创建砍价活动
-func (s *BargainActivityService) CreateBargainActivity(ctx context.Context, r *req.BargainActivityCreateReq) (int64, error) {
+func (s *BargainActivityService) CreateBargainActivity(ctx context.Context, r *promotion2.BargainActivityCreateReq) (int64, error) {
 	// 1. 解析时间 (格式: "2006-01-02 15:04:05")
 	startTime, err := time.Parse("2006-01-02 15:04:05", r.StartTime)
 	if err != nil {
@@ -84,7 +84,7 @@ func (s *BargainActivityService) validateSku(ctx context.Context, skuID int64) e
 }
 
 // UpdateBargainActivity 更新砍价活动
-func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *req.BargainActivityUpdateReq) error {
+func (s *BargainActivityService) UpdateBargainActivity(ctx context.Context, r *promotion2.BargainActivityUpdateReq) error {
 	// 1. 解析时间
 	startTime, err := time.Parse("2006-01-02 15:04:05", r.StartTime)
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *BargainActivityService) GetBargainActivity(ctx context.Context, id int6
 }
 
 // GetBargainActivityPage 获得砍价活动分页
-func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *req.BargainActivityPageReq) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
+func (s *BargainActivityService) GetBargainActivityPage(ctx context.Context, r *promotion2.BargainActivityPageReq) (*pagination.PageResult[*promotion.PromotionBargainActivity], error) {
 	q := s.q.PromotionBargainActivity
 	do := q.WithContext(ctx)
 	if r.Name != "" {

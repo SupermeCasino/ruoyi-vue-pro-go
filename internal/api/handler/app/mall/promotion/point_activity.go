@@ -4,8 +4,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	productContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	appPromotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
@@ -32,7 +33,7 @@ func NewAppPointActivityHandler(svc *promotionSvc.PointActivityService, spuSvc *
 // GetPointActivityPage 获得积分商城活动分页
 // 对齐 Java: AppPointActivityController.getPointActivityPage
 func (h *AppPointActivityHandler) GetPointActivityPage(c *gin.Context) {
-	var reqVO req.PointActivityPageReq
+	var reqVO promotion2.PointActivityPageReq
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -45,8 +46,8 @@ func (h *AppPointActivityHandler) GetPointActivityPage(c *gin.Context) {
 	}
 
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[*resp.AppPointActivityRespVO]{
-			List:  []*resp.AppPointActivityRespVO{},
+		response.WriteSuccess(c, pagination.PageResult[*appPromotionContract.AppPointActivityRespVO]{
+			List:  []*appPromotionContract.AppPointActivityRespVO{},
 			Total: pageResult.Total,
 		})
 		return
@@ -60,7 +61,7 @@ func (h *AppPointActivityHandler) GetPointActivityPage(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[*resp.AppPointActivityRespVO]{
+	response.WriteSuccess(c, pagination.PageResult[*appPromotionContract.AppPointActivityRespVO]{
 		List:  resultList,
 		Total: pageResult.Total,
 	})
@@ -87,7 +88,7 @@ func (h *AppPointActivityHandler) GetPointActivity(c *gin.Context) {
 	}
 
 	// 拼接数据
-	respVO := &resp.AppPointActivityDetailRespVO{
+	respVO := &appPromotionContract.AppPointActivityDetailRespVO{
 		ID:         activity.ID,
 		SpuID:      activity.SpuID,
 		Status:     activity.Status,
@@ -97,9 +98,9 @@ func (h *AppPointActivityHandler) GetPointActivity(c *gin.Context) {
 	}
 
 	// 商品列表
-	respVO.Products = make([]resp.AppPointProductRespVO, len(products))
+	respVO.Products = make([]appPromotionContract.AppPointProductRespVO, len(products))
 	for i, p := range products {
-		respVO.Products[i] = resp.AppPointProductRespVO{
+		respVO.Products[i] = appPromotionContract.AppPointProductRespVO{
 			ID:    p.ID,
 			SkuID: p.SkuID,
 			Count: p.Count,
@@ -128,7 +129,7 @@ func (h *AppPointActivityHandler) GetPointActivity(c *gin.Context) {
 func (h *AppPointActivityHandler) GetPointActivityListByIds(c *gin.Context) {
 	idsStr := c.Query("ids")
 	if idsStr == "" {
-		response.WriteSuccess(c, []*resp.AppPointActivityRespVO{})
+		response.WriteSuccess(c, []*appPromotionContract.AppPointActivityRespVO{})
 		return
 	}
 
@@ -141,7 +142,7 @@ func (h *AppPointActivityHandler) GetPointActivityListByIds(c *gin.Context) {
 	}
 
 	if len(ids) == 0 {
-		response.WriteSuccess(c, []*resp.AppPointActivityRespVO{})
+		response.WriteSuccess(c, []*appPromotionContract.AppPointActivityRespVO{})
 		return
 	}
 
@@ -159,9 +160,9 @@ func (h *AppPointActivityHandler) GetPointActivityListByIds(c *gin.Context) {
 	response.WriteSuccess(c, result)
 }
 
-func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context, activityList []*promotion.PromotionPointActivity) ([]*resp.AppPointActivityRespVO, error) {
+func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context, activityList []*promotion.PromotionPointActivity) ([]*appPromotionContract.AppPointActivityRespVO, error) {
 	if len(activityList) == 0 {
-		return []*resp.AppPointActivityRespVO{}, nil
+		return []*appPromotionContract.AppPointActivityRespVO{}, nil
 	}
 
 	// 1. 获取活动商品列表 (用于获取最低积分/价格)
@@ -184,12 +185,12 @@ func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 {
+	spuMap := lo.KeyBy(spuList, func(item *productContract.ProductSpuResp) int64 {
 		return item.ID
 	})
 
 	// 3. 组装结果
-	result := make([]*resp.AppPointActivityRespVO, 0, len(activityList))
+	result := make([]*appPromotionContract.AppPointActivityRespVO, 0, len(activityList))
 	for _, activity := range activityList {
 		// ✅ 核心修复: 过滤无效 SPU (不存在或非上架状态)
 		spu, ok := spuMap[activity.SpuID]
@@ -202,7 +203,7 @@ func (h *AppPointActivityHandler) buildAppPointActivityRespVOList(c *gin.Context
 			continue
 		}
 
-		vo := &resp.AppPointActivityRespVO{
+		vo := &appPromotionContract.AppPointActivityRespVO{
 			ID:          activity.ID,
 			SpuID:       activity.SpuID,
 			Status:      activity.Status,

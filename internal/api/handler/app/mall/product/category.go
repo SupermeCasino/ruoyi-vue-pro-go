@@ -3,7 +3,7 @@ package product
 import (
 	"sort"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -32,9 +32,9 @@ func (h *AppCategoryHandler) GetCategoryList(c *gin.Context) {
 	})
 
 	// convert
-	resList := make([]resp.AppCategoryResp, len(list))
+	resList := make([]product2.AppCategoryResp, len(list))
 	for i, v := range list {
-		resList[i] = resp.AppCategoryResp{
+		resList[i] = product2.AppCategoryResp{
 			ID:       v.ID,
 			ParentID: v.ParentID,
 			Name:     v.Name,
@@ -49,7 +49,7 @@ func (h *AppCategoryHandler) GetCategoryListByIds(c *gin.Context) {
 	idsStr := c.Query("ids")
 	ids := utils.SplitToInt64(idsStr)
 	if len(ids) == 0 {
-		response.WriteSuccess(c, []resp.AppCategoryResp{})
+		response.WriteSuccess(c, []product2.AppCategoryResp{})
 		return
 	}
 
@@ -64,9 +64,9 @@ func (h *AppCategoryHandler) GetCategoryListByIds(c *gin.Context) {
 	})
 
 	// convert
-	resList := make([]resp.AppCategoryResp, len(list))
+	resList := make([]product2.AppCategoryResp, len(list))
 	for i, v := range list {
-		resList[i] = resp.AppCategoryResp{
+		resList[i] = product2.AppCategoryResp{
 			ID:       v.ID,
 			ParentID: v.ParentID,
 			Name:     v.Name,

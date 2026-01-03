@@ -3,8 +3,7 @@ package member
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -22,14 +21,14 @@ func NewAppSocialUserHandler(svc *system.SocialUserService) *AppSocialUserHandle
 // Bind 绑定社交用户
 // @Router /member/social-user/bind [post]
 func (h *AppSocialUserHandler) Bind(c *gin.Context) {
-	var r req.AppSocialUserBindReq
+	var r system2.AppSocialUserBindReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, err)
 		return
 	}
 
 	userID := c.GetInt64("userId")
-	openid, err := h.svc.BindSocialUser(c, userID, 1, &req.SocialUserBindReq{
+	openid, err := h.svc.BindSocialUser(c, userID, 1, &system2.SocialUserBindReq{
 		Type:  r.Type,
 		Code:  r.Code,
 		State: r.State,
@@ -45,7 +44,7 @@ func (h *AppSocialUserHandler) Bind(c *gin.Context) {
 // Unbind 解绑社交用户
 // @Router /member/social-user/unbind [delete]
 func (h *AppSocialUserHandler) Unbind(c *gin.Context) {
-	var r req.AppSocialUserUnbindReq
+	var r system2.AppSocialUserUnbindReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -74,10 +73,10 @@ func (h *AppSocialUserHandler) Get(c *gin.Context) {
 		return
 	}
 
-	var target *resp.AppSocialUserResp
+	var target *system2.AppSocialUserResp
 	for _, su := range socialUsers {
 		if su.Type == socialType {
-			target = &resp.AppSocialUserResp{
+			target = &system2.AppSocialUserResp{
 				Openid:   su.Openid,
 				Nickname: su.Nickname,
 				Avatar:   su.Avatar,

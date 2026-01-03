@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -68,7 +68,7 @@ func (s *BargainHelpService) GetBargainHelpCountByActivity(ctx context.Context, 
 }
 
 // CreateBargainHelp 砍价助力
-func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64, r *req.AppBargainHelpCreateReq) (*promotion.PromotionBargainHelp, error) {
+func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64, r *promotion2.AppBargainHelpCreateReq) (*promotion.PromotionBargainHelp, error) {
 	var help *promotion.PromotionBargainHelp
 	err := s.q.Transaction(func(tx *query.Query) error {
 		// 1. 校验砍价记录 (加锁)
@@ -175,7 +175,7 @@ func (s *BargainHelpService) CreateBargainHelp(ctx context.Context, userID int64
 }
 
 // GetBargainHelpPage 获得砍价助力分页 (Admin)
-func (s *BargainHelpService) GetBargainHelpPage(ctx context.Context, req *req.BargainHelpPageReq) (*pagination.PageResult[*promotion.PromotionBargainHelp], error) {
+func (s *BargainHelpService) GetBargainHelpPage(ctx context.Context, req *promotion2.BargainHelpPageReq) (*pagination.PageResult[*promotion.PromotionBargainHelp], error) {
 	q := s.q.PromotionBargainHelp
 	do := q.WithContext(ctx)
 

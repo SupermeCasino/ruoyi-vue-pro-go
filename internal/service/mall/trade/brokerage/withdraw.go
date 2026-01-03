@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
-	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
+	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -362,7 +362,7 @@ func (s *BrokerageWithdrawService) GetBrokerageWithdraw(ctx context.Context, id 
 }
 
 // GetBrokerageWithdrawPage 获得佣金提现分页
-func (s *BrokerageWithdrawService) GetBrokerageWithdrawPage(ctx context.Context, r *req.BrokerageWithdrawPageReq) (*pagination.PageResult[*brokerage.BrokerageWithdraw], error) {
+func (s *BrokerageWithdrawService) GetBrokerageWithdrawPage(ctx context.Context, r *trade.BrokerageWithdrawPageReq) (*pagination.PageResult[*brokerage.BrokerageWithdraw], error) {
 	q := s.q.BrokerageWithdraw.WithContext(ctx)
 
 	if r.UserID > 0 {

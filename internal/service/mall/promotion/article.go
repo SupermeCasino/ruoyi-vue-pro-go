@@ -3,8 +3,7 @@ package promotion
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -14,13 +13,13 @@ import (
 )
 
 type ArticleService interface {
-	CreateArticle(ctx context.Context, req req.ArticleCreateReq) (int64, error)
-	UpdateArticle(ctx context.Context, req req.ArticleUpdateReq) error
+	CreateArticle(ctx context.Context, req promotion2.ArticleCreateReq) (int64, error)
+	UpdateArticle(ctx context.Context, req promotion2.ArticleUpdateReq) error
 	DeleteArticle(ctx context.Context, id int64) error
-	GetArticle(ctx context.Context, id int64) (*resp.ArticleRespVO, error)
-	GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error)
-	GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error)
-	GetLastArticleByTitle(ctx context.Context, title string) (*resp.ArticleRespVO, error)
+	GetArticle(ctx context.Context, id int64) (*promotion2.ArticleRespVO, error)
+	GetArticlePage(ctx context.Context, req promotion2.ArticlePageReq) (*pagination.PageResult[*promotion2.ArticleRespVO], error)
+	GetArticlePageApp(ctx context.Context, req promotion2.ArticlePageReq) (*pagination.PageResult[*promotion2.ArticleRespVO], error)
+	GetLastArticleByTitle(ctx context.Context, title string) (*promotion2.ArticleRespVO, error)
 	AddArticleBrowseCount(ctx context.Context, id int64) error
 }
 
@@ -32,7 +31,7 @@ func NewArticleService(q *query.Query) ArticleService {
 	return &articleService{q: q}
 }
 
-func (s *articleService) CreateArticle(ctx context.Context, req req.ArticleCreateReq) (int64, error) {
+func (s *articleService) CreateArticle(ctx context.Context, req promotion2.ArticleCreateReq) (int64, error) {
 	// Validate Category
 	if err := s.validateArticleCategory(ctx, req.CategoryID); err != nil {
 		return 0, err
@@ -55,7 +54,7 @@ func (s *articleService) CreateArticle(ctx context.Context, req req.ArticleCreat
 	return article.ID, err
 }
 
-func (s *articleService) UpdateArticle(ctx context.Context, req req.ArticleUpdateReq) error {
+func (s *articleService) UpdateArticle(ctx context.Context, req promotion2.ArticleUpdateReq) error {
 	// Validate Exists
 	if _, err := s.validateArticleExists(ctx, req.ID); err != nil {
 		return err
@@ -89,7 +88,7 @@ func (s *articleService) DeleteArticle(ctx context.Context, id int64) error {
 	return err
 }
 
-func (s *articleService) GetArticle(ctx context.Context, id int64) (*resp.ArticleRespVO, error) {
+func (s *articleService) GetArticle(ctx context.Context, id int64) (*promotion2.ArticleRespVO, error) {
 	article, err := s.validateArticleExists(ctx, id)
 	if err != nil {
 		return nil, err
@@ -97,7 +96,7 @@ func (s *articleService) GetArticle(ctx context.Context, id int64) (*resp.Articl
 	return s.convertArticleToResp(article), nil
 }
 
-func (s *articleService) GetLastArticleByTitle(ctx context.Context, title string) (*resp.ArticleRespVO, error) {
+func (s *articleService) GetLastArticleByTitle(ctx context.Context, title string) (*promotion2.ArticleRespVO, error) {
 	q := s.q.PromotionArticle
 	article, err := q.WithContext(ctx).Where(q.Title.Eq(title)).Order(q.ID.Desc()).First()
 	if err != nil {
@@ -109,7 +108,7 @@ func (s *articleService) GetLastArticleByTitle(ctx context.Context, title string
 	return s.convertArticleToResp(article), nil
 }
 
-func (s *articleService) GetArticlePage(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error) {
+func (s *articleService) GetArticlePage(ctx context.Context, req promotion2.ArticlePageReq) (*pagination.PageResult[*promotion2.ArticleRespVO], error) {
 	q := s.q.PromotionArticle
 	do := q.WithContext(ctx)
 	if req.Title != "" {
@@ -127,14 +126,14 @@ func (s *articleService) GetArticlePage(ctx context.Context, req req.ArticlePage
 		return nil, err
 	}
 
-	result := make([]*resp.ArticleRespVO, len(list))
+	result := make([]*promotion2.ArticleRespVO, len(list))
 	for i, item := range list {
 		result[i] = s.convertArticleToResp(item)
 	}
-	return &pagination.PageResult[*resp.ArticleRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*promotion2.ArticleRespVO]{List: result, Total: total}, nil
 }
 
-func (s *articleService) GetArticlePageApp(ctx context.Context, req req.ArticlePageReq) (*pagination.PageResult[*resp.ArticleRespVO], error) {
+func (s *articleService) GetArticlePageApp(ctx context.Context, req promotion2.ArticlePageReq) (*pagination.PageResult[*promotion2.ArticleRespVO], error) {
 	q := s.q.PromotionArticle
 	do := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
 
@@ -151,11 +150,11 @@ func (s *articleService) GetArticlePageApp(ctx context.Context, req req.ArticleP
 		return nil, err
 	}
 
-	result := make([]*resp.ArticleRespVO, len(list))
+	result := make([]*promotion2.ArticleRespVO, len(list))
 	for i, item := range list {
 		result[i] = s.convertArticleToResp(item)
 	}
-	return &pagination.PageResult[*resp.ArticleRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*promotion2.ArticleRespVO]{List: result, Total: total}, nil
 }
 
 func (s *articleService) AddArticleBrowseCount(ctx context.Context, id int64) error {
@@ -185,8 +184,8 @@ func (s *articleService) validateArticleCategory(ctx context.Context, categoryID
 	return nil
 }
 
-func (s *articleService) convertArticleToResp(item *promotion.PromotionArticle) *resp.ArticleRespVO {
-	return &resp.ArticleRespVO{
+func (s *articleService) convertArticleToResp(item *promotion.PromotionArticle) *promotion2.ArticleRespVO {
+	return &promotion2.ArticleRespVO{
 		ID:              item.ID,
 		CategoryID:      item.CategoryID,
 		Title:           item.Title,

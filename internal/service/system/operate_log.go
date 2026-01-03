@@ -3,7 +3,7 @@ package system
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -18,7 +18,7 @@ func NewOperateLogService(q *query.Query) *OperateLogService {
 }
 
 // GetOperateLogPage 获取操作日志分页
-func (s *OperateLogService) GetOperateLogPage(ctx context.Context, r *req.OperateLogPageReq) (*pagination.PageResult[*model.SystemOperateLog], error) {
+func (s *OperateLogService) GetOperateLogPage(ctx context.Context, r *system.OperateLogPageReq) (*pagination.PageResult[*model.SystemOperateLog], error) {
 	q := s.q.SystemOperateLog.WithContext(ctx)
 
 	// 过滤条件

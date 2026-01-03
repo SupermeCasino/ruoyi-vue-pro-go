@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -21,7 +20,7 @@ func NewPostService(q *query.Query) *PostService {
 	}
 }
 
-func (s *PostService) CreatePost(ctx context.Context, req *req.PostSaveReq) (int64, error) {
+func (s *PostService) CreatePost(ctx context.Context, req *system.PostSaveReq) (int64, error) {
 	p := s.q.SystemPost
 	// Check Code/Name unique?
 	count, err := p.WithContext(ctx).Where(p.Name.Eq(req.Name)).Or(p.Code.Eq(req.Code)).Count()
@@ -43,7 +42,7 @@ func (s *PostService) CreatePost(ctx context.Context, req *req.PostSaveReq) (int
 	return post.ID, err
 }
 
-func (s *PostService) UpdatePost(ctx context.Context, req *req.PostSaveReq) error {
+func (s *PostService) UpdatePost(ctx context.Context, req *system.PostSaveReq) error {
 	p := s.q.SystemPost
 	_, err := p.WithContext(ctx).Where(p.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -74,13 +73,13 @@ func (s *PostService) DeletePost(ctx context.Context, id int64) error {
 	return err
 }
 
-func (s *PostService) GetPost(ctx context.Context, id int64) (*resp.PostRespVO, error) {
+func (s *PostService) GetPost(ctx context.Context, id int64) (*system.PostRespVO, error) {
 	p := s.q.SystemPost
 	item, err := p.WithContext(ctx).Where(p.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.PostRespVO{
+	return &system.PostRespVO{
 		ID:         item.ID,
 		Name:       item.Name,
 		Code:       item.Code,
@@ -91,7 +90,7 @@ func (s *PostService) GetPost(ctx context.Context, id int64) (*resp.PostRespVO, 
 	}, nil
 }
 
-func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*pagination.PageResult[*resp.PostRespVO], error) {
+func (s *PostService) GetPostPage(ctx context.Context, req *system.PostPageReq) (*pagination.PageResult[*system.PostRespVO], error) {
 	p := s.q.SystemPost
 	qb := p.WithContext(ctx)
 
@@ -115,9 +114,9 @@ func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*p
 		return nil, err
 	}
 
-	var data []*resp.PostRespVO
+	var data []*system.PostRespVO
 	for _, item := range list {
-		data = append(data, &resp.PostRespVO{
+		data = append(data, &system.PostRespVO{
 			ID:         item.ID,
 			Name:       item.Name,
 			Code:       item.Code,
@@ -128,22 +127,22 @@ func (s *PostService) GetPostPage(ctx context.Context, req *req.PostPageReq) (*p
 		})
 	}
 
-	return &pagination.PageResult[*resp.PostRespVO]{
+	return &pagination.PageResult[*system.PostRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
 }
 
-func (s *PostService) GetSimplePostList(ctx context.Context) ([]*resp.PostSimpleRespVO, error) {
+func (s *PostService) GetSimplePostList(ctx context.Context) ([]*system.PostSimpleRespVO, error) {
 	p := s.q.SystemPost
 	list, err := p.WithContext(ctx).Where(p.Status.Eq(0)).Order(p.Sort, p.ID).Find()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*resp.PostSimpleRespVO
+	var res []*system.PostSimpleRespVO
 	for _, item := range list {
-		res = append(res, &resp.PostSimpleRespVO{
+		res = append(res, &system.PostSimpleRespVO{
 			ID:   item.ID,
 			Name: item.Name,
 		})

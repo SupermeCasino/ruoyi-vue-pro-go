@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -22,7 +22,7 @@ func NewDeptHandler(svc *system.DeptService) *DeptHandler {
 }
 
 func (h *DeptHandler) CreateDept(c *gin.Context) {
-	var r req.DeptSaveReq
+	var r system2.DeptSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *DeptHandler) CreateDept(c *gin.Context) {
 }
 
 func (h *DeptHandler) UpdateDept(c *gin.Context) {
-	var r req.DeptSaveReq
+	var r system2.DeptSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -70,7 +70,7 @@ func (h *DeptHandler) GetDept(c *gin.Context) {
 }
 
 func (h *DeptHandler) GetDeptList(c *gin.Context) {
-	var r req.DeptListReq
+	var r system2.DeptListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
-	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
+	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -106,14 +105,14 @@ func (h *AppProductSpuHandler) GetSpuListByIds(c *gin.Context) {
 	idsStr := c.Query("ids")
 	if idsStr == "" {
 		// 返回空数组而不是null，对齐Java版本Collections.emptyList()
-		response.WriteSuccess(c, []resp.AppProductSpuResp{})
+		response.WriteSuccess(c, []product2.AppProductSpuResp{})
 		return
 	}
 
 	ids := utils.SplitToInt64(idsStr)
 	if len(ids) == 0 {
 		// 返回空数组而不是null，对齐Java版本Collections.emptyList()
-		response.WriteSuccess(c, []resp.AppProductSpuResp{})
+		response.WriteSuccess(c, []product2.AppProductSpuResp{})
 		return
 	}
 
@@ -126,17 +125,17 @@ func (h *AppProductSpuHandler) GetSpuListByIds(c *gin.Context) {
 
 	// 如果列表为空，返回空数组 - 对齐Java版本CollUtil.isEmpty(list)处理
 	if len(list) == 0 {
-		response.WriteSuccess(c, []resp.AppProductSpuResp{})
+		response.WriteSuccess(c, []product2.AppProductSpuResp{})
 		return
 	}
 
 	// 转换为App端响应格式，对齐Java版本的AppProductSpuRespVO结构
 	// 注意：Java版本中没有VIP价格计算，这里移除VIP价格相关逻辑以完全对齐
-	resList := make([]resp.AppProductSpuResp, len(list))
+	resList := make([]product2.AppProductSpuResp, len(list))
 	for i, spu := range list {
 		// 确保字段完全对齐Java版本的AppProductSpuRespVO
 		// Java版本：list.forEach(spu -> spu.setSalesCount(spu.getSalesCount() + spu.getVirtualSalesCount()));
-		resList[i] = resp.AppProductSpuResp{
+		resList[i] = product2.AppProductSpuResp{
 			ID:            spu.ID,
 			Name:          spu.Name,
 			Introduction:  spu.Introduction, // 对齐Java版本字段
@@ -161,7 +160,7 @@ func (h *AppProductSpuHandler) GetSpuListByIds(c *gin.Context) {
 // @Success 200 {object} pagination.PageResult[resp.AppProductSpuResp]
 // @Router /app-api/product/spu/page [get]
 func (h *AppProductSpuHandler) GetSpuPage(c *gin.Context) {
-	var r req.AppProductSpuPageReq
+	var r product2.AppProductSpuPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		if !middleware.ValidateProductParams(c, err) {
 			return
@@ -177,8 +176,8 @@ func (h *AppProductSpuHandler) GetSpuPage(c *gin.Context) {
 
 	// 如果列表为空，返回空分页结果 - 对齐Java版本CollUtil.isEmpty(pageResult.getList())处理
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.AppProductSpuResp]{
-			List:  []resp.AppProductSpuResp{},
+		response.WriteSuccess(c, pagination.PageResult[product2.AppProductSpuResp]{
+			List:  []product2.AppProductSpuResp{},
 			Total: pageResult.Total,
 		})
 		return
@@ -186,9 +185,9 @@ func (h *AppProductSpuHandler) GetSpuPage(c *gin.Context) {
 
 	// 转换为App端响应格式，对齐Java版本的AppProductSpuRespVO结构
 	// Java版本：pageResult.getList().forEach(spu -> spu.setSalesCount(spu.getSalesCount() + spu.getVirtualSalesCount()));
-	list := make([]resp.AppProductSpuResp, len(pageResult.List))
+	list := make([]product2.AppProductSpuResp, len(pageResult.List))
 	for i, spu := range pageResult.List {
-		list[i] = resp.AppProductSpuResp{
+		list[i] = product2.AppProductSpuResp{
 			ID:            spu.ID,
 			Name:          spu.Name,
 			Introduction:  spu.Introduction, // 对齐Java版本字段
@@ -204,7 +203,7 @@ func (h *AppProductSpuHandler) GetSpuPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.AppProductSpuResp]{
+	response.WriteSuccess(c, pagination.PageResult[product2.AppProductSpuResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -268,7 +267,7 @@ func (h *AppProductSpuHandler) getPropertyName(propertyID int64, propertyMap map
 }
 
 // convertSpuDetailResp 在Handler层组装SPU详情响应VO
-func (h *AppProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus []*product.ProductSku) *resp.AppProductSpuDetailResp {
+func (h *AppProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, skus []*product.ProductSku) *product2.AppProductSpuDetailResp {
 	// 确保数组字段返回[]而不是null，对齐Java版本处理逻辑
 	sliderPicURLs := spu.SliderPicURLs
 	if sliderPicURLs == nil {
@@ -282,14 +281,14 @@ func (h *AppProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, sku
 	propertyMap := h.getPropertyNameMap(stdcontext.Background(), propertyIDs)
 
 	// 3. 转换SKU数组，填充PropertyName
-	skuResps := make([]resp.AppProductSpuDetailSkuResp, 0, len(skus))
+	skuResps := make([]product2.AppProductSpuDetailSkuResp, 0, len(skus))
 	for _, sku := range skus {
 		// 转换SKU属性数组
-		properties := make([]resp.AppProductPropertyValueDetail, 0)
+		properties := make([]product2.AppProductPropertyValueDetail, 0)
 		if sku.Properties != nil {
 			for _, prop := range sku.Properties {
 				propertyName := h.getPropertyName(prop.PropertyID, propertyMap)
-				properties = append(properties, resp.AppProductPropertyValueDetail{
+				properties = append(properties, product2.AppProductPropertyValueDetail{
 					PropertyID:   prop.PropertyID,
 					PropertyName: propertyName,
 					ValueID:      prop.ValueID,
@@ -298,7 +297,7 @@ func (h *AppProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, sku
 			}
 		}
 
-		skuResps = append(skuResps, resp.AppProductSpuDetailSkuResp{
+		skuResps = append(skuResps, product2.AppProductSpuDetailSkuResp{
 			ID:          sku.ID,
 			Properties:  properties,
 			Price:       int(sku.Price),
@@ -311,7 +310,7 @@ func (h *AppProductSpuHandler) convertSpuDetailResp(spu *product.ProductSpu, sku
 		})
 	}
 
-	return &resp.AppProductSpuDetailResp{
+	return &product2.AppProductSpuDetailResp{
 		ID:            spu.ID,
 		Name:          spu.Name,
 		Introduction:  spu.Introduction, // 确保返回完整介绍文本

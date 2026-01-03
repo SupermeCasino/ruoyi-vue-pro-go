@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -21,7 +21,7 @@ func NewAppProductFavoriteHandler(svc *product.ProductFavoriteService) *AppProdu
 
 // CreateFavorite 添加商品收藏
 func (h *AppProductFavoriteHandler) CreateFavorite(c *gin.Context) {
-	var r req.AppFavoriteCreateReq
+	var r product2.AppFavoriteCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -37,7 +37,7 @@ func (h *AppProductFavoriteHandler) CreateFavorite(c *gin.Context) {
 
 // DeleteFavorite 取消单个商品收藏
 func (h *AppProductFavoriteHandler) DeleteFavorite(c *gin.Context) {
-	var r req.AppFavoriteReq
+	var r product2.AppFavoriteReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -52,7 +52,7 @@ func (h *AppProductFavoriteHandler) DeleteFavorite(c *gin.Context) {
 
 // GetFavoritePage 获得商品收藏分页
 func (h *AppProductFavoriteHandler) GetFavoritePage(c *gin.Context) {
-	var r req.AppFavoritePageReq
+	var r product2.AppFavoritePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -68,7 +68,7 @@ func (h *AppProductFavoriteHandler) GetFavoritePage(c *gin.Context) {
 
 // IsFavoriteExists 检查是否收藏过商品
 func (h *AppProductFavoriteHandler) IsFavoriteExists(c *gin.Context) {
-	var r req.AppFavoriteReq
+	var r product2.AppFavoriteReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

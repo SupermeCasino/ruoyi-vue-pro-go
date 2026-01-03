@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -26,7 +26,7 @@ func NewProductFavoriteHandler(svc *product.ProductFavoriteService) *ProductFavo
 // @Success 200 {object} pagination.PageResult[resp.ProductFavoriteResp]
 // @Router /admin-api/product/favorite/page [get]
 func (h *ProductFavoriteHandler) GetFavoritePage(c *gin.Context) {
-	var r req.ProductFavoritePageReq
+	var r product2.ProductFavoritePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

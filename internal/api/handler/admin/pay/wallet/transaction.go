@@ -1,8 +1,7 @@
 package wallet
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -22,7 +21,7 @@ func NewPayWalletTransactionHandler(svc *payData.PayWalletTransactionService) *P
 
 // GetWalletTransactionPage 获得会员钱包流水分页
 func (h *PayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context) {
-	var r req.PayWalletTransactionPageReq
+	var r pay2.PayWalletTransactionPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,18 +33,18 @@ func (h *PayWalletTransactionHandler) GetWalletTransactionPage(c *gin.Context) {
 	}
 
 	// Convert list
-	newRes := pagination.NewPageResult(make([]*resp.PayWalletTransactionResp, 0, len(res.List)), res.Total)
+	newRes := pagination.NewPageResult(make([]*pay2.PayWalletTransactionResp, 0, len(res.List)), res.Total)
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertTransactionResp(item))
 	}
 	response.WriteSuccess(c, newRes)
 }
 
-func convertTransactionResp(item *pay.PayWalletTransaction) *resp.PayWalletTransactionResp {
+func convertTransactionResp(item *pay.PayWalletTransaction) *pay2.PayWalletTransactionResp {
 	if item == nil {
 		return nil
 	}
-	return &resp.PayWalletTransactionResp{
+	return &pay2.PayWalletTransactionResp{
 		ID:         item.ID,
 		WalletID:   item.WalletID,
 		BizType:    item.BizType,

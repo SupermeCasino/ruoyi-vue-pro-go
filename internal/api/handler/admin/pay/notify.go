@@ -3,8 +3,7 @@ package pay
 import (
 	"io"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/client"
@@ -183,22 +182,22 @@ func (h *PayNotifyHandler) GetNotifyTaskDetail(c *gin.Context) {
 		return
 	}
 	if task == nil {
-		response.WriteSuccess(c, &resp.PayNotifyTaskDetailResp{})
+		response.WriteSuccess(c, &pay2.PayNotifyTaskDetailResp{})
 		return
 	}
 
 	logs, _ := h.svc.GetNotifyLogList(c, id)
 	app, _ := h.appSvc.GetApp(c, task.AppID)
 
-	r := &resp.PayNotifyTaskDetailResp{}
+	r := &pay2.PayNotifyTaskDetailResp{}
 	copier.Copy(&r.PayNotifyTaskResp, task)
 	if app != nil {
 		r.AppName = app.Name
 	}
 
-	logResps := make([]*resp.PayNotifyLogResp, 0, len(logs))
+	logResps := make([]*pay2.PayNotifyLogResp, 0, len(logs))
 	for _, log := range logs {
-		lr := &resp.PayNotifyLogResp{}
+		lr := &pay2.PayNotifyLogResp{}
 		copier.Copy(lr, log)
 		logResps = append(logResps, lr)
 	}
@@ -209,7 +208,7 @@ func (h *PayNotifyHandler) GetNotifyTaskDetail(c *gin.Context) {
 
 // GetNotifyTaskPage 获得回调通知分页
 func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
-	var r req.PayNotifyTaskPageReq
+	var r pay2.PayNotifyTaskPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -226,9 +225,9 @@ func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
 	}
 	appMap, _ := h.appSvc.GetAppMap(c, appIds)
 
-	list := make([]*resp.PayNotifyTaskResp, 0, len(pageResult.List))
+	list := make([]*pay2.PayNotifyTaskResp, 0, len(pageResult.List))
 	for _, item := range pageResult.List {
-		tr := &resp.PayNotifyTaskResp{}
+		tr := &pay2.PayNotifyTaskResp{}
 		copier.Copy(tr, item)
 		if app, ok := appMap[item.AppID]; ok {
 			tr.AppName = app.Name
@@ -236,7 +235,7 @@ func (h *PayNotifyHandler) GetNotifyTaskPage(c *gin.Context) {
 		list = append(list, tr)
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[*resp.PayNotifyTaskResp]{
+	response.WriteSuccess(c, pagination.PageResult[*pay2.PayNotifyTaskResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -264,8 +263,8 @@ func (h *PayNotifyHandler) headerToMap(c *gin.Context) map[string]string {
 }
 
 // Helpers
-func convertNotifyTaskResp(task *pay.PayNotifyTask, app *pay.PayApp) *resp.PayNotifyTaskResp {
-	r := &resp.PayNotifyTaskResp{}
+func convertNotifyTaskResp(task *pay.PayNotifyTask, app *pay.PayApp) *pay2.PayNotifyTaskResp {
+	r := &pay2.PayNotifyTaskResp{}
 	copier.Copy(r, task)
 	if app != nil {
 		r.AppName = app.Name

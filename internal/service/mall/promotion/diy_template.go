@@ -5,8 +5,7 @@ import (
 	stdErrors "errors"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -17,15 +16,15 @@ import (
 )
 
 type DiyTemplateService interface {
-	CreateDiyTemplate(ctx context.Context, req req.DiyTemplateCreateReq) (int64, error)
-	UpdateDiyTemplate(ctx context.Context, req req.DiyTemplateUpdateReq) error
+	CreateDiyTemplate(ctx context.Context, req promotion2.DiyTemplateCreateReq) (int64, error)
+	UpdateDiyTemplate(ctx context.Context, req promotion2.DiyTemplateUpdateReq) error
 	UseDiyTemplate(ctx context.Context, id int64) error
 	DeleteDiyTemplate(ctx context.Context, id int64) error
-	GetDiyTemplate(ctx context.Context, id int64) (*resp.DiyTemplateResp, error)
+	GetDiyTemplate(ctx context.Context, id int64) (*promotion2.DiyTemplateResp, error)
 	GetDiyTemplateModel(ctx context.Context, id int64) (*promotion.PromotionDiyTemplate, error) // App端使用
-	GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error)
-	GetDiyTemplateProperty(ctx context.Context, id int64) (*resp.DiyTemplatePropertyResp, error)
-	UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error
+	GetDiyTemplatePage(ctx context.Context, req promotion2.DiyTemplatePageReq) (*pagination.PageResult[*promotion2.DiyTemplateResp], error)
+	GetDiyTemplateProperty(ctx context.Context, id int64) (*promotion2.DiyTemplatePropertyResp, error)
+	UpdateDiyTemplateProperty(ctx context.Context, req promotion2.DiyTemplatePropertyUpdateReq) error
 	GetUsedDiyTemplate(ctx context.Context) (*promotion.PromotionDiyTemplate, error)
 }
 
@@ -37,7 +36,7 @@ func NewDiyTemplateService(q *query.Query) DiyTemplateService {
 	return &diyTemplateService{q: q}
 }
 
-func (s *diyTemplateService) CreateDiyTemplate(ctx context.Context, req req.DiyTemplateCreateReq) (int64, error) {
+func (s *diyTemplateService) CreateDiyTemplate(ctx context.Context, req promotion2.DiyTemplateCreateReq) (int64, error) {
 	if err := s.validateNameUnique(ctx, 0, req.Name); err != nil {
 		return 0, err
 	}
@@ -59,7 +58,7 @@ func (s *diyTemplateService) CreateDiyTemplate(ctx context.Context, req req.DiyT
 	return template.ID, nil
 }
 
-func (s *diyTemplateService) UpdateDiyTemplate(ctx context.Context, req req.DiyTemplateUpdateReq) error {
+func (s *diyTemplateService) UpdateDiyTemplate(ctx context.Context, req promotion2.DiyTemplateUpdateReq) error {
 	_, err := s.validateDiyTemplateExists(ctx, req.ID)
 	if err != nil {
 		return err
@@ -98,7 +97,7 @@ func (s *diyTemplateService) DeleteDiyTemplate(ctx context.Context, id int64) er
 	return err
 }
 
-func (s *diyTemplateService) GetDiyTemplate(ctx context.Context, id int64) (*resp.DiyTemplateResp, error) {
+func (s *diyTemplateService) GetDiyTemplate(ctx context.Context, id int64) (*promotion2.DiyTemplateResp, error) {
 	template, err := s.validateDiyTemplateExists(ctx, id)
 	if err != nil {
 		return nil, err
@@ -111,7 +110,7 @@ func (s *diyTemplateService) GetDiyTemplateModel(ctx context.Context, id int64) 
 	return s.validateDiyTemplateExists(ctx, id)
 }
 
-func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.DiyTemplatePageReq) (*pagination.PageResult[*resp.DiyTemplateResp], error) {
+func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req promotion2.DiyTemplatePageReq) (*pagination.PageResult[*promotion2.DiyTemplateResp], error) {
 	q := s.q.PromotionDiyTemplate
 	do := q.WithContext(ctx)
 	if req.Name != "" {
@@ -127,14 +126,14 @@ func (s *diyTemplateService) GetDiyTemplatePage(ctx context.Context, req req.Diy
 		return nil, err
 	}
 
-	result := make([]*resp.DiyTemplateResp, len(list))
+	result := make([]*promotion2.DiyTemplateResp, len(list))
 	for i, item := range list {
 		result[i] = s.convertDiyTemplateToResp(item)
 	}
-	return &pagination.PageResult[*resp.DiyTemplateResp]{List: result, Total: total}, nil
+	return &pagination.PageResult[*promotion2.DiyTemplateResp]{List: result, Total: total}, nil
 }
 
-func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (*resp.DiyTemplatePropertyResp, error) {
+func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int64) (*promotion2.DiyTemplatePropertyResp, error) {
 	template, err := s.validateDiyTemplateExists(ctx, id)
 	if err != nil {
 		return nil, err
@@ -145,10 +144,10 @@ func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int6
 		return nil, err
 	}
 
-	pageResps := make([]resp.DiyPagePropertyResp, len(pages))
+	pageResps := make([]promotion2.DiyPagePropertyResp, len(pages))
 	for i, page := range pages {
-		pageResps[i] = resp.DiyPagePropertyResp{
-			DiyPageBase: resp.DiyPageBase{
+		pageResps[i] = promotion2.DiyPagePropertyResp{
+			DiyPageBase: promotion2.DiyPageBase{
 				TemplateID:     page.TemplateID,
 				Name:           page.Name,
 				Remark:         page.Remark,
@@ -159,8 +158,8 @@ func (s *diyTemplateService) GetDiyTemplateProperty(ctx context.Context, id int6
 		}
 	}
 
-	return &resp.DiyTemplatePropertyResp{
-		DiyTemplateBase: resp.DiyTemplateBase{
+	return &promotion2.DiyTemplatePropertyResp{
+		DiyTemplateBase: promotion2.DiyTemplateBase{
 			Name:           template.Name,
 			Remark:         template.Remark,
 			PreviewPicUrls: []string(template.PreviewPicUrls),
@@ -212,7 +211,7 @@ func (s *diyTemplateService) GetUsedDiyTemplate(ctx context.Context) (*promotion
 }
 
 // UpdateDiyTemplateProperty 更新装修模板属性
-func (s *diyTemplateService) UpdateDiyTemplateProperty(ctx context.Context, req req.DiyTemplatePropertyUpdateReq) error {
+func (s *diyTemplateService) UpdateDiyTemplateProperty(ctx context.Context, req promotion2.DiyTemplatePropertyUpdateReq) error {
 	// 校验存在
 	_, err := s.validateDiyTemplateExists(ctx, req.ID)
 	if err != nil {
@@ -270,9 +269,9 @@ func (s *diyTemplateService) validateDiyTemplateExists(ctx context.Context, id i
 	return template, nil
 }
 
-func (s *diyTemplateService) convertDiyTemplateToResp(item *promotion.PromotionDiyTemplate) *resp.DiyTemplateResp {
-	return &resp.DiyTemplateResp{
-		DiyTemplateBase: resp.DiyTemplateBase{
+func (s *diyTemplateService) convertDiyTemplateToResp(item *promotion.PromotionDiyTemplate) *promotion2.DiyTemplateResp {
+	return &promotion2.DiyTemplateResp{
+		DiyTemplateBase: promotion2.DiyTemplateBase{
 			Name:           item.Name,
 			Remark:         item.Remark,
 			PreviewPicUrls: []string(item.PreviewPicUrls),

@@ -3,10 +3,8 @@ package system
 import (
 	"context"
 	"errors"
-	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -26,7 +24,7 @@ func NewTenantPackageService(q *query.Query, tenantSvc *TenantService) *TenantPa
 }
 
 // CreateTenantPackage 创建租户套餐
-func (s *TenantPackageService) CreateTenantPackage(ctx context.Context, r *req.TenantPackageSaveReq) (int64, error) {
+func (s *TenantPackageService) CreateTenantPackage(ctx context.Context, r *system.TenantPackageSaveReq) (int64, error) {
 	// 校验名称唯一
 	if err := s.validateTenantPackageNameUnique(ctx, r.Name, 0); err != nil {
 		return 0, err
@@ -36,7 +34,7 @@ func (s *TenantPackageService) CreateTenantPackage(ctx context.Context, r *req.T
 		Name:    r.Name,
 		Status:  int32(*r.Status),
 		Remark:  r.Remark,
-		MenuIDs: r.MenuIDs,
+		MenuIDs: r.MenuIds,
 	}
 	if err := s.q.SystemTenantPackage.WithContext(ctx).Create(pkg); err != nil {
 		return 0, err
@@ -45,7 +43,7 @@ func (s *TenantPackageService) CreateTenantPackage(ctx context.Context, r *req.T
 }
 
 // UpdateTenantPackage 更新租户套餐
-func (s *TenantPackageService) UpdateTenantPackage(ctx context.Context, r *req.TenantPackageSaveReq) error {
+func (s *TenantPackageService) UpdateTenantPackage(ctx context.Context, r *system.TenantPackageSaveReq) error {
 	t := s.q.SystemTenantPackage
 	// 1. 校验存在
 	oldPkg, err := t.WithContext(ctx).Where(t.ID.Eq(r.ID)).First()
@@ -62,19 +60,19 @@ func (s *TenantPackageService) UpdateTenantPackage(ctx context.Context, r *req.T
 		Name:    r.Name,
 		Status:  int32(*r.Status),
 		Remark:  r.Remark,
-		MenuIDs: r.MenuIDs,
+		MenuIDs: r.MenuIds,
 	})
 	if err != nil {
 		return err
 	}
 
 	// 4. 如果菜单发生变化，则修改每个租户的权限 - 对齐 Java: updateTenantPackage 数据同步逻辑
-	if !utils.IsEqualList(oldPkg.MenuIDs, r.MenuIDs) {
+	if !utils.IsEqualList(oldPkg.MenuIDs, r.MenuIds) {
 		// 查找所有使用该套餐的租户
 		tenants, err := s.q.SystemTenant.WithContext(ctx).Where(s.q.SystemTenant.PackageID.Eq(r.ID)).Find()
 		if err == nil {
 			for _, tenant := range tenants {
-				_ = s.tenantSvc.updateTenantRoleMenu(ctx, tenant.ID, r.MenuIDs)
+				_ = s.tenantSvc.updateTenantRoleMenu(ctx, tenant.ID, r.MenuIds)
 			}
 		}
 	}
@@ -142,13 +140,13 @@ func (s *TenantPackageService) ValidTenantPackage(ctx context.Context, id int64)
 }
 
 // GetTenantPackage 获得租户套餐
-func (s *TenantPackageService) GetTenantPackage(ctx context.Context, id int64) (*resp.TenantPackageResp, error) {
+func (s *TenantPackageService) GetTenantPackage(ctx context.Context, id int64) (*system.TenantPackageResp, error) {
 	t := s.q.SystemTenantPackage
 	pkg, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return &resp.TenantPackageResp{
+	return &system.TenantPackageResp{
 		ID:         pkg.ID,
 		Name:       pkg.Name,
 		Status:     int(pkg.Status),
@@ -159,15 +157,15 @@ func (s *TenantPackageService) GetTenantPackage(ctx context.Context, id int64) (
 }
 
 // GetTenantPackageSimpleList 获取租户套餐精简列表
-func (s *TenantPackageService) GetTenantPackageSimpleList(ctx context.Context) ([]*resp.TenantPackageResp, error) {
+func (s *TenantPackageService) GetTenantPackageSimpleList(ctx context.Context) ([]*system.TenantPackageResp, error) {
 	t := s.q.SystemTenantPackage
 	list, err := t.WithContext(ctx).Where(t.Status.Eq(0)).Find() // 0 = 开启
 	if err != nil {
 		return nil, err
 	}
-	respList := make([]*resp.TenantPackageResp, len(list))
+	respList := make([]*system.TenantPackageResp, len(list))
 	for i, pkg := range list {
-		respList[i] = &resp.TenantPackageResp{
+		respList[i] = &system.TenantPackageResp{
 			ID:   pkg.ID,
 			Name: pkg.Name,
 		}
@@ -176,7 +174,7 @@ func (s *TenantPackageService) GetTenantPackageSimpleList(ctx context.Context) (
 }
 
 // GetTenantPackagePage 获得租户套餐分页
-func (s *TenantPackageService) GetTenantPackagePage(ctx context.Context, r *req.TenantPackagePageReq) (*pagination.PageResult[*resp.TenantPackageResp], error) {
+func (s *TenantPackageService) GetTenantPackagePage(ctx context.Context, r *system.TenantPackagePageReq) (*pagination.PageResult[*system.TenantPackageResp], error) {
 	t := s.q.SystemTenantPackage
 	q := t.WithContext(ctx)
 
@@ -190,10 +188,11 @@ func (s *TenantPackageService) GetTenantPackagePage(ctx context.Context, r *req.
 	if r.Remark != "" {
 		q = q.Where(t.Remark.Like("%" + r.Remark + "%"))
 	}
-	if len(r.CreateTime) == 2 {
-		startTime, _ := time.Parse("2006-01-02 15:04:05", r.CreateTime[0])
-		endTime, _ := time.Parse("2006-01-02 15:04:05", r.CreateTime[1])
-		q = q.Where(t.CreateTime.Between(startTime, endTime))
+	if r.CreateTimeGe != nil {
+		q = q.Where(t.CreateTime.Gte(*r.CreateTimeGe))
+	}
+	if r.CreateTimeLe != nil {
+		q = q.Where(t.CreateTime.Lte(*r.CreateTimeLe))
 	}
 
 	// 分页查询
@@ -208,9 +207,9 @@ func (s *TenantPackageService) GetTenantPackagePage(ctx context.Context, r *req.
 	}
 
 	// Entity → DTO 转换
-	respList := make([]*resp.TenantPackageResp, len(list))
+	respList := make([]*system.TenantPackageResp, len(list))
 	for i, pkg := range list {
-		respList[i] = &resp.TenantPackageResp{
+		respList[i] = &system.TenantPackageResp{
 			ID:         pkg.ID,
 			Name:       pkg.Name,
 			Status:     int(pkg.Status),
@@ -220,7 +219,7 @@ func (s *TenantPackageService) GetTenantPackagePage(ctx context.Context, r *req.
 		}
 	}
 
-	return &pagination.PageResult[*resp.TenantPackageResp]{
+	return &pagination.PageResult[*system.TenantPackageResp]{
 		List:  respList,
 		Total: count,
 	}, nil

@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -14,13 +13,13 @@ import (
 )
 
 type ArticleCategoryService interface {
-	CreateArticleCategory(ctx context.Context, req req.ArticleCategoryCreateReq) (int64, error)
-	UpdateArticleCategory(ctx context.Context, req req.ArticleCategoryUpdateReq) error
+	CreateArticleCategory(ctx context.Context, req promotion2.ArticleCategoryCreateReq) (int64, error)
+	UpdateArticleCategory(ctx context.Context, req promotion2.ArticleCategoryUpdateReq) error
 	DeleteArticleCategory(ctx context.Context, id int64) error
-	GetArticleCategory(ctx context.Context, id int64) (*resp.ArticleCategoryRespVO, error)
-	GetArticleCategoryList(ctx context.Context, req req.ArticleCategoryListReq) ([]*resp.ArticleCategoryRespVO, error)
-	GetArticleCategorySimpleList(ctx context.Context) ([]*resp.ArticleCategorySimpleRespVO, error)
-	GetArticleCategoryPage(ctx context.Context, req req.ArticleCategoryPageReq) (*pagination.PageResult[*resp.ArticleCategoryRespVO], error)
+	GetArticleCategory(ctx context.Context, id int64) (*promotion2.ArticleCategoryRespVO, error)
+	GetArticleCategoryList(ctx context.Context, req promotion2.ArticleCategoryListReq) ([]*promotion2.ArticleCategoryRespVO, error)
+	GetArticleCategorySimpleList(ctx context.Context) ([]*promotion2.ArticleCategorySimpleRespVO, error)
+	GetArticleCategoryPage(ctx context.Context, req promotion2.ArticleCategoryPageReq) (*pagination.PageResult[*promotion2.ArticleCategoryRespVO], error)
 }
 
 type articleCategoryService struct {
@@ -31,7 +30,7 @@ func NewArticleCategoryService(q *query.Query) ArticleCategoryService {
 	return &articleCategoryService{q: q}
 }
 
-func (s *articleCategoryService) CreateArticleCategory(ctx context.Context, req req.ArticleCategoryCreateReq) (int64, error) {
+func (s *articleCategoryService) CreateArticleCategory(ctx context.Context, req promotion2.ArticleCategoryCreateReq) (int64, error) {
 	category := &promotion.PromotionArticleCategory{
 		Name:   req.Name,
 		PicURL: req.PicURL,
@@ -42,7 +41,7 @@ func (s *articleCategoryService) CreateArticleCategory(ctx context.Context, req 
 	return category.ID, err
 }
 
-func (s *articleCategoryService) UpdateArticleCategory(ctx context.Context, req req.ArticleCategoryUpdateReq) error {
+func (s *articleCategoryService) UpdateArticleCategory(ctx context.Context, req promotion2.ArticleCategoryUpdateReq) error {
 	_, err := s.q.PromotionArticleCategory.WithContext(ctx).Where(s.q.PromotionArticleCategory.ID.Eq(req.ID)).Updates(promotion.PromotionArticleCategory{
 		Name:   req.Name,
 		PicURL: req.PicURL,
@@ -66,12 +65,12 @@ func (s *articleCategoryService) DeleteArticleCategory(ctx context.Context, id i
 	return err
 }
 
-func (s *articleCategoryService) GetArticleCategory(ctx context.Context, id int64) (*resp.ArticleCategoryRespVO, error) {
+func (s *articleCategoryService) GetArticleCategory(ctx context.Context, id int64) (*promotion2.ArticleCategoryRespVO, error) {
 	category, err := s.q.PromotionArticleCategory.WithContext(ctx).Where(s.q.PromotionArticleCategory.ID.Eq(id)).First()
 	if err != nil {
 		return nil, errors.NewBizError(404, "文章分类不存在")
 	}
-	return &resp.ArticleCategoryRespVO{
+	return &promotion2.ArticleCategoryRespVO{
 		ID:         category.ID,
 		Name:       category.Name,
 		PicURL:     category.PicURL,
@@ -81,7 +80,7 @@ func (s *articleCategoryService) GetArticleCategory(ctx context.Context, id int6
 	}, nil
 }
 
-func (s *articleCategoryService) GetArticleCategoryList(ctx context.Context, req req.ArticleCategoryListReq) ([]*resp.ArticleCategoryRespVO, error) {
+func (s *articleCategoryService) GetArticleCategoryList(ctx context.Context, req promotion2.ArticleCategoryListReq) ([]*promotion2.ArticleCategoryRespVO, error) {
 	q := s.q.PromotionArticleCategory
 	do := q.WithContext(ctx)
 	if req.Name != "" {
@@ -100,10 +99,10 @@ func (s *articleCategoryService) GetArticleCategoryList(ctx context.Context, req
 		return nil, err
 	}
 
-	result := make([]*resp.ArticleCategoryRespVO, len(list))
+	result := make([]*promotion2.ArticleCategoryRespVO, len(list))
 	for i, item := range list {
 		// Manual Filter for Status if needed? No.
-		result[i] = &resp.ArticleCategoryRespVO{
+		result[i] = &promotion2.ArticleCategoryRespVO{
 			ID:         item.ID,
 			Name:       item.Name,
 			PicURL:     item.PicURL,
@@ -115,7 +114,7 @@ func (s *articleCategoryService) GetArticleCategoryList(ctx context.Context, req
 	return result, nil
 }
 
-func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Context) ([]*resp.ArticleCategorySimpleRespVO, error) {
+func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Context) ([]*promotion2.ArticleCategorySimpleRespVO, error) {
 	list, err := s.q.PromotionArticleCategory.WithContext(ctx).
 		Where(s.q.PromotionArticleCategory.Status.Eq(consts.CommonStatusEnable)). // 使用启用状态常量替代魔法数字 0
 		Order(s.q.PromotionArticleCategory.Sort.Desc()).
@@ -124,9 +123,9 @@ func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Contex
 		return nil, err
 	}
 
-	result := make([]*resp.ArticleCategorySimpleRespVO, len(list))
+	result := make([]*promotion2.ArticleCategorySimpleRespVO, len(list))
 	for i, item := range list {
-		result[i] = &resp.ArticleCategorySimpleRespVO{
+		result[i] = &promotion2.ArticleCategorySimpleRespVO{
 			ID:   item.ID,
 			Name: item.Name,
 		}
@@ -134,7 +133,7 @@ func (s *articleCategoryService) GetArticleCategorySimpleList(ctx context.Contex
 	return result, nil
 }
 
-func (s *articleCategoryService) GetArticleCategoryPage(ctx context.Context, req req.ArticleCategoryPageReq) (*pagination.PageResult[*resp.ArticleCategoryRespVO], error) {
+func (s *articleCategoryService) GetArticleCategoryPage(ctx context.Context, req promotion2.ArticleCategoryPageReq) (*pagination.PageResult[*promotion2.ArticleCategoryRespVO], error) {
 	q := s.q.PromotionArticleCategory
 	do := q.WithContext(ctx)
 
@@ -169,9 +168,9 @@ func (s *articleCategoryService) GetArticleCategoryPage(ctx context.Context, req
 	}
 
 	// 转换为响应 VO
-	result := make([]*resp.ArticleCategoryRespVO, len(list))
+	result := make([]*promotion2.ArticleCategoryRespVO, len(list))
 	for i, item := range list {
-		result[i] = &resp.ArticleCategoryRespVO{
+		result[i] = &promotion2.ArticleCategoryRespVO{
 			ID:         item.ID,
 			Name:       item.Name,
 			PicURL:     item.PicURL,
@@ -181,7 +180,7 @@ func (s *articleCategoryService) GetArticleCategoryPage(ctx context.Context, req
 		}
 	}
 
-	return &pagination.PageResult[*resp.ArticleCategoryRespVO]{
+	return &pagination.PageResult[*promotion2.ArticleCategoryRespVO]{
 		List:  result,
 		Total: total,
 	}, nil

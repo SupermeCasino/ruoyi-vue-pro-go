@@ -3,7 +3,7 @@ package system
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -22,7 +22,7 @@ func NewAuthHandler(svc *system.AuthService) *AuthHandler {
 // Login 登录接口
 // @Router /system/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req req.AuthLoginReq
+	var req system2.AuthLoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -85,7 +85,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 // SmsLogin 短信登录
 // @Router /system/auth/sms-login [post]
 func (h *AuthHandler) SmsLogin(c *gin.Context) {
-	var r req.AuthSmsLoginReq
+	var r system2.AuthSmsLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -102,7 +102,7 @@ func (h *AuthHandler) SmsLogin(c *gin.Context) {
 // SendSmsCode 发送短信验证码
 // @Router /system/auth/send-sms-code [post]
 func (h *AuthHandler) SendSmsCode(c *gin.Context) {
-	var r req.AuthSmsSendReq
+	var r system2.AuthSmsSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -119,7 +119,7 @@ func (h *AuthHandler) SendSmsCode(c *gin.Context) {
 // Register 注册
 // @Router /system/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
-	var r req.AuthRegisterReq
+	var r system2.AuthRegisterReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -136,7 +136,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // ResetPassword 重置密码
 // @Router /system/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
-	var r req.AuthResetPasswordReq
+	var r system2.AuthResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -179,7 +179,7 @@ func (h *AuthHandler) SocialAuthRedirect(c *gin.Context) {
 // SocialLogin 社交登录
 // @Router /system/auth/social-login [post]
 func (h *AuthHandler) SocialLogin(c *gin.Context) {
-	var r req.AuthSocialLoginReq
+	var r system2.AuthSocialLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

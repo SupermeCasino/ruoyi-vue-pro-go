@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/trade"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -63,7 +63,7 @@ func (s *BrokerageRecordService) GetBrokerageRecord(ctx context.Context, id int6
 }
 
 // GetBrokerageRecordPage 获得分销记录分页
-func (s *BrokerageRecordService) GetBrokerageRecordPage(ctx context.Context, r *req.BrokerageRecordPageReq) (*pagination.PageResult[*brokerage.BrokerageRecord], error) {
+func (s *BrokerageRecordService) GetBrokerageRecordPage(ctx context.Context, r *trade2.BrokerageRecordPageReq) (*pagination.PageResult[*brokerage.BrokerageRecord], error) {
 	q := s.q.BrokerageRecord.WithContext(ctx)
 
 	if r.UserID > 0 {
@@ -230,7 +230,7 @@ func (s *BrokerageRecordService) CalculateProductBrokeragePrice(ctx context.Cont
 }
 
 // GetBrokerageUserRankPageByPrice 获得分销用户排行分页（基于佣金）
-func (s *BrokerageRecordService) GetBrokerageUserRankPageByPrice(ctx context.Context, r *req.AppBrokerageUserRankPageReq) (*pagination.PageResult[*trade.AppBrokerageUserRankByPriceRespVO], error) {
+func (s *BrokerageRecordService) GetBrokerageUserRankPageByPrice(ctx context.Context, r *trade2.AppBrokerageUserRankPageReq) (*pagination.PageResult[*trade.AppBrokerageUserRankByPriceRespVO], error) {
 	// 解析时间范围
 	var beginTime, endTime time.Time
 	if len(r.Times) >= 2 {

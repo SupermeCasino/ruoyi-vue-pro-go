@@ -6,7 +6,7 @@ import (
 	stdErrors "errors"
 	"fmt"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payrepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
@@ -40,7 +40,7 @@ func NewPayRefundService(q *query.Query, appSvc *PayAppService, channelSvc *PayC
 }
 
 // CreateRefund 创建退款单
-func (s *PayRefundService) CreateRefund(ctx context.Context, reqDTO *req.PayRefundCreateReq) (int64, error) {
+func (s *PayRefundService) CreateRefund(ctx context.Context, reqDTO *pay.PayRefundCreateReq) (int64, error) {
 	// 1.1 校验 App
 	app, err := s.appSvc.GetAppByAppKey(ctx, reqDTO.AppKey)
 	if err != nil {
@@ -125,7 +125,7 @@ func (s *PayRefundService) CreateRefund(ctx context.Context, reqDTO *req.PayRefu
 	return refund.ID, nil
 }
 
-func (s *PayRefundService) validatePayOrderCanRefund(ctx context.Context, appId int64, reqDTO *req.PayRefundCreateReq) (*payModel.PayOrder, error) {
+func (s *PayRefundService) validatePayOrderCanRefund(ctx context.Context, appId int64, reqDTO *pay.PayRefundCreateReq) (*payModel.PayOrder, error) {
 	// Query PayOrder
 	payOrder, err := s.q.PayOrder.WithContext(ctx).
 		Where(s.q.PayOrder.AppID.Eq(appId), s.q.PayOrder.MerchantOrderId.Eq(reqDTO.MerchantOrderId)).
@@ -201,7 +201,7 @@ func (s *PayRefundService) GetRefundCountByAppId(ctx context.Context, appId int6
 }
 
 // GetRefundPage 获得退款订单分页
-func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefundPageReq) (*pagination.PageResult[*payModel.PayRefund], error) {
+func (s *PayRefundService) GetRefundPage(ctx context.Context, req *pay.PayRefundPageReq) (*pagination.PageResult[*payModel.PayRefund], error) {
 	q := s.q.PayRefund.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayRefund.AppID.Eq(req.AppID))
@@ -240,7 +240,7 @@ func (s *PayRefundService) GetRefundPage(ctx context.Context, req *req.PayRefund
 }
 
 // GetRefundList 获得退款订单列表 (Export)
-func (s *PayRefundService) GetRefundList(ctx context.Context, req *req.PayRefundExportReq) ([]*payModel.PayRefund, error) {
+func (s *PayRefundService) GetRefundList(ctx context.Context, req *pay.PayRefundExportReq) ([]*payModel.PayRefund, error) {
 	q := s.q.PayRefund.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayRefund.AppID.Eq(req.AppID))

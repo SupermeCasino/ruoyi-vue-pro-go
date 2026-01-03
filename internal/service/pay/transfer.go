@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
-	respPay "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/pay"
+	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
+	respPay "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	repoPay "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"

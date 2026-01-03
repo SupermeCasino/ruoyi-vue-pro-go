@@ -3,8 +3,8 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	productContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
@@ -28,7 +28,7 @@ func NewSeckillActivityHandler(svc *promotion.SeckillActivityService, spuSvc *pr
 
 // CreateSeckillActivity 创建
 func (h *SeckillActivityHandler) CreateSeckillActivity(c *gin.Context) {
-	var r req.SeckillActivityCreateReq
+	var r promotion2.SeckillActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -43,7 +43,7 @@ func (h *SeckillActivityHandler) CreateSeckillActivity(c *gin.Context) {
 
 // UpdateSeckillActivity 更新
 func (h *SeckillActivityHandler) UpdateSeckillActivity(c *gin.Context) {
-	var r req.SeckillActivityUpdateReq
+	var r promotion2.SeckillActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -96,8 +96,8 @@ func (h *SeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		return
 	}
 
-	detail := resp.SeckillActivityDetailResp{}
-	detail.SeckillActivityResp = resp.SeckillActivityResp{
+	detail := promotion2.SeckillActivityDetailResp{}
+	detail.SeckillActivityResp = promotion2.SeckillActivityResp{
 		ID:               act.ID,
 		SpuID:            act.SpuID,
 		Name:             act.Name,
@@ -114,7 +114,7 @@ func (h *SeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		CreateTime:       act.CreateTime,
 	}
 	for _, p := range products {
-		detail.Products = append(detail.Products, resp.SeckillProductResp{
+		detail.Products = append(detail.Products, promotion2.SeckillProductResp{
 			ID:           p.ID,
 			ActivityID:   p.ActivityID,
 			SpuID:        p.SpuID,
@@ -128,7 +128,7 @@ func (h *SeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 
 // GetSeckillActivityPage 分页
 func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
-	var r req.SeckillActivityPageReq
+	var r promotion2.SeckillActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -139,8 +139,8 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		return
 	}
 	if len(res.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.SeckillActivityResp]{
-			List:  []resp.SeckillActivityResp{},
+		response.WriteSuccess(c, pagination.PageResult[promotion2.SeckillActivityResp]{
+			List:  []promotion2.SeckillActivityResp{},
 			Total: res.Total,
 		})
 		return
@@ -163,15 +163,15 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 
 	// 批量获取 SPU
 	spuList, _ := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*productContract.ProductSpuResp)
 	for _, spu := range spuList {
 		spuMap[spu.ID] = spu
 	}
 
 	// 构建响应
-	list := make([]resp.SeckillActivityResp, len(res.List))
+	list := make([]promotion2.SeckillActivityResp, len(res.List))
 	for i, v := range res.List {
-		item := resp.SeckillActivityResp{
+		item := promotion2.SeckillActivityResp{
 			ID:               v.ID,
 			SpuID:            v.SpuID,
 			Name:             v.Name,
@@ -190,10 +190,10 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 
 		// 拼接 Products
 		if prods, ok := productMap[v.ID]; ok {
-			item.Products = make([]resp.SeckillProductResp, len(prods))
+			item.Products = make([]promotion2.SeckillProductResp, len(prods))
 			minPrice := 0
 			for j, p := range prods {
-				item.Products[j] = resp.SeckillProductResp{
+				item.Products[j] = promotion2.SeckillProductResp{
 					ID:           p.ID,
 					ActivityID:   p.ActivityID,
 					SpuID:        p.SpuID,
@@ -218,7 +218,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		list[i] = item
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.SeckillActivityResp]{
+	response.WriteSuccess(c, pagination.PageResult[promotion2.SeckillActivityResp]{
 		List:  list,
 		Total: res.Total,
 	})
@@ -251,7 +251,7 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 		}
 	}
 	if len(activeList) == 0 {
-		response.WriteSuccess(c, []resp.SeckillActivityResp{})
+		response.WriteSuccess(c, []promotion2.SeckillActivityResp{})
 		return
 	}
 
@@ -288,9 +288,9 @@ func (h *SeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) {
 	}
 
 	// 构建响应
-	result := make([]resp.SeckillActivityResp, len(activeList))
+	result := make([]promotion2.SeckillActivityResp, len(activeList))
 	for i, act := range activeList {
-		result[i] = resp.SeckillActivityResp{
+		result[i] = promotion2.SeckillActivityResp{
 			ID:               act.ID,
 			SpuID:            act.SpuID,
 			Name:             act.Name,

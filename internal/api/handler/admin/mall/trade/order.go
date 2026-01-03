@@ -1,8 +1,8 @@
 package trade
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	memberContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/area"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -33,7 +33,7 @@ func NewTradeOrderHandler(svc *trade.TradeOrderUpdateService, querySvc *trade.Tr
 
 // GetOrderPage 获得订单分页
 func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
-	var r req.TradeOrderPageReq
+	var r trade2.TradeOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -46,7 +46,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 	}
 
 	// Fetch Items
-	var resultList []resp.TradeOrderPageItemResp
+	var resultList []trade2.TradeOrderPageItemResp
 	if len(pageResult.List) > 0 {
 		orderIds := make([]int64, len(pageResult.List))
 		userIds := make([]int64, 0, len(pageResult.List))
@@ -66,9 +66,9 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 			response.WriteBizError(c, err)
 			return
 		}
-		itemMap := make(map[int64][]resp.TradeOrderItemBase)
+		itemMap := make(map[int64][]trade2.TradeOrderItemBase)
 		for _, item := range items {
-			itemResp := resp.TradeOrderItemBase{
+			itemResp := trade2.TradeOrderItemBase{
 				ID:       item.ID,
 				UserID:   item.UserID,
 				OrderID:  item.OrderID,
@@ -92,7 +92,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 		}
 
 		// Query Brokerage Users
-		var brokerageUserMap map[int64]*resp.MemberUserResp
+		var brokerageUserMap map[int64]*memberContract.MemberUserResp
 		if len(brokerageUserIds) > 0 {
 			brokerageUserMap, err = h.memberSvc.GetUserRespMap(c, brokerageUserIds)
 			if err != nil {
@@ -101,20 +101,20 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 			}
 		}
 
-		resultList = make([]resp.TradeOrderPageItemResp, len(pageResult.List))
+		resultList = make([]trade2.TradeOrderPageItemResp, len(pageResult.List))
 		for i, o := range pageResult.List {
 			var payOrderID int64
 			if o.PayOrderID != nil {
 				payOrderID = *o.PayOrderID
 			}
 
-			var brokerageUser *resp.MemberUserResp
+			var brokerageUser *memberContract.MemberUserResp
 			if o.BrokerageUserID != nil {
 				brokerageUser = brokerageUserMap[*o.BrokerageUserID]
 			}
 
-			resultList[i] = resp.TradeOrderPageItemResp{
-				TradeOrderBase: resp.TradeOrderBase{
+			resultList[i] = trade2.TradeOrderPageItemResp{
+				TradeOrderBase: trade2.TradeOrderBase{
 					ID:                    o.ID,
 					No:                    o.No,
 					CreateTime:            o.CreateTime,
@@ -145,7 +145,7 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 					ReceiveTime:           o.ReceiveTime,
 					ReceiverName:          o.ReceiverName,
 					ReceiverMobile:        o.ReceiverMobile,
-					ReceiverAreaID:        o.ReceiverAreaID,
+					ReceiverAreaID:        int32(o.ReceiverAreaID),
 					ReceiverDetailAddress: o.ReceiverDetailAddress,
 					RefundPrice:           o.RefundPrice,
 					CouponID:              o.CouponID,
@@ -158,10 +158,10 @@ func (h *TradeOrderHandler) GetOrderPage(c *gin.Context) {
 			}
 		}
 	} else {
-		resultList = []resp.TradeOrderPageItemResp{}
+		resultList = []trade2.TradeOrderPageItemResp{}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.TradeOrderPageItemResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade2.TradeOrderPageItemResp]{
 		List:  resultList,
 		Total: pageResult.Total,
 	})
@@ -200,7 +200,7 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 	}
 
 	// 4. Query User and Brokerage User
-	var user *resp.MemberUserResp
+	var user *memberContract.MemberUserResp
 	if order.UserID > 0 {
 		userMap, err := h.memberSvc.GetUserRespMap(c, []int64{order.UserID})
 		if err == nil && userMap != nil {
@@ -208,7 +208,7 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 		}
 	}
 
-	var brokerageUser *resp.MemberUserResp
+	var brokerageUser *memberContract.MemberUserResp
 	if order.BrokerageUserID != nil && *order.BrokerageUserID > 0 {
 		brokerageUserMap, err := h.memberSvc.GetUserRespMap(c, []int64{*order.BrokerageUserID})
 		if err == nil && brokerageUserMap != nil {
@@ -218,9 +218,9 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 
 	// 5. Get Receiver Area Name
 	receiverAreaName := area.Format(int(order.ReceiverAreaID))
-	itemResps := make([]resp.TradeOrderItemBase, len(items))
+	itemResps := make([]trade2.TradeOrderItemBase, len(items))
 	for i, item := range items {
-		itemResps[i] = resp.TradeOrderItemBase{
+		itemResps[i] = trade2.TradeOrderItemBase{
 			ID:       item.ID,
 			UserID:   item.UserID,
 			OrderID:  item.OrderID,
@@ -235,9 +235,9 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 		}
 	}
 
-	logResps := make([]resp.TradeOrderLogResp, len(logs))
+	logResps := make([]trade2.TradeOrderLogResp, len(logs))
 	for i, l := range logs {
-		logResps[i] = resp.TradeOrderLogResp{
+		logResps[i] = trade2.TradeOrderLogResp{
 			Content:    l.Content,
 			CreateTime: l.CreateTime,
 			UserType:   l.UserType,
@@ -251,8 +251,8 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 
 	// Prepare User Info if needed, skip for now
 
-	res := resp.TradeOrderDetailResp{
-		TradeOrderBase: resp.TradeOrderBase{
+	res := trade2.TradeOrderDetailResp{
+		TradeOrderBase: trade2.TradeOrderBase{
 			ID:                    order.ID,
 			No:                    order.No,
 			Type:                  order.Type,
@@ -282,7 +282,7 @@ func (h *TradeOrderHandler) GetOrderDetail(c *gin.Context) {
 			ReceiveTime:           order.ReceiveTime,
 			ReceiverName:          order.ReceiverName,
 			ReceiverMobile:        order.ReceiverMobile,
-			ReceiverAreaID:        order.ReceiverAreaID,
+			ReceiverAreaID:        int32(order.ReceiverAreaID),
 			ReceiverDetailAddress: order.ReceiverDetailAddress,
 			RefundPrice:           order.RefundPrice,
 			CouponID:              order.CouponID,
@@ -315,7 +315,7 @@ func (h *TradeOrderHandler) GetOrderExpressTrackList(c *gin.Context) {
 
 // DeliveryOrder 订单发货
 func (h *TradeOrderHandler) DeliveryOrder(c *gin.Context) {
-	var r req.TradeOrderDeliveryReq
+	var r trade2.TradeOrderDeliveryReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -329,7 +329,7 @@ func (h *TradeOrderHandler) DeliveryOrder(c *gin.Context) {
 
 // UpdateOrderRemark 订单备注
 func (h *TradeOrderHandler) UpdateOrderRemark(c *gin.Context) {
-	var r req.TradeOrderRemarkReq
+	var r trade2.TradeOrderRemarkReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -343,7 +343,7 @@ func (h *TradeOrderHandler) UpdateOrderRemark(c *gin.Context) {
 
 // UpdateOrderPrice 订单调价
 func (h *TradeOrderHandler) UpdateOrderPrice(c *gin.Context) {
-	var r req.TradeOrderUpdatePriceReq
+	var r trade2.TradeOrderUpdatePriceReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -357,7 +357,7 @@ func (h *TradeOrderHandler) UpdateOrderPrice(c *gin.Context) {
 
 // UpdateOrderAddress 修改订单收货地址
 func (h *TradeOrderHandler) UpdateOrderAddress(c *gin.Context) {
-	var r req.TradeOrderUpdateAddressReq
+	var r trade2.TradeOrderUpdateAddressReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -414,7 +414,7 @@ func (h *TradeOrderHandler) GetByPickUpVerifyCode(c *gin.Context) {
 
 // GetOrderSummary 获得交易订单统计
 func (h *TradeOrderHandler) GetOrderSummary(c *gin.Context) {
-	var r req.TradeOrderPageReq
+	var r trade2.TradeOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

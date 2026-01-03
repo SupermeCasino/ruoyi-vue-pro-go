@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/common"
 	"github.com/wxlbd/ruoyi-mall-go/internal/dto"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/statistics"
 )
@@ -13,10 +14,10 @@ import (
 
 // TradeStatisticsService 交易统计服务接口
 type TradeStatisticsService interface {
-	GetTradeSummaryByDays(ctx context.Context, days int) (*resp.TradeSummaryItemVO, error)
-	GetTradeSummaryByMonths(ctx context.Context, months int) (*resp.TradeSummaryItemVO, error)
-	GetTradeStatisticsAnalyse(ctx context.Context, beginTime, endTime time.Time) (*resp.DataComparisonRespVO[resp.TradeTrendSummaryRespVO], error)
-	GetTradeStatisticsList(ctx context.Context, beginTime, endTime time.Time) ([]*resp.TradeTrendSummaryRespVO, error)
+	GetTradeSummaryByDays(ctx context.Context, days int) (*trade.TradeSummaryItemVO, error)
+	GetTradeSummaryByMonths(ctx context.Context, months int) (*trade.TradeSummaryItemVO, error)
+	GetTradeStatisticsAnalyse(ctx context.Context, beginTime, endTime time.Time) (*common.DataComparisonRespVO[trade.TradeTrendSummaryRespVO], error)
+	GetTradeStatisticsList(ctx context.Context, beginTime, endTime time.Time) ([]*trade.TradeTrendSummaryRespVO, error)
 }
 
 // TradeOrderStatisticsService 交易订单统计服务接口
@@ -25,8 +26,8 @@ type TradeOrderStatisticsService interface {
 	GetPayUserCount(ctx context.Context, beginTime, endTime time.Time) (int64, error)
 	GetOrderPayPrice(ctx context.Context, beginTime, endTime time.Time) (int64, error)
 	GetOrderUserCount(ctx context.Context, beginTime, endTime time.Time) (int64, error)
-	GetOrderComparison(ctx context.Context) (*resp.DataComparisonRespVO[resp.TradeOrderSummaryRespVO], error)
-	GetOrderCountTrendComparison(ctx context.Context) ([]*resp.DataComparisonRespVO[resp.TradeOrderTrendRespVO], error)
+	GetOrderComparison(ctx context.Context) (*common.DataComparisonRespVO[trade.TradeOrderSummaryRespVO], error)
+	GetOrderCountTrendComparison(ctx context.Context) ([]*common.DataComparisonRespVO[trade.TradeOrderTrendRespVO], error)
 }
 
 // AfterSaleStatisticsService 售后统计服务接口
@@ -73,7 +74,7 @@ func NewTradeStatisticsService(
 }
 
 // GetTradeSummaryByDays 获得指定天数的交易统计摘要
-func (s *TradeStatisticsServiceImpl) GetTradeSummaryByDays(ctx context.Context, days int) (*resp.TradeSummaryItemVO, error) {
+func (s *TradeStatisticsServiceImpl) GetTradeSummaryByDays(ctx context.Context, days int) (*trade.TradeSummaryItemVO, error) {
 	targetDate := time.Now().AddDate(0, 0, days)
 	beginTime := statistics.BeginOfDay(targetDate)
 	endTime := statistics.EndOfDay(targetDate)
@@ -84,10 +85,10 @@ func (s *TradeStatisticsServiceImpl) GetTradeSummaryByDays(ctx context.Context, 
 	}
 
 	if stats == nil {
-		return &resp.TradeSummaryItemVO{}, nil
+		return &trade.TradeSummaryItemVO{}, nil
 	}
 
-	return &resp.TradeSummaryItemVO{
+	return &trade.TradeSummaryItemVO{
 		OrderCreateCount:         int64(stats.OrderCreateCount),
 		OrderPayCount:            int64(stats.OrderPayCount),
 		OrderPayPrice:            int64(stats.OrderPayPrice),
@@ -103,7 +104,7 @@ func (s *TradeStatisticsServiceImpl) GetTradeSummaryByDays(ctx context.Context, 
 }
 
 // GetTradeSummaryByMonths 获得指定月份的交易统计摘要
-func (s *TradeStatisticsServiceImpl) GetTradeSummaryByMonths(ctx context.Context, months int) (*resp.TradeSummaryItemVO, error) {
+func (s *TradeStatisticsServiceImpl) GetTradeSummaryByMonths(ctx context.Context, months int) (*trade.TradeSummaryItemVO, error) {
 	monthDate := time.Now().AddDate(0, months, 0)
 	beginTime := statistics.BeginOfMonth(monthDate)
 	endTime := statistics.EndOfMonth(monthDate)
@@ -114,10 +115,10 @@ func (s *TradeStatisticsServiceImpl) GetTradeSummaryByMonths(ctx context.Context
 	}
 
 	if stats == nil {
-		return &resp.TradeSummaryItemVO{}, nil
+		return &trade.TradeSummaryItemVO{}, nil
 	}
 
-	return &resp.TradeSummaryItemVO{
+	return &trade.TradeSummaryItemVO{
 		OrderCreateCount:         int64(stats.OrderCreateCount),
 		OrderPayCount:            int64(stats.OrderPayCount),
 		OrderPayPrice:            int64(stats.OrderPayPrice),
@@ -133,7 +134,7 @@ func (s *TradeStatisticsServiceImpl) GetTradeSummaryByMonths(ctx context.Context
 }
 
 // GetTradeStatisticsAnalyse 获得交易统计分析
-func (s *TradeStatisticsServiceImpl) GetTradeStatisticsAnalyse(ctx context.Context, beginTime, endTime time.Time) (*resp.DataComparisonRespVO[resp.TradeTrendSummaryRespVO], error) {
+func (s *TradeStatisticsServiceImpl) GetTradeStatisticsAnalyse(ctx context.Context, beginTime, endTime time.Time) (*common.DataComparisonRespVO[trade.TradeTrendSummaryRespVO], error) {
 	currentStats, err := s.tradeStatisticsRepo.GetByDateRange(ctx, beginTime, endTime)
 	if err != nil {
 		return nil, err
@@ -148,8 +149,8 @@ func (s *TradeStatisticsServiceImpl) GetTradeStatisticsAnalyse(ctx context.Conte
 		return nil, err
 	}
 
-	result := &resp.DataComparisonRespVO[resp.TradeTrendSummaryRespVO]{
-		Summary: &resp.TradeTrendSummaryRespVO{
+	result := &common.DataComparisonRespVO[trade.TradeTrendSummaryRespVO]{
+		Summary: &trade.TradeTrendSummaryRespVO{
 			StatisticsTime:           currentStats.StatisticsTime,
 			OrderCreateCount:         int64(currentStats.OrderCreateCount),
 			OrderPayCount:            int64(currentStats.OrderPayCount),
@@ -163,7 +164,7 @@ func (s *TradeStatisticsServiceImpl) GetTradeStatisticsAnalyse(ctx context.Conte
 			RechargeRefundCount:      int64(currentStats.RechargeRefundCount),
 			RechargeRefundPrice:      int64(currentStats.RechargeRefundPrice),
 		},
-		Comparison: &resp.TradeTrendSummaryRespVO{
+		Comparison: &trade.TradeTrendSummaryRespVO{
 			StatisticsTime:           referenceStats.StatisticsTime,
 			OrderCreateCount:         int64(referenceStats.OrderCreateCount),
 			OrderPayCount:            int64(referenceStats.OrderPayCount),
@@ -183,15 +184,15 @@ func (s *TradeStatisticsServiceImpl) GetTradeStatisticsAnalyse(ctx context.Conte
 }
 
 // GetTradeStatisticsList 获得交易统计列表
-func (s *TradeStatisticsServiceImpl) GetTradeStatisticsList(ctx context.Context, beginTime, endTime time.Time) ([]*resp.TradeTrendSummaryRespVO, error) {
+func (s *TradeStatisticsServiceImpl) GetTradeStatisticsList(ctx context.Context, beginTime, endTime time.Time) ([]*trade.TradeTrendSummaryRespVO, error) {
 	statsList, err := s.tradeStatisticsRepo.GetListByDateRange(ctx, beginTime, endTime)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]*resp.TradeTrendSummaryRespVO, 0, len(statsList))
+	result := make([]*trade.TradeTrendSummaryRespVO, 0, len(statsList))
 	for _, stats := range statsList {
-		result = append(result, &resp.TradeTrendSummaryRespVO{
+		result = append(result, &trade.TradeTrendSummaryRespVO{
 			StatisticsTime:           stats.StatisticsTime,
 			OrderCreateCount:         int64(stats.OrderCreateCount),
 			OrderPayCount:            int64(stats.OrderPayCount),
@@ -253,7 +254,7 @@ func (s *TradeOrderStatisticsServiceImplV2) GetOrderUserCount(ctx context.Contex
 }
 
 // GetOrderComparison 获得订单数量对比
-func (s *TradeOrderStatisticsServiceImplV2) GetOrderComparison(ctx context.Context) (*resp.DataComparisonRespVO[resp.TradeOrderSummaryRespVO], error) {
+func (s *TradeOrderStatisticsServiceImplV2) GetOrderComparison(ctx context.Context) (*common.DataComparisonRespVO[trade.TradeOrderSummaryRespVO], error) {
 	yesterday := time.Now().AddDate(0, 0, -1)
 	yesterdayBegin := statistics.BeginOfDay(yesterday)
 	yesterdayEnd := statistics.EndOfDay(yesterday)
@@ -282,12 +283,12 @@ func (s *TradeOrderStatisticsServiceImplV2) GetOrderComparison(ctx context.Conte
 		return nil, err
 	}
 
-	result := &resp.DataComparisonRespVO[resp.TradeOrderSummaryRespVO]{
-		Summary: &resp.TradeOrderSummaryRespVO{
+	result := &common.DataComparisonRespVO[trade.TradeOrderSummaryRespVO]{
+		Summary: &trade.TradeOrderSummaryRespVO{
 			OrderCount: yesterdayOrderCount,
 			PayPrice:   yesterdayPayPrice,
 		},
-		Comparison: &resp.TradeOrderSummaryRespVO{
+		Comparison: &trade.TradeOrderSummaryRespVO{
 			OrderCount: beforeYesterdayOrderCount,
 			PayPrice:   beforeYesterdayPayPrice,
 		},
@@ -297,8 +298,9 @@ func (s *TradeOrderStatisticsServiceImplV2) GetOrderComparison(ctx context.Conte
 }
 
 // GetOrderCountTrendComparison 获得订单量趋势对比
-func (s *TradeOrderStatisticsServiceImplV2) GetOrderCountTrendComparison(ctx context.Context) ([]*resp.DataComparisonRespVO[resp.TradeOrderTrendRespVO], error) {
-	return []*resp.DataComparisonRespVO[resp.TradeOrderTrendRespVO]{}, nil
+// GetOrderCountTrendComparison 获得订单量趋势对比
+func (s *TradeOrderStatisticsServiceImplV2) GetOrderCountTrendComparison(ctx context.Context) ([]*common.DataComparisonRespVO[trade.TradeOrderTrendRespVO], error) {
+	return []*common.DataComparisonRespVO[trade.TradeOrderTrendRespVO]{}, nil
 }
 
 // ============ AfterSaleStatisticsService 实现 ============

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -28,7 +28,7 @@ func NewJobService(q *query.Query, scheduler *Scheduler) *JobService {
 }
 
 // CreateJob 创建定时任务
-func (s *JobService) CreateJob(ctx context.Context, r *req.JobSaveReq) (int64, error) {
+func (s *JobService) CreateJob(ctx context.Context, r *infra.JobSaveReq) (int64, error) {
 	// 1. 校验 Cron 表达式
 	if err := s.scheduler.ValidateCronExpression(r.CronExpression); err != nil {
 		return 0, err
@@ -89,7 +89,7 @@ func (s *JobService) CreateJob(ctx context.Context, r *req.JobSaveReq) (int64, e
 }
 
 // UpdateJob 更新定时任务
-func (s *JobService) UpdateJob(ctx context.Context, r *req.JobSaveReq) error {
+func (s *JobService) UpdateJob(ctx context.Context, r *infra.JobSaveReq) error {
 	if r.ID == nil {
 		return errors.New("任务 ID 不能为空")
 	}
@@ -195,7 +195,7 @@ func (s *JobService) GetJob(ctx context.Context, id int64) (*model.InfraJob, err
 }
 
 // GetJobPage 获取定时任务分页
-func (s *JobService) GetJobPage(ctx context.Context, r *req.JobPageReq) (*pagination.PageResult[*model.InfraJob], error) {
+func (s *JobService) GetJobPage(ctx context.Context, r *infra.JobPageReq) (*pagination.PageResult[*model.InfraJob], error) {
 	q := s.q.InfraJob.WithContext(ctx)
 
 	if r.Name != "" {

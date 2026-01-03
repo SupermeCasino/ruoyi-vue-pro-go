@@ -3,7 +3,7 @@ package member
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -25,7 +25,7 @@ func NewMemberTagService(q *query.Query, memberUserService *MemberUserService) *
 }
 
 // CreateTag 创建用户标签
-func (s *MemberTagService) CreateTag(ctx context.Context, r *req.MemberTagCreateReq) (int64, error) {
+func (s *MemberTagService) CreateTag(ctx context.Context, r *member2.MemberTagCreateReq) (int64, error) {
 	// 校验名称唯一
 	if err := s.validateNameUnique(ctx, 0, r.Name); err != nil {
 		return 0, err
@@ -41,7 +41,7 @@ func (s *MemberTagService) CreateTag(ctx context.Context, r *req.MemberTagCreate
 }
 
 // UpdateTag 更新用户标签
-func (s *MemberTagService) UpdateTag(ctx context.Context, r *req.MemberTagUpdateReq) error {
+func (s *MemberTagService) UpdateTag(ctx context.Context, r *member2.MemberTagUpdateReq) error {
 	// 校验存在
 	_, err := s.q.MemberTag.WithContext(ctx).Where(s.q.MemberTag.ID.Eq(r.ID)).First()
 	if err != nil {
@@ -92,10 +92,10 @@ func (s *MemberTagService) GetTag(ctx context.Context, id int64) (*member.Member
 }
 
 // GetTagPage 获得用户标签分页
-func (s *MemberTagService) GetTagPage(ctx context.Context, r *req.MemberTagPageReq) (*pagination.PageResult[*member.MemberTag], error) {
+func (s *MemberTagService) GetTagPage(ctx context.Context, r *member2.MemberTagPageReq) (*pagination.PageResult[*member.MemberTag], error) {
 	q := s.q.MemberTag.WithContext(ctx)
-	if r.Name != nil && *r.Name != "" {
-		q = q.Where(s.q.MemberTag.Name.Like("%" + *r.Name + "%"))
+	if r.Name != "" {
+		q = q.Where(s.q.MemberTag.Name.Like("%" + r.Name + "%"))
 	}
 	q = q.Order(s.q.MemberTag.ID.Desc())
 

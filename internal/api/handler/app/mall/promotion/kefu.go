@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -21,7 +21,7 @@ func NewAppKefuHandler(svc promotion.KefuService) *AppKefuHandler {
 
 // GetMessageList 获得消息列表 (对齐 Java AppKeFuMessageController.getKefuMessageList)
 func (h *AppKefuHandler) GetMessageList(c *gin.Context) {
-	var r req.KefuMessageListReq
+	var r promotion2.KefuMessageListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -55,7 +55,7 @@ func (h *AppKefuHandler) UpdateMessageReadStatus(c *gin.Context) {
 
 // SendMessage 发送消息
 func (h *AppKefuHandler) SendMessage(c *gin.Context) {
-	var r req.KefuMessageCreateReq
+	var r promotion2.KefuMessageCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

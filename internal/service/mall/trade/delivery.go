@@ -8,8 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -25,7 +24,7 @@ func NewDeliveryExpressService(q *query.Query) *DeliveryExpressService {
 }
 
 // CreateDeliveryExpress 创建物流公司
-func (s *DeliveryExpressService) CreateDeliveryExpress(ctx context.Context, r *req.DeliveryExpressSaveReq) (int64, error) {
+func (s *DeliveryExpressService) CreateDeliveryExpress(ctx context.Context, r *trade2.DeliveryExpressSaveReq) (int64, error) {
 	express := &trade.TradeDeliveryExpress{
 		Code:   r.Code,
 		Name:   r.Name,
@@ -40,7 +39,7 @@ func (s *DeliveryExpressService) CreateDeliveryExpress(ctx context.Context, r *r
 }
 
 // UpdateDeliveryExpress 更新物流公司
-func (s *DeliveryExpressService) UpdateDeliveryExpress(ctx context.Context, r *req.DeliveryExpressSaveReq) error {
+func (s *DeliveryExpressService) UpdateDeliveryExpress(ctx context.Context, r *trade2.DeliveryExpressSaveReq) error {
 	_, err := s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.ID.Eq(*r.ID)).Updates(map[string]interface{}{
 		"code":   r.Code,
 		"name":   r.Name,
@@ -63,7 +62,7 @@ func (s *DeliveryExpressService) GetDeliveryExpress(ctx context.Context, id int6
 }
 
 // GetDeliveryExpressPage 获取物流公司分页
-func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *req.DeliveryExpressPageReq) (*pagination.PageResult[*trade.TradeDeliveryExpress], error) {
+func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *trade2.DeliveryExpressPageReq) (*pagination.PageResult[*trade.TradeDeliveryExpress], error) {
 	q := s.q.TradeDeliveryExpress.WithContext(ctx)
 	if r.Code != "" {
 		q = q.Where(s.q.TradeDeliveryExpress.Code.Like("%" + r.Code + "%"))
@@ -115,7 +114,7 @@ func NewDeliveryPickUpStoreService(q *query.Query) *DeliveryPickUpStoreService {
 }
 
 // CreateDeliveryPickUpStore 创建自提门店
-func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Context, r *req.DeliveryPickUpStoreSaveReq) (int64, error) {
+func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Context, r *trade2.DeliveryPickUpStoreSaveReq) (int64, error) {
 	store := &trade.TradeDeliveryPickUpStore{
 		Name:          r.Name,
 		Introduction:  r.Introduction,
@@ -136,7 +135,7 @@ func (s *DeliveryPickUpStoreService) CreateDeliveryPickUpStore(ctx context.Conte
 }
 
 // UpdateDeliveryPickUpStore 更新自提门店
-func (s *DeliveryPickUpStoreService) UpdateDeliveryPickUpStore(ctx context.Context, r *req.DeliveryPickUpStoreSaveReq) error {
+func (s *DeliveryPickUpStoreService) UpdateDeliveryPickUpStore(ctx context.Context, r *trade2.DeliveryPickUpStoreSaveReq) error {
 	_, err := s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.ID.Eq(*r.ID)).Updates(map[string]interface{}{
 		"name":           r.Name,
 		"introduction":   r.Introduction,
@@ -165,7 +164,7 @@ func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStore(ctx context.Context,
 }
 
 // GetDeliveryPickUpStorePage 获取自提门店分页
-func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Context, r *req.DeliveryPickUpStorePageReq) (*pagination.PageResult[*trade.TradeDeliveryPickUpStore], error) {
+func (s *DeliveryPickUpStoreService) GetDeliveryPickUpStorePage(ctx context.Context, r *trade2.DeliveryPickUpStorePageReq) (*pagination.PageResult[*trade.TradeDeliveryPickUpStore], error) {
 	q := s.q.TradeDeliveryPickUpStore.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.TradeDeliveryPickUpStore.Name.Like("%" + r.Name + "%"))
@@ -210,7 +209,7 @@ func (s *DeliveryPickUpStoreService) GetSimpleDeliveryPickUpStoreList(ctx contex
 
 // BindDeliveryPickUpStore 绑定自提门店核销员工
 // 对齐 Java: DeliveryPickUpStoreServiceImpl.bindDeliveryPickUpStore
-func (s *DeliveryPickUpStoreService) BindDeliveryPickUpStore(ctx context.Context, bindReq *req.DeliveryPickUpBindReq) error {
+func (s *DeliveryPickUpStoreService) BindDeliveryPickUpStore(ctx context.Context, bindReq *trade2.DeliveryPickUpBindReq) error {
 	// 1. 校验门店存在
 	store, err := s.q.TradeDeliveryPickUpStore.WithContext(ctx).Where(s.q.TradeDeliveryPickUpStore.ID.Eq(bindReq.ID)).First()
 	if err != nil {
@@ -236,7 +235,7 @@ func NewDeliveryExpressTemplateService(q *query.Query) *DeliveryExpressTemplateS
 }
 
 // CreateDeliveryExpressTemplate 创建运费模板
-func (s *DeliveryExpressTemplateService) CreateDeliveryExpressTemplate(ctx context.Context, r *req.DeliveryFreightTemplateSaveReq) (int64, error) {
+func (s *DeliveryExpressTemplateService) CreateDeliveryExpressTemplate(ctx context.Context, r *trade2.DeliveryFreightTemplateSaveReq) (int64, error) {
 	template := &trade.TradeDeliveryExpressTemplate{
 		Name:       r.Name,
 		ChargeMode: r.ChargeMode,
@@ -296,7 +295,7 @@ func (s *DeliveryExpressTemplateService) CreateDeliveryExpressTemplate(ctx conte
 }
 
 // UpdateDeliveryExpressTemplate 更新运费模板
-func (s *DeliveryExpressTemplateService) UpdateDeliveryExpressTemplate(ctx context.Context, r *req.DeliveryFreightTemplateSaveReq) error {
+func (s *DeliveryExpressTemplateService) UpdateDeliveryExpressTemplate(ctx context.Context, r *trade2.DeliveryFreightTemplateSaveReq) error {
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 1. 更新模板
 		if _, err := tx.TradeDeliveryExpressTemplate.WithContext(ctx).Where(tx.TradeDeliveryExpressTemplate.ID.Eq(r.ID)).Updates(map[string]interface{}{
@@ -378,14 +377,14 @@ func (s *DeliveryExpressTemplateService) DeleteDeliveryExpressTemplate(ctx conte
 }
 
 // GetDeliveryExpressTemplate 获取运费模板详情
-func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.Context, id int64) (*resp.DeliveryFreightTemplateResp, error) {
+func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.Context, id int64) (*trade2.DeliveryFreightTemplateResp, error) {
 	// 1. 获取模板
 	template, err := s.q.TradeDeliveryExpressTemplate.WithContext(ctx).Where(s.q.TradeDeliveryExpressTemplate.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
 
-	result := &resp.DeliveryFreightTemplateResp{
+	result := &trade2.DeliveryFreightTemplateResp{
 		ID:         template.ID,
 		Name:       template.Name,
 		ChargeMode: template.ChargeMode,
@@ -400,7 +399,7 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.
 	}
 	for _, charge := range charges {
 		areaIDs := s.convertAreaIDsToIntSlice(charge.AreaIDs)
-		result.Charges = append(result.Charges, resp.DeliveryFreightTemplateChargeResp{
+		result.Charges = append(result.Charges, trade2.DeliveryFreightTemplateChargeResp{
 			AreaIDs:    areaIDs,
 			StartCount: charge.StartCount,
 			StartPrice: charge.StartPrice,
@@ -416,7 +415,7 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.
 	}
 	for _, free := range frees {
 		areaIDs := s.convertAreaIDsToIntSlice(free.AreaIDs)
-		result.Frees = append(result.Frees, resp.DeliveryFreightTemplateFreeResp{
+		result.Frees = append(result.Frees, trade2.DeliveryFreightTemplateFreeResp{
 			AreaIDs:   areaIDs,
 			FreePrice: free.FreePrice,
 			FreeCount: free.FreeCount,
@@ -427,7 +426,7 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplate(ctx context.
 }
 
 // GetDeliveryExpressTemplatePage 获取运费模板分页
-func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx context.Context, r *req.DeliveryFreightTemplatePageReq) (*pagination.PageResult[*trade.TradeDeliveryExpressTemplate], error) {
+func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx context.Context, r *trade2.DeliveryFreightTemplatePageReq) (*pagination.PageResult[*trade.TradeDeliveryExpressTemplate], error) {
 	q := s.q.TradeDeliveryExpressTemplate.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.TradeDeliveryExpressTemplate.Name.Like("%" + r.Name + "%"))
@@ -460,14 +459,14 @@ func (s *DeliveryExpressTemplateService) GetDeliveryExpressTemplatePage(ctx cont
 }
 
 // GetSimpleDeliveryExpressTemplateList 获取所有运费模板精简列表
-func (s *DeliveryExpressTemplateService) GetSimpleDeliveryExpressTemplateList(ctx context.Context) ([]*resp.SimpleDeliveryFreightTemplateResp, error) {
+func (s *DeliveryExpressTemplateService) GetSimpleDeliveryExpressTemplateList(ctx context.Context) ([]*trade2.SimpleDeliveryFreightTemplateResp, error) {
 	list, err := s.q.TradeDeliveryExpressTemplate.WithContext(ctx).Order(s.q.TradeDeliveryExpressTemplate.Sort.Asc()).Find()
 	if err != nil {
 		return nil, err
 	}
-	var res []*resp.SimpleDeliveryFreightTemplateResp
+	var res []*trade2.SimpleDeliveryFreightTemplateResp
 	for _, item := range list {
-		res = append(res, &resp.SimpleDeliveryFreightTemplateResp{
+		res = append(res, &trade2.SimpleDeliveryFreightTemplateResp{
 			ID:   item.ID,
 			Name: item.Name,
 		})

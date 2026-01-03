@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	promotion3 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -34,7 +34,7 @@ func NewSeckillActivityService(q *query.Query, configSvc *SeckillConfigService, 
 }
 
 // CreateSeckillActivity 创建秒杀活动
-func (s *SeckillActivityService) CreateSeckillActivity(ctx context.Context, r *req.SeckillActivityCreateReq) (int64, error) {
+func (s *SeckillActivityService) CreateSeckillActivity(ctx context.Context, r *promotion2.SeckillActivityCreateReq) (int64, error) {
 	// 1. Validate
 	if err := s.configSvc.ValidateSeckillConfigExists(ctx, r.ConfigIds); err != nil {
 		return 0, err
@@ -56,7 +56,7 @@ func (s *SeckillActivityService) CreateSeckillActivity(ctx context.Context, r *r
 	var activityID int64
 	err := s.q.Transaction(func(tx *query.Query) error {
 		// Calculate Stock
-		totalStock := lo.SumBy(r.Products, func(p req.SeckillProductBaseVO) int {
+		totalStock := lo.SumBy(r.Products, func(p promotion2.SeckillProductBaseVO) int {
 			return p.Stock
 		})
 
@@ -104,7 +104,7 @@ func (s *SeckillActivityService) CreateSeckillActivity(ctx context.Context, r *r
 }
 
 // UpdateSeckillActivity 更新秒杀活动
-func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *req.SeckillActivityUpdateReq) error {
+func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *promotion2.SeckillActivityUpdateReq) error {
 	q := s.q.PromotionSeckillActivity
 	oldActivity, err := q.WithContext(ctx).Where(q.ID.Eq(r.ID)).First()
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *SeckillActivityService) UpdateSeckillActivity(ctx context.Context, r *r
 	}
 
 	return s.q.Transaction(func(tx *query.Query) error {
-		totalStock := lo.SumBy(r.Products, func(p req.SeckillProductBaseVO) int {
+		totalStock := lo.SumBy(r.Products, func(p promotion2.SeckillProductBaseVO) int {
 			return p.Stock
 		})
 
@@ -209,7 +209,7 @@ func (s *SeckillActivityService) GetSeckillActivity(ctx context.Context, id int6
 }
 
 // GetSeckillActivityDetail 获取秒杀活动详情（包含时间段计算）
-func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, id int64) (*resp.AppSeckillActivityDetailResp, error) {
+func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, id int64) (*promotion3.AppSeckillActivityDetailResp, error) {
 	// 1. 获取活动基本信息
 	act, err := s.GetSeckillActivity(ctx, id)
 	if err != nil {
@@ -253,7 +253,7 @@ func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, i
 	}
 
 	// 6. 构建完整响应
-	detail := &resp.AppSeckillActivityDetailResp{
+	detail := &promotion3.AppSeckillActivityDetailResp{
 		ID:               act.ID,
 		Name:             act.Name,
 		Status:           act.Status,
@@ -267,7 +267,7 @@ func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, i
 		SpuName:          spu.Name,
 		PicURL:           spu.PicURL,
 		MarketPrice:      spu.MarketPrice,
-		Products:         make([]resp.AppSeckillProductResp, 0, len(products)),
+		Products:         make([]promotion3.AppSeckillProductResp, 0, len(products)),
 	}
 
 	// Calculate Min Seckill Price
@@ -280,7 +280,7 @@ func (s *SeckillActivityService) GetSeckillActivityDetail(ctx context.Context, i
 		if p.SeckillPrice < minPrice {
 			minPrice = p.SeckillPrice
 		}
-		detail.Products = append(detail.Products, resp.AppSeckillProductResp{
+		detail.Products = append(detail.Products, promotion3.AppSeckillProductResp{
 			ID:           p.ID,
 			ActivityID:   p.ActivityID,
 			SpuID:        p.SpuID,
@@ -368,7 +368,7 @@ func (s *SeckillActivityService) GetSeckillProductListByActivityIds(ctx context.
 }
 
 // GetSeckillActivityPage 分页获得秒杀活动
-func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *req.SeckillActivityPageReq) (*pagination.PageResult[*promotion.PromotionSeckillActivity], error) {
+func (s *SeckillActivityService) GetSeckillActivityPage(ctx context.Context, r *promotion2.SeckillActivityPageReq) (*pagination.PageResult[*promotion.PromotionSeckillActivity], error) {
 	q := s.q.PromotionSeckillActivity
 	do := q.WithContext(ctx)
 	if r.Name != "" {

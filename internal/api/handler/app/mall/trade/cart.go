@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +23,7 @@ func NewAppCartHandler(svc *trade.CartService) *AppCartHandler {
 
 // AddCart 添加购物车
 func (h *AppCartHandler) AddCart(c *gin.Context) {
-	var r req.AppCartAddReq
+	var r trade2.AppCartAddReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -39,7 +39,7 @@ func (h *AppCartHandler) AddCart(c *gin.Context) {
 
 // UpdateCartCount 更新购物车数量
 func (h *AppCartHandler) UpdateCartCount(c *gin.Context) {
-	var r req.AppCartUpdateCountReq
+	var r trade2.AppCartUpdateCountReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -54,7 +54,7 @@ func (h *AppCartHandler) UpdateCartCount(c *gin.Context) {
 
 // UpdateCartSelected 更新购物车选中状态
 func (h *AppCartHandler) UpdateCartSelected(c *gin.Context) {
-	var r req.AppCartUpdateSelectedReq
+	var r trade2.AppCartUpdateSelectedReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -69,14 +69,14 @@ func (h *AppCartHandler) UpdateCartSelected(c *gin.Context) {
 
 // ResetCart 重置购物车
 func (h *AppCartHandler) ResetCart(c *gin.Context) {
-	var r req.AppCartResetReq
+	var r trade2.AppCartResetReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	userId := context.GetLoginUserID(c)
 	if err := h.svc.ResetCart(c, userId, &r); err != nil {
-			response.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)

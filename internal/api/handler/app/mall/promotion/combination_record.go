@@ -3,8 +3,8 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	promotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -42,14 +42,14 @@ func (h *AppCombinationRecordHandler) GetHeadCombinationRecordList(c *gin.Contex
 	}
 
 	// Convert to RespVO
-	vos := make([]*resp.AppCombinationRecordRespVO, len(list))
+	vos := make([]*promotionContract.AppCombinationRecordRespVO, len(list))
 	for i, item := range list {
-		vos[i] = &resp.AppCombinationRecordRespVO{
+		vos[i] = &promotionContract.AppCombinationRecordRespVO{
 			ID:               item.ID,
 			ActivityID:       item.ActivityID,
 			Nickname:         item.Nickname,
 			Avatar:           item.Avatar,
-			ExpireTime:       item.ExpireTime,
+			ExpireTime:       &item.ExpireTime,
 			UserSize:         item.UserSize,
 			UserCount:        item.UserCount,
 			Status:           item.Status,
@@ -65,7 +65,7 @@ func (h *AppCombinationRecordHandler) GetHeadCombinationRecordList(c *gin.Contex
 
 // GetCombinationRecordPage 获得我的拼团记录分页
 func (h *AppCombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
-	var req req.AppCombinationRecordPageReq
+	var req promotion2.AppCombinationRecordPageReq
 	req.PageNo, _ = strconv.Atoi(c.DefaultQuery("pageNo", "1"))
 	req.PageSize, _ = strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	req.Status, _ = strconv.Atoi(c.DefaultQuery("status", "0"))

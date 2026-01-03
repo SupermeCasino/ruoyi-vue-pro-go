@@ -3,7 +3,7 @@ package pay
 import (
 	"strconv"
 
-	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
+	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	servicePay "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"

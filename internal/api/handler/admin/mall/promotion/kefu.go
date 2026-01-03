@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -48,7 +48,7 @@ func (h *KefuHandler) GetConversationList(c *gin.Context) {
 
 // UpdateConversationPinned 置顶/取消置顶客服会话
 func (h *KefuHandler) UpdateConversationPinned(c *gin.Context) {
-	var r req.KeFuConversationUpdatePinnedReq
+	var r promotion2.KeFuConversationUpdatePinnedReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -76,7 +76,7 @@ func (h *KefuHandler) DeleteConversation(c *gin.Context) {
 
 // GetMessageList 获得客服消息列表 (对齐 Java /list 端点)
 func (h *KefuHandler) GetMessageList(c *gin.Context) {
-	var r req.KefuMessageListReq
+	var r promotion2.KefuMessageListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -107,7 +107,7 @@ func (h *KefuHandler) UpdateMessageReadStatus(c *gin.Context) {
 
 // SendMessage 发送客服消息
 func (h *KefuHandler) SendMessage(c *gin.Context) {
-	var r req.KefuMessageCreateReq
+	var r promotion2.KefuMessageCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

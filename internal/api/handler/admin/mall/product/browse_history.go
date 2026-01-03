@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -26,7 +26,7 @@ func NewProductBrowseHistoryHandler(svc *product.ProductBrowseHistoryService) *P
 // @Success 200 {object} pagination.PageResult[resp.ProductBrowseHistoryResp]
 // @Router /admin-api/product/browse-history/page [get]
 func (h *ProductBrowseHistoryHandler) GetBrowseHistoryPage(c *gin.Context) {
-	var r req.ProductBrowseHistoryPageReq
+	var r product2.ProductBrowseHistoryPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

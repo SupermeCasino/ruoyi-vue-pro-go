@@ -3,14 +3,15 @@ package promotion
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	adminProduct "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	promotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -45,7 +46,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordSummary(c *gin.Context) {
 	status := 1 // SUCCESS
 	count, _ := h.recordSvc.GetBargainRecordUserCount(c.Request.Context(), 0, status)
 	if count == 0 {
-		response.WriteSuccess(c, resp.AppBargainRecordSummaryRespVO{SuccessUserCount: 0, SuccessList: []resp.AppBargainRecordSummaryRecordVO{}})
+		response.WriteSuccess(c, promotionContract.AppBargainRecordSummaryRespVO{SuccessUserCount: 0, SuccessList: []promotionContract.AppBargainRecordSummaryRecordVO{}})
 		return
 	}
 
@@ -79,9 +80,9 @@ func (h *AppBargainRecordHandler) GetBargainRecordSummary(c *gin.Context) {
 		}
 	}
 
-	successList := make([]resp.AppBargainRecordSummaryRecordVO, len(records))
+	successList := make([]promotionContract.AppBargainRecordSummaryRecordVO, len(records))
 	for i, r := range records {
-		item := resp.AppBargainRecordSummaryRecordVO{}
+		item := promotionContract.AppBargainRecordSummaryRecordVO{}
 		if u, ok := userMap[r.UserID]; ok {
 			item.Nickname = u.Nickname
 			item.Avatar = u.Avatar
@@ -92,7 +93,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordSummary(c *gin.Context) {
 		successList[i] = item
 	}
 
-	response.WriteSuccess(c, resp.AppBargainRecordSummaryRespVO{
+	response.WriteSuccess(c, promotionContract.AppBargainRecordSummaryRespVO{
 		SuccessUserCount: int(count),
 		SuccessList:      successList,
 	})
@@ -132,7 +133,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordDetail(c *gin.Context) {
 		}
 	}
 
-	res := resp.AppBargainRecordDetailRespVO{
+	res := promotionContract.AppBargainRecordDetailRespVO{
 		ActivityID: activityId,
 		HelpAction: helpAction,
 	}
@@ -198,7 +199,7 @@ func (h *AppBargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 	}
 
 	if page.Total == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.AppBargainRecordRespVO]{List: []resp.AppBargainRecordRespVO{}, Total: 0})
+		response.WriteSuccess(c, pagination.PageResult[promotionContract.AppBargainRecordRespVO]{List: []promotionContract.AppBargainRecordRespVO{}, Total: 0})
 		return
 	}
 
@@ -216,15 +217,15 @@ func (h *AppBargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 		activityMap[a.ID] = a
 	}
 
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*adminProduct.ProductSpuResp)
 	spus, _ := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
 	for _, s := range spus {
 		spuMap[s.ID] = s
 	}
 
-	result := make([]resp.AppBargainRecordRespVO, len(page.List))
+	result := make([]promotionContract.AppBargainRecordRespVO, len(page.List))
 	for i, r := range page.List {
-		item := resp.AppBargainRecordRespVO{
+		item := promotionContract.AppBargainRecordRespVO{
 			ID:           r.ID,
 			SpuID:        r.SpuID,
 			SkuID:        r.SkuID,
@@ -245,13 +246,13 @@ func (h *AppBargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 		result[i] = item
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.AppBargainRecordRespVO]{List: result, Total: page.Total})
+	response.WriteSuccess(c, pagination.PageResult[promotionContract.AppBargainRecordRespVO]{List: result, Total: page.Total})
 }
 
 // CreateBargainRecord 创建砍价记录
 // Java: POST /create
 func (h *AppBargainRecordHandler) CreateBargainRecord(c *gin.Context) {
-	var r req.AppBargainRecordCreateReq
+	var r promotion2.AppBargainRecordCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 1001004001, "参数校验失败")
 		return

@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -21,7 +21,7 @@ func NewFileConfigHandler(svc *infra.FileConfigService) *FileConfigHandler {
 }
 
 func (h *FileConfigHandler) CreateFileConfig(c *gin.Context) {
-	var req req.FileConfigSaveReq
+	var req infra2.FileConfigSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -35,7 +35,7 @@ func (h *FileConfigHandler) CreateFileConfig(c *gin.Context) {
 }
 
 func (h *FileConfigHandler) UpdateFileConfig(c *gin.Context) {
-	var req req.FileConfigSaveReq
+	var req infra2.FileConfigSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -100,7 +100,7 @@ func (h *FileConfigHandler) GetFileConfig(c *gin.Context) {
 }
 
 func (h *FileConfigHandler) GetFileConfigPage(c *gin.Context) {
-	var req req.FileConfigPageReq
+	var req infra2.FileConfigPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -182,7 +182,7 @@ func (h *FileHandler) DeleteFile(c *gin.Context) {
 }
 
 func (h *FileHandler) GetFilePage(c *gin.Context) {
-	var req req.FilePageReq
+	var req infra2.FilePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -210,7 +210,7 @@ func (h *FileHandler) GetFilePresignedUrl(c *gin.Context) {
 }
 
 func (h *FileHandler) CreateFile(c *gin.Context) {
-	var req req.FileCreateReq
+	var req infra2.FileCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

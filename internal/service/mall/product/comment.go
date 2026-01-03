@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
@@ -31,7 +30,7 @@ func NewProductCommentService(q *query.Query, spuSvc *ProductSpuService, skuSvc 
 }
 
 // GetCommentPage 获得商品评价分页 (Admin)
-func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *req.ProductCommentPageReq) (*pagination.PageResult[*resp.ProductCommentResp], error) {
+func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *product2.ProductCommentPageReq) (*pagination.PageResult[*product2.ProductCommentResp], error) {
 	u := s.q.ProductComment
 	q := u.WithContext(ctx)
 
@@ -60,14 +59,14 @@ func (s *ProductCommentService) GetCommentPage(ctx context.Context, req *req.Pro
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.ProductCommentResp]{
+	return &pagination.PageResult[*product2.ProductCommentResp]{
 		List:  s.convertList(list),
 		Total: total,
 	}, nil
 }
 
 // UpdateCommentVisible 更新评论可见性
-func (s *ProductCommentService) UpdateCommentVisible(ctx context.Context, req *req.ProductCommentUpdateVisibleReq) error {
+func (s *ProductCommentService) UpdateCommentVisible(ctx context.Context, req *product2.ProductCommentUpdateVisibleReq) error {
 	_, err := s.validateCommentExists(ctx, req.ID)
 	if err != nil {
 		return err
@@ -77,7 +76,7 @@ func (s *ProductCommentService) UpdateCommentVisible(ctx context.Context, req *r
 }
 
 // ReplyComment 商家回复
-func (s *ProductCommentService) ReplyComment(ctx context.Context, req *req.ProductCommentReplyReq, loginUserID int64) error {
+func (s *ProductCommentService) ReplyComment(ctx context.Context, req *product2.ProductCommentReplyReq, loginUserID int64) error {
 	_, err := s.validateCommentExists(ctx, req.ID)
 	if err != nil {
 		return err
@@ -93,7 +92,7 @@ func (s *ProductCommentService) ReplyComment(ctx context.Context, req *req.Produ
 }
 
 // CreateComment 创建评论 (Admin)
-func (s *ProductCommentService) CreateComment(ctx context.Context, req *req.ProductCommentCreateReq) error {
+func (s *ProductCommentService) CreateComment(ctx context.Context, req *product2.ProductCommentCreateReq) error {
 	// 校验 SKU
 	sku, err := s.skuSvc.GetSku(ctx, req.SkuID)
 	if err != nil {
@@ -133,7 +132,7 @@ func (s *ProductCommentService) CreateComment(ctx context.Context, req *req.Prod
 }
 
 // GetAppCommentPage 获得商品评价分页 (App)
-func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.AppProductCommentPageReq) (*pagination.PageResult[*resp.AppProductCommentResp], error) {
+func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *product2.AppProductCommentPageReq) (*pagination.PageResult[*product2.AppProductCommentResp], error) {
 	u := s.q.ProductComment
 	q := u.WithContext(ctx).Where(u.SpuID.Eq(r.SpuID), u.Visible.Eq(model.BitBool(true)))
 
@@ -154,12 +153,12 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 		return nil, err
 	}
 
-	result := lo.Map(list, func(item *product.ProductComment, _ int) *resp.AppProductCommentResp {
+	result := lo.Map(list, func(item *product.ProductComment, _ int) *product2.AppProductCommentResp {
 		nickname := item.UserNickname
 		if item.Anonymous {
 			nickname = "匿名用户"
 		}
-		return &resp.AppProductCommentResp{
+		return &product2.AppProductCommentResp{
 			ID:            item.ID,
 			UserNickname:  nickname,
 			UserAvatar:    item.UserAvatar,
@@ -172,7 +171,7 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 		}
 	})
 
-	return &pagination.PageResult[*resp.AppProductCommentResp]{
+	return &pagination.PageResult[*product2.AppProductCommentResp]{
 		List:  result,
 		Total: total,
 	}, nil
@@ -181,7 +180,7 @@ func (s *ProductCommentService) GetAppCommentPage(ctx context.Context, r *req.Ap
 // Helpers
 
 // CreateAppComment 创建商品评价 (App)
-func (s *ProductCommentService) CreateAppComment(ctx context.Context, userId int64, req *req.AppProductCommentCreateReq) (*product.ProductComment, error) {
+func (s *ProductCommentService) CreateAppComment(ctx context.Context, userId int64, req *product2.AppProductCommentCreateReq) (*product.ProductComment, error) {
 	// 1. Verify OrderItem
 	item, err := s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.ID.Eq(req.OrderItemID), s.q.TradeOrderItem.UserID.Eq(userId)).First()
 	if err != nil {
@@ -269,9 +268,9 @@ func (s *ProductCommentService) validateCommentExists(ctx context.Context, id in
 	return c, nil
 }
 
-func (s *ProductCommentService) convertList(list []*product.ProductComment) []*resp.ProductCommentResp {
-	return lo.Map(list, func(item *product.ProductComment, _ int) *resp.ProductCommentResp {
-		return &resp.ProductCommentResp{
+func (s *ProductCommentService) convertList(list []*product.ProductComment) []*product2.ProductCommentResp {
+	return lo.Map(list, func(item *product.ProductComment, _ int) *product2.ProductCommentResp {
+		return &product2.ProductCommentResp{
 			ID:                item.ID,
 			UserID:            item.UserID,
 			UserNickname:      item.UserNickname,
@@ -299,9 +298,9 @@ func (s *ProductCommentService) convertList(list []*product.ProductComment) []*r
 	})
 }
 
-func (s *ProductCommentService) convertSkuProperties(props []product.ProductSkuProperty) []resp.ProductSkuPropertyResp {
-	return lo.Map(props, func(item product.ProductSkuProperty, _ int) resp.ProductSkuPropertyResp {
-		return resp.ProductSkuPropertyResp{
+func (s *ProductCommentService) convertSkuProperties(props []product.ProductSkuProperty) []product2.ProductSkuPropertyResp {
+	return lo.Map(props, func(item product.ProductSkuProperty, _ int) product2.ProductSkuPropertyResp {
+		return product2.ProductSkuPropertyResp{
 			PropertyID:   item.PropertyID,
 			PropertyName: item.PropertyName,
 			ValueID:      item.ValueID,

@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	adminProduct "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -46,7 +46,7 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 
 	// 2. 找到当前时间所在的时段
 	now := time.Now()
-	var currentConfig *resp.AppSeckillConfigResp
+	var currentConfig *promotion2.AppSeckillConfigResp
 	for _, cfg := range configs {
 		// 解析时间段 (格式: HH:mm:ss)
 		startTime, _ := time.Parse("15:04:05", cfg.StartTime)
@@ -57,7 +57,7 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 		todayEnd := time.Date(now.Year(), now.Month(), now.Day(), endTime.Hour(), endTime.Minute(), endTime.Second(), 0, now.Location())
 
 		if now.After(todayStart) && now.Before(todayEnd) {
-			currentConfig = &resp.AppSeckillConfigResp{
+			currentConfig = &promotion2.AppSeckillConfigResp{
 				ID:            cfg.ID,
 				StartTime:     cfg.StartTime,
 				EndTime:       cfg.EndTime,
@@ -69,9 +69,9 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 
 	if currentConfig == nil {
 		// 没有当前进行中的时段
-		response.WriteSuccess(c, resp.AppSeckillActivityNowResp{
+		response.WriteSuccess(c, promotion2.AppSeckillActivityNowResp{
 			Config:     nil,
-			Activities: []resp.AppSeckillActivityResp{},
+			Activities: []promotion2.AppSeckillActivityResp{},
 		})
 		return
 	}
@@ -89,13 +89,13 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 		spuIds[i] = act.SpuID
 	}
 	spuList, _ := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*adminProduct.ProductSpuResp)
 	for _, spu := range spuList {
 		spuMap[spu.ID] = spu
 	}
 
 	// 5. 构建响应
-	actResp := make([]resp.AppSeckillActivityResp, 0, len(activities))
+	actResp := make([]promotion2.AppSeckillActivityResp, 0, len(activities))
 	for _, act := range activities {
 		spu, ok := spuMap[act.SpuID]
 		if !ok || spu.Status != consts.ProductSpuStatusEnable {
@@ -113,7 +113,7 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 				}
 			}
 		}
-		actResp = append(actResp, resp.AppSeckillActivityResp{
+		actResp = append(actResp, promotion2.AppSeckillActivityResp{
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,
@@ -127,7 +127,7 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 		})
 	}
 
-	response.WriteSuccess(c, resp.AppSeckillActivityNowResp{
+	response.WriteSuccess(c, promotion2.AppSeckillActivityNowResp{
 		Config:     currentConfig,
 		Activities: actResp,
 	})
@@ -136,7 +136,7 @@ func (h *AppSeckillActivityHandler) GetNowSeckillActivity(c *gin.Context) {
 // GetSeckillActivityPage 获得秒杀活动分页
 // 对齐 Java: AppSeckillActivityController.getSeckillActivityPage
 func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
-	var r req.AppSeckillActivityPageReq
+	var r promotion2.AppSeckillActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -155,13 +155,13 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		spuIds[i] = act.SpuID
 	}
 	spuList, _ := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*adminProduct.ProductSpuResp)
 	for _, spu := range spuList {
 		spuMap[spu.ID] = spu
 	}
 
 	// 构建响应
-	list := make([]resp.AppSeckillActivityResp, 0, len(result.List))
+	list := make([]promotion2.AppSeckillActivityResp, 0, len(result.List))
 	for _, act := range result.List {
 		spu, ok := spuMap[act.SpuID]
 		if !ok || spu.Status != consts.ProductSpuStatusEnable {
@@ -179,7 +179,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 				}
 			}
 		}
-		list = append(list, resp.AppSeckillActivityResp{
+		list = append(list, promotion2.AppSeckillActivityResp{
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,
@@ -193,7 +193,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityPage(c *gin.Context) {
 		})
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.AppSeckillActivityResp]{
+	response.WriteSuccess(c, pagination.PageResult[promotion2.AppSeckillActivityResp]{
 		List:  list,
 		Total: result.Total,
 	})
@@ -228,7 +228,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 	products, _ := h.svc.GetSeckillProductListByActivityID(c.Request.Context(), id)
 
 	// 构建响应
-	detail := resp.AppSeckillActivityDetailResp{
+	detail := promotion2.AppSeckillActivityDetailResp{
 		ID:               act.ID,
 		Name:             act.Name,
 		Status:           act.Status,
@@ -242,7 +242,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		SpuName:          spu.Name,
 		PicURL:           spu.PicURL,
 		MarketPrice:      spu.MarketPrice,
-		Products:         make([]resp.AppSeckillProductResp, 0, len(products)),
+		Products:         make([]promotion2.AppSeckillProductResp, 0, len(products)),
 	}
 
 	// Calculate Min Seckill Price
@@ -255,7 +255,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 		if p.SeckillPrice < minPrice {
 			minPrice = p.SeckillPrice
 		}
-		detail.Products = append(detail.Products, resp.AppSeckillProductResp{
+		detail.Products = append(detail.Products, promotion2.AppSeckillProductResp{
 			ID:           p.ID,
 			ActivityID:   p.ActivityID,
 			SpuID:        p.SpuID,
@@ -272,7 +272,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivity(c *gin.Context) {
 // GetSeckillActivityDetail 获得秒杀活动详情
 // 对齐 Java: AppSeckillActivityController.getSeckillActivity (get-detail路径)
 func (h *AppSeckillActivityHandler) GetSeckillActivityDetail(c *gin.Context) {
-	var r req.AppSeckillActivityDetailReq
+	var r promotion2.AppSeckillActivityDetailReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -317,7 +317,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) 
 	}
 
 	if len(enabledActivities) == 0 {
-		response.WriteSuccess(c, []resp.AppSeckillActivityResp{})
+		response.WriteSuccess(c, []promotion2.AppSeckillActivityResp{})
 		return
 	}
 
@@ -344,7 +344,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) 
 	}
 
 	// 3. 构建SPU映射
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*adminProduct.ProductSpuResp)
 	for _, spu := range spuList {
 		spuMap[spu.ID] = spu
 	}
@@ -356,7 +356,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) 
 	}
 
 	// 4. 构建响应
-	var activeList []resp.AppSeckillActivityResp
+	var activeList []promotion2.AppSeckillActivityResp
 	for _, act := range enabledActivities {
 		spu, ok := spuMap[act.SpuID]
 		if !ok {
@@ -375,7 +375,7 @@ func (h *AppSeckillActivityHandler) GetSeckillActivityListByIds(c *gin.Context) 
 			}
 		}
 
-		activeList = append(activeList, resp.AppSeckillActivityResp{
+		activeList = append(activeList, promotion2.AppSeckillActivityResp{
 			ID:           act.ID,
 			Name:         act.Name,
 			SpuID:        act.SpuID,

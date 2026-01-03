@@ -1,7 +1,7 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -29,9 +29,9 @@ func (h *AppSeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
 	}
 
 	// 构建响应
-	result := make([]resp.AppSeckillConfigResp, len(list))
+	result := make([]promotion2.AppSeckillConfigResp, len(list))
 	for i, cfg := range list {
-		result[i] = resp.AppSeckillConfigResp{
+		result[i] = promotion2.AppSeckillConfigResp{
 			ID:            cfg.ID,
 			StartTime:     cfg.StartTime,
 			EndTime:       cfg.EndTime,

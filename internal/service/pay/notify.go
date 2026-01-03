@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -231,7 +231,7 @@ func (s *PayNotifyService) GetNotifyTask(ctx context.Context, id int64) (*pay.Pa
 }
 
 // GetNotifyTaskPage 获得回调通知分页
-func (s *PayNotifyService) GetNotifyTaskPage(ctx context.Context, req *req.PayNotifyTaskPageReq) (*pagination.PageResult[*pay.PayNotifyTask], error) {
+func (s *PayNotifyService) GetNotifyTaskPage(ctx context.Context, req *pay2.PayNotifyTaskPageReq) (*pagination.PageResult[*pay.PayNotifyTask], error) {
 	q := s.q.PayNotifyTask.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayNotifyTask.AppID.Eq(req.AppID))

@@ -3,7 +3,7 @@ package system
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -23,7 +23,7 @@ func NewNoticeHandler(noticeSvc *system.NoticeService) *NoticeHandler {
 
 // GetNoticePage 获取通知公告分页
 func (h *NoticeHandler) GetNoticePage(c *gin.Context) {
-	var req req.NoticePageReq
+	var req system2.NoticePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -54,7 +54,7 @@ func (h *NoticeHandler) GetNotice(c *gin.Context) {
 
 // CreateNotice 创建通知公告
 func (h *NoticeHandler) CreateNotice(c *gin.Context) {
-	var req req.NoticeSaveReq
+	var req system2.NoticeSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -69,7 +69,7 @@ func (h *NoticeHandler) CreateNotice(c *gin.Context) {
 
 // UpdateNotice 更新通知公告
 func (h *NoticeHandler) UpdateNotice(c *gin.Context) {
-	var req req.NoticeSaveReq
+	var req system2.NoticeSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

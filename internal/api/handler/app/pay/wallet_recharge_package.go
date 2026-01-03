@@ -2,7 +2,7 @@ package pay
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/pay"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -23,9 +23,9 @@ func (h *AppPayWalletRechargePackageHandler) GetWalletRechargePackageList(c *gin
 		return
 	}
 
-	list := make([]resp.AppPayWalletPackageResp, len(pkgs))
+	list := make([]pay2.AppPayWalletPackageResp, len(pkgs))
 	for i, item := range pkgs {
-		list[i] = resp.AppPayWalletPackageResp{
+		list[i] = pay2.AppPayWalletPackageResp{
 			ID:         item.ID,
 			Name:       item.Name,
 			PayPrice:   item.PayPrice,

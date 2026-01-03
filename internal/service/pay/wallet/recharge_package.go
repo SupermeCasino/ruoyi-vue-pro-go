@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -22,7 +22,7 @@ func NewPayWalletRechargePackageService(q *query.Query) *PayWalletRechargePackag
 }
 
 // CreateWalletRechargePackage 创建充值套餐
-func (s *PayWalletRechargePackageService) CreateWalletRechargePackage(ctx context.Context, req *req.PayWalletRechargePackageCreateReq) (int64, error) {
+func (s *PayWalletRechargePackageService) CreateWalletRechargePackage(ctx context.Context, req *pay2.PayWalletRechargePackageCreateReq) (int64, error) {
 	// 校验名是否重复
 	exists, err := s.q.PayWalletRechargePackage.WithContext(ctx).Where(s.q.PayWalletRechargePackage.Name.Eq(req.Name)).First()
 	if err == nil && exists != nil {
@@ -43,7 +43,7 @@ func (s *PayWalletRechargePackageService) CreateWalletRechargePackage(ctx contex
 }
 
 // UpdateWalletRechargePackage 更新充值套餐
-func (s *PayWalletRechargePackageService) UpdateWalletRechargePackage(ctx context.Context, req *req.PayWalletRechargePackageUpdateReq) error {
+func (s *PayWalletRechargePackageService) UpdateWalletRechargePackage(ctx context.Context, req *pay2.PayWalletRechargePackageUpdateReq) error {
 	// 校验存在
 	oldPkg, err := s.validatePackageExists(ctx, req.ID)
 	if err != nil {
@@ -84,7 +84,7 @@ func (s *PayWalletRechargePackageService) GetWalletRechargePackage(ctx context.C
 }
 
 // GetWalletRechargePackagePage 获得充值套餐分页
-func (s *PayWalletRechargePackageService) GetWalletRechargePackagePage(ctx context.Context, req *req.PayWalletRechargePackagePageReq) (*pagination.PageResult[*pay.PayWalletRechargePackage], error) {
+func (s *PayWalletRechargePackageService) GetWalletRechargePackagePage(ctx context.Context, req *pay2.PayWalletRechargePackagePageReq) (*pagination.PageResult[*pay.PayWalletRechargePackage], error) {
 	q := s.q.PayWalletRechargePackage.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PayWalletRechargePackage.Name.Like("%" + req.Name + "%"))

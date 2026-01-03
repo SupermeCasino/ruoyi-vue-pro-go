@@ -3,7 +3,7 @@ package member
 import (
 	"regexp"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -36,7 +36,7 @@ func (h *AppMemberUserHandler) GetUserInfo(c *gin.Context) {
 // UpdateUser 修改基本信息
 // @Router /member/user/update [put]
 func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
-	var r req.AppMemberUserUpdateReq
+	var r member2.AppMemberUserUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -53,7 +53,7 @@ func (h *AppMemberUserHandler) UpdateUser(c *gin.Context) {
 // UpdateUserMobile 修改用户手机
 // @Router /member/user/update-mobile [put]
 func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
-	var r req.AppMemberUserUpdateMobileReq
+	var r member2.AppMemberUserUpdateMobileReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -80,7 +80,7 @@ func (h *AppMemberUserHandler) UpdateUserMobile(c *gin.Context) {
 // UpdateUserPassword 修改用户密码
 // @Router /member/user/update-password [put]
 func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
-	var r req.AppMemberUserUpdatePasswordReq
+	var r member2.AppMemberUserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -102,13 +102,13 @@ func (h *AppMemberUserHandler) UpdateUserPassword(c *gin.Context) {
 // ResetUserPassword 重置用户密码 (忘记密码)
 // @Router /member/user/reset-password [put]
 func (h *AppMemberUserHandler) ResetUserPassword(c *gin.Context) {
-	var r req.AppMemberUserResetPasswordReq
+	var r member2.AppMemberUserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	if err := h.svc.ResetUserPassword(c, &r); err != nil {
-			response.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)

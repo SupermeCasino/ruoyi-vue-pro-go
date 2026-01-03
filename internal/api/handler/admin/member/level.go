@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +22,7 @@ func NewMemberLevelHandler(svc *memberSvc.MemberLevelService) *MemberLevelHandle
 
 // CreateLevel 创建等级
 func (h *MemberLevelHandler) CreateLevel(c *gin.Context) {
-	var r req.MemberLevelCreateReq
+	var r member2.MemberLevelCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +37,7 @@ func (h *MemberLevelHandler) CreateLevel(c *gin.Context) {
 
 // UpdateLevel 更新等级
 func (h *MemberLevelHandler) UpdateLevel(c *gin.Context) {
-	var r req.MemberLevelUpdateReq
+	var r member2.MemberLevelUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +82,7 @@ func (h *MemberLevelHandler) GetLevel(c *gin.Context) {
 
 // GetLevelPage 获得等级分页
 func (h *MemberLevelHandler) GetLevelPage(c *gin.Context) {
-	var r req.MemberLevelPageReq
+	var r member2.MemberLevelPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -93,7 +92,7 @@ func (h *MemberLevelHandler) GetLevelPage(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *member.MemberLevel, _ int) *resp.MemberLevelResp {
+	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *member.MemberLevel, _ int) *member2.MemberLevelResp {
 		return h.convertResp(item)
 	}))
 }
@@ -105,13 +104,13 @@ func (h *MemberLevelHandler) GetLevelListSimple(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WriteSuccess(c, lo.Map(list, func(item *member.MemberLevel, _ int) *resp.MemberLevelResp {
+	response.WriteSuccess(c, lo.Map(list, func(item *member.MemberLevel, _ int) *member2.MemberLevelResp {
 		return h.convertResp(item)
 	}))
 }
 
-func (h *MemberLevelHandler) convertResp(item *member.MemberLevel) *resp.MemberLevelResp {
-	return &resp.MemberLevelResp{
+func (h *MemberLevelHandler) convertResp(item *member.MemberLevel) *member2.MemberLevelResp {
+	return &member2.MemberLevelResp{
 		ID:              item.ID,
 		Name:            item.Name,
 		Level:           item.Level,
@@ -119,6 +118,6 @@ func (h *MemberLevelHandler) convertResp(item *member.MemberLevel) *resp.MemberL
 		DiscountPercent: item.DiscountPercent,
 		Icon:            item.Icon,
 		BackgroundURL:   item.BackgroundURL,
-		CreateTime:       item.CreateTime,
+		CreateTime:      item.CreateTime,
 	}
 }

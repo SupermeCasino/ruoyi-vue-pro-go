@@ -3,7 +3,7 @@ package system
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -23,7 +23,7 @@ func NewSmsChannelHandler(smsChannelSvc *system.SmsChannelService) *SmsChannelHa
 
 // CreateSmsChannel 创建短信渠道
 func (h *SmsChannelHandler) CreateSmsChannel(c *gin.Context) {
-	var req req.SmsChannelSaveReq
+	var req system2.SmsChannelSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +38,7 @@ func (h *SmsChannelHandler) CreateSmsChannel(c *gin.Context) {
 
 // UpdateSmsChannel 更新短信渠道
 func (h *SmsChannelHandler) UpdateSmsChannel(c *gin.Context) {
-	var req req.SmsChannelSaveReq
+	var req system2.SmsChannelSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +83,7 @@ func (h *SmsChannelHandler) GetSmsChannel(c *gin.Context) {
 
 // GetSmsChannelPage 获得短信渠道分页
 func (h *SmsChannelHandler) GetSmsChannelPage(c *gin.Context) {
-	var req req.SmsChannelPageReq
+	var req system2.SmsChannelPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

@@ -1,8 +1,7 @@
 package system
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -21,7 +20,7 @@ func NewLoginLogHandler(svc *system.LoginLogService) *LoginLogHandler {
 
 // GetLoginLogPage 获取登录日志分页
 func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
-	var r req.LoginLogPageReq
+	var r system2.LoginLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,9 +33,9 @@ func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
 	}
 
 	// Convert to Response DTO
-	list := make([]resp.LoginLogResp, len(pageResult.List))
+	list := make([]system2.LoginLogResp, len(pageResult.List))
 	for i, log := range pageResult.List {
-		list[i] = resp.LoginLogResp{
+		list[i] = system2.LoginLogResp{
 			ID:         log.ID,
 			LogType:    log.LogType,
 			UserID:     log.UserID,
@@ -50,7 +49,7 @@ func (h *LoginLogHandler) GetLoginLogPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.LoginLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[system2.LoginLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

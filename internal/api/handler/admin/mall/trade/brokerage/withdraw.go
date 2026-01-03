@@ -2,9 +2,8 @@ package brokerage
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	brokerageModel "github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -44,7 +43,7 @@ func (h *BrokerageWithdrawHandler) ApproveBrokerageWithdraw(c *gin.Context) {
 
 // RejectBrokerageWithdraw 驳回申请
 func (h *BrokerageWithdrawHandler) RejectBrokerageWithdraw(c *gin.Context) {
-	var r req.BrokerageWithdrawRejectReq
+	var r trade.BrokerageWithdrawRejectReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -103,7 +102,7 @@ func (h *BrokerageWithdrawHandler) GetBrokerageWithdraw(c *gin.Context) {
 
 // GetBrokerageWithdrawPage 获得佣金提现分页
 func (h *BrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
-	var r req.BrokerageWithdrawPageReq
+	var r trade.BrokerageWithdrawPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return
@@ -122,7 +121,7 @@ func (h *BrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 	}
 	userMap, _ := h.memberUserSvc.GetUserMap(c, userIds)
 
-	list := make([]resp.BrokerageWithdrawResp, len(pageResult.List))
+	list := make([]trade.BrokerageWithdrawResp, len(pageResult.List))
 	for i, item := range pageResult.List {
 		res := h.convert(item)
 		if u, ok := userMap[item.UserID]; ok {
@@ -131,18 +130,18 @@ func (h *BrokerageWithdrawHandler) GetBrokerageWithdrawPage(c *gin.Context) {
 		list[i] = res
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.BrokerageWithdrawResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade.BrokerageWithdrawResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
 }
 
-func (h *BrokerageWithdrawHandler) convert(do *brokerageModel.BrokerageWithdraw) resp.BrokerageWithdrawResp {
+func (h *BrokerageWithdrawHandler) convert(do *brokerageModel.BrokerageWithdraw) trade.BrokerageWithdrawResp {
 	payTransferId := int64(0)
 	if do.PayTransferID > 0 {
 		payTransferId = do.PayTransferID
 	}
-	return resp.BrokerageWithdrawResp{
+	return trade.BrokerageWithdrawResp{
 		ID:               do.ID,
 		UserID:           do.UserID,
 		Price:            do.Price,

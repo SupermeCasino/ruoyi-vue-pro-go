@@ -6,8 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
@@ -149,7 +150,7 @@ func (s *TradeOrderUpdateService) UpdatePaidOrderRefunded(ctx context.Context, o
 }
 
 // DeliveryOrder 订单发货
-func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *req.TradeOrderDeliveryReq) error {
+func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *trade2.TradeOrderDeliveryReq) error {
 	s.logger.Info("开始处理订单发货请求",
 		zap.Int64("orderId", reqVO.ID),
 		zap.Int64("logisticsId", reqVO.LogisticsID),
@@ -191,7 +192,7 @@ func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *req.
 
 // UpdateOrderRemark 更新订单备注
 // 对应 Java: TradeOrderUpdateServiceImpl#updateOrderRemark
-func (s *TradeOrderUpdateService) UpdateOrderRemark(ctx context.Context, reqVO *req.TradeOrderRemarkReq) error {
+func (s *TradeOrderUpdateService) UpdateOrderRemark(ctx context.Context, reqVO *trade2.TradeOrderRemarkReq) error {
 	s.logger.Info("开始处理订单备注更新",
 		zap.Int64("orderId", reqVO.ID),
 		zap.String("remark", reqVO.Remark),
@@ -243,7 +244,7 @@ func (s *TradeOrderUpdateService) UpdateOrderRemark(ctx context.Context, reqVO *
 
 // UpdateOrderPrice 更新订单价格
 // 对应 Java: TradeOrderUpdateServiceImpl#updateOrderPrice
-func (s *TradeOrderUpdateService) UpdateOrderPrice(ctx context.Context, reqVO *req.TradeOrderUpdatePriceReq) error {
+func (s *TradeOrderUpdateService) UpdateOrderPrice(ctx context.Context, reqVO *trade2.TradeOrderUpdatePriceReq) error {
 	s.logger.Info("开始处理订单价格调整",
 		zap.Int64("orderId", reqVO.ID),
 		zap.Int("adjustPrice", reqVO.AdjustPrice),
@@ -432,7 +433,7 @@ func (s *TradeOrderUpdateService) createOrderLog(ctx context.Context, orderId in
 
 // UpdateOrderAddress 更新订单收货地址
 // 对应 Java: TradeOrderUpdateServiceImpl#updateOrderAddress
-func (s *TradeOrderUpdateService) UpdateOrderAddress(ctx context.Context, reqVO *req.TradeOrderUpdateAddressReq) error {
+func (s *TradeOrderUpdateService) UpdateOrderAddress(ctx context.Context, reqVO *trade2.TradeOrderUpdateAddressReq) error {
 	s.logger.Info("开始更新订单收货地址",
 		zap.Int64("orderId", reqVO.ID),
 	)
@@ -522,7 +523,7 @@ func (s *TradeOrderUpdateService) GetByPickUpVerifyCode(ctx context.Context, ver
 
 // SettlementOrder 获得订单结算信息
 // 对应 Java: TradeOrderUpdateServiceImpl#settlementOrder
-func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, userId int64, settlementReq *req.AppTradeOrderSettlementReq) (*resp.AppTradeOrderSettlementResp, error) {
+func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, userId int64, settlementReq *trade2.AppTradeOrderSettlementReq) (*trade2.AppTradeOrderSettlementResp, error) {
 	s.logger.Info("开始计算订单结算信息",
 		zap.Int64("userId", userId),
 		zap.Int("itemCount", len(settlementReq.Items)),
@@ -580,7 +581,7 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, userId in
 
 // calculatePrice 计算订单价格
 // 对应 Java: TradeOrderUpdateServiceImpl#calculatePrice
-func (s *TradeOrderUpdateService) calculatePrice(ctx context.Context, userId int64, settlementReq *req.AppTradeOrderSettlementReq) (*TradePriceCalculateRespBO, error) {
+func (s *TradeOrderUpdateService) calculatePrice(ctx context.Context, userId int64, settlementReq *trade2.AppTradeOrderSettlementReq) (*TradePriceCalculateRespBO, error) {
 	// 1. 如果来自购物车，则获得购物车的商品
 	var cartIDs []int64
 	for _, item := range settlementReq.Items {
@@ -608,14 +609,14 @@ func (s *TradeOrderUpdateService) calculatePrice(ctx context.Context, userId int
 
 // CreateOrder 创建交易订单
 // 对应 Java: TradeOrderUpdateServiceImpl#createOrder
-func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64, userIP string, terminal int, createReq *req.AppTradeOrderCreateReq) (*tradeModel.TradeOrder, error) {
+func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64, userIP string, terminal int, createReq *trade2.AppTradeOrderCreateReq) (*tradeModel.TradeOrder, error) {
 	s.logger.Info("开始创建订单",
 		zap.Int64("userId", userId),
 		zap.Int("itemCount", len(createReq.Items)),
 	)
 
 	// 1.1 价格计算
-	priceResp, err := s.calculatePrice(ctx, userId, &req.AppTradeOrderSettlementReq{
+	priceResp, err := s.calculatePrice(ctx, userId, &trade2.AppTradeOrderSettlementReq{
 		CouponID:      createReq.CouponID,
 		PointStatus:   createReq.PointStatus,
 		DeliveryType:  createReq.DeliveryType,
@@ -682,7 +683,7 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64,
 
 // buildTradeOrder 构建订单
 // 对应 Java: TradeOrderUpdateServiceImpl#buildTradeOrder
-func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId int64, userIP string, terminal int, createReq *req.AppTradeOrderCreateReq, priceResp *TradePriceCalculateRespBO) *tradeModel.TradeOrder {
+func (s *TradeOrderUpdateService) buildTradeOrder(ctx context.Context, userId int64, userIP string, terminal int, createReq *trade2.AppTradeOrderCreateReq, priceResp *TradePriceCalculateRespBO) *tradeModel.TradeOrder {
 	order := &tradeModel.TradeOrder{
 		UserID:       userId,
 		UserIP:       userIP,
@@ -795,7 +796,7 @@ func (s *TradeOrderUpdateService) buildTradeOrderItems(order *tradeModel.TradeOr
 
 // afterCreateTradeOrder 订单创建后的后置逻辑
 // 对应 Java: TradeOrderUpdateServiceImpl#afterCreateTradeOrder
-func (s *TradeOrderUpdateService) afterCreateTradeOrder(ctx context.Context, order *tradeModel.TradeOrder, orderItems []*tradeModel.TradeOrderItem, createReq *req.AppTradeOrderCreateReq) error {
+func (s *TradeOrderUpdateService) afterCreateTradeOrder(ctx context.Context, order *tradeModel.TradeOrder, orderItems []*tradeModel.TradeOrderItem, createReq *trade2.AppTradeOrderCreateReq) error {
 	// 1. 执行订单创建后置处理器
 	// 对应 Java: tradeOrderHandlers.forEach(handler -> handler.afterOrderCreate(order, orderItems))
 	if err := s.executeAfterOrderCreate(ctx, order, orderItems); err != nil {
@@ -861,7 +862,7 @@ func (s *TradeOrderUpdateService) createPayOrder(ctx context.Context, order *tra
 	}
 
 	// 3. 构建支付订单创建请求
-	createReq := &req.PayOrderCreateReq{
+	createReq := &pay.PayOrderCreateReq{
 		AppKey:          payApp.AppKey,
 		MerchantOrderId: order.No,
 		Subject:         fmt.Sprintf("订单编号：%s", order.No),
@@ -961,7 +962,7 @@ func (s *TradeOrderUpdateService) generatePickUpVerifyCode() string {
 }
 
 // convertToCalculateReq 转换为价格计算请求
-func (s *TradeOrderUpdateService) convertToCalculateReq(userId int64, settlementReq *req.AppTradeOrderSettlementReq) *TradePriceCalculateReqBO {
+func (s *TradeOrderUpdateService) convertToCalculateReq(userId int64, settlementReq *trade2.AppTradeOrderSettlementReq) *TradePriceCalculateReqBO {
 	pointStatus := false
 	if settlementReq.PointStatus != nil {
 		pointStatus = *settlementReq.PointStatus
@@ -1004,10 +1005,10 @@ func (s *TradeOrderUpdateService) convertToCalculateReq(userId int64, settlement
 }
 
 // convertToSettlementResp 转换为结算响应
-func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceCalculateRespBO, address *memberModel.MemberAddress) *resp.AppTradeOrderSettlementResp {
-	result := &resp.AppTradeOrderSettlementResp{
+func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceCalculateRespBO, address *memberModel.MemberAddress) *trade2.AppTradeOrderSettlementResp {
+	result := &trade2.AppTradeOrderSettlementResp{
 		Type: priceResp.Type,
-		Price: resp.AppTradeOrderSettlementPrice{
+		Price: trade2.AppTradeOrderSettlementPrice{
 			TotalPrice:    priceResp.Price.TotalPrice,
 			DiscountPrice: priceResp.Price.DiscountPrice,
 			DeliveryPrice: priceResp.Price.DeliveryPrice,
@@ -1016,16 +1017,16 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 			VipPrice:      priceResp.Price.VipPrice,
 			PayPrice:      priceResp.Price.PayPrice,
 		},
-		Items:      make([]resp.AppTradeOrderSettlementItem, 0),
-		Coupons:    make([]resp.AppTradeOrderSettlementCoupon, 0),
-		Promotions: make([]resp.AppTradeOrderSettlementPromotion, 0),
+		Items:      make([]trade2.AppTradeOrderSettlementItemResp, 0),
+		Coupons:    make([]trade2.AppTradeOrderSettlementCoupon, 0),
+		Promotions: make([]trade2.AppTradeOrderSettlementPromotion, 0),
 		UsePoint:   priceResp.UsePoint,
 		TotalPoint: priceResp.TotalPoint,
 	}
 
 	// 转换商品项
 	for _, item := range priceResp.Items {
-		settlementItem := resp.AppTradeOrderSettlementItem{
+		settlementItem := trade2.AppTradeOrderSettlementItemResp{
 			CategoryID: item.CategoryID,
 			SpuID:      item.SpuID,
 			SpuName:    item.SpuName,
@@ -1049,7 +1050,7 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 		if !coupon.Match && coupon.MismatchReason != nil {
 			mismatchReason = coupon.MismatchReason
 		}
-		result.Coupons = append(result.Coupons, resp.AppTradeOrderSettlementCoupon{
+		result.Coupons = append(result.Coupons, trade2.AppTradeOrderSettlementCoupon{
 			ID:                 coupon.ID,
 			Name:               coupon.Name,
 			UsePrice:           coupon.UsePrice,
@@ -1066,7 +1067,7 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 
 	// 转换促销活动列表（对齐 Java: TradePriceCalculateRespBO.Promotion）
 	for _, promotion := range priceResp.Promotions {
-		promotionItem := resp.AppTradeOrderSettlementPromotion{
+		promotionItem := trade2.AppTradeOrderSettlementPromotion{
 			ID:            promotion.ID,
 			Name:          promotion.Name,
 			Type:          promotion.Type,
@@ -1074,11 +1075,11 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 			DiscountPrice: promotion.DiscountPrice,
 			Match:         promotion.Match,
 			Description:   promotion.Description,
-			Items:         make([]resp.AppTradeOrderSettlementPromotionItem, 0, len(promotion.Items)),
+			Items:         make([]trade2.AppTradeOrderSettlementPromotionItem, 0, len(promotion.Items)),
 		}
 		// 转换促销活动商品项
 		for _, item := range promotion.Items {
-			promotionItem.Items = append(promotionItem.Items, resp.AppTradeOrderSettlementPromotionItem{
+			promotionItem.Items = append(promotionItem.Items, trade2.AppTradeOrderSettlementPromotionItem{
 				SkuID:         item.SkuID,
 				TotalPrice:    item.TotalPrice,
 				DiscountPrice: item.DiscountPrice,
@@ -1090,11 +1091,11 @@ func (s *TradeOrderUpdateService) convertToSettlementResp(priceResp *TradePriceC
 
 	// 设置地址信息（对齐 Java: 使用 AreaUtils.format() 填充 areaName）
 	if address != nil {
-		result.Address = &resp.AppTradeOrderSettlementAddress{
+		result.Address = &trade2.AppTradeOrderSettlementAddress{
 			ID:            address.ID,
 			Name:          address.Name,
 			Mobile:        address.Mobile,
-			AreaID:        address.AreaID,
+			AreaID:        int32(address.AreaID),
 			AreaName:      area.Format(int(address.AreaID)), // 填充地区格式化名称
 			DetailAddress: address.DetailAddress,
 			DefaultStatus: bool(address.DefaultStatus),
@@ -1500,7 +1501,7 @@ func (s *TradeOrderUpdateService) CancelPaidOrder(ctx context.Context, userID in
 				return err
 			}
 
-			_, err = s.payRefundSvc.CreateRefund(ctx, &req.PayRefundCreateReq{
+			_, err = s.payRefundSvc.CreateRefund(ctx, &pay.PayRefundCreateReq{
 				AppKey:           payApp.AppKey,
 				MerchantOrderId:  order.No,
 				MerchantRefundId: refundNo,
@@ -1645,7 +1646,7 @@ func (s *TradeOrderUpdateService) ReceiveOrder(ctx context.Context, userId int64
 }
 
 // CreateOrderItemCommentByMember 创建订单项评价
-func (s *TradeOrderUpdateService) CreateOrderItemCommentByMember(ctx context.Context, userId int64, createReq *req.AppTradeOrderItemCommentCreateReq) (int64, error) {
+func (s *TradeOrderUpdateService) CreateOrderItemCommentByMember(ctx context.Context, userId int64, createReq *trade2.AppTradeOrderItemCommentCreateReq) (int64, error) {
 	s.logger.Info("开始创建订单项评价",
 		zap.Int64("userId", userId),
 		zap.Int64("orderItemId", createReq.OrderItemID),
@@ -1674,7 +1675,7 @@ func (s *TradeOrderUpdateService) CreateOrderItemCommentByMember(ctx context.Con
 
 	// 4. 创建评价记录
 	// 委托给 ProductCommentService 创建评价
-	commentReq := &req.AppProductCommentCreateReq{
+	commentReq := &product.AppProductCommentCreateReq{
 		OrderItemID:       createReq.OrderItemID,
 		Anonymous:         createReq.Anonymous,
 		Content:           createReq.Content,
@@ -1985,7 +1986,7 @@ func (s *TradeOrderUpdateService) CreateOrderItemCommentBySystem(ctx context.Con
 				continue
 			}
 			// 创建好评
-			req := &req.AppTradeOrderItemCommentCreateReq{
+			req := &trade2.AppTradeOrderItemCommentCreateReq{
 				OrderItemID:       item.ID,
 				Content:           "好评！系统默认好评。",
 				BenefitScores:     5,

@@ -3,7 +3,7 @@ package product
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -24,7 +24,7 @@ func NewProductPropertyHandler(svc *product.ProductPropertyService, valueSvc *pr
 }
 
 func (h *ProductPropertyHandler) CreateProperty(c *gin.Context) {
-	var r req.ProductPropertyCreateReq
+	var r product2.ProductPropertyCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +38,7 @@ func (h *ProductPropertyHandler) CreateProperty(c *gin.Context) {
 }
 
 func (h *ProductPropertyHandler) UpdateProperty(c *gin.Context) {
-	var r req.ProductPropertyUpdateReq
+	var r product2.ProductPropertyUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -84,7 +84,7 @@ func (h *ProductPropertyHandler) GetProperty(c *gin.Context) {
 // GetPropertyPage 获得属性项分页
 // @Router /admin-api/product/property/page [get]
 func (h *ProductPropertyHandler) GetPropertyPage(c *gin.Context) {
-	var r req.ProductPropertyPageReq
+	var r product2.ProductPropertyPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -100,7 +100,7 @@ func (h *ProductPropertyHandler) GetPropertyPage(c *gin.Context) {
 // GetPropertySimpleList 获得属性项精简列表
 // @Router /admin-api/product/property/simple-list [get]
 func (h *ProductPropertyHandler) GetPropertySimpleList(c *gin.Context) {
-	var r req.ProductPropertyListReq
+	var r product2.ProductPropertyListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -118,7 +118,7 @@ func (h *ProductPropertyHandler) GetPropertySimpleList(c *gin.Context) {
 // CreatePropertyValue 创建属性值
 // @Router /admin-api/product/property/value/create [post]
 func (h *ProductPropertyHandler) CreatePropertyValue(c *gin.Context) {
-	var r req.ProductPropertyValueCreateReq
+	var r product2.ProductPropertyValueCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -134,7 +134,7 @@ func (h *ProductPropertyHandler) CreatePropertyValue(c *gin.Context) {
 // UpdatePropertyValue 更新属性值
 // @Router /admin-api/product/property/value/update [put]
 func (h *ProductPropertyHandler) UpdatePropertyValue(c *gin.Context) {
-	var r req.ProductPropertyValueUpdateReq
+	var r product2.ProductPropertyValueUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -182,7 +182,7 @@ func (h *ProductPropertyHandler) GetPropertyValue(c *gin.Context) {
 // GetPropertyValuePage 获得属性值分页
 // @Router /admin-api/product/property/value/page [get]
 func (h *ProductPropertyHandler) GetPropertyValuePage(c *gin.Context) {
-	var r req.ProductPropertyValuePageReq
+	var r product2.ProductPropertyValuePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

@@ -1,11 +1,11 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	promotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
@@ -28,7 +28,7 @@ func NewAppBargainHelpHandler(helpSvc *promotion.BargainHelpService, userSvc *me
 // CreateBargainHelp 砍价助力
 // Java: POST /create, returns ReducePrice
 func (h *AppBargainHelpHandler) CreateBargainHelp(c *gin.Context) {
-	var r req.AppBargainHelpCreateReq
+	var r promotion2.AppBargainHelpCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 1001004001, "参数校验失败")
 		return
@@ -46,7 +46,7 @@ func (h *AppBargainHelpHandler) CreateBargainHelp(c *gin.Context) {
 func (h *AppBargainHelpHandler) GetBargainHelpList(c *gin.Context) {
 	recordId := utils.ParseInt64(c.Query("recordId"))
 	if recordId == 0 {
-		response.WriteSuccess(c, []resp.AppBargainHelpRespVO{})
+		response.WriteSuccess(c, []promotionContract.AppBargainHelpRespVO{})
 		return
 	}
 
@@ -71,9 +71,9 @@ func (h *AppBargainHelpHandler) GetBargainHelpList(c *gin.Context) {
 		}
 	}
 
-	resList := make([]resp.AppBargainHelpRespVO, len(list))
+	resList := make([]promotionContract.AppBargainHelpRespVO, len(list))
 	for i, item := range list {
-		vo := resp.AppBargainHelpRespVO{
+		vo := promotionContract.AppBargainHelpRespVO{
 			ReducePrice: item.ReducePrice,
 			CreateTime:  item.CreateTime,
 		}

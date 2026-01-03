@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -41,7 +40,7 @@ func NewMemberUserHandler(
 
 // UpdateUser 更新会员用户
 func (h *MemberUserHandler) UpdateUser(c *gin.Context) {
-	var r req.MemberUserUpdateReq
+	var r member.MemberUserUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -56,12 +55,12 @@ func (h *MemberUserHandler) UpdateUser(c *gin.Context) {
 
 // UpdateUserLevel 更新会员等级
 func (h *MemberUserHandler) UpdateUserLevel(c *gin.Context) {
-	var r req.MemberUserUpdateLevelReq
+	var r member.MemberUserUpdateLevelReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	err := h.levelSvc.UpdateUserLevel(c, r.ID, r.LevelID, r.Reason)
+	err := h.levelSvc.UpdateUserLevel(c, r.ID, &r.LevelID, r.Reason)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -71,7 +70,7 @@ func (h *MemberUserHandler) UpdateUserLevel(c *gin.Context) {
 
 // UpdateUserPoint 更新会员积分
 func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
-	var r req.MemberUserUpdatePointReq
+	var r member.MemberUserUpdatePointReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -80,7 +79,7 @@ func (h *MemberUserHandler) UpdateUserPoint(c *gin.Context) {
 	//           MemberPointBizTypeEnum.ADMIN, String.valueOf(getLoginUserId()));
 	bizId := utils.ToString(context.GetLoginUserID(c))
 
-	err := h.pointSvc.CreatePointRecord(c, r.ID, r.Point, consts.MemberPointBizTypeAdmin, bizId)
+	err := h.pointSvc.CreatePointRecord(c, r.ID, int(r.Point), consts.MemberPointBizTypeAdmin, bizId)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -126,7 +125,7 @@ func (h *MemberUserHandler) GetUser(c *gin.Context) {
 
 // GetUserPage 获得会员用户分页
 func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
-	var r req.MemberUserPageReq
+	var r member.MemberUserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -174,7 +173,7 @@ func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 		}
 	}
 
-	respList := lo.Map(pageResult.List, func(user *memberModel.MemberUser, _ int) *resp.MemberUserResp {
+	respList := lo.Map(pageResult.List, func(user *memberModel.MemberUser, _ int) *member.MemberUserResp {
 		var tagNames []string
 		for _, tid := range user.TagIds {
 			if name, ok := tagMap[int64(tid)]; ok {
@@ -187,11 +186,11 @@ func (h *MemberUserHandler) GetUserPage(c *gin.Context) {
 	response.WritePage(c, pageResult.Total, respList)
 }
 
-func (h *MemberUserHandler) convertRespWithExt(user *memberModel.MemberUser, tagNames []string, levelName, groupName string) *resp.MemberUserResp {
+func (h *MemberUserHandler) convertRespWithExt(user *memberModel.MemberUser, tagNames []string, levelName, groupName string) *member.MemberUserResp {
 	if user == nil {
 		return nil
 	}
-	return &resp.MemberUserResp{
+	return &member.MemberUserResp{
 		ID:         user.ID,
 		Mobile:     user.Mobile,
 		Status:     user.Status,

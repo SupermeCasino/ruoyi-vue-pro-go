@@ -5,8 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
@@ -21,21 +20,21 @@ import (
 // KefuService 客服 Service
 type KefuService interface {
 	// CreateMessage 发送消息
-	CreateMessage(ctx context.Context, r req.KefuMessageCreateReq, senderID int64, senderType int) (int64, error)
+	CreateMessage(ctx context.Context, r promotion2.KefuMessageCreateReq, senderID int64, senderType int) (int64, error)
 	// GetMessagePage 获得消息分页
-	GetMessagePage(ctx context.Context, r req.KefuMessagePageReq) (*pagination.PageResult[resp.KefuMessageResp], error)
+	GetMessagePage(ctx context.Context, r promotion2.KefuMessagePageReq) (*pagination.PageResult[promotion2.KefuMessageResp], error)
 	// GetMessageList 获得消息列表 (对齐 Java - 管理员端)
-	GetMessageList(ctx context.Context, r req.KefuMessageListReq) ([]resp.KefuMessageResp, error)
+	GetMessageList(ctx context.Context, r promotion2.KefuMessageListReq) ([]promotion2.KefuMessageResp, error)
 	// GetMessageListForMember 【会员】获得消息列表 (对齐 Java)
-	GetMessageListForMember(ctx context.Context, r req.KefuMessageListReq, userID int64) ([]resp.KefuMessageResp, error)
+	GetMessageListForMember(ctx context.Context, r promotion2.KefuMessageListReq, userID int64) ([]promotion2.KefuMessageResp, error)
 	// UpdateMessageReadStatus 更新消息已读状态
 	UpdateMessageReadStatus(ctx context.Context, conversationID, senderID int64, senderType int) error
 	// GetConversationPage 获得会话分页
-	GetConversationPage(ctx context.Context, r req.KefuConversationPageReq) (*pagination.PageResult[resp.KefuConversationResp], error)
+	GetConversationPage(ctx context.Context, r promotion2.KefuConversationPageReq) (*pagination.PageResult[promotion2.KefuConversationResp], error)
 	// GetConversationList 获得会话列表 (对齐 Java)
-	GetConversationList(ctx context.Context) ([]resp.KefuConversationResp, error)
+	GetConversationList(ctx context.Context) ([]promotion2.KefuConversationResp, error)
 	// UpdateConversationPinned 置顶/取消置顶会话
-	UpdateConversationPinned(ctx context.Context, r req.KeFuConversationUpdatePinnedReq) error
+	UpdateConversationPinned(ctx context.Context, r promotion2.KeFuConversationUpdatePinnedReq) error
 	// DeleteConversation 删除会话
 	DeleteConversation(ctx context.Context, id int64) error
 	// GetConversation 获得会话
@@ -62,7 +61,7 @@ func NewKefuService(q *query.Query, memberUserSvc *member.MemberUserService, sys
 
 // CreateMessage 发送消息 (对齐 Java: KeFuMessageServiceImpl.sendKefuMessage)
 // senderType=1 为会员端发送，senderType=2 为管理员端发送
-func (s *kefuService) CreateMessage(ctx context.Context, r req.KefuMessageCreateReq, senderID int64, senderType int) (int64, error) {
+func (s *kefuService) CreateMessage(ctx context.Context, r promotion2.KefuMessageCreateReq, senderID int64, senderType int) (int64, error) {
 	var conversation *promotion.PromotionKefuConversation
 	var err error
 
@@ -121,7 +120,7 @@ func (s *kefuService) CreateMessage(ctx context.Context, r req.KefuMessageCreate
 
 	// 4. 发送 WebSocket 通知 (严格对齐 Java 逻辑)
 	// 构建消息响应对象
-	msgResp := resp.KefuMessageResp{
+	msgResp := promotion2.KefuMessageResp{
 		ID:             msg.ID,
 		ConversationID: msg.ConversationID,
 		SenderID:       msg.SenderID,
@@ -263,7 +262,7 @@ func (s *kefuService) UpdateMessageReadStatus(ctx context.Context, conversationI
 
 	if memberSentMessage != nil && senderType == 2 { // Admin 阅读了会员消息
 		// 构建通知消息
-		readNotify := resp.KefuMessageResp{
+		readNotify := promotion2.KefuMessageResp{
 			ConversationID: conversationID,
 		}
 
@@ -278,7 +277,7 @@ func (s *kefuService) UpdateMessageReadStatus(ctx context.Context, conversationI
 }
 
 // GetMessageList 获得消息列表 (对齐 Java Controller: AdminKeFuMessageController.getKeFuMessageList)
-func (s *kefuService) GetMessageList(ctx context.Context, r req.KefuMessageListReq) ([]resp.KefuMessageResp, error) {
+func (s *kefuService) GetMessageList(ctx context.Context, r promotion2.KefuMessageListReq) ([]promotion2.KefuMessageResp, error) {
 	msgRepo := s.q.PromotionKefuMessage
 	q := msgRepo.WithContext(ctx).Where(msgRepo.ConversationID.Eq(r.ConversationID))
 
@@ -291,7 +290,7 @@ func (s *kefuService) GetMessageList(ctx context.Context, r req.KefuMessageListR
 		return nil, err
 	}
 
-	resList := make([]resp.KefuMessageResp, len(list))
+	resList := make([]promotion2.KefuMessageResp, len(list))
 
 	// 收集 Admin 发送者 ID 用于批量查询头像
 	adminSenderIDs := make(map[int64]struct{})
@@ -310,7 +309,7 @@ func (s *kefuService) GetMessageList(ctx context.Context, r req.KefuMessageListR
 	}
 
 	for i, v := range list {
-		resList[i] = resp.KefuMessageResp{
+		resList[i] = promotion2.KefuMessageResp{
 			ID:             v.ID,
 			ConversationID: v.ConversationID,
 			SenderID:       v.SenderID,
@@ -333,7 +332,7 @@ func (s *kefuService) GetMessageList(ctx context.Context, r req.KefuMessageListR
 }
 
 // GetMessagePage 获得消息分页 (保持兼容，调用 List 逻辑或独立)
-func (s *kefuService) GetMessagePage(ctx context.Context, r req.KefuMessagePageReq) (*pagination.PageResult[resp.KefuMessageResp], error) {
+func (s *kefuService) GetMessagePage(ctx context.Context, r promotion2.KefuMessagePageReq) (*pagination.PageResult[promotion2.KefuMessageResp], error) {
 	// 简单的分页实现，复用逻辑
 	msgRepo := s.q.PromotionKefuMessage
 	q := msgRepo.WithContext(ctx).Where(msgRepo.ConversationID.Eq(r.ConversationID))
@@ -341,9 +340,9 @@ func (s *kefuService) GetMessagePage(ctx context.Context, r req.KefuMessagePageR
 	if err != nil {
 		return nil, err
 	}
-	resList := make([]resp.KefuMessageResp, len(list))
+	resList := make([]promotion2.KefuMessageResp, len(list))
 	for i, v := range list {
-		resList[i] = resp.KefuMessageResp{
+		resList[i] = promotion2.KefuMessageResp{
 			ID:             v.ID,
 			ConversationID: v.ConversationID,
 			SenderID:       v.SenderID,
@@ -356,11 +355,11 @@ func (s *kefuService) GetMessagePage(ctx context.Context, r req.KefuMessagePageR
 			CreateTime:     v.CreateTime,
 		}
 	}
-	return &pagination.PageResult[resp.KefuMessageResp]{List: resList, Total: count}, nil
+	return &pagination.PageResult[promotion2.KefuMessageResp]{List: resList, Total: count}, nil
 }
 
 // GetConversationList 获得会话列表 (对齐 Java: KeFuConversationController.getConversationList)
-func (s *kefuService) GetConversationList(ctx context.Context) ([]resp.KefuConversationResp, error) {
+func (s *kefuService) GetConversationList(ctx context.Context) ([]promotion2.KefuConversationResp, error) {
 	convoRepo := s.q.PromotionKefuConversation
 	var list []*promotion.PromotionKefuConversation
 	err := convoRepo.WithContext(ctx).UnderlyingDB().
@@ -373,9 +372,9 @@ func (s *kefuService) GetConversationList(ctx context.Context) ([]resp.KefuConve
 		return nil, err
 	}
 
-	resList := make([]resp.KefuConversationResp, len(list))
+	resList := make([]promotion2.KefuConversationResp, len(list))
 	for i, v := range list {
-		resList[i] = resp.KefuConversationResp{
+		resList[i] = promotion2.KefuConversationResp{
 			ID:                      v.ID,
 			UserID:                  v.UserID,
 			LastMessageTime:         v.LastMessageTime,
@@ -398,7 +397,7 @@ func (s *kefuService) GetConversationList(ctx context.Context) ([]resp.KefuConve
 }
 
 // GetConversationPage 获得会话分页
-func (s *kefuService) GetConversationPage(ctx context.Context, r req.KefuConversationPageReq) (*pagination.PageResult[resp.KefuConversationResp], error) {
+func (s *kefuService) GetConversationPage(ctx context.Context, r promotion2.KefuConversationPageReq) (*pagination.PageResult[promotion2.KefuConversationResp], error) {
 	convoRepo := s.q.PromotionKefuConversation
 
 	var list []*promotion.PromotionKefuConversation
@@ -422,9 +421,9 @@ func (s *kefuService) GetConversationPage(ctx context.Context, r req.KefuConvers
 		return nil, err
 	}
 
-	resList := make([]resp.KefuConversationResp, len(list))
+	resList := make([]promotion2.KefuConversationResp, len(list))
 	for i, v := range list {
-		resList[i] = resp.KefuConversationResp{
+		resList[i] = promotion2.KefuConversationResp{
 			ID:                      v.ID,
 			UserID:                  v.UserID,
 			LastMessageTime:         v.LastMessageTime,
@@ -442,11 +441,11 @@ func (s *kefuService) GetConversationPage(ctx context.Context, r req.KefuConvers
 			resList[i].UserAvatar = user.Avatar
 		}
 	}
-	return &pagination.PageResult[resp.KefuConversationResp]{List: resList, Total: total}, nil
+	return &pagination.PageResult[promotion2.KefuConversationResp]{List: resList, Total: total}, nil
 }
 
 // UpdateConversationPinned
-func (s *kefuService) UpdateConversationPinned(ctx context.Context, r req.KeFuConversationUpdatePinnedReq) error {
+func (s *kefuService) UpdateConversationPinned(ctx context.Context, r promotion2.KeFuConversationUpdatePinnedReq) error {
 	// Validate Exists
 	if _, err := s.validateKefuConversationExists(ctx, r.ID); err != nil {
 		return err
@@ -573,11 +572,11 @@ func (s *kefuService) GetConversationByUserId(ctx context.Context, userID int64)
 }
 
 // GetMessageListForMember 【会员】获得消息列表 (对齐 Java: getKeFuMessageList(pageReqVO, userId))
-func (s *kefuService) GetMessageListForMember(ctx context.Context, r req.KefuMessageListReq, userID int64) ([]resp.KefuMessageResp, error) {
+func (s *kefuService) GetMessageListForMember(ctx context.Context, r promotion2.KefuMessageListReq, userID int64) ([]promotion2.KefuMessageResp, error) {
 	// 1. 获得客服会话
 	conversation := s.getConversationByUserIdInternal(ctx, userID)
 	if conversation == nil {
-		return []resp.KefuMessageResp{}, nil // Java 返回 empty list
+		return []promotion2.KefuMessageResp{}, nil // Java 返回 empty list
 	}
 
 	// 2. 设置会话编号

@@ -1,8 +1,7 @@
 package statistics
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -67,12 +66,12 @@ func (h *TradeStatisticsHandler) GetTradeSummaryComparison(c *gin.Context) {
 	}
 
 	// 拼接数据
-	result := &resp.DataComparisonRespVO[resp.TradeSummaryRespVO]{
-		Summary: &resp.TradeSummaryRespVO{
+	result := &trade2.DataComparisonRespVO[trade2.TradeSummaryRespVO]{
+		Summary: &trade2.TradeSummaryRespVO{
 			Yesterday: yesterdayData,
 			Month:     monthData,
 		},
-		Comparison: &resp.TradeSummaryRespVO{
+		Comparison: &trade2.TradeSummaryRespVO{
 			Yesterday: beforeYesterdayData,
 			Month:     lastMonthData,
 		},
@@ -84,7 +83,7 @@ func (h *TradeStatisticsHandler) GetTradeSummaryComparison(c *gin.Context) {
 // GetTradeStatisticsAnalyse 获得交易状况统计
 // GET /statistics/trade/analyse
 func (h *TradeStatisticsHandler) GetTradeStatisticsAnalyse(c *gin.Context) {
-	var reqVO req.TradeStatisticsReqVO
+	var reqVO trade2.TradeStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -107,7 +106,7 @@ func (h *TradeStatisticsHandler) GetTradeStatisticsAnalyse(c *gin.Context) {
 // GetTradeStatisticsList 获得交易状况明细
 // GET /statistics/trade/list
 func (h *TradeStatisticsHandler) GetTradeStatisticsList(c *gin.Context) {
-	var reqVO req.TradeStatisticsReqVO
+	var reqVO trade2.TradeStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -161,7 +160,7 @@ func (h *TradeStatisticsHandler) GetOrderCount(c *gin.Context) {
 		return
 	}
 
-	result := &resp.TradeOrderCountRespVO{
+	result := &trade2.TradeOrderCountRespVO{
 		UndeliveredCount:      undeliveredCount,
 		PickUpCount:           pickUpCount,
 		AfterSaleApplyCount:   afterSaleApplyCount,
@@ -198,7 +197,7 @@ func (h *TradeStatisticsHandler) GetOrderCountTrendComparison(c *gin.Context) {
 // ExportTradeStatisticsExcel 导出交易统计 Excel
 // GET /statistics/trade/export-excel
 func (h *TradeStatisticsHandler) ExportTradeStatisticsExcel(c *gin.Context) {
-	var reqVO req.TradeStatisticsReqVO
+	var reqVO trade2.TradeStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

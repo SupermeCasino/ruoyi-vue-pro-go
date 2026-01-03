@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -24,7 +23,7 @@ func NewNoticeService(q *query.Query) *NoticeService {
 }
 
 // CreateNotice 创建通知公告
-func (s *NoticeService) CreateNotice(ctx context.Context, req *req.NoticeSaveReq) (int64, error) {
+func (s *NoticeService) CreateNotice(ctx context.Context, req *system.NoticeSaveReq) (int64, error) {
 	notice := &model.SystemNotice{
 		Title:   req.Title,
 		Type:    *req.Type,
@@ -36,7 +35,7 @@ func (s *NoticeService) CreateNotice(ctx context.Context, req *req.NoticeSaveReq
 }
 
 // UpdateNotice 修改通知公告
-func (s *NoticeService) UpdateNotice(ctx context.Context, req *req.NoticeSaveReq) error {
+func (s *NoticeService) UpdateNotice(ctx context.Context, req *system.NoticeSaveReq) error {
 	n := s.q.SystemNotice
 	_, err := n.WithContext(ctx).Where(n.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -70,7 +69,7 @@ func (s *NoticeService) DeleteNoticeList(ctx context.Context, ids []int64) error
 }
 
 // GetNotice 获得通知公告
-func (s *NoticeService) GetNotice(ctx context.Context, id int64) (*resp.NoticeRespVO, error) {
+func (s *NoticeService) GetNotice(ctx context.Context, id int64) (*system.NoticeRespVO, error) {
 	n := s.q.SystemNotice
 	item, err := n.WithContext(ctx).Where(n.ID.Eq(id)).First()
 	if err != nil {
@@ -80,7 +79,7 @@ func (s *NoticeService) GetNotice(ctx context.Context, id int64) (*resp.NoticeRe
 }
 
 // GetNoticePage 获得通知公告分页
-func (s *NoticeService) GetNoticePage(ctx context.Context, req *req.NoticePageReq) (*pagination.PageResult[*resp.NoticeRespVO], error) {
+func (s *NoticeService) GetNoticePage(ctx context.Context, req *system.NoticePageReq) (*pagination.PageResult[*system.NoticeRespVO], error) {
 	n := s.q.SystemNotice
 	qb := n.WithContext(ctx)
 
@@ -101,14 +100,14 @@ func (s *NoticeService) GetNoticePage(ctx context.Context, req *req.NoticePageRe
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.NoticeRespVO]{
-		List:  lo.Map(list, func(item *model.SystemNotice, _ int) *resp.NoticeRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*system.NoticeRespVO]{
+		List:  lo.Map(list, func(item *model.SystemNotice, _ int) *system.NoticeRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
-func (s *NoticeService) convertResp(item *model.SystemNotice) *resp.NoticeRespVO {
-	return &resp.NoticeRespVO{
+func (s *NoticeService) convertResp(item *model.SystemNotice) *system.NoticeRespVO {
+	return &system.NoticeRespVO{
 		ID:         item.ID,
 		Title:      item.Title,
 		Type:       item.Type,

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -29,7 +29,7 @@ func NewSmsTemplateHandler(smsTemplateSvc *system.SmsTemplateService, smsSendSvc
 
 // CreateSmsTemplate 创建短信模板
 func (h *SmsTemplateHandler) CreateSmsTemplate(c *gin.Context) {
-	var req req.SmsTemplateSaveReq
+	var req system2.SmsTemplateSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -44,7 +44,7 @@ func (h *SmsTemplateHandler) CreateSmsTemplate(c *gin.Context) {
 
 // UpdateSmsTemplate 更新短信模板
 func (h *SmsTemplateHandler) UpdateSmsTemplate(c *gin.Context) {
-	var req req.SmsTemplateSaveReq
+	var req system2.SmsTemplateSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -89,7 +89,7 @@ func (h *SmsTemplateHandler) GetSmsTemplate(c *gin.Context) {
 
 // GetSmsTemplatePage 获得短信模板分页
 func (h *SmsTemplateHandler) GetSmsTemplatePage(c *gin.Context) {
-	var req req.SmsTemplatePageReq
+	var req system2.SmsTemplatePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -104,7 +104,7 @@ func (h *SmsTemplateHandler) GetSmsTemplatePage(c *gin.Context) {
 
 // ExportSmsTemplateExcel 导出短信模板 Excel
 func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
-	var req req.SmsTemplatePageReq
+	var req system2.SmsTemplatePageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -178,7 +178,7 @@ func (h *SmsTemplateHandler) ExportSmsTemplateExcel(c *gin.Context) {
 
 // SendSms 发送短信
 func (h *SmsTemplateHandler) SendSms(c *gin.Context) {
-	var req req.SmsTemplateSendReq
+	var req system2.SmsTemplateSendReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

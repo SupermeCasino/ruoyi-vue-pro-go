@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/system/social/client"
@@ -42,7 +42,7 @@ func (s *SocialUserService) GetAuthorizeUrl(ctx context.Context, socialType int,
 }
 
 // BindSocialUser 绑定社交用户
-func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, userType int, r *req.SocialUserBindReq) (string, error) {
+func (s *SocialUserService) BindSocialUser(ctx context.Context, userID int64, userType int, r *system.SocialUserBindReq) (string, error) {
 	// 1. 获得社交平台客户端
 	platform, err := s.factory.GetPlatform(ctx, r.Type, userType)
 	if err != nil {
@@ -157,7 +157,7 @@ func (s *SocialUserService) GetSocialUser(ctx context.Context, id int64) (*model
 }
 
 // GetSocialUserPage 获取社交用户分页
-func (s *SocialUserService) GetSocialUserPage(ctx context.Context, r *req.SocialUserPageReq) (*pagination.PageResult[*model.SocialUser], error) {
+func (s *SocialUserService) GetSocialUserPage(ctx context.Context, r *system.SocialUserPageReq) (*pagination.PageResult[*model.SocialUser], error) {
 	q := s.q.SocialUser.WithContext(ctx)
 
 	if r.Type != nil {

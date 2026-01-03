@@ -3,7 +3,7 @@ package calculators
 import (
 	"context"
 
-	apiResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	tradeSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
@@ -91,7 +91,7 @@ func (c *DeliveryPriceCalculator) Calculate(ctx context.Context, req *tradeSvc.T
 		return nil
 	}
 
-	spuMap := make(map[int64]*apiResp.ProductSpuResp)
+	spuMap := make(map[int64]*product2.ProductSpuResp)
 	for _, spu := range spuList {
 		spuMap[spu.ID] = spu
 	}

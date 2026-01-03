@@ -3,8 +3,7 @@ package wallet
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
@@ -25,7 +24,7 @@ func NewPayWalletHandler(svc *payData.PayWalletService) *PayWalletHandler {
 
 // GetWalletPage 获得会员钱包分页
 func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
-	var r req.PayWalletPageReq
+	var r pay2.PayWalletPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -37,7 +36,7 @@ func (h *PayWalletHandler) GetWalletPage(c *gin.Context) {
 	}
 
 	// Convert list
-	newRes := pagination.NewPageResult(make([]*resp.PayWalletResp, 0, len(res.List)), res.Total)
+	newRes := pagination.NewPageResult(make([]*pay2.PayWalletResp, 0, len(res.List)), res.Total)
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertWalletResp(item))
 	}
@@ -63,7 +62,7 @@ func (h *PayWalletHandler) GetWallet(c *gin.Context) {
 
 // UpdateWalletBalance 更新会员用户余额
 func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
-	var r req.PayWalletUpdateBalanceReq
+	var r pay2.PayWalletUpdateBalanceReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -90,11 +89,11 @@ func (h *PayWalletHandler) UpdateWalletBalance(c *gin.Context) {
 	response.WriteSuccess(c, true)
 }
 
-func convertWalletResp(item *pay.PayWallet) *resp.PayWalletResp {
+func convertWalletResp(item *pay.PayWallet) *pay2.PayWalletResp {
 	if item == nil {
 		return nil
 	}
-	return &resp.PayWalletResp{
+	return &pay2.PayWalletResp{
 		ID:            item.ID,
 		UserID:        item.UserID,
 		UserType:      item.UserType,

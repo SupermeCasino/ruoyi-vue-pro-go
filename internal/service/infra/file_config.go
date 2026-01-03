@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/file"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -26,7 +25,7 @@ func NewFileConfigService(q *query.Query) *FileConfigService {
 }
 
 // CreateFileConfig 创建文件配置
-func (s *FileConfigService) CreateFileConfig(ctx context.Context, req *req.FileConfigSaveReq) (int64, error) {
+func (s *FileConfigService) CreateFileConfig(ctx context.Context, req *infra.FileConfigSaveReq) (int64, error) {
 	configBytes, err := json.Marshal(req.Config)
 	if err != nil {
 		return 0, err
@@ -51,7 +50,7 @@ func (s *FileConfigService) CreateFileConfig(ctx context.Context, req *req.FileC
 }
 
 // UpdateFileConfig 更新文件配置
-func (s *FileConfigService) UpdateFileConfig(ctx context.Context, req *req.FileConfigSaveReq) error {
+func (s *FileConfigService) UpdateFileConfig(ctx context.Context, req *infra.FileConfigSaveReq) error {
 	configBytes, err := json.Marshal(req.Config)
 	if err != nil {
 		return err
@@ -102,7 +101,7 @@ func (s *FileConfigService) DeleteFileConfig(ctx context.Context, id int64) erro
 }
 
 // GetFileConfig 获得文件配置
-func (s *FileConfigService) GetFileConfig(ctx context.Context, id int64) (*resp.FileConfigRespVO, error) {
+func (s *FileConfigService) GetFileConfig(ctx context.Context, id int64) (*infra.FileConfigResp, error) {
 	c := s.q.InfraFileConfig
 	item, err := c.WithContext(ctx).Where(c.ID.Eq(id)).First()
 	if err != nil {
@@ -118,7 +117,7 @@ func (s *FileConfigService) GetMasterFileConfig(ctx context.Context) (*model.Inf
 }
 
 // GetFileConfigPage 获得文件配置分页
-func (s *FileConfigService) GetFileConfigPage(ctx context.Context, req *req.FileConfigPageReq) (*pagination.PageResult[*resp.FileConfigRespVO], error) {
+func (s *FileConfigService) GetFileConfigPage(ctx context.Context, req *infra.FileConfigPageReq) (*pagination.PageResult[*infra.FileConfigResp], error) {
 	c := s.q.InfraFileConfig
 	qb := c.WithContext(ctx)
 
@@ -139,19 +138,21 @@ func (s *FileConfigService) GetFileConfigPage(ctx context.Context, req *req.File
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.FileConfigRespVO]{
-		List:  lo.Map(list, func(item *model.InfraFileConfig, _ int) *resp.FileConfigRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*infra.FileConfigResp]{
+		List:  lo.Map(list, func(item *model.InfraFileConfig, _ int) *infra.FileConfigResp { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
-func (s *FileConfigService) convertResp(item *model.InfraFileConfig) *resp.FileConfigRespVO {
-	return &resp.FileConfigRespVO{
+func (s *FileConfigService) convertResp(item *model.InfraFileConfig) *infra.FileConfigResp {
+	var configMap map[string]interface{}
+	_ = json.Unmarshal(item.Config, &configMap)
+	return &infra.FileConfigResp{
 		ID:         item.ID,
 		Name:       item.Name,
 		Storage:    item.Storage,
 		Master:     bool(item.Master),
-		Config:     &item.Config,
+		Config:     &configMap,
 		Remark:     item.Remark,
 		CreateTime: item.CreateTime,
 	}
@@ -166,7 +167,8 @@ func (s *FileConfigService) TestFileConfig(ctx context.Context, id int64) (strin
 		return "", errors.New("配置内容为空")
 	}
 
-	client, err := file.NewFileClient(config.Storage, *config.Config)
+	configBytes, _ := json.Marshal(config.Config)
+	client, err := file.NewFileClient(config.Storage, configBytes)
 	if err != nil {
 		return "", err
 	}

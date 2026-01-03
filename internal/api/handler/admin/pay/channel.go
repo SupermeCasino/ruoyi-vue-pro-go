@@ -3,8 +3,7 @@ package pay
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +22,7 @@ func NewPayChannelHandler(svc *paySvc.PayChannelService) *PayChannelHandler {
 
 // CreateChannel 创建支付渠道
 func (h *PayChannelHandler) CreateChannel(c *gin.Context) {
-	var r req.PayChannelCreateReq
+	var r pay.PayChannelCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +37,7 @@ func (h *PayChannelHandler) CreateChannel(c *gin.Context) {
 
 // UpdateChannel 更新支付渠道
 func (h *PayChannelHandler) UpdateChannel(c *gin.Context) {
-	var r req.PayChannelUpdateReq
+	var r pay.PayChannelUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -129,11 +128,11 @@ func (h *PayChannelHandler) GetEnableChannelCodeList(c *gin.Context) {
 	response.WriteSuccess(c, codes)
 }
 
-func convertChannelResp(channel *payModel.PayChannel) *resp.PayChannelResp {
+func convertChannelResp(channel *payModel.PayChannel) *pay.PayChannelResp {
 	if channel == nil {
 		return nil
 	}
-	return &resp.PayChannelResp{
+	return &pay.PayChannelResp{
 		ID:         channel.ID,
 		Code:       channel.Code,
 		Status:     channel.Status,

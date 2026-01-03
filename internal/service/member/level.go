@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -34,7 +34,7 @@ func NewMemberLevelService(q *query.Query) *MemberLevelService {
 }
 
 // CreateLevel 创建会员等级
-func (s *MemberLevelService) CreateLevel(ctx context.Context, r *req.MemberLevelCreateReq) (int64, error) {
+func (s *MemberLevelService) CreateLevel(ctx context.Context, r *member2.MemberLevelCreateReq) (int64, error) {
 	// 校验配置是否有效
 	if err := s.validateConfigValid(ctx, 0, r.Name, r.Level, r.Experience); err != nil {
 		return 0, err
@@ -55,7 +55,7 @@ func (s *MemberLevelService) CreateLevel(ctx context.Context, r *req.MemberLevel
 }
 
 // UpdateLevel 更新会员等级
-func (s *MemberLevelService) UpdateLevel(ctx context.Context, r *req.MemberLevelUpdateReq) error {
+func (s *MemberLevelService) UpdateLevel(ctx context.Context, r *member2.MemberLevelUpdateReq) error {
 	// 校验存在
 	if _, err := s.validateLevelExists(ctx, r.ID); err != nil {
 		return err
@@ -212,7 +212,7 @@ func (s *MemberLevelService) GetLevelSimpleList(ctx context.Context) ([]*member.
 }
 
 // GetLevelPage 获得会员等级分页
-func (s *MemberLevelService) GetLevelPage(ctx context.Context, r *req.MemberLevelPageReq) (*pagination.PageResult[*member.MemberLevel], error) {
+func (s *MemberLevelService) GetLevelPage(ctx context.Context, r *member2.MemberLevelPageReq) (*pagination.PageResult[*member.MemberLevel], error) {
 	q := s.q.MemberLevel.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.MemberLevel.Name.Like("%" + r.Name + "%"))

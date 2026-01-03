@@ -3,7 +3,8 @@ package trade
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -21,7 +22,7 @@ func NewTradeAfterSaleHandler(svc *trade.TradeAfterSaleService) *TradeAfterSaleH
 
 // GetAfterSalePage 获得售后分页
 func (h *TradeAfterSaleHandler) GetAfterSalePage(c *gin.Context) {
-	var r req.TradeAfterSalePageReq
+	var r trade2.TradeAfterSalePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -36,7 +37,7 @@ func (h *TradeAfterSaleHandler) GetAfterSalePage(c *gin.Context) {
 
 // AgreeAfterSale 同意售后
 func (h *TradeAfterSaleHandler) AgreeAfterSale(c *gin.Context) {
-	var r req.TradeAfterSaleAgreeReq
+	var r trade2.TradeAfterSaleAgreeReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -50,7 +51,7 @@ func (h *TradeAfterSaleHandler) AgreeAfterSale(c *gin.Context) {
 
 // DisagreeAfterSale 拒绝售后
 func (h *TradeAfterSaleHandler) DisagreeAfterSale(c *gin.Context) {
-	var r req.TradeAfterSaleDisagreeReq
+	var r trade2.TradeAfterSaleDisagreeReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -64,7 +65,7 @@ func (h *TradeAfterSaleHandler) DisagreeAfterSale(c *gin.Context) {
 
 // RefundAfterSale 退款
 func (h *TradeAfterSaleHandler) RefundAfterSale(c *gin.Context) {
-	var r req.TradeAfterSaleRefundReq
+	var r trade2.TradeAfterSaleRefundReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -117,7 +118,7 @@ func (h *TradeAfterSaleHandler) ReceiveAfterSale(c *gin.Context) {
 
 // RefuseAfterSale 拒绝收货
 func (h *TradeAfterSaleHandler) RefuseAfterSale(c *gin.Context) {
-	var r req.TradeAfterSaleRefuseReq
+	var r trade2.TradeAfterSaleRefuseReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -132,7 +133,7 @@ func (h *TradeAfterSaleHandler) RefuseAfterSale(c *gin.Context) {
 // UpdateAfterSaleRefunded 更新售后单为已退款 (Callback)
 // @Router /admin-api/trade/after-sale/update-refunded [post]
 func (h *TradeAfterSaleHandler) UpdateAfterSaleRefunded(c *gin.Context) {
-	var r req.PayRefundNotifyReqDTO // Reuse Pay DTO
+	var r pay.PayRefundNotifyReqDTO // Reuse Pay DTO
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return

@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -20,7 +20,7 @@ func NewAppProductCommentHandler(svc *product.ProductCommentService) *AppProduct
 
 // GetCommentPage 获得商品评价分页 (App)
 func (h *AppProductCommentHandler) GetCommentPage(c *gin.Context) {
-	var r req.AppProductCommentPageReq
+	var r product2.AppProductCommentPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -35,7 +35,7 @@ func (h *AppProductCommentHandler) GetCommentPage(c *gin.Context) {
 
 // CreateComment 创建商品评价
 func (h *AppProductCommentHandler) CreateComment(c *gin.Context) {
-	var r req.AppProductCommentCreateReq
+	var r product2.AppProductCommentCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

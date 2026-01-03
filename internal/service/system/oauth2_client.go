@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 
@@ -19,7 +19,7 @@ func NewOAuth2ClientService(db *gorm.DB) *OAuth2ClientService {
 	return &OAuth2ClientService{db: db}
 }
 
-func (s *OAuth2ClientService) CreateOAuth2Client(ctx context.Context, r *req.OAuth2ClientCreateReq) (int64, error) {
+func (s *OAuth2ClientService) CreateOAuth2Client(ctx context.Context, r *system.OAuth2ClientCreateReq) (int64, error) {
 	RedirectUris, _ := json.Marshal(r.RedirectUris)
 	AuthorizedGrantTypes, _ := json.Marshal(r.AuthorizedGrantTypes)
 	Scopes, _ := json.Marshal(r.Scopes)
@@ -51,7 +51,7 @@ func (s *OAuth2ClientService) CreateOAuth2Client(ctx context.Context, r *req.OAu
 	return c.ID, nil
 }
 
-func (s *OAuth2ClientService) UpdateOAuth2Client(ctx context.Context, r *req.OAuth2ClientUpdateReq) error {
+func (s *OAuth2ClientService) UpdateOAuth2Client(ctx context.Context, r *system.OAuth2ClientUpdateReq) error {
 	RedirectUris, _ := json.Marshal(r.RedirectUris)
 	AuthorizedGrantTypes, _ := json.Marshal(r.AuthorizedGrantTypes)
 	Scopes, _ := json.Marshal(r.Scopes)
@@ -93,7 +93,7 @@ func (s *OAuth2ClientService) GetOAuth2Client(ctx context.Context, id int64) (*m
 	return &c, nil
 }
 
-func (s *OAuth2ClientService) GetOAuth2ClientPage(ctx context.Context, r *req.OAuth2ClientPageReq) (*pagination.PageResult[*model.SystemOAuth2Client], error) {
+func (s *OAuth2ClientService) GetOAuth2ClientPage(ctx context.Context, r *system.OAuth2ClientPageReq) (*pagination.PageResult[*model.SystemOAuth2Client], error) {
 	db := s.db.WithContext(ctx).Model(&model.SystemOAuth2Client{})
 	if r.Name != "" {
 		db = db.Where("name LIKE ?", "%"+r.Name+"%")

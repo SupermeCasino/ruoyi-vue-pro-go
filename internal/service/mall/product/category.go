@@ -3,10 +3,9 @@ package product
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
+	productModel "github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 
@@ -22,13 +21,13 @@ func NewProductCategoryService(q *query.Query) *ProductCategoryService {
 }
 
 // CreateCategory 创建商品分类
-func (s *ProductCategoryService) CreateCategory(ctx context.Context, req *req.ProductCategoryCreateReq) (int64, error) {
+func (s *ProductCategoryService) CreateCategory(ctx context.Context, req *product.ProductCategoryCreateReq) (int64, error) {
 	// 校验父分类
 	if err := s.validateParentCategory(ctx, req.ParentID); err != nil {
 		return 0, err
 	}
 
-	category := &product.ProductCategory{
+	category := &productModel.ProductCategory{
 		ParentID: req.ParentID,
 		Name:     req.Name,
 		PicURL:   req.PicURL,
@@ -40,7 +39,7 @@ func (s *ProductCategoryService) CreateCategory(ctx context.Context, req *req.Pr
 }
 
 // UpdateCategory 更新商品分类
-func (s *ProductCategoryService) UpdateCategory(ctx context.Context, req *req.ProductCategoryUpdateReq) error {
+func (s *ProductCategoryService) UpdateCategory(ctx context.Context, req *product.ProductCategoryUpdateReq) error {
 	// 校验存在
 	if err := s.ValidateCategory(ctx, req.ID); err != nil {
 		return err
@@ -55,7 +54,7 @@ func (s *ProductCategoryService) UpdateCategory(ctx context.Context, req *req.Pr
 	}
 
 	u := s.q.ProductCategory
-	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&product.ProductCategory{
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&productModel.ProductCategory{
 		ParentID: req.ParentID,
 		Name:     req.Name,
 		PicURL:   req.PicURL,
@@ -93,7 +92,7 @@ func (s *ProductCategoryService) DeleteCategory(ctx context.Context, id int64) e
 }
 
 // GetCategory 获得商品分类
-func (s *ProductCategoryService) GetCategory(ctx context.Context, id int64) (*resp.ProductCategoryResp, error) {
+func (s *ProductCategoryService) GetCategory(ctx context.Context, id int64) (*product.ProductCategoryResp, error) {
 	u := s.q.ProductCategory
 	category, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
@@ -103,7 +102,7 @@ func (s *ProductCategoryService) GetCategory(ctx context.Context, id int64) (*re
 }
 
 // GetCategoryList 获得商品分类列表
-func (s *ProductCategoryService) GetCategoryList(ctx context.Context, req *req.ProductCategoryListReq) ([]*resp.ProductCategoryResp, error) {
+func (s *ProductCategoryService) GetCategoryList(ctx context.Context, req *product.ProductCategoryListReq) ([]*product.ProductCategoryResp, error) {
 	u := s.q.ProductCategory
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -119,21 +118,21 @@ func (s *ProductCategoryService) GetCategoryList(ctx context.Context, req *req.P
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *product.ProductCategory, _ int) *resp.ProductCategoryResp {
+	return lo.Map(list, func(item *productModel.ProductCategory, _ int) *product.ProductCategoryResp {
 		return s.convertResp(item)
 	}), nil
 }
 
 // GetEnableCategoryList 获得开启状态的商品分类列表
-func (s *ProductCategoryService) GetEnableCategoryList(ctx context.Context) ([]*product.ProductCategory, error) {
+func (s *ProductCategoryService) GetEnableCategoryList(ctx context.Context) ([]*productModel.ProductCategory, error) {
 	u := s.q.ProductCategory
 	return u.WithContext(ctx).Where(u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
 }
 
 // GetEnableCategoryListByIds 获得开启状态的商品分类列表，指定编号
-func (s *ProductCategoryService) GetEnableCategoryListByIds(ctx context.Context, ids []int64) ([]*product.ProductCategory, error) {
+func (s *ProductCategoryService) GetEnableCategoryListByIds(ctx context.Context, ids []int64) ([]*productModel.ProductCategory, error) {
 	if len(ids) == 0 {
-		return []*product.ProductCategory{}, nil
+		return []*productModel.ProductCategory{}, nil
 	}
 	u := s.q.ProductCategory
 	return u.WithContext(ctx).Where(u.ID.In(ids...), u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
@@ -206,8 +205,8 @@ func (s *ProductCategoryService) ValidateCategoryLevel(ctx context.Context, id i
 	return nil
 }
 
-func (s *ProductCategoryService) convertResp(item *product.ProductCategory) *resp.ProductCategoryResp {
-	return &resp.ProductCategoryResp{
+func (s *ProductCategoryService) convertResp(item *productModel.ProductCategory) *product.ProductCategoryResp {
+	return &product.ProductCategoryResp{
 		ID:          item.ID,
 		ParentID:    item.ParentID,
 		Name:        item.Name,

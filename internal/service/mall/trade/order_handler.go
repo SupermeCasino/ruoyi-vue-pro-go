@@ -3,7 +3,7 @@ package trade
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 )
 
@@ -44,11 +44,11 @@ type OrderHandleRequest struct {
 	Remark  string `json:"remark"`  // 备注
 
 	// 创建订单相关
-	CreateReq         *req.AppTradeOrderCreateReq `json:"createReq"`         // 创建订单请求
-	PriceCalculateReq *TradePriceCalculateReqBO   `json:"priceCalculateReq"` // 价格计算请求
-	CartIDs           []int64                     `json:"cartIds"`           // 购物车ID数组
-	StockItems        []StockDeductItem           `json:"stockItems"`        // 库存扣减项
-	OrderItems        []*trade.TradeOrderItem     `json:"orderItems"`        // 订单项数组
+	CreateReq         *trade2.AppTradeOrderCreateReq `json:"createReq"`         // 创建订单请求
+	PriceCalculateReq *TradePriceCalculateReqBO      `json:"priceCalculateReq"` // 价格计算请求
+	CartIDs           []int64                        `json:"cartIds"`           // 购物车ID数组
+	StockItems        []StockDeductItem              `json:"stockItems"`        // 库存扣减项
+	OrderItems        []*trade.TradeOrderItem        `json:"orderItems"`        // 订单项数组
 
 	// 支付订单相关
 	PayOrderID int64 `json:"payOrderId"` // 支付订单ID

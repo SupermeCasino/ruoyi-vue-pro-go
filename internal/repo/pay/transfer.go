@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/req/pay"
+	reqPay "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	modelPay "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"

@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -21,7 +21,7 @@ func NewTenantPackageHandler(svc *system.TenantPackageService) *TenantPackageHan
 
 // CreateTenantPackage 创建租户套餐
 func (h *TenantPackageHandler) CreateTenantPackage(c *gin.Context) {
-	var r req.TenantPackageSaveReq
+	var r system2.TenantPackageSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *TenantPackageHandler) CreateTenantPackage(c *gin.Context) {
 
 // UpdateTenantPackage 更新租户套餐
 func (h *TenantPackageHandler) UpdateTenantPackage(c *gin.Context) {
-	var r req.TenantPackageSaveReq
+	var r system2.TenantPackageSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -103,7 +103,7 @@ func (h *TenantPackageHandler) GetTenantPackageSimpleList(c *gin.Context) {
 
 // GetTenantPackagePage 获得租户套餐分页
 func (h *TenantPackageHandler) GetTenantPackagePage(c *gin.Context) {
-	var r req.TenantPackagePageReq
+	var r system2.TenantPackagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

@@ -1,8 +1,7 @@
 package system
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -29,7 +28,7 @@ func NewSocialUserHandler(socialUserService *system.SocialUserService, logger *z
 
 // BindSocialUser 绑定社交用户
 func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
-	var req req.SocialUserBindReq
+	var req system2.SocialUserBindReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -51,7 +50,7 @@ func (h *SocialUserHandler) BindSocialUser(c *gin.Context) {
 
 // UnbindSocialUser 解绑社交用户
 func (h *SocialUserHandler) UnbindSocialUser(c *gin.Context) {
-	var req req.SocialUserUnbindReq
+	var req system2.SocialUserUnbindReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -85,9 +84,9 @@ func (h *SocialUserHandler) GetSocialUserList(c *gin.Context) {
 		return
 	}
 
-	result := make([]resp.SocialUserResp, len(list))
+	result := make([]system2.SocialUserResp, len(list))
 	for i, user := range list {
-		result[i] = resp.SocialUserResp{
+		result[i] = system2.SocialUserResp{
 			ID:          user.ID,
 			Type:        user.Type,
 			Openid:      user.Openid,
@@ -114,7 +113,7 @@ func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
 		return
 	}
 
-	result := resp.SocialUserResp{
+	result := system2.SocialUserResp{
 		ID:          user.ID,
 		Type:        user.Type,
 		Openid:      user.Openid,
@@ -131,7 +130,7 @@ func (h *SocialUserHandler) GetSocialUser(c *gin.Context) {
 
 // GetSocialUserPage 获取社交用户分页
 func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
-	var req req.SocialUserPageReq
+	var req system2.SocialUserPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -144,9 +143,9 @@ func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.SocialUserResp, len(page.List))
+	list := make([]system2.SocialUserResp, len(page.List))
 	for i, user := range page.List {
-		list[i] = resp.SocialUserResp{
+		list[i] = system2.SocialUserResp{
 			ID:          user.ID,
 			Type:        user.Type,
 			Openid:      user.Openid,
@@ -160,7 +159,7 @@ func (h *SocialUserHandler) GetSocialUserPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.SocialUserResp]{
+	response.WriteSuccess(c, pagination.PageResult[system2.SocialUserResp]{
 		List:  list,
 		Total: page.Total,
 	})

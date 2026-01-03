@@ -2,8 +2,7 @@ package system
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -26,7 +25,7 @@ func NewSocialClientHandler(socialClientService *system.SocialClientService, log
 
 // CreateSocialClient 创建社交客户端
 func (h *SocialClientHandler) CreateSocialClient(c *gin.Context) {
-	var req req.SocialClientSaveReq
+	var req system2.SocialClientSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -44,7 +43,7 @@ func (h *SocialClientHandler) CreateSocialClient(c *gin.Context) {
 
 // UpdateSocialClient 更新社交客户端
 func (h *SocialClientHandler) UpdateSocialClient(c *gin.Context) {
-	var req req.SocialClientSaveReq
+	var req system2.SocialClientSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +82,7 @@ func (h *SocialClientHandler) GetSocialClient(c *gin.Context) {
 		return
 	}
 
-	result := resp.SocialClientResp{
+	result := system2.SocialClientResp{
 		ID:           client.ID,
 		Name:         client.Name,
 		SocialType:   client.SocialType,
@@ -99,7 +98,7 @@ func (h *SocialClientHandler) GetSocialClient(c *gin.Context) {
 
 // GetSocialClientPage 获取社交客户端分页
 func (h *SocialClientHandler) GetSocialClientPage(c *gin.Context) {
-	var req req.SocialClientPageReq
+	var req system2.SocialClientPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -112,9 +111,9 @@ func (h *SocialClientHandler) GetSocialClientPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.SocialClientResp, len(page.List))
+	list := make([]system2.SocialClientResp, len(page.List))
 	for i, client := range page.List {
-		list[i] = resp.SocialClientResp{
+		list[i] = system2.SocialClientResp{
 			ID:           client.ID,
 			Name:         client.Name,
 			SocialType:   client.SocialType,
@@ -127,7 +126,7 @@ func (h *SocialClientHandler) GetSocialClientPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.SocialClientResp]{
+	response.WriteSuccess(c, pagination.PageResult[system2.SocialClientResp]{
 		List:  list,
 		Total: page.Total,
 	})

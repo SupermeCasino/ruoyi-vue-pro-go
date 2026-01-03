@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -42,7 +42,7 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityPage(c *gin.Contex
 func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.Context) {
 	idsStr := c.Query("ids")
 	if idsStr == "" {
-		response.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
+		response.WriteSuccess(c, []*promotionContract.AppCombinationActivityRespVO{})
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *AppCombinationActivityHandler) GetCombinationActivityListByIds(c *gin.C
 	}
 
 	if len(ids) == 0 {
-		response.WriteSuccess(c, []*resp.AppCombinationActivityRespVO{})
+		response.WriteSuccess(c, []*promotionContract.AppCombinationActivityRespVO{})
 		return
 	}
 

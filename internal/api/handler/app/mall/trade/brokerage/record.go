@@ -3,9 +3,8 @@ package brokerage
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/req/app/trade"
-	tradeResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp/app/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	tradeReq "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade/brokerage"
 	brokerageSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -33,7 +32,7 @@ func (h *AppBrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 	}
 
 	userId := context.GetLoginUserID(c)
-	pageReq := &req.BrokerageRecordPageReq{
+	pageReq := &trade.BrokerageRecordPageReq{
 		PageParam:  reqVO.PageParam,
 		UserID:     userId,
 		Status:     reqVO.Status,
@@ -56,10 +55,10 @@ func (h *AppBrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 		return
 	}
 
-	writeResp := pagination.PageResult[*tradeResp.AppBrokerageRecordRespVO]{
+	writeResp := pagination.PageResult[*tradeReq.AppBrokerageRecordRespVO]{
 		Total: pageResult.Total,
-		List: lo.Map(pageResult.List, func(item *brokerage.BrokerageRecord, _ int) *tradeResp.AppBrokerageRecordRespVO {
-			return &tradeResp.AppBrokerageRecordRespVO{
+		List: lo.Map(pageResult.List, func(item *brokerage.BrokerageRecord, _ int) *tradeReq.AppBrokerageRecordRespVO {
+			return &tradeReq.AppBrokerageRecordRespVO{
 				ID:          item.ID,
 				UserID:      item.UserID,
 				BizType:     item.BizType,
@@ -69,7 +68,7 @@ func (h *AppBrokerageRecordHandler) GetBrokerageRecordPage(c *gin.Context) {
 				Description: item.Description,
 				Status:      item.Status,
 				Total:       item.TotalPrice,
-				CreateTime:   item.CreateTime,
+				CreateTime:  item.CreateTime,
 				// StatusName: item.Status // TODO: Dict lookup
 			}
 		}),

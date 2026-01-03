@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -24,7 +23,7 @@ func NewConfigService(q *query.Query) *ConfigService {
 }
 
 // CreateConfig 创建参数配置
-func (s *ConfigService) CreateConfig(ctx context.Context, req *req.ConfigSaveReq) (int64, error) {
+func (s *ConfigService) CreateConfig(ctx context.Context, req *system.ConfigSaveReq) (int64, error) {
 	// TODO: Check key uniqueness if necessary
 	config := &model.SystemConfig{
 		Category:  req.Category,
@@ -40,7 +39,7 @@ func (s *ConfigService) CreateConfig(ctx context.Context, req *req.ConfigSaveReq
 }
 
 // UpdateConfig 修改参数配置
-func (s *ConfigService) UpdateConfig(ctx context.Context, req *req.ConfigSaveReq) error {
+func (s *ConfigService) UpdateConfig(ctx context.Context, req *system.ConfigSaveReq) error {
 	c := s.q.SystemConfig
 	_, err := c.WithContext(ctx).Where(c.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -77,7 +76,7 @@ func (s *ConfigService) DeleteConfigList(ctx context.Context, ids []int64) error
 }
 
 // GetConfig 获得参数配置
-func (s *ConfigService) GetConfig(ctx context.Context, id int64) (*resp.ConfigRespVO, error) {
+func (s *ConfigService) GetConfig(ctx context.Context, id int64) (*system.ConfigRespVO, error) {
 	c := s.q.SystemConfig
 	item, err := c.WithContext(ctx).Where(c.ID.Eq(id)).First()
 	if err != nil {
@@ -93,7 +92,7 @@ func (s *ConfigService) GetConfigByKey(ctx context.Context, key string) (*model.
 }
 
 // GetConfigPage 获得参数配置分页
-func (s *ConfigService) GetConfigPage(ctx context.Context, req *req.ConfigPageReq) (*pagination.PageResult[*resp.ConfigRespVO], error) {
+func (s *ConfigService) GetConfigPage(ctx context.Context, req *system.ConfigPageReq) (*pagination.PageResult[*system.ConfigRespVO], error) {
 	c := s.q.SystemConfig
 	qb := c.WithContext(ctx)
 
@@ -117,14 +116,14 @@ func (s *ConfigService) GetConfigPage(ctx context.Context, req *req.ConfigPageRe
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.ConfigRespVO]{
-		List:  lo.Map(list, func(item *model.SystemConfig, _ int) *resp.ConfigRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*system.ConfigRespVO]{
+		List:  lo.Map(list, func(item *model.SystemConfig, _ int) *system.ConfigRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
-func (s *ConfigService) convertResp(item *model.SystemConfig) *resp.ConfigRespVO {
-	return &resp.ConfigRespVO{
+func (s *ConfigService) convertResp(item *model.SystemConfig) *system.ConfigRespVO {
+	return &system.ConfigRespVO{
 		ID:         item.ID,
 		Category:   item.Category,
 		Name:       item.Name,

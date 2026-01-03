@@ -1,10 +1,10 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product_contract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
+	product_service "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -17,10 +17,10 @@ type BargainActivityHandler struct {
 	activitySvc *promotion.BargainActivityService
 	recordSvc   *promotion.BargainRecordService
 	helpSvc     *promotion.BargainHelpService
-	spuSvc      *product.ProductSpuService
+	spuSvc      *product_service.ProductSpuService
 }
 
-func NewBargainActivityHandler(activitySvc *promotion.BargainActivityService, recordSvc *promotion.BargainRecordService, helpSvc *promotion.BargainHelpService, spuSvc *product.ProductSpuService) *BargainActivityHandler {
+func NewBargainActivityHandler(activitySvc *promotion.BargainActivityService, recordSvc *promotion.BargainRecordService, helpSvc *promotion.BargainHelpService, spuSvc *product_service.ProductSpuService) *BargainActivityHandler {
 	return &BargainActivityHandler{
 		activitySvc: activitySvc,
 		recordSvc:   recordSvc,
@@ -31,7 +31,7 @@ func NewBargainActivityHandler(activitySvc *promotion.BargainActivityService, re
 
 // CreateBargainActivity 创建砍价活动
 func (h *BargainActivityHandler) CreateBargainActivity(c *gin.Context) {
-	var r req.BargainActivityCreateReq
+	var r promotion2.BargainActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
 		return
@@ -46,7 +46,7 @@ func (h *BargainActivityHandler) CreateBargainActivity(c *gin.Context) {
 
 // UpdateBargainActivity 更新砍价活动
 func (h *BargainActivityHandler) UpdateBargainActivity(c *gin.Context) {
-	var r req.BargainActivityUpdateReq
+	var r promotion2.BargainActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
 		return
@@ -103,7 +103,7 @@ func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
 		return
 	}
 
-	respVO := resp.BargainActivityResp{
+	respVO := promotion2.BargainActivityResp{
 		ID:                act.ID,
 		SpuID:             act.SpuID,
 		SkuID:             act.SkuID,
@@ -127,7 +127,7 @@ func (h *BargainActivityHandler) GetBargainActivity(c *gin.Context) {
 
 // GetBargainActivityPage 获得砍价活动分页
 func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
-	var r req.BargainActivityPageReq
+	var r promotion2.BargainActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 1001004001, "参数校验失败: "+err.Error())
 		return
@@ -139,8 +139,8 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	}
 
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.BargainActivityPageItemResp]{
-			List:  []resp.BargainActivityPageItemResp{},
+		response.WriteSuccess(c, pagination.PageResult[promotion2.BargainActivityPageItemResp]{
+			List:  []promotion2.BargainActivityPageItemResp{},
 			Total: pageResult.Total,
 		})
 		return
@@ -155,7 +155,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	}
 
 	// Fetch SPUs
-	spuMap := make(map[int64]*resp.ProductSpuResp)
+	spuMap := make(map[int64]*product_contract.ProductSpuResp)
 	if len(spuIds) > 0 {
 		spuList, err := h.spuSvc.GetSpuList(c.Request.Context(), spuIds)
 		if err == nil {
@@ -172,7 +172,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 	recordSuccessUserCountMap, _ := h.recordSvc.GetBargainRecordUserCountMap(c.Request.Context(), activityIds, &successStatus)
 	helpUserCountMap, _ := h.helpSvc.GetBargainHelpUserCountMapByActivity(c.Request.Context(), activityIds)
 
-	list := make([]resp.BargainActivityPageItemResp, len(pageResult.List))
+	list := make([]promotion2.BargainActivityPageItemResp, len(pageResult.List))
 	for i, item := range pageResult.List {
 		spuName := ""
 		picUrl := ""
@@ -184,8 +184,8 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 			marketPrice = spu.MarketPrice // Or SKU Price if available? SPU market price usually min.
 		}
 
-		list[i] = resp.BargainActivityPageItemResp{
-			BargainActivityResp: resp.BargainActivityResp{
+		list[i] = promotion2.BargainActivityPageItemResp{
+			BargainActivityResp: promotion2.BargainActivityResp{
 				ID:                item.ID,
 				Name:              item.Name,
 				Status:            item.Status,
@@ -213,7 +213,7 @@ func (h *BargainActivityHandler) GetBargainActivityPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.BargainActivityPageItemResp]{
+	response.WriteSuccess(c, pagination.PageResult[promotion2.BargainActivityPageItemResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

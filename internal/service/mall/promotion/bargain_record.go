@@ -3,7 +3,7 @@ package promotion
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -76,7 +76,7 @@ func (s *BargainRecordService) GetLastBargainRecord(ctx context.Context, userID 
 }
 
 // CreateBargainRecord 创建砍价记录
-func (s *BargainRecordService) CreateBargainRecord(ctx context.Context, userID int64, req *req.AppBargainRecordCreateReq) (int64, error) {
+func (s *BargainRecordService) CreateBargainRecord(ctx context.Context, userID int64, req *promotion2.AppBargainRecordCreateReq) (int64, error) {
 	// TODO: Implement Logic
 	return 0, nil
 }
@@ -93,7 +93,7 @@ func (s *BargainRecordService) GetBargainRecordPage(ctx context.Context, userID 
 }
 
 // GetBargainRecordPageAdmin 获得砍价记录分页 (Admin)
-func (s *BargainRecordService) GetBargainRecordPageAdmin(ctx context.Context, req *req.BargainRecordPageReq) (*pagination.PageResult[*promotion.PromotionBargainRecord], error) {
+func (s *BargainRecordService) GetBargainRecordPageAdmin(ctx context.Context, req *promotion2.BargainRecordPageReq) (*pagination.PageResult[*promotion.PromotionBargainRecord], error) {
 	q := s.q.PromotionBargainRecord
 	do := q.WithContext(ctx)
 

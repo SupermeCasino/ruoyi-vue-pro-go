@@ -3,7 +3,7 @@ package system
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -19,7 +19,7 @@ func NewLoginLogService(q *query.Query) *LoginLogService {
 }
 
 // GetLoginLogPage 获取登录日志分页
-func (s *LoginLogService) GetLoginLogPage(ctx context.Context, r *req.LoginLogPageReq) (*pagination.PageResult[*model.SystemLoginLog], error) {
+func (s *LoginLogService) GetLoginLogPage(ctx context.Context, r *system.LoginLogPageReq) (*pagination.PageResult[*model.SystemLoginLog], error) {
 	q := s.q.SystemLoginLog.WithContext(ctx)
 
 	// 过滤条件

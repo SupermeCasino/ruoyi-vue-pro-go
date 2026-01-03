@@ -8,15 +8,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
@@ -66,7 +67,7 @@ func NewTradeAfterSaleService(
 }
 
 // CreateAfterSale 创建售后 (App)
-func (s *TradeAfterSaleService) CreateAfterSale(ctx context.Context, userId int64, r *req.AppAfterSaleCreateReq) (int64, error) {
+func (s *TradeAfterSaleService) CreateAfterSale(ctx context.Context, userId int64, r *trade2.AppAfterSaleCreateReq) (int64, error) {
 	// 1. 前置校验
 	item, err := s.validateOrderItemApplicable(ctx, userId, r)
 	if err != nil {
@@ -111,7 +112,7 @@ func (s *TradeAfterSaleService) CreateAfterSale(ctx context.Context, userId int6
 	return afterSaleId, nil
 }
 
-func (s *TradeAfterSaleService) validateOrderItemApplicable(ctx context.Context, userId int64, r *req.AppAfterSaleCreateReq) (*trade.TradeOrderItem, error) {
+func (s *TradeAfterSaleService) validateOrderItemApplicable(ctx context.Context, userId int64, r *trade2.AppAfterSaleCreateReq) (*trade.TradeOrderItem, error) {
 	// 校验订单项存在
 	item, err := s.q.TradeOrderItem.WithContext(ctx).Where(s.q.TradeOrderItem.ID.Eq(r.OrderItemID), s.q.TradeOrderItem.UserID.Eq(userId)).First()
 	if err != nil {
@@ -160,7 +161,7 @@ func (s *TradeAfterSaleService) validateOrderItemApplicable(ctx context.Context,
 	return item, nil
 }
 
-func (s *TradeAfterSaleService) createAfterSaleDOWithQuery(ctx context.Context, tx *query.Query, r *req.AppAfterSaleCreateReq, item *trade.TradeOrderItem) (*trade.AfterSale, error) {
+func (s *TradeAfterSaleService) createAfterSaleDOWithQuery(ctx context.Context, tx *query.Query, r *trade2.AppAfterSaleCreateReq, item *trade.TradeOrderItem) (*trade.AfterSale, error) {
 	// 生成售后单号
 	afterSaleNo, err := s.noDAO.GenerateAfterSaleNo(ctx)
 	if err != nil {
@@ -207,7 +208,7 @@ func (s *TradeAfterSaleService) createAfterSaleDOWithQuery(ctx context.Context, 
 }
 
 // GetAfterSale 获得售后详情 (App)
-func (s *TradeAfterSaleService) GetAfterSale(ctx context.Context, userId int64, id int64) (*resp.AppAfterSaleResp, error) {
+func (s *TradeAfterSaleService) GetAfterSale(ctx context.Context, userId int64, id int64) (*trade2.AppAfterSaleResp, error) {
 	as, err := s.q.AfterSale.WithContext(ctx).Where(s.q.AfterSale.ID.Eq(id), s.q.AfterSale.UserID.Eq(userId)).First()
 	if err != nil {
 		return nil, err
@@ -216,8 +217,8 @@ func (s *TradeAfterSaleService) GetAfterSale(ctx context.Context, userId int64, 
 	return s.convertToAppAfterSaleResp(as), nil
 }
 
-func (s *TradeAfterSaleService) convertToAppAfterSaleResp(as *trade.AfterSale) *resp.AppAfterSaleResp {
-	res := &resp.AppAfterSaleResp{
+func (s *TradeAfterSaleService) convertToAppAfterSaleResp(as *trade.AfterSale) *trade2.AppAfterSaleResp {
+	res := &trade2.AppAfterSaleResp{
 		ID:               as.ID,
 		No:               as.No,
 		Status:           as.Status,
@@ -268,7 +269,7 @@ func (s *TradeAfterSaleService) convertToAppAfterSaleResp(as *trade.AfterSale) *
 }
 
 // GetUserAfterSalePage 获得售后分页 (App)
-func (s *TradeAfterSaleService) GetUserAfterSalePage(ctx context.Context, userId int64, r *req.AppAfterSalePageReq) (*pagination.PageResult[*resp.AppAfterSaleResp], error) {
+func (s *TradeAfterSaleService) GetUserAfterSalePage(ctx context.Context, userId int64, r *trade2.AppAfterSalePageReq) (*pagination.PageResult[*trade2.AppAfterSaleResp], error) {
 	q := s.q.AfterSale.WithContext(ctx).Where(s.q.AfterSale.UserID.Eq(userId))
 	if r.Status != nil {
 		q = q.Where(s.q.AfterSale.Status.Eq(*r.Status))
@@ -279,19 +280,19 @@ func (s *TradeAfterSaleService) GetUserAfterSalePage(ctx context.Context, userId
 		return nil, err
 	}
 
-	resList := make([]*resp.AppAfterSaleResp, len(list))
+	resList := make([]*trade2.AppAfterSaleResp, len(list))
 	for i, as := range list {
 		resList[i] = s.convertToAppAfterSaleResp(as)
 	}
 
-	return &pagination.PageResult[*resp.AppAfterSaleResp]{
+	return &pagination.PageResult[*trade2.AppAfterSaleResp]{
 		List:  resList,
 		Total: total,
 	}, nil
 }
 
 // GetAfterSalePage 获得售后分页 (Admin)
-func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.TradeAfterSalePageReq) (*pagination.PageResult[*resp.AfterSalePageItemResp], error) {
+func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *trade2.TradeAfterSalePageReq) (*pagination.PageResult[*trade2.AfterSalePageItemResp], error) {
 	q := s.q.AfterSale.WithContext(ctx)
 	if r.No != "" {
 		q = q.Where(s.q.AfterSale.No.Like("%" + r.No + "%"))
@@ -309,8 +310,8 @@ func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.Tra
 	}
 
 	if len(list) == 0 {
-		return &pagination.PageResult[*resp.AfterSalePageItemResp]{
-			List:  []*resp.AfterSalePageItemResp{},
+		return &pagination.PageResult[*trade2.AfterSalePageItemResp]{
+			List:  []*trade2.AfterSalePageItemResp{},
 			Total: total,
 		}, nil
 	}
@@ -322,9 +323,9 @@ func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.Tra
 	}
 	userMap, _ := s.memberUserSvc.GetUserRespMap(ctx, userIds)
 
-	resList := make([]*resp.AfterSalePageItemResp, len(list))
+	resList := make([]*trade2.AfterSalePageItemResp, len(list))
 	for i, as := range list {
-		item := &resp.AfterSalePageItemResp{
+		item := &trade2.AfterSalePageItemResp{
 			ID:          as.ID,
 			No:          as.No,
 			Status:      as.Status,
@@ -344,7 +345,7 @@ func (s *TradeAfterSaleService) GetAfterSalePage(ctx context.Context, r *req.Tra
 		resList[i] = item
 	}
 
-	return &pagination.PageResult[*resp.AfterSalePageItemResp]{
+	return &pagination.PageResult[*trade2.AfterSalePageItemResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -434,7 +435,7 @@ func (s *TradeAfterSaleService) AgreeAfterSale(ctx context.Context, adminUserId 
 }
 
 // DisagreeAfterSale 拒绝售后 (审核不通过)
-func (s *TradeAfterSaleService) DisagreeAfterSale(ctx context.Context, adminUserId int64, req *req.TradeAfterSaleDisagreeReq) error {
+func (s *TradeAfterSaleService) DisagreeAfterSale(ctx context.Context, adminUserId int64, req *trade2.TradeAfterSaleDisagreeReq) error {
 	as, err := s.q.AfterSale.WithContext(ctx).Where(s.q.AfterSale.ID.Eq(req.ID)).First()
 	if err != nil {
 		return err
@@ -497,7 +498,7 @@ func (s *TradeAfterSaleService) RefundAfterSale(ctx context.Context, adminUserId
 	}
 
 	// 2. 发起退款申请
-	refundReq := &req.PayRefundCreateReq{
+	refundReq := &pay2.PayRefundCreateReq{
 		AppKey:           payApp.AppKey,
 		UserIP:           userIp,
 		MerchantOrderId:  strconv.FormatInt(as.OrderID, 10),
@@ -534,13 +535,13 @@ func (s *TradeAfterSaleService) RefundAfterSale(ctx context.Context, adminUserId
 }
 
 // GetAfterSaleDetail 获得售后详情 (Admin)
-func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64) (*resp.TradeAfterSaleDetailResp, error) {
+func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64) (*trade2.TradeAfterSaleDetailResp, error) {
 	as, err := s.q.AfterSale.WithContext(ctx).Where(s.q.AfterSale.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
 
-	res := &resp.TradeAfterSaleDetailResp{
+	res := &trade2.TradeAfterSaleDetailResp{
 		ID:               as.ID,
 		No:               as.No,
 		Status:           as.Status,
@@ -590,7 +591,7 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 	// 3.1 订单
 	order, _ := s.orderQuerySvc.GetOrder(ctx, as.OrderID)
 	if order != nil {
-		res.Order = &resp.TradeOrderBase{
+		res.Order = &trade2.TradeOrderBase{
 			ID:         order.ID,
 			No:         order.No,
 			UserID:     order.UserID,
@@ -603,8 +604,8 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 	// 3.2 订单项
 	item, _ := s.orderQuerySvc.GetOrderItem(ctx, as.UserID, as.OrderItemID)
 	if item != nil {
-		res.OrderItem = &resp.AfterSaleOrderItem{
-			TradeOrderItemBase: resp.TradeOrderItemBase{
+		res.OrderItem = &trade2.AfterSaleOrderItem{
+			TradeOrderItemBase: trade2.TradeOrderItemBase{
 				ID:      item.ID,
 				OrderID: item.OrderID,
 				SpuID:   item.SpuID,
@@ -617,7 +618,7 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 		}
 		if len(item.Properties) > 0 {
 			for _, p := range item.Properties {
-				res.OrderItem.Properties = append(res.OrderItem.Properties, resp.ProductPropertyValueDetailResp{
+				res.OrderItem.Properties = append(res.OrderItem.Properties, product.ProductSkuPropertyResp{
 					PropertyID:   p.PropertyID,
 					PropertyName: p.PropertyName,
 					ValueID:      p.ValueID,
@@ -636,9 +637,9 @@ func (s *TradeAfterSaleService) GetAfterSaleDetail(ctx context.Context, id int64
 	// 3.4 日志
 	logs, _ := s.afterSaleLogSvc.GetAfterSaleLogList(ctx, as.ID)
 	if len(logs) > 0 {
-		res.Logs = make([]resp.AfterSaleLogResp, len(logs))
+		res.Logs = make([]trade2.AfterSaleLogResp, len(logs))
 		for i, l := range logs {
-			res.Logs[i] = resp.AfterSaleLogResp{
+			res.Logs[i] = trade2.AfterSaleLogResp{
 				ID:           l.ID,
 				AfterSaleID:  l.AfterSaleID,
 				BeforeStatus: l.BeforeStatus,
@@ -699,7 +700,7 @@ func (s *TradeAfterSaleService) ReceiveAfterSale(ctx context.Context, adminUserI
 }
 
 // DeliveryAfterSale 用户退回货物 (App)
-func (s *TradeAfterSaleService) DeliveryAfterSale(ctx context.Context, userId int64, req *req.AppAfterSaleDeliveryReq) error {
+func (s *TradeAfterSaleService) DeliveryAfterSale(ctx context.Context, userId int64, req *trade2.AppAfterSaleDeliveryReq) error {
 	as, err := s.q.AfterSale.WithContext(ctx).Where(s.q.AfterSale.ID.Eq(req.ID), s.q.AfterSale.UserID.Eq(userId)).First()
 	if err != nil {
 		return fmt.Errorf("售后单不存在")
@@ -787,7 +788,7 @@ func (s *TradeAfterSaleService) UpdateAfterSaleRefunded(ctx context.Context, aft
 }
 
 // UpdateRefunded 更新退款状态 (Unified Facade)
-func (s *TradeAfterSaleService) UpdateRefunded(ctx context.Context, req *req.PayRefundNotifyReqDTO) error {
+func (s *TradeAfterSaleService) UpdateRefunded(ctx context.Context, req *pay2.PayRefundNotifyReqDTO) error {
 	if strings.HasPrefix(req.MerchantRefundId, "order-") {
 		orderId, err := strconv.ParseInt(strings.TrimPrefix(req.MerchantRefundId, "order-"), 10, 64)
 		if err != nil {
@@ -817,7 +818,7 @@ func (s *TradeAfterSaleService) GetUserAfterSaleCount(ctx context.Context, userI
 }
 
 // RefuseAfterSale 拒绝收货 (Admin)
-func (s *TradeAfterSaleService) RefuseAfterSale(ctx context.Context, adminUserId int64, req *req.TradeAfterSaleRefuseReq) error {
+func (s *TradeAfterSaleService) RefuseAfterSale(ctx context.Context, adminUserId int64, req *trade2.TradeAfterSaleRefuseReq) error {
 	as, err := s.q.AfterSale.WithContext(ctx).Where(s.q.AfterSale.ID.Eq(req.ID)).First()
 	if err != nil {
 		return fmt.Errorf("售后单不存在")

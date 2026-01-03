@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -52,7 +52,7 @@ func NewPayWalletRechargeService(
 }
 
 // CreateWalletRecharge 创建充值记录 (发起充值)
-func (s *PayWalletRechargeService) CreateWalletRecharge(ctx context.Context, req *req.PayWalletRechargeCreateReq, userIP string) (*pay.PayWalletRecharge, error) {
+func (s *PayWalletRechargeService) CreateWalletRecharge(ctx context.Context, req *pay2.PayWalletRechargeCreateReq, userIP string) (*pay.PayWalletRecharge, error) {
 	// 1. 校验钱包是否存在
 	wallet, err := s.walletSvc.GetOrCreateWallet(ctx, req.UserID, req.UserType)
 	if err != nil {
@@ -164,7 +164,7 @@ func (s *PayWalletRechargeService) RefundWalletRecharge(ctx context.Context, id 
 	// MerchantRefundId gen
 	refundNo := "R" + strconv.FormatInt(id, 10) + "_" + strconv.FormatInt(time.Now().Unix(), 10)
 
-	payRefundID, err := s.refundSvc.CreateRefund(ctx, &req.PayRefundCreateReq{
+	payRefundID, err := s.refundSvc.CreateRefund(ctx, &pay2.PayRefundCreateReq{
 		AppKey:           appKey,
 		UserIP:           userIP,
 		MerchantOrderId:  strconv.FormatInt(id, 10),
@@ -244,7 +244,7 @@ func (s *PayWalletRechargeService) UpdateWalletRechargeRefunded(ctx context.Cont
 	return err
 }
 
-func (s *PayWalletRechargeService) GetWalletRechargePage(ctx context.Context, req *req.PayWalletRechargePageReq) (*pagination.PageResult[*pay.PayWalletRecharge], error) {
+func (s *PayWalletRechargeService) GetWalletRechargePage(ctx context.Context, req *pay2.PayWalletRechargePageReq) (*pagination.PageResult[*pay.PayWalletRecharge], error) {
 	q := s.q.PayWalletRecharge.WithContext(ctx)
 	if req.PayStatus != nil {
 		q = q.Where(s.q.PayWalletRecharge.PayStatus.Is(*req.PayStatus))

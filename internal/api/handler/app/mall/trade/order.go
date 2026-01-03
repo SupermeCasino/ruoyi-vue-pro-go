@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	tradeModel "github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -43,7 +44,7 @@ func NewAppTradeOrderHandler(
 
 // SettlementOrder 获得订单结算信息
 func (h *AppTradeOrderHandler) SettlementOrder(c *gin.Context) {
-	var r req.AppTradeOrderSettlementReq
+	var r trade2.AppTradeOrderSettlementReq
 	// 支持 POST (JSON) 和 GET (Query) 以对齐多样化的 App/Web 使用场景
 	if c.Request.Method == "POST" {
 		if err := c.ShouldBindJSON(&r); err != nil {
@@ -60,7 +61,7 @@ func (h *AppTradeOrderHandler) SettlementOrder(c *gin.Context) {
 		}
 		// 备选方案: 支持 skuIds=1,2&counts=1,1 形式
 		if len(r.Items) == 0 {
-			var q req.AppTradeOrderSettlementQueryReq
+			var q trade2.AppTradeOrderSettlementQueryReq
 			if err := c.ShouldBindQuery(&q); err == nil {
 				r.Items = q.ToSettlementItems()
 			}
@@ -93,7 +94,7 @@ func (h *AppTradeOrderHandler) SettlementOrder(c *gin.Context) {
 
 // CreateOrder 创建订单
 func (h *AppTradeOrderHandler) CreateOrder(c *gin.Context) {
-	var r req.AppTradeOrderCreateReq
+	var r trade2.AppTradeOrderCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -106,7 +107,7 @@ func (h *AppTradeOrderHandler) CreateOrder(c *gin.Context) {
 	}
 
 	// 严格对齐 Java: 返回 AppTradeOrderCreateResp
-	vo := resp.AppTradeOrderCreateResp{
+	vo := trade2.AppTradeOrderCreateResp{
 		ID:         res.ID,
 		PayOrderID: 0, // 默认 0
 	}
@@ -120,7 +121,7 @@ func (h *AppTradeOrderHandler) CreateOrder(c *gin.Context) {
 // UpdateOrderPaid 更新订单为已支付
 // 这是一个回调接口,通常由 Pay 模块通过 HTTP 调用
 func (h *AppTradeOrderHandler) UpdateOrderPaid(c *gin.Context) {
-	var r req.PayOrderNotifyReq
+	var r pay.PayOrderNotifyReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -166,11 +167,11 @@ func (h *AppTradeOrderHandler) GetOrderDetail(c *gin.Context) {
 	}
 
 	// 3. 拼接数据
-	itemResps := make([]resp.AppTradeOrderItemResp, len(items))
+	itemResps := make([]trade2.AppTradeOrderItemResp, len(items))
 	for i, item := range items {
-		properties := make([]resp.ProductSkuPropertyResp, len(item.Properties))
+		properties := make([]product.ProductSkuPropertyResp, len(item.Properties))
 		for j, p := range item.Properties {
-			properties[j] = resp.ProductSkuPropertyResp{
+			properties[j] = product.ProductSkuPropertyResp{
 				PropertyID:   p.PropertyID,
 				PropertyName: p.PropertyName,
 				ValueID:      p.ValueID,
@@ -178,7 +179,7 @@ func (h *AppTradeOrderHandler) GetOrderDetail(c *gin.Context) {
 			}
 		}
 
-		itemResps[i] = resp.AppTradeOrderItemResp{
+		itemResps[i] = trade2.AppTradeOrderItemResp{
 			ID:              item.ID,
 			OrderID:         item.OrderID,
 			SpuID:           item.SpuID,
@@ -200,7 +201,7 @@ func (h *AppTradeOrderHandler) GetOrderDetail(c *gin.Context) {
 		payOrderID = *order.PayOrderID
 	}
 
-	res := resp.AppTradeOrderDetailResp{
+	res := trade2.AppTradeOrderDetailResp{
 		ID:                    order.ID,
 		No:                    order.No,
 		Type:                  order.Type,
@@ -244,7 +245,7 @@ func (h *AppTradeOrderHandler) GetOrderDetail(c *gin.Context) {
 
 // GetOrderPage 获得订单分页
 func (h *AppTradeOrderHandler) GetOrderPage(c *gin.Context) {
-	var r req.AppTradeOrderPageReq
+	var r trade2.AppTradeOrderPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -270,11 +271,11 @@ func (h *AppTradeOrderHandler) GetOrderPage(c *gin.Context) {
 		}
 
 		// 根据 OrderID 映射订单项
-		itemMap := make(map[int64][]resp.AppTradeOrderItemResp)
+		itemMap := make(map[int64][]trade2.AppTradeOrderItemResp)
 		for _, item := range items {
-			properties := make([]resp.ProductSkuPropertyResp, len(item.Properties))
+			properties := make([]product.ProductSkuPropertyResp, len(item.Properties))
 			for j, p := range item.Properties {
-				properties[j] = resp.ProductSkuPropertyResp{
+				properties[j] = product.ProductSkuPropertyResp{
 					PropertyID:   p.PropertyID,
 					PropertyName: p.PropertyName,
 					ValueID:      p.ValueID,
@@ -282,7 +283,7 @@ func (h *AppTradeOrderHandler) GetOrderPage(c *gin.Context) {
 				}
 			}
 
-			itemResp := resp.AppTradeOrderItemResp{
+			itemResp := trade2.AppTradeOrderItemResp{
 				ID:              item.ID,
 				OrderID:         item.OrderID,
 				SpuID:           item.SpuID,
@@ -301,13 +302,13 @@ func (h *AppTradeOrderHandler) GetOrderPage(c *gin.Context) {
 		}
 
 		// 3. 拼接返回 VO
-		list := make([]resp.AppTradeOrderPageItemResp, len(pageResult.List))
+		list := make([]trade2.AppTradeOrderPageItemResp, len(pageResult.List))
 		for i, o := range pageResult.List {
 			var payOrderID int64
 			if o.PayOrderID != nil {
 				payOrderID = *o.PayOrderID
 			}
-			list[i] = resp.AppTradeOrderPageItemResp{
+			list[i] = trade2.AppTradeOrderPageItemResp{
 				ID:                  o.ID,
 				No:                  o.No,
 				Type:                o.Type,
@@ -323,13 +324,13 @@ func (h *AppTradeOrderHandler) GetOrderPage(c *gin.Context) {
 			}
 		}
 
-		response.WriteSuccess(c, pagination.PageResult[resp.AppTradeOrderPageItemResp]{
+		response.WriteSuccess(c, pagination.PageResult[trade2.AppTradeOrderPageItemResp]{
 			List:  list,
 			Total: pageResult.Total,
 		})
 	} else {
-		response.WriteSuccess(c, pagination.PageResult[resp.AppTradeOrderPageItemResp]{
-			List:  []resp.AppTradeOrderPageItemResp{},
+		response.WriteSuccess(c, pagination.PageResult[trade2.AppTradeOrderPageItemResp]{
+			List:  []trade2.AppTradeOrderPageItemResp{},
 			Total: 0,
 		})
 	}
@@ -400,7 +401,7 @@ func (h *AppTradeOrderHandler) GetOrderCount(c *gin.Context) {
 
 // CreateOrderItemComment 创建订单项评价
 func (h *AppTradeOrderHandler) CreateOrderItemComment(c *gin.Context) {
-	var r req.AppTradeOrderItemCommentCreateReq
+	var r trade2.AppTradeOrderItemCommentCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -475,9 +476,9 @@ func (h *AppTradeOrderHandler) GetOrderItem(c *gin.Context) {
 		return
 	}
 
-	properties := make([]resp.ProductSkuPropertyResp, len(item.Properties))
+	properties := make([]product.ProductSkuPropertyResp, len(item.Properties))
 	for j, p := range item.Properties {
-		properties[j] = resp.ProductSkuPropertyResp{
+		properties[j] = product.ProductSkuPropertyResp{
 			PropertyID:   p.PropertyID,
 			PropertyName: p.PropertyName,
 			ValueID:      p.ValueID,
@@ -485,7 +486,7 @@ func (h *AppTradeOrderHandler) GetOrderItem(c *gin.Context) {
 		}
 	}
 
-	res := resp.AppTradeOrderItemResp{
+	res := trade2.AppTradeOrderItemResp{
 		ID:              item.ID,
 		OrderID:         item.OrderID,
 		SpuID:           item.SpuID,
@@ -504,8 +505,8 @@ func (h *AppTradeOrderHandler) GetOrderItem(c *gin.Context) {
 }
 
 // parseOrderItemsFromQuery 解析 items[0].skuId 格式的查询参数
-func (h *AppTradeOrderHandler) parseOrderItemsFromQuery(q url.Values) []req.AppTradeOrderSettlementItem {
-	itemsMap := make(map[int]*req.AppTradeOrderSettlementItem)
+func (h *AppTradeOrderHandler) parseOrderItemsFromQuery(q url.Values) []trade2.AppTradeOrderSettlementItem {
+	itemsMap := make(map[int]*trade2.AppTradeOrderSettlementItem)
 	indices := make([]int, 0)
 
 	for k, v := range q {
@@ -524,7 +525,7 @@ func (h *AppTradeOrderHandler) parseOrderItemsFromQuery(q url.Values) []req.AppT
 		}
 
 		if _, ok := itemsMap[index]; !ok {
-			itemsMap[index] = &req.AppTradeOrderSettlementItem{}
+			itemsMap[index] = &trade2.AppTradeOrderSettlementItem{}
 			indices = append(indices, index)
 		}
 
@@ -557,7 +558,7 @@ func (h *AppTradeOrderHandler) parseOrderItemsFromQuery(q url.Values) []req.AppT
 
 	// 排序索引以保证顺序一致性
 	sort.Ints(indices)
-	res := make([]req.AppTradeOrderSettlementItem, 0, len(indices))
+	res := make([]trade2.AppTradeOrderSettlementItem, 0, len(indices))
 	for _, idx := range indices {
 		res = append(res, *itemsMap[idx])
 	}

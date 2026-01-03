@@ -84,3 +84,28 @@ func ParseIDs(strs []string) []int64 {
 	}
 	return ids
 }
+
+// PtrInt64 返回 int64 指针，如果 v 为 0 且且 optionally 可选 nullIfZero 则返回 nil
+// 简化版：直接返回指针
+func PtrInt64(v int64) *int64 {
+	if v == 0 {
+		return nil
+	}
+	return &v
+}
+
+// PtrInt 返回 int 指针
+func PtrInt(v int) *int {
+	if v == 0 {
+		return nil
+	}
+	return &v
+}
+
+// PtrString 返回 string 指针
+func PtrString(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
+}

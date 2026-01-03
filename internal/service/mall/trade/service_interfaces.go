@@ -3,8 +3,9 @@ package trade
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	payModel "github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	product "github.com/wxlbd/ruoyi-mall-go/internal/model/product"
@@ -15,12 +16,12 @@ import (
 type PayOrderServiceAPI interface {
 	GetOrder(ctx context.Context, id int64) (*payModel.PayOrder, error)
 	UpdatePayOrderPrice(ctx context.Context, id int64, payPrice int) error
-	CreateOrder(ctx context.Context, reqDTO *req.PayOrderCreateReq) (int64, error)
+	CreateOrder(ctx context.Context, reqDTO *pay.PayOrderCreateReq) (int64, error)
 }
 
 // PayRefundServiceAPI 定义退款服务接口
 type PayRefundServiceAPI interface {
-	CreateRefund(ctx context.Context, reqDTO *req.PayRefundCreateReq) (int64, error)
+	CreateRefund(ctx context.Context, reqDTO *pay.PayRefundCreateReq) (int64, error)
 	GetRefund(ctx context.Context, id int64) (*payModel.PayRefund, error)
 }
 
@@ -31,14 +32,14 @@ type PayAppServiceAPI interface {
 
 // ProductCommentServiceAPI 定义商品评价服务接口
 type ProductCommentServiceAPI interface {
-	CreateAppComment(ctx context.Context, userId int64, req *req.AppProductCommentCreateReq) (*product.ProductComment, error)
+	CreateAppComment(ctx context.Context, userId int64, req *product2.AppProductCommentCreateReq) (*product.ProductComment, error)
 }
 
 // ProductSkuServiceAPI 定义商品 SKU 服务接口
 type ProductSkuServiceAPI interface {
 	GetSku(ctx context.Context, id int64) (*product.ProductSku, error)
-	GetSkuList(ctx context.Context, ids []int64) ([]*resp.ProductSkuResp, error)
-	UpdateSkuStock(ctx context.Context, updateReq *req.ProductSkuUpdateStockReq) error
+	GetSkuList(ctx context.Context, ids []int64) ([]*product2.ProductSkuResp, error)
+	UpdateSkuStock(ctx context.Context, updateReq *product2.ProductSkuUpdateStockReq) error
 }
 
 // CouponUserServiceAPI 定义优惠券服务接口
@@ -56,7 +57,7 @@ type MemberUserServiceAPI interface {
 
 // TradeConfigServiceAPI 定义交易配置服务接口
 type TradeConfigServiceAPI interface {
-	GetTradeConfig(ctx context.Context) (*resp.TradeConfigResp, error)
+	GetTradeConfig(ctx context.Context) (*trade2.TradeConfigResp, error)
 }
 
 // TradeNoRedisDAOAPI 定义 Redis 编号生成接口

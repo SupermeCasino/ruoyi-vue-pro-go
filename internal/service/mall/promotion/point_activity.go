@@ -3,7 +3,7 @@ package promotion
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
@@ -31,7 +31,7 @@ func NewPointActivityService(q *query.Query, spuSvc *productSvc.ProductSpuServic
 
 // CreatePointActivity 创建积分商城活动
 // 对应 Java: PointActivityServiceImpl.createPointActivity
-func (s *PointActivityService) CreatePointActivity(ctx context.Context, r *req.PointActivityCreateReq) (int64, error) {
+func (s *PointActivityService) CreatePointActivity(ctx context.Context, r *promotion2.PointActivityCreateReq) (int64, error) {
 	// 1.1 校验商品是否存在
 	if err := s.validateProductExists(ctx, r.SpuID, r.Products); err != nil {
 		return 0, err
@@ -42,7 +42,7 @@ func (s *PointActivityService) CreatePointActivity(ctx context.Context, r *req.P
 	}
 
 	// 计算总库存 (Sum of products stocks)
-	totalStock := lo.SumBy(r.Products, func(p req.PointProductSaveReq) int {
+	totalStock := lo.SumBy(r.Products, func(p promotion2.PointProductSaveReq) int {
 		return p.Stock
 	})
 
@@ -81,7 +81,7 @@ func (s *PointActivityService) CreatePointActivity(ctx context.Context, r *req.P
 
 // UpdatePointActivity 更新积分商城活动
 // 对应 Java: PointActivityServiceImpl.updatePointActivity
-func (s *PointActivityService) UpdatePointActivity(ctx context.Context, r *req.PointActivityUpdateReq) error {
+func (s *PointActivityService) UpdatePointActivity(ctx context.Context, r *promotion2.PointActivityUpdateReq) error {
 	// 1.1 校验存在
 	activity, err := s.validatePointActivityExists(ctx, r.ID)
 	if err != nil {
@@ -102,7 +102,7 @@ func (s *PointActivityService) UpdatePointActivity(ctx context.Context, r *req.P
 	return s.q.Transaction(func(tx *query.Query) error {
 		// 2.1 更新活动
 		// 计算总库存
-		newStock := lo.SumBy(r.Products, func(p req.PointProductSaveReq) int {
+		newStock := lo.SumBy(r.Products, func(p promotion2.PointProductSaveReq) int {
 			return p.Stock
 		})
 
@@ -127,7 +127,7 @@ func (s *PointActivityService) UpdatePointActivity(ctx context.Context, r *req.P
 }
 
 // updatePointProduct 更新积分商品 (Diff Logic)
-func (s *PointActivityService) updatePointProduct(ctx context.Context, tx *query.Query, activityID int64, spuID int64, activityStatus int, products []req.PointProductSaveReq) error {
+func (s *PointActivityService) updatePointProduct(ctx context.Context, tx *query.Query, activityID int64, spuID int64, activityStatus int, products []promotion2.PointProductSaveReq) error {
 	// 1. 查询旧的商品列表
 	oldList, err := tx.PromotionPointProduct.WithContext(ctx).Where(tx.PromotionPointProduct.ActivityID.Eq(activityID)).Find()
 	if err != nil {
@@ -267,7 +267,7 @@ func (s *PointActivityService) GetPointActivity(ctx context.Context, id int64) (
 
 // GetPointActivityPage 获得积分商城活动分页
 // 对应 Java: PointActivityServiceImpl.getPointActivityPage
-func (s *PointActivityService) GetPointActivityPage(ctx context.Context, r *req.PointActivityPageReq) (*pagination.PageResult[promotion.PromotionPointActivity], error) {
+func (s *PointActivityService) GetPointActivityPage(ctx context.Context, r *promotion2.PointActivityPageReq) (*pagination.PageResult[promotion.PromotionPointActivity], error) {
 	q := s.q.PromotionPointActivity.WithContext(ctx)
 	if r.Status != nil {
 		q = q.Where(s.q.PromotionPointActivity.Status.Eq(*r.Status))
@@ -324,7 +324,7 @@ func (s *PointActivityService) validatePointActivityExists(ctx context.Context, 
 }
 
 // validateProductExists 校验商品是否存在
-func (s *PointActivityService) validateProductExists(ctx context.Context, spuID int64, products []req.PointProductSaveReq) error {
+func (s *PointActivityService) validateProductExists(ctx context.Context, spuID int64, products []promotion2.PointProductSaveReq) error {
 	// 1. 校验商品 spu 是否存在
 	spu, err := s.spuSvc.GetSpu(ctx, spuID)
 	if err != nil {

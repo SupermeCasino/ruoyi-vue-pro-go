@@ -3,7 +3,7 @@ package system
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -20,7 +20,7 @@ func NewOAuth2ClientHandler(svc *system.OAuth2ClientService) *OAuth2ClientHandle
 }
 
 func (h *OAuth2ClientHandler) CreateOAuth2Client(c *gin.Context) {
-	var r req.OAuth2ClientCreateReq
+	var r system2.OAuth2ClientCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,7 +34,7 @@ func (h *OAuth2ClientHandler) CreateOAuth2Client(c *gin.Context) {
 }
 
 func (h *OAuth2ClientHandler) UpdateOAuth2Client(c *gin.Context) {
-	var r req.OAuth2ClientUpdateReq
+	var r system2.OAuth2ClientUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -76,7 +76,7 @@ func (h *OAuth2ClientHandler) GetOAuth2Client(c *gin.Context) {
 }
 
 func (h *OAuth2ClientHandler) GetOAuth2ClientPage(c *gin.Context) {
-	var r req.OAuth2ClientPageReq
+	var r system2.OAuth2ClientPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

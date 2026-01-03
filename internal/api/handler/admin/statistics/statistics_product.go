@@ -1,8 +1,7 @@
 package statistics
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	productService "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/excel"
@@ -32,7 +31,7 @@ func NewProductStatisticsHandler(
 // GetProductStatisticsAnalyse 获得商品统计分析
 // GET /statistics/product/analyse
 func (h *ProductStatisticsHandler) GetProductStatisticsAnalyse(c *gin.Context) {
-	var reqVO req.ProductStatisticsReqVO
+	var reqVO product.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -50,7 +49,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsAnalyse(c *gin.Context) {
 // GetProductStatisticsList 获得商品统计明细
 // GET /statistics/product/list
 func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
-	var reqVO req.ProductStatisticsReqVO
+	var reqVO product.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -73,7 +72,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 			response.WriteBizError(c, err)
 			return
 		}
-		spuMap := make(map[int64]*resp.ProductSpuResp)
+		spuMap := make(map[int64]*product.ProductSpuResp)
 		for _, spu := range spuList {
 			spuMap[spu.ID] = spu
 		}
@@ -91,7 +90,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsList(c *gin.Context) {
 // GetProductStatisticsRankPage 获得商品统计排行榜分页
 // GET /statistics/product/rank-page
 func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) {
-	var reqVO req.ProductStatisticsReqVO
+	var reqVO product.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -126,11 +125,11 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 	// Using lo.Map or manual loop
 	spuIds := []int64{}
 
-	// Cast interface{} back to *resp.ProductStatisticsRespVO
-	// The service implementation put *resp.ProductStatisticsRespVO into the list.
-	realList := make([]*resp.ProductStatisticsRespVO, 0, len(pageResult.List))
+	// Cast interface{} back to *product.ProductStatisticsRespVO
+	// The service implementation put *product.ProductStatisticsRespVO into the list.
+	realList := make([]*product.ProductStatisticsRespVO, 0, len(pageResult.List))
 	for _, item := range pageResult.List {
-		if val, ok := item.(*resp.ProductStatisticsRespVO); ok {
+		if val, ok := item.(*product.ProductStatisticsRespVO); ok {
 			realList = append(realList, val)
 			spuIds = append(spuIds, val.SpuID)
 		}
@@ -142,7 +141,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 			response.WriteError(c, errors.ServerErrCode, err.Error())
 			return
 		}
-		spuMap := make(map[int64]*resp.ProductSpuResp)
+		spuMap := make(map[int64]*product.ProductSpuResp)
 		for _, spu := range spuList {
 			spuMap[spu.ID] = spu
 		}
@@ -164,7 +163,7 @@ func (h *ProductStatisticsHandler) GetProductStatisticsRankPage(c *gin.Context) 
 // ExportProductStatisticsExcel 导出商品统计 Excel
 // GET /statistics/product/export-excel
 func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) {
-	var reqVO req.ProductStatisticsReqVO
+	var reqVO product.ProductStatisticsReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -188,7 +187,7 @@ func (h *ProductStatisticsHandler) ExportProductStatisticsExcel(c *gin.Context) 
 			response.WriteBizError(c, errors.ErrUnknown)
 			return
 		}
-		spuMap := make(map[int64]*resp.ProductSpuResp)
+		spuMap := make(map[int64]*product.ProductSpuResp)
 		for _, spu := range spuList {
 			spuMap[spu.ID] = spu
 		}

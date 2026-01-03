@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +22,7 @@ func NewMemberSignInConfigHandler(svc *memberSvc.MemberSignInConfigService) *Mem
 
 // CreateSignInConfig 创建签到规则
 func (h *MemberSignInConfigHandler) CreateSignInConfig(c *gin.Context) {
-	var r req.MemberSignInConfigCreateReq
+	var r member.MemberSignInConfigCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +37,7 @@ func (h *MemberSignInConfigHandler) CreateSignInConfig(c *gin.Context) {
 
 // UpdateSignInConfig 更新签到规则
 func (h *MemberSignInConfigHandler) UpdateSignInConfig(c *gin.Context) {
-	var r req.MemberSignInConfigUpdateReq
+	var r member.MemberSignInConfigUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -93,14 +92,14 @@ func (h *MemberSignInConfigHandler) GetSignInConfigList(c *gin.Context) {
 		return
 	}
 
-	respList := lo.Map(list, func(item *memberModel.MemberSignInConfig, _ int) resp.MemberSignInConfigResp {
+	respList := lo.Map(list, func(item *memberModel.MemberSignInConfig, _ int) member.MemberSignInConfigResp {
 		return toConfigResp(item)
 	})
 	response.WriteSuccess(c, respList)
 }
 
-func toConfigResp(config *memberModel.MemberSignInConfig) resp.MemberSignInConfigResp {
-	return resp.MemberSignInConfigResp{
+func toConfigResp(config *memberModel.MemberSignInConfig) member.MemberSignInConfigResp {
+	return member.MemberSignInConfigResp{
 		ID:         config.ID,
 		Day:        config.Day,
 		Point:      config.Point,

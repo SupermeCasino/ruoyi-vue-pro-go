@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -27,7 +26,7 @@ func NewSmsTemplateService(q *query.Query) *SmsTemplateService {
 }
 
 // CreateSmsTemplate 创建短信模板
-func (s *SmsTemplateService) CreateSmsTemplate(ctx context.Context, req *req.SmsTemplateSaveReq) (int64, error) {
+func (s *SmsTemplateService) CreateSmsTemplate(ctx context.Context, req *system.SmsTemplateSaveReq) (int64, error) {
 	// 校验 Channel 是否存在
 	channel, err := s.q.SystemSmsChannel.WithContext(ctx).Where(s.q.SystemSmsChannel.ID.Eq(req.ChannelId)).First()
 	if err != nil {
@@ -57,7 +56,7 @@ func (s *SmsTemplateService) CreateSmsTemplate(ctx context.Context, req *req.Sms
 }
 
 // UpdateSmsTemplate 更新短信模板
-func (s *SmsTemplateService) UpdateSmsTemplate(ctx context.Context, req *req.SmsTemplateSaveReq) error {
+func (s *SmsTemplateService) UpdateSmsTemplate(ctx context.Context, req *system.SmsTemplateSaveReq) error {
 	t := s.q.SystemSmsTemplate
 	_, err := t.WithContext(ctx).Where(t.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -100,7 +99,7 @@ func (s *SmsTemplateService) DeleteSmsTemplate(ctx context.Context, id int64) er
 }
 
 // GetSmsTemplate 获得短信模板
-func (s *SmsTemplateService) GetSmsTemplate(ctx context.Context, id int64) (*resp.SmsTemplateRespVO, error) {
+func (s *SmsTemplateService) GetSmsTemplate(ctx context.Context, id int64) (*system.SmsTemplateRespVO, error) {
 	t := s.q.SystemSmsTemplate
 	item, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 	if err != nil {
@@ -110,7 +109,7 @@ func (s *SmsTemplateService) GetSmsTemplate(ctx context.Context, id int64) (*res
 }
 
 // GetSmsTemplatePage 获得短信模板分页
-func (s *SmsTemplateService) GetSmsTemplatePage(ctx context.Context, req *req.SmsTemplatePageReq) (*pagination.PageResult[*resp.SmsTemplateRespVO], error) {
+func (s *SmsTemplateService) GetSmsTemplatePage(ctx context.Context, req *system.SmsTemplatePageReq) (*pagination.PageResult[*system.SmsTemplateRespVO], error) {
 	t := s.q.SystemSmsTemplate
 	qb := t.WithContext(ctx)
 
@@ -143,14 +142,14 @@ func (s *SmsTemplateService) GetSmsTemplatePage(ctx context.Context, req *req.Sm
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.SmsTemplateRespVO]{
-		List:  lo.Map(list, func(item *model.SystemSmsTemplate, _ int) *resp.SmsTemplateRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*system.SmsTemplateRespVO]{
+		List:  lo.Map(list, func(item *model.SystemSmsTemplate, _ int) *system.SmsTemplateRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
-func (s *SmsTemplateService) convertResp(item *model.SystemSmsTemplate) *resp.SmsTemplateRespVO {
-	return &resp.SmsTemplateRespVO{
+func (s *SmsTemplateService) convertResp(item *model.SystemSmsTemplate) *system.SmsTemplateRespVO {
+	return &system.SmsTemplateRespVO{
 		ID:            item.ID,
 		Type:          item.Type,
 		Status:        item.Status,

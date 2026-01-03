@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -47,7 +47,7 @@ func (s *NotifyService) RefreshCache() {
 
 // ================= Template CRUD =================
 
-func (s *NotifyService) CreateNotifyTemplate(ctx context.Context, r *req.NotifyTemplateCreateReq) (int64, error) {
+func (s *NotifyService) CreateNotifyTemplate(ctx context.Context, r *pay.NotifyTemplateCreateReq) (int64, error) {
 	t := s.q.SystemNotifyTemplate
 	template := &model.SystemNotifyTemplate{
 		Name:     r.Name,
@@ -65,7 +65,7 @@ func (s *NotifyService) CreateNotifyTemplate(ctx context.Context, r *req.NotifyT
 	return template.ID, nil
 }
 
-func (s *NotifyService) UpdateNotifyTemplate(ctx context.Context, r *req.NotifyTemplateUpdateReq) error {
+func (s *NotifyService) UpdateNotifyTemplate(ctx context.Context, r *pay.NotifyTemplateUpdateReq) error {
 	t := s.q.SystemNotifyTemplate
 	_, err := t.WithContext(ctx).Where(t.ID.Eq(r.ID)).Updates(&model.SystemNotifyTemplate{
 		Name:     r.Name,
@@ -98,7 +98,7 @@ func (s *NotifyService) GetNotifyTemplate(ctx context.Context, id int64) (*model
 	return t.WithContext(ctx).Where(t.ID.Eq(id)).First()
 }
 
-func (s *NotifyService) GetNotifyTemplatePage(ctx context.Context, r *req.NotifyTemplatePageReq) (*pagination.PageResult[*model.SystemNotifyTemplate], error) {
+func (s *NotifyService) GetNotifyTemplatePage(ctx context.Context, r *pay.NotifyTemplatePageReq) (*pagination.PageResult[*model.SystemNotifyTemplate], error) {
 	t := s.q.SystemNotifyTemplate
 	qb := t.WithContext(ctx)
 
@@ -180,7 +180,7 @@ func (s *NotifyService) SendNotify(ctx context.Context, userID int64, userType i
 	return msg.ID, nil
 }
 
-func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
+func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *pay.NotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
 	m := s.q.SystemNotifyMessage
 	qb := m.WithContext(ctx)
 
@@ -218,7 +218,7 @@ func (s *NotifyService) GetNotifyMessagePage(ctx context.Context, r *req.NotifyM
 	return &pagination.PageResult[*model.SystemNotifyMessage]{List: list, Total: total}, nil
 }
 
-func (s *NotifyService) GetMyNotifyMessagePage(ctx context.Context, userID int64, userType int, r *req.MyNotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
+func (s *NotifyService) GetMyNotifyMessagePage(ctx context.Context, userID int64, userType int, r *pay.MyNotifyMessagePageReq) (*pagination.PageResult[*model.SystemNotifyMessage], error) {
 	m := s.q.SystemNotifyMessage
 	qb := m.WithContext(ctx).Where(m.UserID.Eq(userID), m.UserType.Eq(userType))
 

@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotionContract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -30,7 +30,7 @@ func (h *AppDiyPageHandler) GetDiyPage(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WriteSuccess(c, &resp.AppDiyPagePropertyResp{
+	response.WriteSuccess(c, &promotionContract.AppDiyPagePropertyResp{
 		ID:       page.ID,
 		Name:     page.Name,
 		Property: page.Property,

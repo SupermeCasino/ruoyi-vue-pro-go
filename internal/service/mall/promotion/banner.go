@@ -3,8 +3,7 @@ package promotion
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -23,7 +22,7 @@ func NewPromotionBannerService(q *query.Query) *PromotionBannerService {
 }
 
 // CreateBanner 创建 Banner
-func (s *PromotionBannerService) CreateBanner(ctx context.Context, r *req.PromotionBannerCreateReq) (int64, error) {
+func (s *PromotionBannerService) CreateBanner(ctx context.Context, r *promotion2.PromotionBannerCreateReq) (int64, error) {
 	banner := &promotion.PromotionBanner{
 		Title:    r.Title,
 		PicURL:   r.PicURL,
@@ -38,7 +37,7 @@ func (s *PromotionBannerService) CreateBanner(ctx context.Context, r *req.Promot
 }
 
 // UpdateBanner 更新 Banner
-func (s *PromotionBannerService) UpdateBanner(ctx context.Context, r *req.PromotionBannerUpdateReq) error {
+func (s *PromotionBannerService) UpdateBanner(ctx context.Context, r *promotion2.PromotionBannerUpdateReq) error {
 	_, err := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.ID.Eq(r.ID)).First()
 	if err != nil {
 		return errors.NewBizError(1004001000, "Banner不存在") // TODO: Error Code
@@ -62,7 +61,7 @@ func (s *PromotionBannerService) DeleteBanner(ctx context.Context, id int64) err
 }
 
 // GetBanner 获得 Banner
-func (s *PromotionBannerService) GetBanner(ctx context.Context, id int64) (*resp.PromotionBannerResp, error) {
+func (s *PromotionBannerService) GetBanner(ctx context.Context, id int64) (*promotion2.PromotionBannerResp, error) {
 	item, err := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
@@ -71,7 +70,7 @@ func (s *PromotionBannerService) GetBanner(ctx context.Context, id int64) (*resp
 }
 
 // GetBannerPage 获得 Banner 分页 (Admin)
-func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.PromotionBannerPageReq) (*pagination.PageResult[*resp.PromotionBannerResp], error) {
+func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *promotion2.PromotionBannerPageReq) (*pagination.PageResult[*promotion2.PromotionBannerResp], error) {
 	q := s.q.PromotionBanner.WithContext(ctx)
 	if r.Title != "" {
 		q = q.Where(s.q.PromotionBanner.Title.Like("%" + r.Title + "%"))
@@ -88,11 +87,11 @@ func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.Promo
 		return nil, err
 	}
 
-	resList := lo.Map(list, func(item *promotion.PromotionBanner, _ int) *resp.PromotionBannerResp {
+	resList := lo.Map(list, func(item *promotion.PromotionBanner, _ int) *promotion2.PromotionBannerResp {
 		return s.convertResp(item)
 	})
 
-	return &pagination.PageResult[*resp.PromotionBannerResp]{
+	return &pagination.PageResult[*promotion2.PromotionBannerResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -100,7 +99,7 @@ func (s *PromotionBannerService) GetBannerPage(ctx context.Context, r *req.Promo
 
 // GetInfoList 获得 App Banner 列表
 // 对应 Java /app-api/promotion/banner/list
-func (s *PromotionBannerService) GetAppBannerList(ctx context.Context, position int) ([]*resp.PromotionBannerResp, error) {
+func (s *PromotionBannerService) GetAppBannerList(ctx context.Context, position int) ([]*promotion2.PromotionBannerResp, error) {
 	q := s.q.PromotionBanner.WithContext(ctx).Where(s.q.PromotionBanner.Status.Eq(consts.CommonStatusEnable)) // 使用启用状态常量替代魔法数字 0
 	if position > 0 {
 		q = q.Where(s.q.PromotionBanner.Position.Eq(position))
@@ -109,13 +108,13 @@ func (s *PromotionBannerService) GetAppBannerList(ctx context.Context, position 
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *promotion.PromotionBanner, _ int) *resp.PromotionBannerResp {
+	return lo.Map(list, func(item *promotion.PromotionBanner, _ int) *promotion2.PromotionBannerResp {
 		return s.convertResp(item)
 	}), nil
 }
 
-func (s *PromotionBannerService) convertResp(item *promotion.PromotionBanner) *resp.PromotionBannerResp {
-	return &resp.PromotionBannerResp{
+func (s *PromotionBannerService) convertResp(item *promotion.PromotionBanner) *promotion2.PromotionBannerResp {
+	return &promotion2.PromotionBannerResp{
 		ID:         item.ID,
 		Title:      item.Title,
 		PicURL:     item.PicURL,

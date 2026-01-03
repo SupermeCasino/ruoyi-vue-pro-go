@@ -3,8 +3,7 @@ package product
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -31,7 +30,7 @@ func (s *ProductPropertyService) SetSkuService(skuSvc *ProductSkuService) {
 }
 
 // CreateProperty 创建属性项
-func (s *ProductPropertyService) CreateProperty(ctx context.Context, req *req.ProductPropertyCreateReq) (int64, error) {
+func (s *ProductPropertyService) CreateProperty(ctx context.Context, req *product2.ProductPropertyCreateReq) (int64, error) {
 	// 校验名字重复
 	u := s.q.ProductProperty
 	exist, err := u.WithContext(ctx).Where(u.Name.Eq(req.Name)).First()
@@ -48,7 +47,7 @@ func (s *ProductPropertyService) CreateProperty(ctx context.Context, req *req.Pr
 }
 
 // UpdateProperty 更新属性项
-func (s *ProductPropertyService) UpdateProperty(ctx context.Context, req *req.ProductPropertyUpdateReq) error {
+func (s *ProductPropertyService) UpdateProperty(ctx context.Context, req *product2.ProductPropertyUpdateReq) error {
 	// 校验存在
 	if err := s.validatePropertyExists(ctx, req.ID); err != nil {
 		return err
@@ -97,7 +96,7 @@ func (s *ProductPropertyService) DeleteProperty(ctx context.Context, id int64) e
 }
 
 // GetProperty 获得属性项
-func (s *ProductPropertyService) GetProperty(ctx context.Context, id int64) (*resp.ProductPropertyResp, error) {
+func (s *ProductPropertyService) GetProperty(ctx context.Context, id int64) (*product2.ProductPropertyResp, error) {
 	u := s.q.ProductProperty
 	property, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
@@ -107,7 +106,7 @@ func (s *ProductPropertyService) GetProperty(ctx context.Context, id int64) (*re
 }
 
 // GetPropertyPage 获得属性项分页
-func (s *ProductPropertyService) GetPropertyPage(ctx context.Context, req *req.ProductPropertyPageReq) (*pagination.PageResult[*resp.ProductPropertyResp], error) {
+func (s *ProductPropertyService) GetPropertyPage(ctx context.Context, req *product2.ProductPropertyPageReq) (*pagination.PageResult[*product2.ProductPropertyResp], error) {
 	u := s.q.ProductProperty
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -119,17 +118,17 @@ func (s *ProductPropertyService) GetPropertyPage(ctx context.Context, req *req.P
 		return nil, err
 	}
 
-	resList := lo.Map(list, func(item *product.ProductProperty, _ int) *resp.ProductPropertyResp {
+	resList := lo.Map(list, func(item *product.ProductProperty, _ int) *product2.ProductPropertyResp {
 		return s.convertResp(item)
 	})
-	return &pagination.PageResult[*resp.ProductPropertyResp]{
+	return &pagination.PageResult[*product2.ProductPropertyResp]{
 		List:  resList,
 		Total: total,
 	}, nil
 }
 
 // GetPropertyList 获得属性项列表
-func (s *ProductPropertyService) GetPropertyList(ctx context.Context, req *req.ProductPropertyListReq) ([]*resp.ProductPropertyResp, error) {
+func (s *ProductPropertyService) GetPropertyList(ctx context.Context, req *product2.ProductPropertyListReq) ([]*product2.ProductPropertyResp, error) {
 	u := s.q.ProductProperty
 	q := u.WithContext(ctx)
 	if req.Name != "" {
@@ -139,22 +138,22 @@ func (s *ProductPropertyService) GetPropertyList(ctx context.Context, req *req.P
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *product.ProductProperty, _ int) *resp.ProductPropertyResp {
+	return lo.Map(list, func(item *product.ProductProperty, _ int) *product2.ProductPropertyResp {
 		return s.convertResp(item)
 	}), nil
 }
 
 // GetPropertyListByIds 获得属性项列表 (按 ID)
-func (s *ProductPropertyService) GetPropertyListByIds(ctx context.Context, ids []int64) ([]*resp.ProductPropertyResp, error) {
+func (s *ProductPropertyService) GetPropertyListByIds(ctx context.Context, ids []int64) ([]*product2.ProductPropertyResp, error) {
 	if len(ids) == 0 {
-		return []*resp.ProductPropertyResp{}, nil
+		return []*product2.ProductPropertyResp{}, nil
 	}
 	u := s.q.ProductProperty
 	list, err := u.WithContext(ctx).Where(u.ID.In(ids...)).Find()
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *product.ProductProperty, _ int) *resp.ProductPropertyResp {
+	return lo.Map(list, func(item *product.ProductProperty, _ int) *product2.ProductPropertyResp {
 		return s.convertResp(item)
 	}), nil
 }
@@ -171,8 +170,8 @@ func (s *ProductPropertyService) validatePropertyExists(ctx context.Context, id 
 	return nil
 }
 
-func (s *ProductPropertyService) convertResp(item *product.ProductProperty) *resp.ProductPropertyResp {
-	return &resp.ProductPropertyResp{
+func (s *ProductPropertyService) convertResp(item *product.ProductProperty) *product2.ProductPropertyResp {
+	return &product2.ProductPropertyResp{
 		ID:         item.ID,
 		Name:       item.Name,
 		Remark:     item.Remark,

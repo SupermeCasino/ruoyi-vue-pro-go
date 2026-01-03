@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -20,7 +20,7 @@ func NewCouponHandler(svc *promotion.CouponService) *CouponHandler {
 
 // CreateCouponTemplate 创建模板
 func (h *CouponHandler) CreateCouponTemplate(c *gin.Context) {
-	var r req.CouponTemplateCreateReq
+	var r promotion2.CouponTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
@@ -35,7 +35,7 @@ func (h *CouponHandler) CreateCouponTemplate(c *gin.Context) {
 
 // UpdateCouponTemplate 更新模板
 func (h *CouponHandler) UpdateCouponTemplate(c *gin.Context) {
-	var r req.CouponTemplateUpdateReq
+	var r promotion2.CouponTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
@@ -49,7 +49,7 @@ func (h *CouponHandler) UpdateCouponTemplate(c *gin.Context) {
 
 // GetCouponTemplatePage 模板分页
 func (h *CouponHandler) GetCouponTemplatePage(c *gin.Context) {
-	var r req.CouponTemplatePageReq
+	var r promotion2.CouponTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -64,7 +64,7 @@ func (h *CouponHandler) GetCouponTemplatePage(c *gin.Context) {
 
 // GetCouponPage 发放记录
 func (h *CouponHandler) GetCouponPage(c *gin.Context) {
-	var r req.CouponPageReq
+	var r promotion2.CouponPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -80,7 +80,7 @@ func (h *CouponHandler) GetCouponPage(c *gin.Context) {
 // UpdateCouponTemplateStatus 更新模板状态
 // 对应 Java: CouponTemplateController.updateCouponTemplateStatus
 func (h *CouponHandler) UpdateCouponTemplateStatus(c *gin.Context) {
-	var r req.CouponTemplateUpdateStatusReq
+	var r promotion2.CouponTemplateUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -162,7 +162,7 @@ func (h *CouponHandler) DeleteCoupon(c *gin.Context) {
 // SendCoupon 发送优惠券
 // 对应 Java: CouponController.sendCoupon
 func (h *CouponHandler) SendCoupon(c *gin.Context) {
-	var r req.CouponSendReq
+	var r promotion2.CouponSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return

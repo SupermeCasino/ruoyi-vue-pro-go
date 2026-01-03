@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +23,7 @@ func NewAppCouponHandler(svc *promotion.CouponUserService) *AppCouponHandler {
 // TakeCoupon 领取优惠券 (对齐 Java: AppCouponController.takeCoupon)
 // 返回 Boolean: 是否可继续领取
 func (h *AppCouponHandler) TakeCoupon(c *gin.Context) {
-	var r req.AppCouponTakeReq
+	var r promotion2.AppCouponTakeReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -39,7 +39,7 @@ func (h *AppCouponHandler) TakeCoupon(c *gin.Context) {
 
 // GetCouponPage 我的优惠券 (对齐 Java: AppCouponController.getCouponPage)
 func (h *AppCouponHandler) GetCouponPage(c *gin.Context) {
-	var r req.AppCouponPageReq
+	var r promotion2.AppCouponPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +83,7 @@ func (h *AppCouponHandler) GetUnusedCouponCount(c *gin.Context) {
 
 // GetCouponMatchList 获得匹配的优惠券列表
 func (h *AppCouponHandler) GetCouponMatchList(c *gin.Context) {
-	var r req.AppCouponMatchReq
+	var r promotion2.AppCouponMatchReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

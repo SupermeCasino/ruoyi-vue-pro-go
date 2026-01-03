@@ -5,8 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	query "github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
@@ -31,18 +30,18 @@ func NewMemberUserService(q *query.Query, smsCodeSvc *system.SmsCodeService, lev
 }
 
 // GetUserInfo 获取用户个人信息
-func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*resp.AppMemberUserInfoResp, error) {
+func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*member2.AppMemberUserInfoResp, error) {
 	u := s.q.MemberUser
 	user, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
 
-	var levelResp *resp.AppMemberUserLevelResp
+	var levelResp *member2.AppMemberUserLevelResp
 	if user.LevelID > 0 {
 		level, _ := s.levelSvc.GetLevel(ctx, user.LevelID)
 		if level != nil {
-			levelResp = &resp.AppMemberUserLevelResp{
+			levelResp = &member2.AppMemberUserLevelResp{
 				ID:    level.ID,
 				Name:  level.Name,
 				Level: level.Level,
@@ -58,7 +57,7 @@ func (s *MemberUserService) GetUserInfo(ctx context.Context, id int64) (*resp.Ap
 		brokerageEnabled = bool(brokerageUser.BrokerageEnabled)
 	}
 
-	return &resp.AppMemberUserInfoResp{
+	return &member2.AppMemberUserInfoResp{
 		ID:               user.ID,
 		Nickname:         user.Nickname,
 		Avatar:           user.Avatar,
@@ -124,7 +123,7 @@ func (s *MemberUserService) GetUser(ctx context.Context, id int64) (*member.Memb
 }
 
 // UpdateUser 修改用户基本信息
-func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.AppMemberUserUpdateReq) error {
+func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *member2.AppMemberUserUpdateReq) error {
 	// 校验用户存在
 	u := s.q.MemberUser
 	count, err := u.WithContext(ctx).Where(u.ID.Eq(id)).Count()
@@ -141,13 +140,13 @@ func (s *MemberUserService) UpdateUser(ctx context.Context, id int64, req *req.A
 		Updates(&member.MemberUser{
 			Nickname: req.Nickname,
 			Avatar:   req.Avatar,
-			Sex:      req.Sex,
+			Sex:      int32(req.Sex),
 		})
 	return err
 }
 
 // UpdateUserMobile 修改用户手机
-func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req *req.AppMemberUserUpdateMobileReq) error {
+func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req *member2.AppMemberUserUpdateMobileReq) error {
 	// 使用定义的场景值（对应 Java 中的 MEMBER_UPDATE_MOBILE）
 	scene := system.SmsSceneMemberUpdateMob.Scene
 
@@ -172,7 +171,7 @@ func (s *MemberUserService) UpdateUserMobile(ctx context.Context, id int64, req 
 
 // ResetUserPassword 重置用户密码 (忘记密码)
 // 对齐 Java: MemberUserServiceImpl.resetUserPassword
-func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppMemberUserResetPasswordReq) error {
+func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *member2.AppMemberUserResetPasswordReq) error {
 	// 1. 校验验证码 (场景: 重置密码 = SmsSceneEnum.MEMBER_RESET_PASSWORD)
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, system.SmsSceneMemberResetPwd.Scene, req.Code); err != nil {
 		return err
@@ -197,22 +196,26 @@ func (s *MemberUserService) ResetUserPassword(ctx context.Context, req *req.AppM
 }
 
 // UpdateUserPassword 修改用户密码
-func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, req *req.AppMemberUserUpdatePasswordReq) error {
-	// 使用定义的场景值（对应 Java 中的 MEMBER_UPDATE_PASSWORD）
-	scene := system.SmsSceneMemberUpdatePwd.Scene
-
-	// 1. 校验验证码
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, int32(scene), req.Code); err != nil {
-		return err
+func (s *MemberUserService) UpdateUserPassword(ctx context.Context, id int64, req *member2.AppMemberUserUpdatePasswordReq) error {
+	// 1. Check User
+	u := s.q.MemberUser
+	user, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
+	if err != nil {
+		return errors.New("user not found")
 	}
 
-	// 2. Hash Password
-	hashedPwd, err := utils.HashPassword(req.Password)
+	// 2. Validate Old Password
+	if !utils.CheckPasswordHash(req.OldPassword, user.Password) {
+		return errors.New("invalid old password")
+	}
+
+	// 3. Hash New Password
+	hashedPwd, err := utils.HashPassword(req.NewPassword)
 	if err != nil {
 		return err
 	}
 
-	u := s.q.MemberUser
+	// 4. Update
 	_, err = u.WithContext(ctx).Where(u.ID.Eq(id)).Update(u.Password, hashedPwd)
 	return err
 }
@@ -308,9 +311,9 @@ func (s *MemberUserService) GetUserMap(ctx context.Context, ids []int64) (map[in
 }
 
 // GetUserRespMap 获得用户 Map (Response VO)
-func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (map[int64]*resp.MemberUserResp, error) {
+func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (map[int64]*member2.MemberUserResp, error) {
 	if len(ids) == 0 {
-		return make(map[int64]*resp.MemberUserResp), nil
+		return make(map[int64]*member2.MemberUserResp), nil
 	}
 	u := s.q.MemberUser
 	list, err := u.WithContext(ctx).Where(u.ID.In(ids...)).Find()
@@ -318,11 +321,11 @@ func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (ma
 		return nil, err
 	}
 
-	userMap := make(map[int64]*resp.MemberUserResp, len(list))
+	userMap := make(map[int64]*member2.MemberUserResp, len(list))
 	for _, user := range list {
 		// Fetch Level info if needed or just basic info
 		// For now, basic info is enough as per TradeOrder requirements
-		userMap[user.ID] = &resp.MemberUserResp{
+		userMap[user.ID] = &member2.MemberUserResp{
 			ID:         user.ID,
 			Mobile:     user.Mobile,
 			Status:     user.Status,
@@ -343,7 +346,7 @@ func (s *MemberUserService) GetUserRespMap(ctx context.Context, ids []int64) (ma
 // ========== Admin API Service Methods ==========
 
 // AdminUpdateUser Admin 更新会员用户
-func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUserUpdateReq) error {
+func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *member2.MemberUserUpdateReq) error {
 	u := s.q.MemberUser
 	count, err := u.WithContext(ctx).Where(u.ID.Eq(r.ID)).Count()
 	if err != nil {
@@ -362,11 +365,11 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 	// 构建更新对象，支持所有字段
 	updateUser := &member.MemberUser{
 		Mobile:   r.Mobile,
-		Status:   r.Status,
+		Status:   int32(r.Status),
 		Nickname: r.Nickname,
 		Avatar:   r.Avatar,
 		Name:     r.Name,
-		Sex:      r.Sex,
+		Sex:      int32(r.Sex),
 		AreaID:   int32(r.AreaID),
 		Birthday: r.Birthday,
 		Mark:     r.Mark,
@@ -386,7 +389,7 @@ func (s *MemberUserService) AdminUpdateUser(ctx context.Context, r *req.MemberUs
 }
 
 // GetUserPage Admin 获得会员用户分页
-func (s *MemberUserService) GetUserPage(ctx context.Context, r *req.MemberUserPageReq) (*pagination.PageResult[*member.MemberUser], error) {
+func (s *MemberUserService) GetUserPage(ctx context.Context, r *member2.MemberUserPageReq) (*pagination.PageResult[*member.MemberUser], error) {
 	u := s.q.MemberUser
 	q := u.WithContext(ctx)
 

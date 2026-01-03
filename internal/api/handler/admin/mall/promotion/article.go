@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -20,7 +20,7 @@ func NewArticleHandler(svc promotion.ArticleService) *ArticleHandler {
 }
 
 func (h *ArticleHandler) CreateArticle(c *gin.Context) {
-	var r req.ArticleCreateReq
+	var r promotion2.ArticleCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,7 +34,7 @@ func (h *ArticleHandler) CreateArticle(c *gin.Context) {
 }
 
 func (h *ArticleHandler) UpdateArticle(c *gin.Context) {
-	var r req.ArticleUpdateReq
+	var r promotion2.ArticleUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -74,7 +74,7 @@ func (h *ArticleHandler) GetArticle(c *gin.Context) {
 }
 
 func (h *ArticleHandler) GetArticlePage(c *gin.Context) {
-	var r req.ArticlePageReq
+	var r promotion2.ArticlePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

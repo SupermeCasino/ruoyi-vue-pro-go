@@ -3,8 +3,7 @@ package product
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -64,7 +63,7 @@ func (s *ProductFavoriteService) DeleteFavorite(ctx context.Context, userId, spu
 }
 
 // GetFavoritePage (Admin)
-func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.ProductFavoritePageReq) (*pagination.PageResult[resp.ProductFavoriteResp], error) {
+func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *product2.ProductFavoritePageReq) (*pagination.PageResult[product2.ProductFavoriteResp], error) {
 	f := s.q.ProductFavorite
 	q := f.WithContext(ctx)
 
@@ -88,10 +87,9 @@ func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.Pro
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 { return item.ID })
-
-	result := lo.Map(list, func(item *product.ProductFavorite, _ int) resp.ProductFavoriteResp {
-		r := resp.ProductFavoriteResp{
+	spuMap := lo.KeyBy(spuList, func(item *product2.ProductSpuResp) int64 { return item.ID })
+	result := lo.Map(list, func(item *product.ProductFavorite, _ int) product2.ProductFavoriteResp {
+		r := product2.ProductFavoriteResp{
 			ID:         item.ID,
 			UserID:     item.UserID,
 			SpuID:      item.SpuID,
@@ -125,14 +123,14 @@ func (s *ProductFavoriteService) GetFavoritePage(ctx context.Context, r *req.Pro
 		return r
 	})
 
-	return &pagination.PageResult[resp.ProductFavoriteResp]{
+	return &pagination.PageResult[product2.ProductFavoriteResp]{
 		List:  result,
 		Total: total,
 	}, nil
 }
 
 // GetAppFavoritePage (App)
-func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId int64, r *req.AppFavoritePageReq) (*pagination.PageResult[resp.AppFavoriteResp], error) {
+func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId int64, r *product2.AppFavoritePageReq) (*pagination.PageResult[product2.AppFavoriteResp], error) {
 	f := s.q.ProductFavorite
 	q := f.WithContext(ctx).Where(f.UserID.Eq(userId))
 
@@ -148,10 +146,10 @@ func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId 
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 { return item.ID })
+	spuMap := lo.KeyBy(spuList, func(item *product2.ProductSpuResp) int64 { return item.ID })
 
-	result := lo.Map(list, func(item *product.ProductFavorite, _ int) resp.AppFavoriteResp {
-		r := resp.AppFavoriteResp{
+	result := lo.Map(list, func(item *product.ProductFavorite, _ int) product2.AppFavoriteResp {
+		r := product2.AppFavoriteResp{
 			ID:         item.ID,
 			SpuID:      item.SpuID,
 			CreateTime: item.CreateTime,
@@ -164,7 +162,7 @@ func (s *ProductFavoriteService) GetAppFavoritePage(ctx context.Context, userId 
 		return r
 	})
 
-	return &pagination.PageResult[resp.AppFavoriteResp]{
+	return &pagination.PageResult[product2.AppFavoriteResp]{
 		List:  result,
 		Total: total,
 	}, nil

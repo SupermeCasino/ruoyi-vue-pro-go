@@ -2,14 +2,14 @@ package infra
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/file"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -184,7 +184,8 @@ func (s *FileService) DeleteFile(ctx context.Context, id int64) error {
 
 	// 初始化客户端并删除物理文件
 	if config.Config != nil {
-		client, err := file.NewFileClient(config.Storage, *config.Config)
+		configBytes, _ := json.Marshal(config.Config)
+		client, err := file.NewFileClient(config.Storage, configBytes)
 		if err == nil {
 			_ = client.Delete(fileRecord.Path)
 		}
@@ -204,7 +205,8 @@ func (s *FileService) GetFileContent(ctx context.Context, configId int64, path s
 		return nil, errors.New("配置内容为空")
 	}
 
-	client, err := file.NewFileClient(config.Storage, *config.Config)
+	configBytes, _ := json.Marshal(config.Config)
+	client, err := file.NewFileClient(config.Storage, configBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +214,7 @@ func (s *FileService) GetFileContent(ctx context.Context, configId int64, path s
 }
 
 // GetFilePage 获得文件分页
-func (s *FileService) GetFilePage(ctx context.Context, req *req.FilePageReq) (*pagination.PageResult[*resp.FileRespVO], error) {
+func (s *FileService) GetFilePage(ctx context.Context, req *infra.FilePageReq) (*pagination.PageResult[*infra.FileResp], error) {
 	f := s.q.InfraFile
 	qb := f.WithContext(ctx)
 
@@ -233,14 +235,14 @@ func (s *FileService) GetFilePage(ctx context.Context, req *req.FilePageReq) (*p
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.FileRespVO]{
-		List:  lo.Map(list, func(item *model.InfraFile, _ int) *resp.FileRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*infra.FileResp]{
+		List:  lo.Map(list, func(item *model.InfraFile, _ int) *infra.FileResp { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
-func (s *FileService) convertResp(item *model.InfraFile) *resp.FileRespVO {
-	return &resp.FileRespVO{
+func (s *FileService) convertResp(item *model.InfraFile) *infra.FileResp {
+	return &infra.FileResp{
 		ID:         item.ID,
 		ConfigId:   item.ConfigId,
 		Name:       item.Name,
@@ -252,13 +254,14 @@ func (s *FileService) convertResp(item *model.InfraFile) *resp.FileRespVO {
 	}
 }
 
-func (s *FileService) GetFilePresignedUrl(ctx context.Context, path string) (*resp.FilePresignedUrlResp, error) {
+func (s *FileService) GetFilePresignedUrl(ctx context.Context, path string) (*infra.FilePresignedUrlResp, error) {
 	config, err := s.fileConfigService.GetMasterFileConfig(ctx)
 	if err != nil {
 		return nil, errors.New("请先配置主文件存储")
 	}
 
-	client, err := file.NewFileClient(config.Storage, config.Config)
+	configBytes, _ := json.Marshal(config.Config)
+	client, err := file.NewFileClient(config.Storage, configBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +271,7 @@ func (s *FileService) GetFilePresignedUrl(ctx context.Context, path string) (*re
 		return nil, err
 	}
 
-	return &resp.FilePresignedUrlResp{
+	return &infra.FilePresignedUrlResp{
 		ConfigID:  config.ID,
 		UploadURL: presignedUrl,
 		URL:       client.GetURL(path),
@@ -276,7 +279,7 @@ func (s *FileService) GetFilePresignedUrl(ctx context.Context, path string) (*re
 	}, nil
 }
 
-func (s *FileService) CreateFileCallback(ctx context.Context, req *req.FileCreateReq) (int64, error) {
+func (s *FileService) CreateFileCallback(ctx context.Context, req *infra.FileCreateReq) (int64, error) {
 	// 验证配置是否存在
 	_, err := s.fileConfigService.GetFileConfig(ctx, req.ConfigID)
 	if err != nil {

@@ -3,8 +3,7 @@ package member
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -38,8 +37,9 @@ func NewMemberSignInRecordService(q *query.Query,
 }
 
 // GetSignInRecordSummary 获得签到记录统计
-func (s *MemberSignInRecordService) GetSignInRecordSummary(ctx context.Context, userId int64) (*resp.AppMemberSignInRecordSummaryResp, error) {
-	summary := &resp.AppMemberSignInRecordSummaryResp{
+// GetSignInRecordSummary 获得签到记录统计
+func (s *MemberSignInRecordService) GetSignInRecordSummary(ctx context.Context, userId int64) (*member2.AppMemberSignInRecordSummaryResp, error) {
+	summary := &member2.AppMemberSignInRecordSummaryResp{
 		TotalDay:      0,
 		ContinuousDay: 0,
 		TodaySignIn:   false,
@@ -78,7 +78,7 @@ func (s *MemberSignInRecordService) GetSignInRecordSummary(ctx context.Context, 
 }
 
 // GetSignInRecordPage 获得签到记录分页
-func (s *MemberSignInRecordService) GetSignInRecordPage(ctx context.Context, r *req.MemberSignInRecordPageReq) (*pagination.PageResult[*member.MemberSignInRecord], error) {
+func (s *MemberSignInRecordService) GetSignInRecordPage(ctx context.Context, r *member2.MemberSignInRecordPageReq) (*pagination.PageResult[*member.MemberSignInRecord], error) {
 	q := s.q.MemberSignInRecord.WithContext(ctx)
 
 	if r.Nickname != "" {

@@ -3,8 +3,8 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product_contract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion_contract "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	productSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	promotionSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
@@ -29,7 +29,7 @@ func NewPointActivityHandler(svc *promotionSvc.PointActivityService, spuSvc *pro
 
 // CreatePointActivity 创建积分商城活动
 func (h *PointActivityHandler) CreatePointActivity(c *gin.Context) {
-	var r req.PointActivityCreateReq
+	var r promotion_contract.PointActivityCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -44,7 +44,7 @@ func (h *PointActivityHandler) CreatePointActivity(c *gin.Context) {
 
 // UpdatePointActivity 更新积分商城活动
 func (h *PointActivityHandler) UpdatePointActivity(c *gin.Context) {
-	var r req.PointActivityUpdateReq
+	var r promotion_contract.PointActivityUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -105,7 +105,7 @@ func (h *PointActivityHandler) GetPointActivity(c *gin.Context) {
 	}
 
 	// 组装 VO
-	vo := resp.PointActivityRespVO{
+	vo := promotion_contract.PointActivityRespVO{
 		ID:         activity.ID,
 		SpuID:      activity.SpuID,
 		Status:     activity.Status,
@@ -116,9 +116,9 @@ func (h *PointActivityHandler) GetPointActivity(c *gin.Context) {
 		CreateTime: activity.CreateTime,
 	}
 
-	productVOs := make([]resp.PointProductRespVO, len(products))
+	productVOs := make([]promotion_contract.PointProductRespVO, len(products))
 	for i, p := range products {
-		productVOs[i] = resp.PointProductRespVO{
+		productVOs[i] = promotion_contract.PointProductRespVO{
 			ID:             p.ID,
 			ActivityID:     p.ActivityID,
 			SpuID:          p.SpuID,
@@ -137,7 +137,7 @@ func (h *PointActivityHandler) GetPointActivity(c *gin.Context) {
 
 // GetPointActivityPage 获得积分商城活动分页
 func (h *PointActivityHandler) GetPointActivityPage(c *gin.Context) {
-	var r req.PointActivityPageReq
+	var r promotion_contract.PointActivityPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -159,7 +159,7 @@ func (h *PointActivityHandler) GetPointActivityPage(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.PointActivityRespVO]{
+	response.WriteSuccess(c, pagination.PageResult[promotion_contract.PointActivityRespVO]{
 		List:  resultList,
 		Total: pageResult.Total,
 	})
@@ -188,9 +188,9 @@ func (h *PointActivityHandler) GetPointActivityListByIds(c *gin.Context) {
 	response.WriteSuccess(c, result)
 }
 
-func (h *PointActivityHandler) buildPointActivityRespVOList(c *gin.Context, activityList []*promotion.PromotionPointActivity) ([]resp.PointActivityRespVO, error) {
+func (h *PointActivityHandler) buildPointActivityRespVOList(c *gin.Context, activityList []*promotion.PromotionPointActivity) ([]promotion_contract.PointActivityRespVO, error) {
 	if len(activityList) == 0 {
-		return []resp.PointActivityRespVO{}, nil
+		return []promotion_contract.PointActivityRespVO{}, nil
 	}
 
 	// 1. 获取活动商品列表
@@ -213,14 +213,14 @@ func (h *PointActivityHandler) buildPointActivityRespVOList(c *gin.Context, acti
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 {
+	spuMap := lo.KeyBy(spuList, func(item *product_contract.ProductSpuResp) int64 {
 		return item.ID
 	})
 
 	// 3. 组装结果
-	result := make([]resp.PointActivityRespVO, len(activityList))
+	result := make([]promotion_contract.PointActivityRespVO, len(activityList))
 	for i, activity := range activityList {
-		vo := resp.PointActivityRespVO{
+		vo := promotion_contract.PointActivityRespVO{
 			ID:         activity.ID,
 			SpuID:      activity.SpuID,
 			Status:     activity.Status,

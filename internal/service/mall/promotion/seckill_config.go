@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -21,7 +21,7 @@ func NewSeckillConfigService(q *query.Query) *SeckillConfigService {
 }
 
 // CreateSeckillConfig 创建秒杀时段
-func (s *SeckillConfigService) CreateSeckillConfig(ctx context.Context, r *req.SeckillConfigCreateReq) (int64, error) {
+func (s *SeckillConfigService) CreateSeckillConfig(ctx context.Context, r *promotion2.SeckillConfigCreateReq) (int64, error) {
 	// TODO: Verify params (startTime < endTime) if needed
 	do := &promotion.PromotionSeckillConfig{
 		Name:          r.Name,
@@ -38,7 +38,7 @@ func (s *SeckillConfigService) CreateSeckillConfig(ctx context.Context, r *req.S
 }
 
 // UpdateSeckillConfig 更新秒杀时段
-func (s *SeckillConfigService) UpdateSeckillConfig(ctx context.Context, r *req.SeckillConfigUpdateReq) error {
+func (s *SeckillConfigService) UpdateSeckillConfig(ctx context.Context, r *promotion2.SeckillConfigUpdateReq) error {
 	q := s.q.PromotionSeckillConfig
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(r.ID)).First()
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *SeckillConfigService) GetSeckillConfigListByStatus(ctx context.Context,
 }
 
 // GetSeckillConfigPage 分页获得秒杀时段
-func (s *SeckillConfigService) GetSeckillConfigPage(ctx context.Context, r *req.SeckillConfigPageReq) (*pagination.PageResult[*promotion.PromotionSeckillConfig], error) {
+func (s *SeckillConfigService) GetSeckillConfigPage(ctx context.Context, r *promotion2.SeckillConfigPageReq) (*pagination.PageResult[*promotion.PromotionSeckillConfig], error) {
 	q := s.q.PromotionSeckillConfig
 	do := q.WithContext(ctx)
 

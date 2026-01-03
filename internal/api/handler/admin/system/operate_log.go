@@ -1,8 +1,7 @@
 package system
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -21,7 +20,7 @@ func NewOperateLogHandler(svc *system.OperateLogService) *OperateLogHandler {
 
 // GetOperateLogPage 获取操作日志分页
 func (h *OperateLogHandler) GetOperateLogPage(c *gin.Context) {
-	var r req.OperateLogPageReq
+	var r system2.OperateLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -35,9 +34,9 @@ func (h *OperateLogHandler) GetOperateLogPage(c *gin.Context) {
 
 	// Convert to Response DTO
 	// Note: userName is derived from userId. For now we leave it empty or can join with user table later.
-	list := make([]resp.OperateLogResp, len(pageResult.List))
+	list := make([]system2.OperateLogResp, len(pageResult.List))
 	for i, log := range pageResult.List {
-		list[i] = resp.OperateLogResp{
+		list[i] = system2.OperateLogResp{
 			ID:            log.ID,
 			TraceID:       log.TraceID,
 			UserID:        log.UserID,
@@ -55,7 +54,7 @@ func (h *OperateLogHandler) GetOperateLogPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.OperateLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[system2.OperateLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

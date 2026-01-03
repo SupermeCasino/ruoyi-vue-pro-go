@@ -3,8 +3,7 @@ package trade
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
@@ -21,12 +20,12 @@ func NewTradeConfigService(q *query.Query) *TradeConfigService {
 }
 
 // GetTradeConfig 获取交易配置 (Admin)
-func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*resp.TradeConfigResp, error) {
+func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*trade2.TradeConfigResp, error) {
 	qc := s.q.TradeConfig
 	config, err := qc.WithContext(ctx).First()
 	if err != nil {
 		// 如果不存在，返回默认配置（对齐 Java application.yaml / 默认行为）
-		return &resp.TradeConfigResp{
+		return &trade2.TradeConfigResp{
 			AfterSaleDeadlineDays: consts.DefaultAfterSaleDeadlineDays,
 			PayTimeoutMinutes:     consts.DefaultPayTimeoutMinutes,
 			AutoReceiveDays:       consts.DefaultAutoReceiveDays,
@@ -35,7 +34,7 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*resp.TradeCon
 	}
 
 	// 补充部分默认值，防止数据库中记录存在但值为 0 的情况
-	res := &resp.TradeConfigResp{
+	res := &trade2.TradeConfigResp{
 		ID:                          config.ID,
 		AppID:                       config.AppID,
 		AfterSaleDeadlineDays:       config.AfterSaleDeadlineDays,
@@ -57,6 +56,7 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*resp.TradeCon
 		BrokerageBindMode:           config.BrokerageBindMode,
 		BrokeragePosterUrls:         []string(config.BrokeragePosterUrls),
 		BrokerageWithdrawTypes:      []int(config.BrokerageWithdrawTypes),
+		TencentLbsKey:               "", // 待 DB 补全或从配置中心获取
 	}
 	if res.PayTimeoutMinutes <= consts.DefaultPayTimeoutMinutes {
 		res.PayTimeoutMinutes = consts.DefaultPayTimeoutMinutes
@@ -69,7 +69,7 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*resp.TradeCon
 
 // GetAppTradeConfig 获取交易配置 (App) - 对齐 Java: AppTradeConfigController.getTradeConfig
 // 对应 Java: TradeConfigConvert.convert02(TradeConfigDO)
-func (s *TradeConfigService) GetAppTradeConfig(ctx context.Context) (*resp.AppTradeConfigResp, error) {
+func (s *TradeConfigService) GetAppTradeConfig(ctx context.Context) (*trade2.AppTradeConfigResp, error) {
 	qc := s.q.TradeConfig
 	config, err := qc.WithContext(ctx).First()
 	if err != nil {
@@ -78,8 +78,8 @@ func (s *TradeConfigService) GetAppTradeConfig(ctx context.Context) (*resp.AppTr
 	}
 
 	// 转换响应结构（对齐 Java: TradeConfigConvert.convert02）
-	return &resp.AppTradeConfigResp{
-		TencentLbsKey:             "",
+	return &trade2.AppTradeConfigResp{
+		TencentLbsKey:             "", // 待补全
 		DeliveryPickUpEnabled:     bool(config.DeliveryPickUpEnabled),
 		AfterSaleRefundReasons:    []string(config.AfterSaleRefundReasons),
 		AfterSaleReturnReasons:    []string(config.AfterSaleReturnReasons),
@@ -91,7 +91,7 @@ func (s *TradeConfigService) GetAppTradeConfig(ctx context.Context) (*resp.AppTr
 }
 
 // SaveTradeConfig 保存交易配置 (Admin) - 对齐 Java: TradeConfigService.saveTradeConfig
-func (s *TradeConfigService) SaveTradeConfig(ctx context.Context, r *req.TradeConfigSaveReq) error {
+func (s *TradeConfigService) SaveTradeConfig(ctx context.Context, r *trade2.TradeConfigSaveReq) error {
 	qc := s.q.TradeConfig
 	existing, err := qc.WithContext(ctx).First()
 	if err == nil {

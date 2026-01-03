@@ -3,7 +3,7 @@ package product
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -21,7 +21,7 @@ func NewProductCategoryHandler(svc *product.ProductCategoryService) *ProductCate
 
 // CreateCategory 创建商品分类
 func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
-	var r req.ProductCategoryCreateReq
+	var r product2.ProductCategoryCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 
 // UpdateCategory 更新商品分类
 func (h *ProductCategoryHandler) UpdateCategory(c *gin.Context) {
-	var r req.ProductCategoryUpdateReq
+	var r product2.ProductCategoryUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -81,7 +81,7 @@ func (h *ProductCategoryHandler) GetCategory(c *gin.Context) {
 
 // GetCategoryList 获得商品分类列表
 func (h *ProductCategoryHandler) GetCategoryList(c *gin.Context) {
-	var r req.ProductCategoryListReq
+	var r product2.ProductCategoryListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

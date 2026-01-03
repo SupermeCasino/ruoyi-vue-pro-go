@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberService "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -24,7 +24,7 @@ func NewAppAuthHandler(svc *memberService.MemberAuthService) *AppAuthHandler {
 // Login 手机+密码登录
 // @Router /member/auth/login [post]
 func (h *AppAuthHandler) Login(c *gin.Context) {
-	var r req.AppAuthLoginReq
+	var r member.AppAuthLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -47,7 +47,7 @@ func (h *AppAuthHandler) Login(c *gin.Context) {
 // SmsLogin 手机+验证码登录
 // @Router /member/auth/sms-login [post]
 func (h *AppAuthHandler) SmsLogin(c *gin.Context) {
-	var r req.AppAuthSmsLoginReq
+	var r member.AppAuthSmsLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -69,7 +69,7 @@ func (h *AppAuthHandler) SmsLogin(c *gin.Context) {
 // SocialLogin 社交登录
 // @Router /member/auth/social-login [post]
 func (h *AppAuthHandler) SocialLogin(c *gin.Context) {
-	var r req.AppAuthSocialLoginReq
+	var r member.AppAuthSocialLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -85,7 +85,7 @@ func (h *AppAuthHandler) SocialLogin(c *gin.Context) {
 // SendSmsCode 发送手机验证码
 // @Router /member/auth/send-sms-code [post]
 func (h *AppAuthHandler) SendSmsCode(c *gin.Context) {
-	var r req.AppAuthSmsSendReq
+	var r member.AppAuthSmsSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -100,7 +100,7 @@ func (h *AppAuthHandler) SendSmsCode(c *gin.Context) {
 // ValidateSmsCode 校验手机验证码
 // @Router /member/auth/validate-sms-code [post]
 func (h *AppAuthHandler) ValidateSmsCode(c *gin.Context) {
-	var r req.AppAuthSmsValidateReq
+	var r member.AppAuthSmsValidateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -160,7 +160,7 @@ func (h *AppAuthHandler) SocialAuthRedirect(c *gin.Context) {
 // WeixinMiniAppLogin 微信小程序登录
 // @Router /member/auth/weixin-mini-app-login [post]
 func (h *AppAuthHandler) WeixinMiniAppLogin(c *gin.Context) {
-	var r req.AppAuthWeixinMiniAppLoginReq
+	var r member.AppAuthWeixinMiniAppLoginReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

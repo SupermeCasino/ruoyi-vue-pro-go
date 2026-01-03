@@ -4,8 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgContext "github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -60,7 +59,7 @@ func (s *AuthService) SocialAuthRedirect(ctx context.Context, socialType int, re
 }
 
 // SocialLogin 社交登录
-func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginReq) (*resp.AuthLoginResp, error) {
+func (s *AuthService) SocialLogin(ctx context.Context, req *system.AuthSocialLoginReq) (*system.AuthLoginResp, error) {
 	// 1. 获取社交用户及绑定用户ID
 	_, userId, err := s.socialUserSvc.GetSocialUserByCode(ctx, consts.UserTypeAdmin, req.Type, req.Code, req.State)
 	if err != nil {
@@ -98,7 +97,7 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 	// 7. 记录登录日志
 	s.loginLogSvc.CreateLoginLog(ctx, user.ID, consts.UserTypeAdmin, user.Username, user.LoginIP, "", consts.LoginLogTypeSocial, consts.LoginResultSuccess)
 
-	return &resp.AuthLoginResp{
+	return &system.AuthLoginResp{
 		UserId:       user.ID,
 		AccessToken:  tokenDO.AccessToken,
 		RefreshToken: tokenDO.RefreshToken,
@@ -107,7 +106,7 @@ func (s *AuthService) SocialLogin(ctx context.Context, req *req.AuthSocialLoginR
 }
 
 // GetPermissionInfo 获取登录用户的权限信息
-func (s *AuthService) GetPermissionInfo(ctx context.Context) (*resp.AuthPermissionInfoResp, error) {
+func (s *AuthService) GetPermissionInfo(ctx context.Context) (*system.AuthPermissionInfoResp, error) {
 	// 1. 获取当前用户 ID (从 Context)
 	userIdVal := ctx.Value(pkgContext.CtxUserIDKey)
 	if userIdVal == nil {
@@ -160,7 +159,7 @@ func (s *AuthService) GetPermissionInfo(ctx context.Context) (*resp.AuthPermissi
 	}
 
 	// 5.1 过滤禁用的菜单 (Java: menuList = menuService.filterDisableMenus(menuList))
-	var enabledMenus []*resp.MenuResp
+	var enabledMenus []*system.MenuResp
 	for _, m := range menus {
 		if m.Status == 0 { // 0 = ENABLE
 			enabledMenus = append(enabledMenus, m)
@@ -178,8 +177,8 @@ func (s *AuthService) GetPermissionInfo(ctx context.Context) (*resp.AuthPermissi
 	// 7. 构建菜单树
 	menuTree := s.menuSvc.BuildMenuTree(enabledMenus)
 
-	return &resp.AuthPermissionInfoResp{
-		User: resp.UserVO{
+	return &system.AuthPermissionInfoResp{
+		User: system.UserVO{
 			ID:       user.ID,
 			Nickname: user.Nickname,
 			Avatar:   user.Avatar,
@@ -194,7 +193,7 @@ func (s *AuthService) GetPermissionInfo(ctx context.Context) (*resp.AuthPermissi
 }
 
 // Login 登录业务
-func (s *AuthService) Login(ctx context.Context, req *req.AuthLoginReq) (*resp.AuthLoginResp, error) {
+func (s *AuthService) Login(ctx context.Context, req *system.AuthLoginReq) (*system.AuthLoginResp, error) {
 	// 0. 解析租户
 	var tenantId int64 = 1 // 默认租户ID
 	if req.TenantName != "" {
@@ -243,7 +242,7 @@ func (s *AuthService) Login(ctx context.Context, req *req.AuthLoginReq) (*resp.A
 	}
 
 	// 6. 返回结果
-	return &resp.AuthLoginResp{
+	return &system.AuthLoginResp{
 		UserId:       user.ID,
 		AccessToken:  tokenDO.AccessToken,
 		RefreshToken: tokenDO.RefreshToken,
@@ -275,7 +274,7 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 }
 
 // RefreshToken 刷新令牌
-func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*resp.AuthLoginResp, error) {
+func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*system.AuthLoginResp, error) {
 	// 1. 验证 refreshToken（从 Redis 获取原令牌信息）
 	oldToken, err := s.tokenSvc.GetAccessToken(ctx, refreshToken)
 	if err != nil || oldToken == nil {
@@ -306,7 +305,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*r
 	}
 
 	// 6. 返回结果
-	return &resp.AuthLoginResp{
+	return &system.AuthLoginResp{
 		UserId:       user.ID,
 		AccessToken:  tokenDO.AccessToken,
 		RefreshToken: tokenDO.RefreshToken,
@@ -315,7 +314,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*r
 }
 
 // SmsLogin 短信登录
-func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*resp.AuthLoginResp, error) {
+func (s *AuthService) SmsLogin(ctx context.Context, req *system.AuthSmsLoginReq) (*system.AuthLoginResp, error) {
 	// 1. 验证短信验证码 (场景: 1-登录)
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, 1, req.Code); err != nil {
 		return nil, err
@@ -347,7 +346,7 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 	// 6. 记录登录日志
 	s.loginLogSvc.CreateLoginLog(ctx, user.ID, consts.UserTypeAdmin, user.Username, user.LoginIP, "", consts.LoginLogTypeSms, consts.LoginResultSuccess)
 
-	return &resp.AuthLoginResp{
+	return &system.AuthLoginResp{
 		UserId:       user.ID,
 		AccessToken:  tokenDO.AccessToken,
 		RefreshToken: tokenDO.RefreshToken,
@@ -356,17 +355,17 @@ func (s *AuthService) SmsLogin(ctx context.Context, req *req.AuthSmsLoginReq) (*
 }
 
 // SendSmsCode 发送短信验证码
-func (s *AuthService) SendSmsCode(ctx context.Context, req *req.AuthSmsSendReq, createIp string) error {
+func (s *AuthService) SendSmsCode(ctx context.Context, req *system.AuthSmsSendReq, createIp string) error {
 	return s.smsCodeSvc.SendSmsCode(ctx, req.Mobile, int32(req.Scene), createIp)
 }
 
 // Register 注册
-func (s *AuthService) Register(ctx context.Context, r *req.AuthRegisterReq) (*resp.AuthLoginResp, error) {
+func (s *AuthService) Register(ctx context.Context, r *system.AuthRegisterReq) (*system.AuthLoginResp, error) {
 	// 0. 参数校验
 	// TODO: 校验密码强度等 (Java: Validator)
 
 	// 1. 创建用户
-	createReq := &req.UserSaveReq{
+	createReq := &system.UserSaveReq{
 		Username: r.Username,
 		Password: r.Password,
 		Nickname: r.Username, // 默认昵称
@@ -382,7 +381,7 @@ func (s *AuthService) Register(ctx context.Context, r *req.AuthRegisterReq) (*re
 
 	// 2. 自动登录
 	// 构造登录请求 Mock
-	loginReq := &req.AuthLoginReq{
+	loginReq := &system.AuthLoginReq{
 		Username: r.Username,
 		Password: r.Password,
 	}
@@ -390,7 +389,7 @@ func (s *AuthService) Register(ctx context.Context, r *req.AuthRegisterReq) (*re
 }
 
 // ResetPassword 重置密码
-func (s *AuthService) ResetPassword(ctx context.Context, req *req.AuthResetPasswordReq) error {
+func (s *AuthService) ResetPassword(ctx context.Context, req *system.AuthResetPasswordReq) error {
 	// 1. 验证短信验证码 (场景: 3-重置密码)
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, 3, req.Code); err != nil {
 		return err

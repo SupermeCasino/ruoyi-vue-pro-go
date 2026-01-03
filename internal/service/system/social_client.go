@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -19,7 +19,7 @@ func NewSocialClientService(q *query.Query) *SocialClientService {
 }
 
 // CreateSocialClient 创建社交客户端
-func (s *SocialClientService) CreateSocialClient(ctx context.Context, r *req.SocialClientSaveReq) (int64, error) {
+func (s *SocialClientService) CreateSocialClient(ctx context.Context, r *system.SocialClientSaveReq) (int64, error) {
 	client := &model.SocialClient{
 		Name:         r.Name,
 		SocialType:   r.SocialType,
@@ -36,7 +36,7 @@ func (s *SocialClientService) CreateSocialClient(ctx context.Context, r *req.Soc
 }
 
 // UpdateSocialClient 更新社交客户端
-func (s *SocialClientService) UpdateSocialClient(ctx context.Context, r *req.SocialClientSaveReq) error {
+func (s *SocialClientService) UpdateSocialClient(ctx context.Context, r *system.SocialClientSaveReq) error {
 	if r.ID == nil {
 		return errors.New("ID不能为空")
 	}
@@ -64,7 +64,7 @@ func (s *SocialClientService) GetSocialClient(ctx context.Context, id int64) (*m
 }
 
 // GetSocialClientPage 获取社交客户端分页
-func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *req.SocialClientPageReq) (*pagination.PageResult[*model.SocialClient], error) {
+func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *system.SocialClientPageReq) (*pagination.PageResult[*model.SocialClient], error) {
 	q := s.q.SocialClient.WithContext(ctx)
 
 	if r.Name != "" {
@@ -107,7 +107,7 @@ func (s *SocialClientService) GetSocialClientPage(ctx context.Context, r *req.So
 }
 
 // SendWxaSubscribeMessage 发送小程序订阅消息 (Skeleton)
-func (s *SocialClientService) SendWxaSubscribeMessage(ctx context.Context, r *req.SocialWxaSubscribeMessageSendReq) error {
+func (s *SocialClientService) SendWxaSubscribeMessage(ctx context.Context, r *system.SocialWxaSubscribeMessageSendReq) error {
 	// TODO: 集成真实的微信小程序 API
 	// 详见 Java: SocialClientApiImpl.sendWxaSubscribeMessage
 	return nil

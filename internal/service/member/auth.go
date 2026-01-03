@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -38,7 +38,7 @@ func NewMemberAuthService(repo *query.Query, smsCodeSvc *system.SmsCodeService, 
 }
 
 // Login 手机+密码登录
-func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) Login(ctx context.Context, r *member2.AppAuthLoginReq, ip, userAgent string, terminal int32) (*member2.AppAuthLoginResp, error) {
 	// 1. 查询用户
 	userRepo := s.repo.MemberUser
 	user, err := userRepo.WithContext(ctx).Where(userRepo.Mobile.Eq(r.Mobile)).First()
@@ -59,7 +59,7 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq, i
 	// 4. Check Social Bind need?
 	var openid string
 	if r.SocialType != 0 {
-		bindReq := &req.SocialUserBindReq{
+		bindReq := &system2.SocialUserBindReq{
 			Type:  r.SocialType,
 			Code:  r.SocialCode,
 			State: r.SocialState,
@@ -76,7 +76,7 @@ func (s *MemberAuthService) Login(ctx context.Context, r *req.AppAuthLoginReq, i
 }
 
 // SmsLogin 手机+验证码登录
-func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) SmsLogin(ctx context.Context, r *member2.AppAuthSmsLoginReq, ip, userAgent string, terminal int32) (*member2.AppAuthLoginResp, error) {
 	// 1. 校验验证码
 	if err := s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, 1, r.Code); err != nil { // 1 = SmsSceneMemberLogin
 		return nil, err
@@ -113,7 +113,7 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 
 		// 4. Bind Social if needed
 		if r.SocialType != 0 {
-			bindReq := &req.SocialUserBindReq{
+			bindReq := &system2.SocialUserBindReq{
 				Type:  r.SocialType,
 				Code:  r.SocialCode,
 				State: r.SocialState,
@@ -140,7 +140,7 @@ func (s *MemberAuthService) SmsLogin(ctx context.Context, r *req.AppAuthSmsLogin
 }
 
 // SocialLogin 社交快捷登录
-func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocialLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) SocialLogin(ctx context.Context, r *member2.AppAuthSocialLoginReq, ip, userAgent string, terminal int32) (*member2.AppAuthLoginResp, error) {
 	// 1. 获得社交用户
 	socialUser, bindUserId, err := s.socialSvc.GetSocialUserByCode(ctx, 1, int(r.Type), r.Code, r.State) // 1=Member
 	if err != nil {
@@ -151,7 +151,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 	}
 
 	// 2-4. 使用事务处理用户创建和社交绑定
-	var result *resp.AppAuthLoginResp
+	var result *member2.AppAuthLoginResp
 	err = s.repo.Transaction(func(tx *query.Query) error {
 		var user *member.MemberUser
 		if bindUserId != 0 {
@@ -179,7 +179,7 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 			}
 
 			// Bind
-			bindReq := &req.SocialUserBindReq{
+			bindReq := &system2.SocialUserBindReq{
 				Type:  int(r.Type),
 				Code:  r.Code,
 				State: r.State,
@@ -208,17 +208,17 @@ func (s *MemberAuthService) SocialLogin(ctx context.Context, r *req.AppAuthSocia
 }
 
 // SendSmsCode 发送验证码
-func (s *MemberAuthService) SendSmsCode(ctx context.Context, r *req.AppAuthSmsSendReq, createIp string) error {
+func (s *MemberAuthService) SendSmsCode(ctx context.Context, r *member2.AppAuthSmsSendReq, createIp string) error {
 	return s.smsCodeSvc.SendSmsCode(ctx, r.Mobile, int32(r.Scene), createIp)
 }
 
 // ValidateSmsCode 校验验证码
-func (s *MemberAuthService) ValidateSmsCode(ctx context.Context, r *req.AppAuthSmsValidateReq) error {
+func (s *MemberAuthService) ValidateSmsCode(ctx context.Context, r *member2.AppAuthSmsValidateReq) error {
 	return s.smsCodeSvc.ValidateSmsCode(ctx, r.Mobile, int32(r.Scene), r.Code)
 }
 
 // RefreshToken 刷新访问令牌
-func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken, ip, userAgent string) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) RefreshToken(ctx context.Context, refreshToken, ip, userAgent string) (*member2.AppAuthLoginResp, error) {
 	// 1. 验证 refreshToken（从 Redis 获取原令牌信息）
 	oldToken, err := s.tokenSvc.GetAccessToken(ctx, refreshToken)
 	if err != nil || oldToken == nil {
@@ -258,7 +258,7 @@ func (s *MemberAuthService) Logout(ctx context.Context, token, ip, userAgent str
 
 // createTokenAfterLoginSuccess 创建令牌并记录登录成功日志
 func (s *MemberAuthService) createTokenAfterLoginSuccess(ctx context.Context, user *member.MemberUser,
-	logType int, openid, ip, userAgent string) (*resp.AppAuthLoginResp, error) {
+	logType int, openid, ip, userAgent string) (*member2.AppAuthLoginResp, error) {
 	// 1. 记录登录日志
 	s.loginLogSvc.CreateLoginLog(ctx, user.ID, consts.UserTypeMember, user.Mobile, ip, userAgent, logType, consts.LoginResultSuccess)
 	// 2. 更新最后登录时间
@@ -269,7 +269,7 @@ func (s *MemberAuthService) createTokenAfterLoginSuccess(ctx context.Context, us
 }
 
 // createToken 创建访问令牌（使用 OAuth2TokenService，与 Java 对齐）
-func (s *MemberAuthService) createToken(ctx context.Context, user *member.MemberUser, openid string) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) createToken(ctx context.Context, user *member.MemberUser, openid string) (*member2.AppAuthLoginResp, error) {
 	// 构建用户信息
 	userInfo := map[string]string{
 		"nickname": user.Nickname,
@@ -281,7 +281,7 @@ func (s *MemberAuthService) createToken(ctx context.Context, user *member.Member
 		return nil, errors.ErrUnknown
 	}
 
-	return &resp.AppAuthLoginResp{
+	return &member2.AppAuthLoginResp{
 		UserID:       user.ID,
 		AccessToken:  tokenDO.AccessToken,
 		RefreshToken: tokenDO.RefreshToken,
@@ -296,7 +296,7 @@ func (s *MemberAuthService) GetSocialAuthorizeUrl(ctx context.Context, socialTyp
 }
 
 // WeixinMiniAppLogin 微信小程序登录
-func (s *MemberAuthService) WeixinMiniAppLogin(ctx context.Context, r *req.AppAuthWeixinMiniAppLoginReq, ip, userAgent string, terminal int32) (*resp.AppAuthLoginResp, error) {
+func (s *MemberAuthService) WeixinMiniAppLogin(ctx context.Context, r *member2.AppAuthWeixinMiniAppLoginReq, ip, userAgent string, terminal int32) (*member2.AppAuthLoginResp, error) {
 	// 1. 获得社交用户
 	mobile, err := s.socialSvc.GetMobile(ctx, 1, 31, r.PhoneCode) // 1=Member, 31=Mini App
 	if err != nil {
@@ -310,7 +310,7 @@ func (s *MemberAuthService) WeixinMiniAppLogin(ctx context.Context, r *req.AppAu
 	}
 
 	// 3. 绑定社交用户
-	bindReq := &req.SocialUserBindReq{
+	bindReq := &system2.SocialUserBindReq{
 		Type:  31,
 		Code:  r.LoginCode,
 		State: r.State,
@@ -325,12 +325,12 @@ func (s *MemberAuthService) WeixinMiniAppLogin(ctx context.Context, r *req.AppAu
 }
 
 // CreateWeixinMpJsapiSignature 创建微信 MP JSAPI 签名
-func (s *MemberAuthService) CreateWeixinMpJsapiSignature(ctx context.Context, url string) (*resp.AppAuthWeixinJsapiSignatureResp, error) {
+func (s *MemberAuthService) CreateWeixinMpJsapiSignature(ctx context.Context, url string) (*member2.AppAuthWeixinJsapiSignatureResp, error) {
 	signature, err := s.socialSvc.CreateWxMpJsapiSignature(ctx, 1, url) // 1 = Member
 	if err != nil {
 		return nil, err
 	}
-	return &resp.AppAuthWeixinJsapiSignatureResp{
+	return &member2.AppAuthWeixinJsapiSignatureResp{
 		AppID:     signature.AppID,
 		NonceStr:  signature.NonceStr,
 		Timestamp: signature.Timestamp,

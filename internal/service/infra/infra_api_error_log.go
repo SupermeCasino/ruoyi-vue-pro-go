@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -19,7 +19,7 @@ func NewApiErrorLogService(q *query.Query) *ApiErrorLogService {
 }
 
 // GetApiErrorLogPage 获取API错误日志分页
-func (s *ApiErrorLogService) GetApiErrorLogPage(ctx context.Context, r *req.ApiErrorLogPageReq) (*pagination.PageResult[*model.InfraApiErrorLog], error) {
+func (s *ApiErrorLogService) GetApiErrorLogPage(ctx context.Context, r *infra.ApiErrorLogPageReq) (*pagination.PageResult[*model.InfraApiErrorLog], error) {
 	q := s.q.InfraApiErrorLog.WithContext(ctx)
 
 	if r.UserID != nil {

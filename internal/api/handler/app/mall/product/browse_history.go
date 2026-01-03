@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -20,7 +20,7 @@ func NewAppProductBrowseHistoryHandler(svc *product.ProductBrowseHistoryService)
 
 // DeleteBrowseHistory 删除商品浏览记录
 func (h *AppProductBrowseHistoryHandler) DeleteBrowseHistory(c *gin.Context) {
-	var r req.AppProductBrowseHistoryDeleteReq
+	var r product2.AppProductBrowseHistoryDeleteReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -45,7 +45,7 @@ func (h *AppProductBrowseHistoryHandler) CleanBrowseHistory(c *gin.Context) {
 
 // GetBrowseHistoryPage 获得商品浏览记录分页
 func (h *AppProductBrowseHistoryHandler) GetBrowseHistoryPage(c *gin.Context) {
-	var r req.AppProductBrowseHistoryPageReq
+	var r product2.AppProductBrowseHistoryPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

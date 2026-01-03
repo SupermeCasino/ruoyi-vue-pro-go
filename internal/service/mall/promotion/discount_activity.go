@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -15,12 +15,12 @@ import (
 )
 
 type DiscountActivityService interface {
-	CreateDiscountActivity(ctx context.Context, req req.DiscountActivityCreateReq) (int64, error)
-	UpdateDiscountActivity(ctx context.Context, req req.DiscountActivityUpdateReq) error
+	CreateDiscountActivity(ctx context.Context, req promotion2.DiscountActivityCreateReq) (int64, error)
+	UpdateDiscountActivity(ctx context.Context, req promotion2.DiscountActivityUpdateReq) error
 	CloseDiscountActivity(ctx context.Context, id int64) error
 	DeleteDiscountActivity(ctx context.Context, id int64) error
-	GetDiscountActivity(ctx context.Context, id int64) (*resp.DiscountActivityRespVO, error)
-	GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*pagination.PageResult[*resp.DiscountActivityRespVO], error)
+	GetDiscountActivity(ctx context.Context, id int64) (*promotion2.DiscountActivityRespVO, error)
+	GetDiscountActivityPage(ctx context.Context, req promotion2.DiscountActivityPageReq) (*pagination.PageResult[*promotion2.DiscountActivityRespVO], error)
 
 	// GetMatchDiscountProductMap 获得指定 SKU 列表中，当前生效的限时折扣活动
 	GetMatchDiscountProductMap(ctx context.Context, skuIDs []int64) (map[int64]*promotion.PromotionDiscountProduct, error)
@@ -35,7 +35,7 @@ func NewDiscountActivityService(q *query.Query, skuSvc *prodSvc.ProductSkuServic
 	return &discountActivityService{q: q, skuSvc: skuSvc}
 }
 
-func (s *discountActivityService) CreateDiscountActivity(ctx context.Context, req req.DiscountActivityCreateReq) (int64, error) {
+func (s *discountActivityService) CreateDiscountActivity(ctx context.Context, req promotion2.DiscountActivityCreateReq) (int64, error) {
 	// 1. Validate Conflict
 	if err := s.validateProductConflict(ctx, 0, req.Products); err != nil {
 		return 0, err
@@ -85,7 +85,7 @@ func (s *discountActivityService) CreateDiscountActivity(ctx context.Context, re
 	return activity.ID, err
 }
 
-func (s *discountActivityService) UpdateDiscountActivity(ctx context.Context, req req.DiscountActivityUpdateReq) error {
+func (s *discountActivityService) UpdateDiscountActivity(ctx context.Context, req promotion2.DiscountActivityUpdateReq) error {
 	activity, err := s.validateDiscountActivityExists(ctx, req.ID)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func (s *discountActivityService) updateDiscountProductWithDiff(
 	ctx context.Context,
 	tx *query.Query,
 	activity *promotion.PromotionDiscountActivity,
-	req req.DiscountActivityUpdateReq,
+	req promotion2.DiscountActivityUpdateReq,
 ) error {
 	// 第一步：获取新旧列表
 	// 构建新列表
@@ -292,7 +292,7 @@ func (s *discountActivityService) DeleteDiscountActivity(ctx context.Context, id
 	})
 }
 
-func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id int64) (*resp.DiscountActivityRespVO, error) {
+func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id int64) (*promotion2.DiscountActivityRespVO, error) {
 	activity, err := s.q.PromotionDiscountActivity.WithContext(ctx).Where(s.q.PromotionDiscountActivity.ID.Eq(id)).First()
 	if err != nil {
 		return nil, errors.NewBizError(1001007000, "活动不存在")
@@ -302,7 +302,7 @@ func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id in
 		return nil, err
 	}
 
-	res := &resp.DiscountActivityRespVO{
+	res := &promotion2.DiscountActivityRespVO{
 		ID:         activity.ID,
 		Name:       activity.Name,
 		Status:     activity.Status,
@@ -310,10 +310,10 @@ func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id in
 		EndTime:    activity.EndTime,
 		Remark:     activity.Remark,
 		CreateTime: activity.CreateTime,
-		Products:   make([]*resp.DiscountProductRespVO, len(products)),
+		Products:   make([]*promotion2.DiscountProductRespVO, len(products)),
 	}
 	for i, p := range products {
-		res.Products[i] = &resp.DiscountProductRespVO{
+		res.Products[i] = &promotion2.DiscountProductRespVO{
 			ID:              p.ID,
 			ActivityID:      p.ActivityID,
 			SpuID:           p.SpuID,
@@ -326,7 +326,7 @@ func (s *discountActivityService) GetDiscountActivity(ctx context.Context, id in
 	return res, nil
 }
 
-func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, req req.DiscountActivityPageReq) (*pagination.PageResult[*resp.DiscountActivityRespVO], error) {
+func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, req promotion2.DiscountActivityPageReq) (*pagination.PageResult[*promotion2.DiscountActivityRespVO], error) {
 	q := s.q.PromotionDiscountActivity
 	do := q.WithContext(ctx)
 	if req.Name != "" {
@@ -344,9 +344,9 @@ func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, r
 		return nil, err
 	}
 
-	result := make([]*resp.DiscountActivityRespVO, len(list))
+	result := make([]*promotion2.DiscountActivityRespVO, len(list))
 	for i, item := range list {
-		result[i] = &resp.DiscountActivityRespVO{
+		result[i] = &promotion2.DiscountActivityRespVO{
 			ID:         item.ID,
 			Name:       item.Name,
 			Status:     item.Status,
@@ -366,9 +366,9 @@ func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, r
 			ids[i] = r.ID
 		}
 		prods, _ := s.q.PromotionDiscountProduct.WithContext(ctx).Where(s.q.PromotionDiscountProduct.ActivityID.In(ids...)).Find()
-		prodMap := make(map[int64][]*resp.DiscountProductRespVO)
+		prodMap := make(map[int64][]*promotion2.DiscountProductRespVO)
 		for _, p := range prods {
-			prodMap[p.ActivityID] = append(prodMap[p.ActivityID], &resp.DiscountProductRespVO{
+			prodMap[p.ActivityID] = append(prodMap[p.ActivityID], &promotion2.DiscountProductRespVO{
 				ID:              p.ID,
 				ActivityID:      p.ActivityID,
 				SpuID:           p.SpuID,
@@ -383,7 +383,7 @@ func (s *discountActivityService) GetDiscountActivityPage(ctx context.Context, r
 		}
 	}
 
-	return &pagination.PageResult[*resp.DiscountActivityRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*promotion2.DiscountActivityRespVO]{List: result, Total: total}, nil
 }
 
 func (s *discountActivityService) validateDiscountActivityExists(ctx context.Context, id int64) (*promotion.PromotionDiscountActivity, error) {
@@ -401,7 +401,7 @@ func (s *discountActivityService) validatePeriod(startTime, endTime time.Time) e
 	return nil
 }
 
-func (s *discountActivityService) validateProducts(ctx context.Context, products []req.DiscountProductReq) error {
+func (s *discountActivityService) validateProducts(ctx context.Context, products []promotion2.DiscountProductReq) error {
 	skuIDs := make([]int64, len(products))
 	for i, p := range products {
 		skuIDs[i] = p.SkuID
@@ -414,7 +414,7 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 		return errors.NewBizError(400, "部分商品不存在")
 	}
 
-	skuMap := make(map[int64]*resp.ProductSkuResp)
+	skuMap := make(map[int64]*product.ProductSkuResp)
 	for _, sku := range skus {
 		skuMap[sku.ID] = sku
 	}
@@ -439,7 +439,7 @@ func (s *discountActivityService) validateProducts(ctx context.Context, products
 	return nil
 }
 
-func (s *discountActivityService) validateProductConflict(ctx context.Context, id int64, products []req.DiscountProductReq) error {
+func (s *discountActivityService) validateProductConflict(ctx context.Context, id int64, products []promotion2.DiscountProductReq) error {
 	// 1. Find all ENABLE activities
 	q := s.q.PromotionDiscountActivity
 	query := q.WithContext(ctx).Where(q.Status.Eq(consts.CommonStatusEnable))

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -45,7 +45,7 @@ func (h *AppCouponTemplateHandler) GetCouponTemplate(c *gin.Context) {
 // GetCouponTemplateList 获得优惠劵模版列表 (对齐 Java: getCouponTemplateList - 带查询条件)
 // @PermitAll - 公开接口
 func (h *AppCouponTemplateHandler) GetCouponTemplateList(c *gin.Context) {
-	var r req.AppCouponTemplateListReq
+	var r promotion2.AppCouponTemplateListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -87,7 +87,7 @@ func (h *AppCouponTemplateHandler) GetCouponTemplateListByIds(c *gin.Context) {
 // GetCouponTemplatePage 获得优惠劵模版分页 (对齐 Java: getCouponTemplatePage)
 // @PermitAll - 公开接口
 func (h *AppCouponTemplateHandler) GetCouponTemplatePage(c *gin.Context) {
-	var r req.AppCouponTemplatePageReq
+	var r promotion2.AppCouponTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return

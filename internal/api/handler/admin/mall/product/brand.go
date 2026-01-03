@@ -3,7 +3,7 @@ package product
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -21,7 +21,7 @@ func NewProductBrandHandler(svc *product.ProductBrandService) *ProductBrandHandl
 
 // CreateBrand 创建品牌
 func (h *ProductBrandHandler) CreateBrand(c *gin.Context) {
-	var r req.ProductBrandCreateReq
+	var r product2.ProductBrandCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +36,7 @@ func (h *ProductBrandHandler) CreateBrand(c *gin.Context) {
 
 // UpdateBrand 更新品牌
 func (h *ProductBrandHandler) UpdateBrand(c *gin.Context) {
-	var r req.ProductBrandUpdateReq
+	var r product2.ProductBrandUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -81,7 +81,7 @@ func (h *ProductBrandHandler) GetBrand(c *gin.Context) {
 
 // GetBrandPage 获得品牌分页
 func (h *ProductBrandHandler) GetBrandPage(c *gin.Context) {
-	var r req.ProductBrandPageReq
+	var r product2.ProductBrandPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -96,7 +96,7 @@ func (h *ProductBrandHandler) GetBrandPage(c *gin.Context) {
 
 // GetBrandList 获得品牌列表
 func (h *ProductBrandHandler) GetBrandList(c *gin.Context) {
-	var r req.ProductBrandListReq
+	var r product2.ProductBrandListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

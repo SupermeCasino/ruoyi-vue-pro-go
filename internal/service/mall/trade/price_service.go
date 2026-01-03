@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"sort"
 
-	apiResp "github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	productModel "github.com/wxlbd/ruoyi-mall-go/internal/model/product"
 	promotionModel "github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
-	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -199,7 +199,7 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 
 	// 3. 构建 SKU Map
 	skuMap := make(map[int64]*productModel.ProductSku)
-	skuRespMap := make(map[int64]*apiResp.ProductSkuResp)
+	skuRespMap := make(map[int64]*product2.ProductSkuResp)
 	spuIDs := make([]int64, 0)
 	for _, sku := range skuList {
 		skuMap[sku.ID] = &productModel.ProductSku{

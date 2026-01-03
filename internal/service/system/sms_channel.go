@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -24,7 +23,7 @@ func NewSmsChannelService(q *query.Query) *SmsChannelService {
 }
 
 // CreateSmsChannel 创建短信渠道
-func (s *SmsChannelService) CreateSmsChannel(ctx context.Context, req *req.SmsChannelSaveReq) (int64, error) {
+func (s *SmsChannelService) CreateSmsChannel(ctx context.Context, req *system.SmsChannelSaveReq) (int64, error) {
 
 	channel := &model.SystemSmsChannel{
 		Signature:   req.Signature,
@@ -40,7 +39,7 @@ func (s *SmsChannelService) CreateSmsChannel(ctx context.Context, req *req.SmsCh
 }
 
 // UpdateSmsChannel 更新短信渠道
-func (s *SmsChannelService) UpdateSmsChannel(ctx context.Context, req *req.SmsChannelSaveReq) error {
+func (s *SmsChannelService) UpdateSmsChannel(ctx context.Context, req *system.SmsChannelSaveReq) error {
 	c := s.q.SystemSmsChannel
 	_, err := c.WithContext(ctx).Where(c.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -69,7 +68,7 @@ func (s *SmsChannelService) DeleteSmsChannel(ctx context.Context, id int64) erro
 }
 
 // GetSmsChannel 获得短信渠道
-func (s *SmsChannelService) GetSmsChannel(ctx context.Context, id int64) (*resp.SmsChannelRespVO, error) {
+func (s *SmsChannelService) GetSmsChannel(ctx context.Context, id int64) (*system.SmsChannelRespVO, error) {
 	c := s.q.SystemSmsChannel
 	item, err := c.WithContext(ctx).Where(c.ID.Eq(id)).First()
 	if err != nil {
@@ -79,7 +78,7 @@ func (s *SmsChannelService) GetSmsChannel(ctx context.Context, id int64) (*resp.
 }
 
 // GetSmsChannelPage 获得短信渠道分页
-func (s *SmsChannelService) GetSmsChannelPage(ctx context.Context, req *req.SmsChannelPageReq) (*pagination.PageResult[*resp.SmsChannelRespVO], error) {
+func (s *SmsChannelService) GetSmsChannelPage(ctx context.Context, req *system.SmsChannelPageReq) (*pagination.PageResult[*system.SmsChannelRespVO], error) {
 	c := s.q.SystemSmsChannel
 	qb := c.WithContext(ctx)
 
@@ -100,21 +99,21 @@ func (s *SmsChannelService) GetSmsChannelPage(ctx context.Context, req *req.SmsC
 		return nil, err
 	}
 
-	return &pagination.PageResult[*resp.SmsChannelRespVO]{
-		List:  lo.Map(list, func(item *model.SystemSmsChannel, _ int) *resp.SmsChannelRespVO { return s.convertResp(item) }),
+	return &pagination.PageResult[*system.SmsChannelRespVO]{
+		List:  lo.Map(list, func(item *model.SystemSmsChannel, _ int) *system.SmsChannelRespVO { return s.convertResp(item) }),
 		Total: total,
 	}, nil
 }
 
 // GetSimpleSmsChannelList 获得短信渠道精简列表
-func (s *SmsChannelService) GetSimpleSmsChannelList(ctx context.Context) ([]*resp.SmsChannelSimpleRespVO, error) {
+func (s *SmsChannelService) GetSimpleSmsChannelList(ctx context.Context) ([]*system.SmsChannelSimpleRespVO, error) {
 	c := s.q.SystemSmsChannel
 	list, err := c.WithContext(ctx).Order(c.ID.Asc()).Find()
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *model.SystemSmsChannel, _ int) *resp.SmsChannelSimpleRespVO {
-		return &resp.SmsChannelSimpleRespVO{
+	return lo.Map(list, func(item *model.SystemSmsChannel, _ int) *system.SmsChannelSimpleRespVO {
+		return &system.SmsChannelSimpleRespVO{
 			ID:        item.ID,
 			Signature: item.Signature,
 			Code:      item.Code,
@@ -122,8 +121,8 @@ func (s *SmsChannelService) GetSimpleSmsChannelList(ctx context.Context) ([]*res
 	}), nil
 }
 
-func (s *SmsChannelService) convertResp(item *model.SystemSmsChannel) *resp.SmsChannelRespVO {
-	return &resp.SmsChannelRespVO{
+func (s *SmsChannelService) convertResp(item *model.SystemSmsChannel) *system.SmsChannelRespVO {
+	return &system.SmsChannelRespVO{
 		ID:          item.ID,
 		Signature:   item.Signature,
 		Code:        item.Code,

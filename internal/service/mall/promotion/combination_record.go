@@ -5,23 +5,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
-	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	prodSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
+	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 type CombinationRecordService interface {
 	// App
-	GetCombinationRecordSummary(ctx context.Context) (*resp.AppCombinationRecordSummaryRespVO, error)
-	GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*pagination.PageResult[*resp.AppCombinationRecordRespVO], error)
-	GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*resp.AppCombinationRecordDetailRespVO, error)
+	GetCombinationRecordSummary(ctx context.Context) (*promotion2.AppCombinationRecordSummaryRespVO, error)
+	GetCombinationRecordPage(ctx context.Context, userID int64, req promotion2.AppCombinationRecordPageReq) (*pagination.PageResult[*promotion2.AppCombinationRecordRespVO], error)
+	GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*promotion2.AppCombinationRecordDetailRespVO, error)
 	GetLatestCombinationRecordList(ctx context.Context, count int) ([]*promotion.PromotionCombinationRecord, error)
 	GetHeadCombinationRecordList(ctx context.Context, activityID int64, status int, count int) ([]*promotion.PromotionCombinationRecord, error)
 
@@ -29,8 +29,8 @@ type CombinationRecordService interface {
 	ValidateCombinationRecord(ctx context.Context, userID int64, activityID int64, headID int64, skuID int64, count int) (*promotion.PromotionCombinationActivity, *promotion.PromotionCombinationProduct, error)
 	CreateCombinationRecord(ctx context.Context, record *promotion.PromotionCombinationRecord) (int64, error)
 	// Admin
-	GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error)
-	GetCombinationRecordSummaryAdmin(ctx context.Context) (*resp.CombinationRecordSummaryVO, error)
+	GetCombinationRecordPageAdmin(ctx context.Context, req *promotion2.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error)
+	GetCombinationRecordSummaryAdmin(ctx context.Context) (*promotion2.CombinationRecordSummaryVO, error)
 	ExpireCombinationRecord(ctx context.Context) error
 	GetCombinationRecord(ctx context.Context, id int64) (*promotion.PromotionCombinationRecord, error)
 	GetCombinationRecordByOrderId(ctx context.Context, userID int64, orderID int64) (*promotion.PromotionCombinationRecord, error)
@@ -43,7 +43,7 @@ type CombinationTradeOrderService interface {
 
 // CombinationSocialClientService 跨模块依赖接口
 type CombinationSocialClientService interface {
-	SendWxaSubscribeMessage(ctx context.Context, r *req.SocialWxaSubscribeMessageSendReq) error
+	SendWxaSubscribeMessage(ctx context.Context, r *system.SocialWxaSubscribeMessageSendReq) error
 }
 
 type combinationRecordService struct {
@@ -76,7 +76,7 @@ func NewCombinationRecordService(
 	}
 }
 
-func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Context) (*resp.AppCombinationRecordSummaryRespVO, error) {
+func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Context) (*promotion2.AppCombinationRecordSummaryRespVO, error) {
 	q := s.q.PromotionCombinationRecord
 
 	count, err := q.WithContext(ctx).Distinct(q.UserID).Count()
@@ -84,7 +84,7 @@ func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Conte
 		return nil, err
 	}
 	if count == 0 {
-		return &resp.AppCombinationRecordSummaryRespVO{UserCount: 0, Avatars: []string{}}, nil
+		return &promotion2.AppCombinationRecordSummaryRespVO{UserCount: 0, Avatars: []string{}}, nil
 	}
 
 	records, err := s.GetLatestCombinationRecordList(ctx, consts.AppCombinationRecordSummaryAvatarCount)
@@ -99,13 +99,13 @@ func (s *combinationRecordService) GetCombinationRecordSummary(ctx context.Conte
 		}
 	}
 
-	return &resp.AppCombinationRecordSummaryRespVO{
+	return &promotion2.AppCombinationRecordSummaryRespVO{
 		UserCount: count,
 		Avatars:   avatars,
 	}, nil
 }
 
-func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context, userID int64, req req.AppCombinationRecordPageReq) (*pagination.PageResult[*resp.AppCombinationRecordRespVO], error) {
+func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context, userID int64, req promotion2.AppCombinationRecordPageReq) (*pagination.PageResult[*promotion2.AppCombinationRecordRespVO], error) {
 	q := s.q.PromotionCombinationRecord
 	do := q.WithContext(ctx).Where(q.UserID.Eq(userID))
 	if req.Status != 0 {
@@ -116,9 +116,9 @@ func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context,
 		return nil, err
 	}
 
-	result := make([]*resp.AppCombinationRecordRespVO, len(list))
+	result := make([]*promotion2.AppCombinationRecordRespVO, len(list))
 	for i, item := range list {
-		result[i] = &resp.AppCombinationRecordRespVO{
+		result[i] = &promotion2.AppCombinationRecordRespVO{
 			ID:               item.ID,
 			ActivityID:       item.ActivityID,
 			Nickname:         item.Nickname,
@@ -134,10 +134,10 @@ func (s *combinationRecordService) GetCombinationRecordPage(ctx context.Context,
 			CombinationPrice: item.CombinationPrice,
 		}
 	}
-	return &pagination.PageResult[*resp.AppCombinationRecordRespVO]{List: result, Total: total}, nil
+	return &pagination.PageResult[*promotion2.AppCombinationRecordRespVO]{List: result, Total: total}, nil
 }
 
-func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*resp.AppCombinationRecordDetailRespVO, error) {
+func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Context, userID int64, id int64) (*promotion2.AppCombinationRecordDetailRespVO, error) {
 	// 1. 查找这条拼团记录
 	record, err := s.GetCombinationRecord(ctx, id)
 	if err != nil {
@@ -163,10 +163,10 @@ func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Contex
 
 	// 拼接数据
 	allRecords := append([]*promotion.PromotionCombinationRecord{headRecord}, memberRecords...)
-	memberVOs := make([]resp.AppCombinationRecordRespVO, len(allRecords))
+	memberVOs := make([]promotion2.AppCombinationRecordRespVO, len(allRecords))
 	var userOrderId int64
 	for i, r := range allRecords {
-		memberVOs[i] = resp.AppCombinationRecordRespVO{
+		memberVOs[i] = promotion2.AppCombinationRecordRespVO{
 			ID:               r.ID,
 			ActivityID:       r.ActivityID,
 			Nickname:         r.Nickname,
@@ -186,7 +186,7 @@ func (s *combinationRecordService) GetCombinationRecordDetail(ctx context.Contex
 		}
 	}
 
-	return &resp.AppCombinationRecordDetailRespVO{
+	return &promotion2.AppCombinationRecordDetailRespVO{
 		HeadRecord:    memberVOs[0],
 		MemberRecords: memberVOs,
 		OrderID:       userOrderId,
@@ -335,7 +335,7 @@ func (s *combinationRecordService) updateCombinationRecordWhenCreate(ctx context
 
 func (s *combinationRecordService) sendCombinationResultMessage(ctx context.Context, record *promotion.PromotionCombinationRecord) {
 	// 构建并发送模版消息
-	_ = s.socialSvc.SendWxaSubscribeMessage(ctx, &req.SocialWxaSubscribeMessageSendReq{
+	_ = s.socialSvc.SendWxaSubscribeMessage(ctx, &system.SocialWxaSubscribeMessageSendReq{
 		UserID:        record.UserID,
 		UserType:      consts.UserTypeMember,
 		TemplateTitle: "COMBINATION_SUCCESS",
@@ -348,7 +348,7 @@ func (s *combinationRecordService) sendCombinationResultMessage(ctx context.Cont
 }
 
 // GetCombinationRecordPageAdmin 获得拼团记录分页 (Admin)
-func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Context, req *req.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error) {
+func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Context, req *promotion2.CombinationRecordPageReq) (*pagination.PageResult[*promotion.PromotionCombinationRecord], error) {
 	q := s.q.PromotionCombinationRecord
 	do := q.WithContext(ctx)
 
@@ -368,7 +368,7 @@ func (s *combinationRecordService) GetCombinationRecordPageAdmin(ctx context.Con
 
 // GetCombinationRecordSummaryAdmin 获得拼团记录的概要信息 (Admin)
 // 对齐 Java: CombinationRecordController#getCombinationRecordSummary
-func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.Context) (*resp.CombinationRecordSummaryVO, error) {
+func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.Context) (*promotion2.CombinationRecordSummaryVO, error) {
 	q := s.q.PromotionCombinationRecord
 
 	// 1. 获取拼团用户参与数量 (去重)
@@ -389,7 +389,7 @@ func (s *combinationRecordService) GetCombinationRecordSummaryAdmin(ctx context.
 		return nil, err
 	}
 
-	return &resp.CombinationRecordSummaryVO{
+	return &promotion2.CombinationRecordSummaryVO{
 		UserCount:         userCount,
 		SuccessCount:      successCount,
 		VirtualGroupCount: virtualGroupCount,

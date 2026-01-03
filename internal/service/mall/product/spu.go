@@ -3,8 +3,8 @@ package product
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	product3 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/product"
@@ -33,7 +33,7 @@ func NewProductSpuService(q *query.Query, skuSvc *ProductSkuService, brandSvc *P
 }
 
 // CreateSpu 创建 SPU
-func (s *ProductSpuService) CreateSpu(ctx context.Context, req *req.ProductSpuSaveReq) (int64, error) {
+func (s *ProductSpuService) CreateSpu(ctx context.Context, req *product2.ProductSpuSaveReq) (int64, error) {
 	// 校验分类
 	if err := s.categorySvc.ValidateCategory(ctx, req.CategoryID); err != nil {
 		return 0, err
@@ -89,7 +89,7 @@ func (s *ProductSpuService) CreateSpu(ctx context.Context, req *req.ProductSpuSa
 }
 
 // UpdateSpu 更新 SPU
-func (s *ProductSpuService) UpdateSpu(ctx context.Context, req *req.ProductSpuSaveReq) error {
+func (s *ProductSpuService) UpdateSpu(ctx context.Context, req *product2.ProductSpuSaveReq) error {
 	// 校验存在
 	spu, err := s.validateSpuExists(ctx, req.ID)
 	if err != nil {
@@ -157,7 +157,7 @@ func (s *ProductSpuService) DeleteSpu(ctx context.Context, id int64) error {
 }
 
 // UpdateSpuStatus 更新 SPU 状态
-func (s *ProductSpuService) UpdateSpuStatus(ctx context.Context, req *req.ProductSpuUpdateStatusReq) error {
+func (s *ProductSpuService) UpdateSpuStatus(ctx context.Context, req *product2.ProductSpuUpdateStatusReq) error {
 	if _, err := s.validateSpuExists(ctx, req.ID); err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (s *ProductSpuService) GetSpuDetail(ctx context.Context, id int64) (*produc
 }
 
 // GetSpuPage 获得 SPU 分页
-func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuPageReq) (*pagination.PageResult[*resp.ProductSpuResp], error) {
+func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *product2.ProductSpuPageReq) (*pagination.PageResult[*product2.ProductSpuResp], error) {
 	u := s.q.ProductSpu
 	q := u.WithContext(ctx)
 
@@ -236,11 +236,11 @@ func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *req.ProductSpuP
 		return nil, err
 	}
 
-	resList := lo.Map(list, func(item *product.ProductSpu, _ int) *resp.ProductSpuResp {
+	resList := lo.Map(list, func(item *product.ProductSpu, _ int) *product2.ProductSpuResp {
 		return s.convertResp(item, nil)
 	})
 
-	return &pagination.PageResult[*resp.ProductSpuResp]{
+	return &pagination.PageResult[*product2.ProductSpuResp]{
 		List:  resList,
 		Total: total,
 	}, nil
@@ -270,7 +270,7 @@ func (s *ProductSpuService) GetTabsCount(ctx context.Context) (map[int]int64, er
 }
 
 // GetSpuPageForApp 获得商品 SPU 分页 (App)
-func (s *ProductSpuService) GetSpuPageForApp(ctx context.Context, req *req.AppProductSpuPageReq) (*pagination.PageResult[*product.ProductSpu], error) {
+func (s *ProductSpuService) GetSpuPageForApp(ctx context.Context, req *product3.AppProductSpuPageReq) (*pagination.PageResult[*product.ProductSpu], error) {
 	u := s.q.ProductSpu
 	q := u.WithContext(ctx).Where(u.Status.Eq(1)) // 上架状态 Status=1
 
@@ -315,9 +315,9 @@ func (s *ProductSpuService) GetSpuPageForApp(ctx context.Context, req *req.AppPr
 }
 
 // GetSpuList 获得 SPU 列表 (Simple) - 对齐Java版本逻辑
-func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*resp.ProductSpuResp, error) {
+func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*product2.ProductSpuResp, error) {
 	if len(ids) == 0 {
-		return []*resp.ProductSpuResp{}, nil
+		return []*product2.ProductSpuResp{}, nil
 	}
 
 	// 查询SPU数据
@@ -333,7 +333,7 @@ func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*res
 	}
 
 	// 按照输入ID顺序构建结果，对齐Java版本的convertList(ids, spuMap::get)逻辑
-	result := make([]*resp.ProductSpuResp, 0, len(ids))
+	result := make([]*product2.ProductSpuResp, 0, len(ids))
 	for _, id := range ids {
 		if spu, exists := spuMap[id]; exists {
 			// 合并销量：实际销量 + 虚拟销量，对齐Java版本逻辑
@@ -346,13 +346,13 @@ func (s *ProductSpuService) GetSpuList(ctx context.Context, ids []int64) ([]*res
 }
 
 // GetSpuSimpleList 获得 SPU 精简列表
-func (s *ProductSpuService) GetSpuSimpleList(ctx context.Context) ([]*resp.ProductSpuSimpleResp, error) {
+func (s *ProductSpuService) GetSpuSimpleList(ctx context.Context) ([]*product2.ProductSpuSimpleResp, error) {
 	list, err := s.q.ProductSpu.WithContext(ctx).Where(s.q.ProductSpu.Status.Eq(0)).Order(s.q.ProductSpu.Sort.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *product.ProductSpu, _ int) *resp.ProductSpuSimpleResp {
-		return &resp.ProductSpuSimpleResp{
+	return lo.Map(list, func(item *product.ProductSpu, _ int) *product2.ProductSpuSimpleResp {
+		return &product2.ProductSpuSimpleResp{
 			ID:          item.ID,
 			Name:        item.Name,
 			PicURL:      item.PicURL,
@@ -403,7 +403,7 @@ func (s *ProductSpuService) validateSpuExists(ctx context.Context, id int64) (*p
 }
 
 // initSpuFromSkus 计算 SPU 价格库存
-func (s *ProductSpuService) initSpuFromSkus(spu *product.ProductSpu, skus []*req.ProductSkuSaveReq) {
+func (s *ProductSpuService) initSpuFromSkus(spu *product.ProductSpu, skus []*product2.ProductSkuSaveReq) {
 	if len(skus) == 0 {
 		return
 	}
@@ -432,10 +432,10 @@ func (s *ProductSpuService) initSpuFromSkus(spu *product.ProductSpu, skus []*req
 	spu.Stock = totalStock
 }
 
-func (s *ProductSpuService) convertResp(spu *product.ProductSpu, skus []*product.ProductSku) *resp.ProductSpuResp {
-	skuResps := make([]*resp.ProductSkuResp, 0)
+func (s *ProductSpuService) convertResp(spu *product.ProductSpu, skus []*product.ProductSku) *product2.ProductSpuResp {
+	skuResps := make([]*product2.ProductSkuResp, 0)
 	if len(skus) > 0 {
-		skuResps = lo.Map(skus, func(item *product.ProductSku, _ int) *resp.ProductSkuResp {
+		skuResps = lo.Map(skus, func(item *product.ProductSku, _ int) *product2.ProductSkuResp {
 			return s.skuSvc.convertSkuResp(item)
 		})
 	}
@@ -451,7 +451,7 @@ func (s *ProductSpuService) convertResp(spu *product.ProductSpu, skus []*product
 		deliveryTypes = []int{}
 	}
 
-	return &resp.ProductSpuResp{
+	return &product2.ProductSpuResp{
 		ID:                 spu.ID,
 		Name:               spu.Name,
 		Keyword:            spu.Keyword,

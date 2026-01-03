@@ -1,8 +1,7 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -32,7 +31,7 @@ func NewBargainRecordHandler(
 
 // GetBargainRecordPage 获得砍价记录分页
 func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
-	var r req.BargainRecordPageReq
+	var r promotion2.BargainRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -45,8 +44,8 @@ func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 		return
 	}
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.BargainRecordResp]{
-			List:  []resp.BargainRecordResp{},
+		response.WriteSuccess(c, pagination.PageResult[promotion2.BargainRecordResp]{
+			List:  []promotion2.BargainRecordResp{},
 			Total: pageResult.Total,
 		})
 		return
@@ -65,7 +64,7 @@ func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 	activityMap, _ := h.activitySvc.GetBargainActivityMap(c, activityIds)
 
 	// 4. Assemble VOs
-	list := make([]resp.BargainRecordResp, len(pageResult.List))
+	list := make([]promotion2.BargainRecordResp, len(pageResult.List))
 	for i, item := range pageResult.List {
 		nickname := ""
 		avatar := ""
@@ -78,7 +77,7 @@ func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 			activityName = act.Name
 		}
 
-		list[i] = resp.BargainRecordResp{
+		list[i] = promotion2.BargainRecordResp{
 			ID:                item.ID,
 			UserID:            item.UserID,
 			UserNickname:      nickname,
@@ -88,15 +87,15 @@ func (h *BargainRecordHandler) GetBargainRecordPage(c *gin.Context) {
 			SpuID:             item.SpuID,
 			SkuID:             item.SkuID,
 			BargainFirstPrice: item.BargainFirstPrice,
-			BargainPrice:      item.BargainPrice,
+			BargainCurPrice:   item.BargainPrice,
 			Status:            item.Status,
 			EndTime:           item.EndTime,
-			OrderID:           item.OrderID,
+			OrderID:           &item.OrderID,
 			CreateTime:        item.CreateTime,
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.BargainRecordResp]{
+	response.WriteSuccess(c, pagination.PageResult[promotion2.BargainRecordResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

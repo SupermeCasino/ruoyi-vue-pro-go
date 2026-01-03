@@ -1,7 +1,7 @@
 package trade
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -20,7 +20,7 @@ func NewAppTradeAfterSaleHandler(svc *trade.TradeAfterSaleService) *AppTradeAfte
 
 // CreateAfterSale 申请售后
 func (h *AppTradeAfterSaleHandler) CreateAfterSale(c *gin.Context) {
-	var r req.AppAfterSaleCreateReq
+	var r trade2.AppAfterSaleCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -35,7 +35,7 @@ func (h *AppTradeAfterSaleHandler) CreateAfterSale(c *gin.Context) {
 
 // GetAfterSalePage 获得售后分页
 func (h *AppTradeAfterSaleHandler) GetAfterSalePage(c *gin.Context) {
-	var r req.AppAfterSalePageReq
+	var r trade2.AppAfterSalePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -75,7 +75,7 @@ func (h *AppTradeAfterSaleHandler) CancelAfterSale(c *gin.Context) {
 
 // DeliveryAfterSale 退回货物 (Submit Logistics)
 func (h *AppTradeAfterSaleHandler) DeliveryAfterSale(c *gin.Context) {
-	var r req.AppAfterSaleDeliveryReq
+	var r trade2.AppAfterSaleDeliveryReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return

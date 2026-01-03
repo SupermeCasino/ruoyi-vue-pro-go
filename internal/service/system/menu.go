@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 )
@@ -21,7 +20,7 @@ func NewMenuService(q *query.Query) *MenuService {
 }
 
 // CreateMenu 创建菜单
-func (s *MenuService) CreateMenu(ctx context.Context, req *req.MenuCreateReq) (int64, error) {
+func (s *MenuService) CreateMenu(ctx context.Context, req *system.MenuCreateReq) (int64, error) {
 	// 校验父菜单存在
 	if err := s.checkParentMenu(ctx, req.ParentID); err != nil {
 		return 0, err
@@ -54,7 +53,7 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *req.MenuCreateReq) (i
 }
 
 // UpdateMenu 更新菜单
-func (s *MenuService) UpdateMenu(ctx context.Context, req *req.MenuUpdateReq) error {
+func (s *MenuService) UpdateMenu(ctx context.Context, req *system.MenuUpdateReq) error {
 	m := s.q.SystemMenu
 	// 1. 校验存在
 	if _, err := m.WithContext(ctx).Where(m.ID.Eq(req.ID)).First(); err != nil {
@@ -168,7 +167,7 @@ func (s *MenuService) checkMenuNameUnique(ctx context.Context, name string, pare
 }
 
 // GetMenuList 获取菜单列表
-func (s *MenuService) GetMenuList(ctx context.Context, req *req.MenuListReq) ([]*resp.MenuResp, error) {
+func (s *MenuService) GetMenuList(ctx context.Context, req *system.MenuListReq) ([]*system.MenuResp, error) {
 	m := s.q.SystemMenu
 	qb := m.WithContext(ctx)
 
@@ -189,9 +188,9 @@ func (s *MenuService) GetMenuList(ctx context.Context, req *req.MenuListReq) ([]
 	}
 
 	// DO -> DTO
-	var res []*resp.MenuResp
+	var res []*system.MenuResp
 	for _, item := range list {
-		res = append(res, &resp.MenuResp{
+		res = append(res, &system.MenuResp{
 			ID:            item.ID,
 			ParentID:      item.ParentID,
 			Name:          item.Name,
@@ -213,7 +212,7 @@ func (s *MenuService) GetMenuList(ctx context.Context, req *req.MenuListReq) ([]
 }
 
 // GetSimpleMenuList 获取精简菜单列表 (仅返回开启状态的菜单)
-func (s *MenuService) GetSimpleMenuList(ctx context.Context) ([]*resp.MenuSimpleResp, error) {
+func (s *MenuService) GetSimpleMenuList(ctx context.Context) ([]*system.MenuSimpleResp, error) {
 	m := s.q.SystemMenu
 	// 这里硬编码 Status=0 (CommonStatusEnum.ENABLE)
 	list, err := m.WithContext(ctx).Where(m.Status.Eq(0)).Order(m.Sort, m.ID).Find()
@@ -221,9 +220,9 @@ func (s *MenuService) GetSimpleMenuList(ctx context.Context) ([]*resp.MenuSimple
 		return nil, err
 	}
 
-	var res []*resp.MenuSimpleResp
+	var res []*system.MenuSimpleResp
 	for _, item := range list {
-		res = append(res, &resp.MenuSimpleResp{
+		res = append(res, &system.MenuSimpleResp{
 			ID:       item.ID,
 			ParentID: item.ParentID,
 			Name:     item.Name,
@@ -234,14 +233,14 @@ func (s *MenuService) GetSimpleMenuList(ctx context.Context) ([]*resp.MenuSimple
 }
 
 // GetMenu 获取菜单详情
-func (s *MenuService) GetMenu(ctx context.Context, id int64) (*resp.MenuResp, error) {
+func (s *MenuService) GetMenu(ctx context.Context, id int64) (*system.MenuResp, error) {
 	m := s.q.SystemMenu
 	item, err := m.WithContext(ctx).Where(m.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
 
-	return &resp.MenuResp{
+	return &system.MenuResp{
 		ID:            item.ID,
 		ParentID:      item.ParentID,
 		Name:          item.Name,
@@ -261,18 +260,18 @@ func (s *MenuService) GetMenu(ctx context.Context, id int64) (*resp.MenuResp, er
 }
 
 // BuildMenuTree 构建菜单树
-func (s *MenuService) BuildMenuTree(menus []*resp.MenuResp) []resp.MenuVO {
+func (s *MenuService) BuildMenuTree(menus []*system.MenuResp) []system.MenuVO {
 	if len(menus) == 0 {
-		return []resp.MenuVO{}
+		return []system.MenuVO{}
 	}
 
 	// 1. 构建 Map 和 根节点列表
-	menuMap := make(map[int64]*resp.MenuVO)
-	var roots []resp.MenuVO
+	menuMap := make(map[int64]*system.MenuVO)
+	var roots []system.MenuVO
 
 	// 先把所有 MenuResp 转为 MenuVO 并存入 Map
 	for _, m := range menus {
-		vo := resp.MenuVO{
+		vo := system.MenuVO{
 			ID:            m.ID,
 			ParentID:      m.ParentID,
 			Name:          m.Name,
@@ -283,7 +282,7 @@ func (s *MenuService) BuildMenuTree(menus []*resp.MenuResp) []resp.MenuVO {
 			Visible:       m.Visible,
 			KeepAlive:     m.KeepAlive,
 			AlwaysShow:    m.AlwaysShow,
-			Children:      make([]resp.MenuVO, 0),
+			Children:      make([]system.MenuVO, 0),
 		}
 		menuMap[m.ID] = &vo
 	}
@@ -317,8 +316,8 @@ func (s *MenuService) BuildMenuTree(menus []*resp.MenuResp) []resp.MenuVO {
 	return s.buildTreeRecursive(menus, 0)
 }
 
-func (s *MenuService) buildTreeRecursive(list []*resp.MenuResp, parentId int64) []resp.MenuVO {
-	var tree []resp.MenuVO
+func (s *MenuService) buildTreeRecursive(list []*system.MenuResp, parentId int64) []system.MenuVO {
+	var tree []system.MenuVO
 	for _, item := range list {
 		// 过滤按钮类型 (type=3), 只保留目录(type=1)和菜单(type=2)
 		// Java: MenuTypeEnum.BUTTON = 3, 在 convert 时被过滤
@@ -327,7 +326,7 @@ func (s *MenuService) buildTreeRecursive(list []*resp.MenuResp, parentId int64) 
 		}
 
 		if item.ParentID == parentId {
-			node := resp.MenuVO{
+			node := system.MenuVO{
 				ID:            item.ID,
 				ParentID:      item.ParentID,
 				Name:          item.Name,
@@ -350,9 +349,9 @@ func (s *MenuService) buildTreeRecursive(list []*resp.MenuResp, parentId int64) 
 }
 
 // GetMenuListByIds 根据ID列表获取菜单
-func (s *MenuService) GetMenuListByIds(ctx context.Context, ids []int64) ([]*resp.MenuResp, error) {
+func (s *MenuService) GetMenuListByIds(ctx context.Context, ids []int64) ([]*system.MenuResp, error) {
 	if len(ids) == 0 {
-		return []*resp.MenuResp{}, nil
+		return []*system.MenuResp{}, nil
 	}
 	m := s.q.SystemMenu
 	list, err := m.WithContext(ctx).Where(m.ID.In(ids...)).Order(m.Sort, m.ID).Find()
@@ -360,10 +359,10 @@ func (s *MenuService) GetMenuListByIds(ctx context.Context, ids []int64) ([]*res
 		return nil, err
 	}
 
-	var res []*resp.MenuResp
+	var res []*system.MenuResp
 	for _, item := range list {
 		modelPerm := item.Permission // Capture value
-		res = append(res, &resp.MenuResp{
+		res = append(res, &system.MenuResp{
 			ID:            item.ID,
 			ParentID:      item.ParentID,
 			Name:          item.Name,

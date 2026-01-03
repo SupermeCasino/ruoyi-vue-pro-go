@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
-	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/common"
+	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 
 	"gorm.io/gorm"
@@ -25,9 +26,9 @@ func NewMemberStatisticsRepository(q *query.Query, db *gorm.DB) *MemberStatistic
 }
 
 // GetMemberSummary 获得会员统计摘要
-func (r *MemberStatisticsRepositoryImpl) GetMemberSummary(ctx context.Context) (*resp.MemberSummaryRespVO, error) {
+func (r *MemberStatisticsRepositoryImpl) GetMemberSummary(ctx context.Context) (*member.MemberSummaryRespVO, error) {
 	var totalCount int64
-	err := r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err := r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Where("deleted = ?", false).
 		Count(&totalCount).Error
 	if err != nil {
@@ -39,7 +40,7 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberSummary(ctx context.Context) (
 	todayBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	todayEnd := todayBegin.Add(24 * time.Hour)
 	var todayCount int64
-	err = r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err = r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Where("deleted = ?", false).
 		Where("create_time BETWEEN ? AND ?", todayBegin, todayEnd).
 		Count(&todayCount).Error
@@ -47,20 +48,20 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberSummary(ctx context.Context) (
 		return nil, err
 	}
 
-	return &resp.MemberSummaryRespVO{
+	return &member.MemberSummaryRespVO{
 		TotalUserCount: totalCount,
 		RegisterCount:  todayCount,
 	}, nil
 }
 
 // GetMemberAreaStatisticsList 按照省份获得会员统计列表
-func (r *MemberStatisticsRepositoryImpl) GetMemberAreaStatisticsList(ctx context.Context) ([]*resp.MemberAreaStatisticsRespVO, error) {
+func (r *MemberStatisticsRepositoryImpl) GetMemberAreaStatisticsList(ctx context.Context) ([]*member.MemberAreaStatisticsRespVO, error) {
 	var results []struct {
 		AreaID int   `gorm:"column:area_id"`
 		Count  int64 `gorm:"column:count"`
 	}
 
-	err := r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err := r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Select("area_id, COUNT(*) as count").
 		Where("deleted = ?", false).
 		Group("area_id").
@@ -69,9 +70,9 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberAreaStatisticsList(ctx context
 		return nil, err
 	}
 
-	stats := make([]*resp.MemberAreaStatisticsRespVO, 0, len(results))
+	stats := make([]*member.MemberAreaStatisticsRespVO, 0, len(results))
 	for _, r := range results {
-		stats = append(stats, &resp.MemberAreaStatisticsRespVO{
+		stats = append(stats, &member.MemberAreaStatisticsRespVO{
 			AreaName:  "", // 需要从地区表获取，暂空
 			UserCount: r.Count,
 		})
@@ -80,13 +81,13 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberAreaStatisticsList(ctx context
 }
 
 // GetMemberSexStatisticsList 按照性别获得会员统计列表
-func (r *MemberStatisticsRepositoryImpl) GetMemberSexStatisticsList(ctx context.Context) ([]*resp.MemberSexStatisticsRespVO, error) {
+func (r *MemberStatisticsRepositoryImpl) GetMemberSexStatisticsList(ctx context.Context) ([]*member.MemberSexStatisticsRespVO, error) {
 	var results []struct {
 		Sex   int   `gorm:"column:sex"`
 		Count int64 `gorm:"column:count"`
 	}
 
-	err := r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err := r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Select("sex, COUNT(*) as count").
 		Where("deleted = ?", false).
 		Group("sex").
@@ -102,13 +103,13 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberSexStatisticsList(ctx context.
 		2: "女",
 	}
 
-	stats := make([]*resp.MemberSexStatisticsRespVO, 0, len(results))
+	stats := make([]*member.MemberSexStatisticsRespVO, 0, len(results))
 	for _, r := range results {
 		sexName := sexMap[r.Sex]
 		if sexName == "" {
 			sexName = "未知"
 		}
-		stats = append(stats, &resp.MemberSexStatisticsRespVO{
+		stats = append(stats, &member.MemberSexStatisticsRespVO{
 			SexName:   sexName,
 			UserCount: r.Count,
 		})
@@ -117,13 +118,13 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberSexStatisticsList(ctx context.
 }
 
 // GetMemberTerminalStatisticsList 按照终端获得会员统计列表
-func (r *MemberStatisticsRepositoryImpl) GetMemberTerminalStatisticsList(ctx context.Context) ([]*resp.MemberTerminalStatisticsRespVO, error) {
+func (r *MemberStatisticsRepositoryImpl) GetMemberTerminalStatisticsList(ctx context.Context) ([]*member.MemberTerminalStatisticsRespVO, error) {
 	var results []struct {
 		Terminal int   `gorm:"column:register_terminal"`
 		Count    int64 `gorm:"column:count"`
 	}
 
-	err := r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err := r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Select("register_terminal, COUNT(*) as count").
 		Where("deleted = ?", false).
 		Group("register_terminal").
@@ -140,13 +141,13 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberTerminalStatisticsList(ctx con
 		4: "App",
 	}
 
-	stats := make([]*resp.MemberTerminalStatisticsRespVO, 0, len(results))
+	stats := make([]*member.MemberTerminalStatisticsRespVO, 0, len(results))
 	for _, r := range results {
 		terminalName := terminalMap[r.Terminal]
 		if terminalName == "" {
 			terminalName = "其他"
 		}
-		stats = append(stats, &resp.MemberTerminalStatisticsRespVO{
+		stats = append(stats, &member.MemberTerminalStatisticsRespVO{
 			TerminalName: terminalName,
 			UserCount:    r.Count,
 		})
@@ -155,14 +156,14 @@ func (r *MemberStatisticsRepositoryImpl) GetMemberTerminalStatisticsList(ctx con
 }
 
 // GetUserCountComparison 获得用户数量对比
-func (r *MemberStatisticsRepositoryImpl) GetUserCountComparison(ctx context.Context) (*resp.DataComparisonRespVO[resp.MemberCountRespVO], error) {
+func (r *MemberStatisticsRepositoryImpl) GetUserCountComparison(ctx context.Context) (*common.DataComparisonRespVO[member.MemberCountRespVO], error) {
 	now := time.Now()
 
 	// 今日数据
 	todayBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	todayEnd := todayBegin.Add(24 * time.Hour)
 	var todayCount int64
-	err := r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err := r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Where("deleted = ?", false).
 		Where("create_time BETWEEN ? AND ?", todayBegin, todayEnd).
 		Count(&todayCount).Error
@@ -174,7 +175,7 @@ func (r *MemberStatisticsRepositoryImpl) GetUserCountComparison(ctx context.Cont
 	yesterdayBegin := todayBegin.AddDate(0, 0, -1)
 	yesterdayEnd := todayBegin
 	var yesterdayCount int64
-	err = r.db.WithContext(ctx).Model(&member.MemberUser{}).
+	err = r.db.WithContext(ctx).Model(&memberModel.MemberUser{}).
 		Where("deleted = ?", false).
 		Where("create_time BETWEEN ? AND ?", yesterdayBegin, yesterdayEnd).
 		Count(&yesterdayCount).Error
@@ -182,16 +183,16 @@ func (r *MemberStatisticsRepositoryImpl) GetUserCountComparison(ctx context.Cont
 		return nil, err
 	}
 
-	return &resp.DataComparisonRespVO[resp.MemberCountRespVO]{
-		Summary:    &resp.MemberCountRespVO{UserCount: todayCount},
-		Comparison: &resp.MemberCountRespVO{UserCount: yesterdayCount},
+	return &common.DataComparisonRespVO[member.MemberCountRespVO]{
+		Summary:    &member.MemberCountRespVO{UserCount: todayCount},
+		Comparison: &member.MemberCountRespVO{UserCount: yesterdayCount},
 	}, nil
 }
 
 // GetMemberRegisterCountList 获得会员注册数量列表
-func (r *MemberStatisticsRepositoryImpl) GetMemberRegisterCountList(ctx context.Context, beginTime, endTime time.Time) ([]*resp.MemberRegisterCountRespVO, error) {
+func (r *MemberStatisticsRepositoryImpl) GetMemberRegisterCountList(ctx context.Context, beginTime, endTime time.Time) ([]*member.MemberRegisterCountRespVO, error) {
 	// 需要按日期分组统计，暂返回空
-	return []*resp.MemberRegisterCountRespVO{}, nil
+	return []*member.MemberRegisterCountRespVO{}, nil
 }
 
 // ============ ApiAccessLogStatisticsRepository 实现 ============

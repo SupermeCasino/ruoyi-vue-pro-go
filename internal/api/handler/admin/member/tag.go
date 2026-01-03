@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +22,7 @@ func NewMemberTagHandler(svc *memberSvc.MemberTagService) *MemberTagHandler {
 
 // CreateTag 创建用户标签
 func (h *MemberTagHandler) CreateTag(c *gin.Context) {
-	var r req.MemberTagCreateReq
+	var r member.MemberTagCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +37,7 @@ func (h *MemberTagHandler) CreateTag(c *gin.Context) {
 
 // UpdateTag 更新用户标签
 func (h *MemberTagHandler) UpdateTag(c *gin.Context) {
-	var r req.MemberTagUpdateReq
+	var r member.MemberTagUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +82,7 @@ func (h *MemberTagHandler) GetTag(c *gin.Context) {
 
 // GetTagPage 获得用户标签分页
 func (h *MemberTagHandler) GetTagPage(c *gin.Context) {
-	var r req.MemberTagPageReq
+	var r member.MemberTagPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -93,7 +92,7 @@ func (h *MemberTagHandler) GetTagPage(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *memberModel.MemberTag, _ int) *resp.MemberTagResp {
+	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *memberModel.MemberTag, _ int) *member.MemberTagResp {
 		return h.convertResp(item)
 	}))
 }
@@ -105,18 +104,18 @@ func (h *MemberTagHandler) GetSimpleTagList(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WriteSuccess(c, lo.Map(list, func(item *memberModel.MemberTag, _ int) *resp.MemberTagResp {
+	response.WriteSuccess(c, lo.Map(list, func(item *memberModel.MemberTag, _ int) *member.MemberTagResp {
 		return h.convertResp(item)
 	}))
 }
 
-func (h *MemberTagHandler) convertResp(item *memberModel.MemberTag) *resp.MemberTagResp {
+func (h *MemberTagHandler) convertResp(item *memberModel.MemberTag) *member.MemberTagResp {
 	if item == nil {
 		return nil
 	}
-	return &resp.MemberTagResp{
-		ID:        item.ID,
-		Name:      item.Name,
+	return &member.MemberTagResp{
+		ID:         item.ID,
+		Name:       item.Name,
 		CreateTime: item.CreateTime,
 	}
 }

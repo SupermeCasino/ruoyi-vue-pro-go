@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	productDto "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"gorm.io/gorm"
@@ -23,7 +22,7 @@ func NewProductStatisticsRepository(q *query.Query, db *gorm.DB) *ProductStatist
 }
 
 // GetByDateRange 查询指定日期范围的商品统计数据
-func (r *ProductStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*resp.ProductStatisticsRespVO, error) {
+func (r *ProductStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, beginTime, endTime time.Time) ([]*productDto.ProductStatisticsRespVO, error) {
 	ps := r.q.ProductStatistics
 
 	// 查询指定时间范围内的统计数据，按 SPU 聚合
@@ -60,9 +59,9 @@ func (r *ProductStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, be
 	}
 
 	// 转换为 VO
-	voList := make([]*resp.ProductStatisticsRespVO, 0, len(results))
+	voList := make([]*productDto.ProductStatisticsRespVO, 0, len(results))
 	for _, r := range results {
-		voList = append(voList, &resp.ProductStatisticsRespVO{
+		voList = append(voList, &productDto.ProductStatisticsRespVO{
 			SpuID:         r.SpuID,
 			BrowseCount:   r.BrowseCount,
 			FavoriteCount: r.FavoriteCount,
@@ -75,7 +74,7 @@ func (r *ProductStatisticsRepositoryImpl) GetByDateRange(ctx context.Context, be
 }
 
 // GetSummaryByDateRange 获取指定日期范围的汇总统计数据
-func (r *ProductStatisticsRepositoryImpl) GetSummaryByDateRange(ctx context.Context, beginTime, endTime time.Time) (*resp.ProductStatisticsRespVO, error) {
+func (r *ProductStatisticsRepositoryImpl) GetSummaryByDateRange(ctx context.Context, beginTime, endTime time.Time) (*productDto.ProductStatisticsRespVO, error) {
 	ps := r.q.ProductStatistics
 
 	var result struct {
@@ -101,7 +100,7 @@ func (r *ProductStatisticsRepositoryImpl) GetSummaryByDateRange(ctx context.Cont
 		return nil, err
 	}
 
-	return &resp.ProductStatisticsRespVO{
+	return &productDto.ProductStatisticsRespVO{
 		BrowseCount:   result.BrowseCount,
 		FavoriteCount: result.FavoriteCount,
 		BuyCount:      result.BuyCount,
@@ -110,7 +109,7 @@ func (r *ProductStatisticsRepositoryImpl) GetSummaryByDateRange(ctx context.Cont
 }
 
 // GetPageGroupBySpuId 分页获取按 SPU 分组的统计数据
-func (r *ProductStatisticsRepositoryImpl) GetPageGroupBySpuId(ctx context.Context, reqVO *req.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[*resp.ProductStatisticsRespVO], error) {
+func (r *ProductStatisticsRepositoryImpl) GetPageGroupBySpuId(ctx context.Context, reqVO *productDto.ProductStatisticsReqVO, pageParam *pagination.PageParam) (*pagination.PageResult[*productDto.ProductStatisticsRespVO], error) {
 	// 先获取所有数据，然后内存分页
 	list, err := r.GetByDateRange(ctx, reqVO.Times[0], reqVO.Times[1])
 	if err != nil {
@@ -127,7 +126,7 @@ func (r *ProductStatisticsRepositoryImpl) GetPageGroupBySpuId(ctx context.Contex
 		end = int(total)
 	}
 
-	return &pagination.PageResult[*resp.ProductStatisticsRespVO]{
+	return &pagination.PageResult[*productDto.ProductStatisticsRespVO]{
 		List:  list[start:end],
 		Total: total,
 	}, nil

@@ -3,8 +3,8 @@ package pay
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	adminPay "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	payWalletSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
@@ -46,7 +46,7 @@ func (h *AppPayOrderHandler) GetOrder(c *gin.Context) {
 	}
 
 	// 转换为对齐后的 VO
-	vo := &resp.PayOrderResp{
+	vo := &adminPay.PayOrderResp{
 		ID:              order.ID,
 		AppID:           order.AppID,
 		ChannelID:       order.ChannelID,
@@ -68,8 +68,6 @@ func (h *AppPayOrderHandler) GetOrder(c *gin.Context) {
 		ChannelUserID:   order.ChannelUserID,
 		ChannelOrderNo:  order.ChannelOrderNo,
 		CreateTime:      order.CreateTime,
-		UpdateTime:      order.UpdateTime,
-		Creator:         order.Creator,
 		Updater:         order.Updater,
 	}
 
@@ -78,7 +76,7 @@ func (h *AppPayOrderHandler) GetOrder(c *gin.Context) {
 
 // Submit 提交支付订单
 func (h *AppPayOrderHandler) Submit(c *gin.Context) {
-	var r req.AppPayOrderSubmitReq
+	var r pay.AppPayOrderSubmitReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, "参数错误")
 		return

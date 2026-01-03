@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -28,7 +28,7 @@ func NewMemberPointRecordService(q *query.Query, memberUserSvc *MemberUserServic
 
 // GetPointRecordPage 获得用户积分记录分页
 // 对应 Java: MemberPointRecordServiceImpl.getPointRecordPage(MemberPointRecordPageReqVO)
-func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *req.MemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
+func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *member2.MemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
 	q := s.q.MemberPointRecord.WithContext(ctx)
 
 	// 根据用户昵称查询出用户 ids
@@ -49,9 +49,8 @@ func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *re
 	}
 
 	// 业务类型过滤
-	if r.BizType != "" {
-		// 注意：Java 中 BizType 是 Integer，这里需要转换
-		// 暂不处理字符串转换，如果前端传入数字字符串可在 handler 层转换
+	if r.BizType != nil {
+		q = q.Where(s.q.MemberPointRecord.BizType.Eq(*r.BizType))
 	}
 
 	// 标题模糊查询
@@ -70,7 +69,7 @@ func (s *MemberPointRecordService) GetPointRecordPage(ctx context.Context, r *re
 
 // GetAppPointRecordPage 获得用户App积分记录分页
 // 对应 Java: MemberPointRecordServiceImpl.getPointRecordPage(Long userId, AppMemberPointRecordPageReqVO)
-func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, userId int64, r *req.AppMemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
+func (s *MemberPointRecordService) GetAppPointRecordPage(ctx context.Context, userId int64, r *member2.AppMemberPointRecordPageReq) (*pagination.PageResult[*member.MemberPointRecord], error) {
 	q := s.q.MemberPointRecord.WithContext(ctx).Where(s.q.MemberPointRecord.UserID.Eq(userId))
 
 	// 增减状态过滤

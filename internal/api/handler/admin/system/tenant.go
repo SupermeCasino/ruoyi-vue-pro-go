@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 
@@ -39,7 +39,7 @@ func (h *TenantHandler) GetTenantSimpleList(c *gin.Context) {
 // CreateTenant 创建租户
 // @Router /system/tenant/create [post]
 func (h *TenantHandler) CreateTenant(c *gin.Context) {
-	var r req.TenantCreateReq
+	var r system2.TenantCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -55,7 +55,7 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 // UpdateTenant 更新租户
 // @Router /system/tenant/update [put]
 func (h *TenantHandler) UpdateTenant(c *gin.Context) {
-	var r req.TenantUpdateReq
+	var r system2.TenantUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -114,7 +114,7 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 // GetTenantPage 获得租户分页
 // @Router /system/tenant/page [get]
 func (h *TenantHandler) GetTenantPage(c *gin.Context) {
-	var r req.TenantPageReq
+	var r system2.TenantPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -130,7 +130,7 @@ func (h *TenantHandler) GetTenantPage(c *gin.Context) {
 // ExportTenantExcel 导出租户 Excel
 // @Router /system/tenant/export-excel [get]
 func (h *TenantHandler) ExportTenantExcel(c *gin.Context) {
-	var r req.TenantExportReq
+	var r system2.TenantExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

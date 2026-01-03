@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -26,7 +26,7 @@ func NewSmsLogHandler(smsLogSvc *system.SmsLogService) *SmsLogHandler {
 
 // GetSmsLogPage 获得短信日志分页
 func (h *SmsLogHandler) GetSmsLogPage(c *gin.Context) {
-	var req req.SmsLogPageReq
+	var req system2.SmsLogPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -41,7 +41,7 @@ func (h *SmsLogHandler) GetSmsLogPage(c *gin.Context) {
 
 // ExportSmsLogExcel 导出短信日志 Excel
 func (h *SmsLogHandler) ExportSmsLogExcel(c *gin.Context) {
-	var req req.SmsLogPageReq
+	var req system2.SmsLogPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

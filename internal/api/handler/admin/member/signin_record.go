@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -24,7 +23,7 @@ func NewMemberSignInRecordHandler(svc *memberSvc.MemberSignInRecordService, user
 
 // GetSignInRecordPage 获得签到记录分页
 func (h *MemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
-	var r req.MemberSignInRecordPageReq
+	var r member.MemberSignInRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -40,19 +39,19 @@ func (h *MemberSignInRecordHandler) GetSignInRecordPage(c *gin.Context) {
 	userIds := lo.Map(pageResult.List, func(item *memberModel.MemberSignInRecord, _ int) int64 { return item.UserID })
 	userMap, _ := h.userSvc.GetUserMap(c, userIds)
 
-	respList := lo.Map(pageResult.List, func(item *memberModel.MemberSignInRecord, _ int) resp.MemberSignInRecordResp {
+	respList := lo.Map(pageResult.List, func(item *memberModel.MemberSignInRecord, _ int) member.MemberSignInRecordResp {
 		nickname := ""
 		if u, ok := userMap[item.UserID]; ok {
 			nickname = u.Nickname
 		}
-		return resp.MemberSignInRecordResp{
+		return member.MemberSignInRecordResp{
 			ID:         item.ID,
 			UserID:     item.UserID,
 			Nickname:   nickname,
 			Day:        item.Day,
 			Point:      item.Point,
 			Experience: item.Experience,
-			CreateTime:  item.CreateTime,
+			CreateTime: item.CreateTime,
 		}
 	})
 

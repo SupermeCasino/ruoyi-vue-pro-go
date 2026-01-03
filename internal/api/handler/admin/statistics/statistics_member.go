@@ -1,8 +1,7 @@
 package statistics
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
@@ -47,7 +46,7 @@ func (h *MemberStatisticsHandler) GetMemberSummary(c *gin.Context) {
 // GetMemberAnalyse 获得会员分析数据
 // GET /statistics/member/analyse
 func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
-	var reqVO req.MemberAnalyseReqVO
+	var reqVO member2.MemberAnalyseReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -101,7 +100,7 @@ func (h *MemberStatisticsHandler) GetMemberAnalyse(c *gin.Context) {
 	}
 
 	// 2. 拼接返回
-	result := &resp.MemberAnalyseRespVO{
+	result := &member2.MemberAnalyseRespVO{
 		VisitUserCount: visitUserCount,
 		OrderUserCount: orderUserCount,
 		PayUserCount:   payUserCount,
@@ -163,7 +162,7 @@ func (h *MemberStatisticsHandler) GetUserCountComparison(c *gin.Context) {
 // GetMemberRegisterCountList 获得会员注册数量列表
 // GET /statistics/member/register-count-list
 func (h *MemberStatisticsHandler) GetMemberRegisterCountList(c *gin.Context) {
-	var reqVO req.MemberAnalyseReqVO
+	var reqVO member2.MemberAnalyseReqVO
 	if err := c.ShouldBindQuery(&reqVO); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

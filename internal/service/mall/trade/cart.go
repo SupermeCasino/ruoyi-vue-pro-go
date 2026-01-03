@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/samber/lo"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -30,7 +30,7 @@ func NewCartService(q *query.Query, skuSvc *productSvc.ProductSkuService, spuSvc
 }
 
 // AddCart 添加购物车
-func (s *CartService) AddCart(ctx context.Context, userId int64, r *req.AppCartAddReq) (int64, error) {
+func (s *CartService) AddCart(ctx context.Context, userId int64, r *trade2.AppCartAddReq) (int64, error) {
 	c := s.q.Cart
 	// 查询是否已存在
 	cart, err := c.WithContext(ctx).Where(c.UserID.Eq(userId), c.SkuID.Eq(r.SkuID)).First()
@@ -74,7 +74,7 @@ func (s *CartService) AddCart(ctx context.Context, userId int64, r *req.AppCartA
 }
 
 // UpdateCartCount 更新购物车数量
-func (s *CartService) UpdateCartCount(ctx context.Context, userId int64, r *req.AppCartUpdateCountReq) error {
+func (s *CartService) UpdateCartCount(ctx context.Context, userId int64, r *trade2.AppCartUpdateCountReq) error {
 	c := s.q.Cart
 	cart, err := c.WithContext(ctx).Where(c.ID.Eq(r.ID), c.UserID.Eq(userId)).First()
 	if err != nil {
@@ -96,14 +96,14 @@ func (s *CartService) UpdateCartCount(ctx context.Context, userId int64, r *req.
 }
 
 // UpdateCartSelected 更新购物车选中状态
-func (s *CartService) UpdateCartSelected(ctx context.Context, userId int64, r *req.AppCartUpdateSelectedReq) error {
+func (s *CartService) UpdateCartSelected(ctx context.Context, userId int64, r *trade2.AppCartUpdateSelectedReq) error {
 	c := s.q.Cart
 	_, err := c.WithContext(ctx).Where(c.UserID.Eq(userId), c.ID.In(r.IDs...)).Update(c.Selected, *r.Selected)
 	return err
 }
 
 // ResetCart 重置购物车（换 SKU）
-func (s *CartService) ResetCart(ctx context.Context, userId int64, r *req.AppCartResetReq) error {
+func (s *CartService) ResetCart(ctx context.Context, userId int64, r *trade2.AppCartResetReq) error {
 	c := s.q.Cart
 	// 校验原购物车项
 	cart, err := c.WithContext(ctx).Where(c.ID.Eq(r.ID), c.UserID.Eq(userId)).First()
@@ -166,7 +166,7 @@ func (s *CartService) GetCartCount(ctx context.Context, userId int64) (int, erro
 }
 
 // GetCartList 获取购物车列表
-func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppCartListResp, error) {
+func (s *CartService) GetCartList(ctx context.Context, userId int64) (*trade2.AppCartListResp, error) {
 	c := s.q.Cart
 	carts, err := c.WithContext(ctx).Where(c.UserID.Eq(userId)).Order(c.UpdateTime.Desc()).Find()
 	if err != nil {
@@ -174,25 +174,25 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 	}
 
 	if len(carts) == 0 {
-		return &resp.AppCartListResp{ValidList: []resp.AppCartItem{}, InvalidList: []resp.AppCartItem{}}, nil
+		return &trade2.AppCartListResp{ValidList: []trade2.AppCartItem{}, InvalidList: []trade2.AppCartItem{}}, nil
 	}
 
 	// 获取 SKU 信息
 	skuIds := lo.Map(carts, func(item *trade.Cart, _ int) int64 { return item.SkuID })
 	skuList, _ := s.skuSvc.GetSkuList(ctx, skuIds)
-	skuMap := lo.KeyBy(skuList, func(item *resp.ProductSkuResp) int64 { return item.ID })
+	skuMap := lo.KeyBy(skuList, func(item *product.ProductSkuResp) int64 { return item.ID })
 
 	// 获取 SPU 信息
 	spuIds := lo.Uniq(lo.Map(carts, func(item *trade.Cart, _ int) int64 { return item.SpuID }))
 	spuList, _ := s.spuSvc.GetSpuList(ctx, spuIds)
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 { return item.ID })
+	spuMap := lo.KeyBy(spuList, func(item *product.ProductSpuResp) int64 { return item.ID })
 
-	var validList, invalidList []resp.AppCartItem
+	var validList, invalidList []trade2.AppCartItem
 	for _, cart := range carts {
 		sku := skuMap[cart.SkuID]
 		spu := spuMap[cart.SpuID]
 
-		item := resp.AppCartItem{
+		item := trade2.AppCartItem{
 			ID:       cart.ID,
 			Count:    cart.Count,
 			Selected: bool(cart.Selected),
@@ -202,7 +202,7 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 		isValid := spu != nil && spu.Status == consts.ProductSpuStatusEnable && sku != nil && sku.Stock > 0
 
 		if spu != nil {
-			item.Spu = &resp.AppCartSpuInfo{
+			item.Spu = &trade2.AppCartSpuInfo{
 				ID:         spu.ID,
 				Name:       spu.Name,
 				PicURL:     spu.PicURL,
@@ -212,13 +212,13 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 			}
 		}
 		if sku != nil {
-			item.Sku = &resp.AppCartSkuInfo{
+			item.Sku = &trade2.AppCartSkuInfo{
 				ID:     sku.ID,
 				PicURL: sku.PicURL,
 				Price:  sku.Price,
 				Stock:  sku.Stock,
-				Properties: lo.Map(sku.Properties, func(p resp.ProductSkuPropertyResp, _ int) resp.AppCartSkuPropertyInfo {
-					return resp.AppCartSkuPropertyInfo{
+				Properties: lo.Map(sku.Properties, func(p product.ProductSkuPropertyResp, _ int) trade2.AppCartSkuPropertyInfo {
+					return trade2.AppCartSkuPropertyInfo{
 						PropertyID:   p.PropertyID,
 						PropertyName: p.PropertyName,
 						ValueID:      p.ValueID,
@@ -236,13 +236,13 @@ func (s *CartService) GetCartList(ctx context.Context, userId int64) (*resp.AppC
 	}
 
 	if validList == nil {
-		validList = []resp.AppCartItem{}
+		validList = []trade2.AppCartItem{}
 	}
 	if invalidList == nil {
-		invalidList = []resp.AppCartItem{}
+		invalidList = []trade2.AppCartItem{}
 	}
 
-	return &resp.AppCartListResp{
+	return &trade2.AppCartListResp{
 		ValidList:   validList,
 		InvalidList: invalidList,
 	}, nil

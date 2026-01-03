@@ -3,8 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -22,7 +21,7 @@ func NewSeckillConfigHandler(svc *promotion.SeckillConfigService) *SeckillConfig
 
 // CreateSeckillConfig 创建
 func (h *SeckillConfigHandler) CreateSeckillConfig(c *gin.Context) {
-	var r req.SeckillConfigCreateReq
+	var r promotion2.SeckillConfigCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
@@ -37,7 +36,7 @@ func (h *SeckillConfigHandler) CreateSeckillConfig(c *gin.Context) {
 
 // UpdateSeckillConfig 更新
 func (h *SeckillConfigHandler) UpdateSeckillConfig(c *gin.Context) {
-	var r req.SeckillConfigUpdateReq
+	var r promotion2.SeckillConfigUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error()) // HTTP 400 Bad Request
 		return
@@ -51,7 +50,7 @@ func (h *SeckillConfigHandler) UpdateSeckillConfig(c *gin.Context) {
 
 // UpdateSeckillConfigStatus 更新状态
 func (h *SeckillConfigHandler) UpdateSeckillConfigStatus(c *gin.Context) {
-	var r req.SeckillConfigUpdateStatusReq
+	var r promotion2.SeckillConfigUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -88,7 +87,7 @@ func (h *SeckillConfigHandler) GetSeckillConfig(c *gin.Context) {
 
 // GetSeckillConfigPage 分页
 func (h *SeckillConfigHandler) GetSeckillConfigPage(c *gin.Context) {
-	var r req.SeckillConfigPageReq
+	var r promotion2.SeckillConfigPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -108,9 +107,9 @@ func (h *SeckillConfigHandler) GetSeckillConfigList(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	var respList []resp.SeckillConfigResp
+	var respList []promotion2.SeckillConfigResp
 	for _, v := range res {
-		respList = append(respList, resp.SeckillConfigResp{
+		respList = append(respList, promotion2.SeckillConfigResp{
 			ID:            v.ID,
 			Name:          v.Name,
 			StartTime:     v.StartTime,
@@ -130,9 +129,9 @@ func (h *SeckillConfigHandler) GetSeckillConfigSimpleList(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	var respList []resp.SeckillConfigSimpleResp
+	var respList []promotion2.SeckillConfigSimpleResp
 	for _, v := range res {
-		respList = append(respList, resp.SeckillConfigSimpleResp{
+		respList = append(respList, promotion2.SeckillConfigSimpleResp{
 			ID:        v.ID,
 			Name:      v.Name,
 			StartTime: v.StartTime,

@@ -1,8 +1,7 @@
 package infra
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -22,7 +21,7 @@ func NewApiErrorLogHandler(svc *infra.ApiErrorLogService) *ApiErrorLogHandler {
 
 // GetApiErrorLogPage 获取API错误日志分页
 func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
-	var r req.ApiErrorLogPageReq
+	var r infra2.ApiErrorLogPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,9 +33,9 @@ func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
 		return
 	}
 
-	list := make([]resp.ApiErrorLogResp, len(pageResult.List))
+	list := make([]infra2.ApiErrorLogResp, len(pageResult.List))
 	for i, log := range pageResult.List {
-		list[i] = resp.ApiErrorLogResp{
+		list[i] = infra2.ApiErrorLogResp{
 			ID:                        log.ID,
 			TraceID:                   log.TraceID,
 			UserID:                    log.UserID,
@@ -63,7 +62,7 @@ func (h *ApiErrorLogHandler) GetApiErrorLogPage(c *gin.Context) {
 		}
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.ApiErrorLogResp]{
+	response.WriteSuccess(c, pagination.PageResult[infra2.ApiErrorLogResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

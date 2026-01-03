@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -24,7 +23,7 @@ func NewMemberPointRecordHandler(svc *memberSvc.MemberPointRecordService, member
 
 // GetPointRecordPage 获得用户积分记录分页
 func (h *MemberPointRecordHandler) GetPointRecordPage(c *gin.Context) {
-	var r req.MemberPointRecordPageReq
+	var r member.MemberPointRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -45,12 +44,12 @@ func (h *MemberPointRecordHandler) GetPointRecordPage(c *gin.Context) {
 		return
 	}
 
-	response.WriteSuccess(c, pagination.NewPageResult(lo.Map(pageResult.List, func(item *memberModel.MemberPointRecord, _ int) *resp.MemberPointRecordResp {
+	response.WriteSuccess(c, pagination.NewPageResult(lo.Map(pageResult.List, func(item *memberModel.MemberPointRecord, _ int) *member.MemberPointRecordResp {
 		nickname := ""
 		if user, ok := userMap[item.UserID]; ok {
 			nickname = user.Nickname
 		}
-		return &resp.MemberPointRecordResp{
+		return &member.MemberPointRecordResp{
 			ID:          item.ID,
 			UserID:      item.UserID,
 			Nickname:    nickname,
@@ -60,7 +59,7 @@ func (h *MemberPointRecordHandler) GetPointRecordPage(c *gin.Context) {
 			Description: item.Description,
 			Point:       item.Point,
 			TotalPoint:  item.TotalPoint,
-			CreateTime:   item.CreateTime,
+			CreateTime:  item.CreateTime,
 		}
 	}), pageResult.Total))
 }

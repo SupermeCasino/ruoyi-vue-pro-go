@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -26,16 +25,16 @@ func NewUserService(q *query.Query, deptSvc *DeptService) *UserService {
 }
 
 // GetSimpleUserList 获取用户精简列表（只包含启用用户）
-func (s *UserService) GetSimpleUserList(ctx context.Context) ([]resp.UserSimpleRespVO, error) {
+func (s *UserService) GetSimpleUserList(ctx context.Context) ([]system.UserSimpleRespVO, error) {
 	u := s.q.SystemUser
 	list, err := u.WithContext(ctx).Where(u.Status.Eq(consts.CommonStatusEnable)).Find()
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]resp.UserSimpleRespVO, 0, len(list))
+	result := make([]system.UserSimpleRespVO, 0, len(list))
 	for _, user := range list {
-		result = append(result, resp.UserSimpleRespVO{
+		result = append(result, system.UserSimpleRespVO{
 			ID:       user.ID,
 			Nickname: user.Nickname,
 		})
@@ -44,7 +43,7 @@ func (s *UserService) GetSimpleUserList(ctx context.Context) ([]resp.UserSimpleR
 }
 
 // CreateUser 创建用户
-func (s *UserService) CreateUser(ctx context.Context, req *req.UserSaveReq) (int64, error) {
+func (s *UserService) CreateUser(ctx context.Context, req *system.UserSaveReq) (int64, error) {
 	// 1. 校验唯一性
 	if err := s.checkUsernameUnique(ctx, req.Username, 0); err != nil {
 		return 0, err
@@ -125,7 +124,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *req.UserSaveReq) (int
 }
 
 // UpdateUser 更新用户
-func (s *UserService) UpdateUser(ctx context.Context, req *req.UserSaveReq) error {
+func (s *UserService) UpdateUser(ctx context.Context, req *system.UserSaveReq) error {
 	// 1. 校验存在
 	u := s.q.SystemUser
 	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).First()
@@ -238,7 +237,7 @@ func (s *UserService) DeleteUser(ctx context.Context, id int64) error {
 
 // GetUser 获得用户详情
 // 对应 Java: AdminUserServiceImpl.getUser + 返回完整角色和岗位信息
-func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileRespVO, error) {
+func (s *UserService) GetUser(ctx context.Context, id int64) (*system.UserProfileRespVO, error) {
 	u := s.q.SystemUser
 	user, err := u.WithContext(ctx).Where(u.ID.Eq(id)).First()
 	if err != nil {
@@ -254,11 +253,11 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 	}
 
 	// 2. 获取角色详情
-	var roles []*resp.RoleSimpleRespVO
+	var roles []*system.RoleSimpleRespVO
 	if len(roleIds) > 0 {
 		roleList, _ := s.q.SystemRole.WithContext(ctx).Where(s.q.SystemRole.ID.In(roleIds...)).Find()
 		for _, role := range roleList {
-			roles = append(roles, &resp.RoleSimpleRespVO{
+			roles = append(roles, &system.RoleSimpleRespVO{
 				ID:   role.ID,
 				Name: role.Name,
 			})
@@ -274,11 +273,11 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 	}
 
 	// 4. 获取岗位详情
-	var posts []*resp.PostSimpleRespVO
+	var posts []*system.PostSimpleRespVO
 	if len(postIds) > 0 {
 		postList, _ := s.q.SystemPost.WithContext(ctx).Where(s.q.SystemPost.ID.In(postIds...)).Find()
 		for _, post := range postList {
-			posts = append(posts, &resp.PostSimpleRespVO{
+			posts = append(posts, &system.PostSimpleRespVO{
 				ID:   post.ID,
 				Name: post.Name,
 			})
@@ -286,12 +285,12 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 	}
 
 	// 5. 获取部门信息
-	var dept *resp.DeptSimpleRespVO
+	var dept *system.DeptSimpleRespVO
 	var deptName string
 	if user.DeptID > 0 {
 		deptInfo, _ := s.q.SystemDept.WithContext(ctx).Where(s.q.SystemDept.ID.Eq(user.DeptID)).First()
 		if deptInfo != nil {
-			dept = &resp.DeptSimpleRespVO{
+			dept = &system.DeptSimpleRespVO{
 				ID:       deptInfo.ID,
 				Name:     deptInfo.Name,
 				ParentID: deptInfo.ParentID,
@@ -300,8 +299,8 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 		}
 	}
 
-	return &resp.UserProfileRespVO{
-		UserRespVO: &resp.UserRespVO{
+	return &system.UserProfileRespVO{
+		UserRespVO: &system.UserRespVO{
 			ID:         user.ID,
 			Username:   user.Username,
 			Nickname:   user.Nickname,
@@ -325,7 +324,7 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (*resp.UserProfileR
 }
 
 // GetUserPage 获得用户分页
-func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*pagination.PageResult[*resp.UserRespVO], error) {
+func (s *UserService) GetUserPage(ctx context.Context, req *system.UserPageReq) (*pagination.PageResult[*system.UserRespVO], error) {
 	u := s.q.SystemUser
 	qb := u.WithContext(ctx)
 
@@ -358,8 +357,8 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 		ur := s.q.SystemUserRole
 		userRoles, _ := ur.WithContext(ctx).Where(ur.RoleID.Eq(req.RoleID)).Find()
 		if len(userRoles) == 0 {
-			return &pagination.PageResult[*resp.UserRespVO]{
-				List:  []*resp.UserRespVO{},
+			return &pagination.PageResult[*system.UserRespVO]{
+				List:  []*system.UserRespVO{},
 				Total: 0,
 			}, nil
 		}
@@ -380,7 +379,7 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 		return nil, err
 	}
 
-	var data []*resp.UserRespVO
+	var data []*system.UserRespVO
 	// 批量获取部门名称
 	deptIDs := make([]int64, 0, len(list))
 	for _, item := range list {
@@ -397,7 +396,7 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 	}
 
 	for _, item := range list {
-		data = append(data, &resp.UserRespVO{
+		data = append(data, &system.UserRespVO{
 			ID:         item.ID,
 			Username:   item.Username,
 			Nickname:   item.Nickname,
@@ -414,21 +413,21 @@ func (s *UserService) GetUserPage(ctx context.Context, req *req.UserPageReq) (*p
 		})
 	}
 
-	return &pagination.PageResult[*resp.UserRespVO]{
+	return &pagination.PageResult[*system.UserRespVO]{
 		List:  data,
 		Total: total,
 	}, nil
 }
 
 // UpdateUserStatus 修改用户状态
-func (s *UserService) UpdateUserStatus(ctx context.Context, req *req.UserUpdateStatusReq) error {
+func (s *UserService) UpdateUserStatus(ctx context.Context, req *system.UserUpdateStatusReq) error {
 	u := s.q.SystemUser
 	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Update(u.Status, req.Status)
 	return err
 }
 
 // UpdateUserPassword 修改用户密码
-func (s *UserService) UpdateUserPassword(ctx context.Context, req *req.UserUpdatePasswordReq) error {
+func (s *UserService) UpdateUserPassword(ctx context.Context, req *system.UserUpdatePasswordReq) error {
 	u := s.q.SystemUser
 	hashedPwd, err := utils.HashPassword(req.Password)
 	if err != nil {
@@ -439,7 +438,7 @@ func (s *UserService) UpdateUserPassword(ctx context.Context, req *req.UserUpdat
 }
 
 // ResetUserPassword 重置用户密码
-func (s *UserService) ResetUserPassword(ctx context.Context, req *req.UserResetPasswordReq) error {
+func (s *UserService) ResetUserPassword(ctx context.Context, req *system.UserResetPasswordReq) error {
 	u := s.q.SystemUser
 	hashedPwd, err := utils.HashPassword(req.Password)
 	if err != nil {
@@ -450,7 +449,7 @@ func (s *UserService) ResetUserPassword(ctx context.Context, req *req.UserResetP
 }
 
 // GetUserList 获得用户列表 (用于导出)
-func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) ([]*resp.UserRespVO, error) {
+func (s *UserService) GetUserList(ctx context.Context, req *system.UserExportReq) ([]*system.UserRespVO, error) {
 	u := s.q.SystemUser
 	qb := u.WithContext(ctx)
 
@@ -478,7 +477,7 @@ func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) (
 		return nil, err
 	}
 
-	var data []*resp.UserRespVO
+	var data []*system.UserRespVO
 	// 批量获取部门名称
 	deptIDs := make([]int64, 0, len(list))
 	for _, item := range list {
@@ -495,7 +494,7 @@ func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) (
 	}
 
 	for _, item := range list {
-		data = append(data, &resp.UserRespVO{
+		data = append(data, &system.UserRespVO{
 			ID:         item.ID,
 			Username:   item.Username,
 			Nickname:   item.Nickname,
@@ -515,8 +514,8 @@ func (s *UserService) GetUserList(ctx context.Context, req *req.UserExportReq) (
 }
 
 // GetImportTemplate 获得导入模板
-func (s *UserService) GetImportTemplate(ctx context.Context) ([]resp.UserImportExcelVO, error) {
-	return []resp.UserImportExcelVO{
+func (s *UserService) GetImportTemplate(ctx context.Context) ([]system.UserImportExcelVO, error) {
+	return []system.UserImportExcelVO{
 		{
 			Username: "zhangsan",
 			Nickname: "张三",

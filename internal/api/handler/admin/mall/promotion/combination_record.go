@@ -1,8 +1,7 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -27,7 +26,7 @@ func NewCombinationRecordHandler(
 
 // GetCombinationRecordPage 获得拼团记录分页
 func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
-	var r req.CombinationRecordPageReq
+	var r promotion2.CombinationRecordPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -40,8 +39,8 @@ func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 		return
 	}
 	if len(pageResult.List) == 0 {
-		response.WriteSuccess(c, pagination.PageResult[resp.CombinationRecordPageItemRespVO]{
-			List:  []resp.CombinationRecordPageItemRespVO{},
+		response.WriteSuccess(c, pagination.PageResult[promotion2.CombinationRecordPageItemRespVO]{
+			List:  []promotion2.CombinationRecordPageItemRespVO{},
 			Total: pageResult.Total,
 		})
 		return
@@ -57,9 +56,9 @@ func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 	activityMap, _ := h.activitySvc.GetCombinationActivityMap(c, activityIds)
 
 	// 4. Assemble
-	list := make([]resp.CombinationRecordPageItemRespVO, len(pageResult.List))
+	list := make([]promotion2.CombinationRecordPageItemRespVO, len(pageResult.List))
 	for i, item := range pageResult.List {
-		vo := resp.CombinationRecordPageItemRespVO{
+		vo := promotion2.CombinationRecordPageItemRespVO{
 			ID:               item.ID,
 			ActivityID:       item.ActivityID,
 			UserID:           item.UserID,
@@ -94,7 +93,7 @@ func (h *CombinationRecordHandler) GetCombinationRecordPage(c *gin.Context) {
 		list[i] = vo
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.CombinationRecordPageItemRespVO]{
+	response.WriteSuccess(c, pagination.PageResult[promotion2.CombinationRecordPageItemRespVO]{
 		List:  list,
 		Total: pageResult.Total,
 	})

@@ -5,12 +5,11 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/utils"
 	"github.com/xuri/excelize/v2"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -27,7 +26,7 @@ func NewUserHandler(svc *system.UserService) *UserHandler {
 
 // CreateUser 创建用户
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var r req.UserSaveReq
+	var r system2.UserSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -42,7 +41,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 // UpdateUser 更新用户
 func (h *UserHandler) UpdateUser(c *gin.Context) {
-	var r req.UserSaveReq
+	var r system2.UserSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -93,7 +92,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 // GetUserPage 获得用户分页
 func (h *UserHandler) GetUserPage(c *gin.Context) {
-	var r req.UserPageReq
+	var r system2.UserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -107,7 +106,7 @@ func (h *UserHandler) GetUserPage(c *gin.Context) {
 }
 
 func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
-	var r req.UserUpdateStatusReq
+	var r system2.UserUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -129,7 +128,7 @@ func (h *UserHandler) GetSimpleUserList(c *gin.Context) {
 }
 
 func (h *UserHandler) ResetUserPassword(c *gin.Context) {
-	var r req.UserResetPasswordReq
+	var r system2.UserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -143,7 +142,7 @@ func (h *UserHandler) ResetUserPassword(c *gin.Context) {
 
 // UpdateUserPassword 修改用户密码
 func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
-	var r req.UserUpdatePasswordReq
+	var r system2.UserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -158,7 +157,7 @@ func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 // ExportUser 导出用户
 // @Router /system/user/export [get]
 func (h *UserHandler) ExportUser(c *gin.Context) {
-	var r req.UserExportReq
+	var r system2.UserExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -287,7 +286,7 @@ func (h *UserHandler) ImportUser(c *gin.Context) {
 
 	// Mock response structure for strictly adhering to API signature first.
 	// Java returns UserImportRespVO
-	respVO := resp.UserImportRespVO{
+	respVO := system2.UserImportRespVO{
 		CreateUsernames:  []string{},
 		UpdateUsernames:  []string{},
 		FailureUsernames: map[string]string{},

@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -20,7 +20,7 @@ func NewDiyTemplateHandler(svc promotion.DiyTemplateService) *DiyTemplateHandler
 }
 
 func (h *DiyTemplateHandler) CreateDiyTemplate(c *gin.Context) {
-	var r req.DiyTemplateCreateReq
+	var r promotion2.DiyTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -34,7 +34,7 @@ func (h *DiyTemplateHandler) CreateDiyTemplate(c *gin.Context) {
 }
 
 func (h *DiyTemplateHandler) UpdateDiyTemplate(c *gin.Context) {
-	var r req.DiyTemplateUpdateReq
+	var r promotion2.DiyTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -76,7 +76,7 @@ func (h *DiyTemplateHandler) GetDiyTemplate(c *gin.Context) {
 }
 
 func (h *DiyTemplateHandler) GetDiyTemplatePage(c *gin.Context) {
-	var r req.DiyTemplatePageReq
+	var r promotion2.DiyTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -123,7 +123,7 @@ func (h *DiyTemplateHandler) UseDiyTemplate(c *gin.Context) {
 // UpdateDiyTemplateProperty 更新装修模板属性
 // Java: DiyTemplateController#updateDiyTemplateProperty
 func (h *DiyTemplateHandler) UpdateDiyTemplateProperty(c *gin.Context) {
-	var r req.DiyTemplatePropertyUpdateReq
+	var r promotion2.DiyTemplatePropertyUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

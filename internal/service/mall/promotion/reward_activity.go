@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
+	promotion3 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/app/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -27,7 +27,7 @@ func NewRewardActivityService(q *query.Query) *RewardActivityService {
 }
 
 // CreateRewardActivity 创建活动
-func (s *RewardActivityService) CreateRewardActivity(ctx context.Context, r *req.PromotionRewardActivityCreateReq) (int64, error) {
+func (s *RewardActivityService) CreateRewardActivity(ctx context.Context, r *promotion2.PromotionRewardActivityCreateReq) (int64, error) {
 	rules, _ := json.Marshal(r.Rules)
 	scopeValues, _ := json.Marshal(r.ProductScopeValues)
 
@@ -47,7 +47,7 @@ func (s *RewardActivityService) CreateRewardActivity(ctx context.Context, r *req
 }
 
 // UpdateRewardActivity 更新活动
-func (s *RewardActivityService) UpdateRewardActivity(ctx context.Context, r *req.PromotionRewardActivityUpdateReq) error {
+func (s *RewardActivityService) UpdateRewardActivity(ctx context.Context, r *promotion2.PromotionRewardActivityUpdateReq) error {
 	_, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(r.ID)).First()
 	if err != nil {
 		return errors.NewBizError(1004002000, "活动不存在")
@@ -97,7 +97,7 @@ func (s *RewardActivityService) CloseRewardActivity(ctx context.Context, id int6
 }
 
 // GetRewardActivity 获得活动详情
-func (s *RewardActivityService) GetRewardActivity(ctx context.Context, id int64) (*resp.PromotionRewardActivityResp, error) {
+func (s *RewardActivityService) GetRewardActivity(ctx context.Context, id int64) (*promotion2.PromotionRewardActivityResp, error) {
 	item, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func (s *RewardActivityService) GetRewardActivity(ctx context.Context, id int64)
 }
 
 // GetRewardActivityPage 获得活动分页
-func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *req.PromotionRewardActivityPageReq) (*pagination.PageResult[*resp.PromotionRewardActivityResp], error) {
+func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *promotion2.PromotionRewardActivityPageReq) (*pagination.PageResult[*promotion2.PromotionRewardActivityResp], error) {
 	q := s.q.PromotionRewardActivity.WithContext(ctx)
 	if r.Name != "" {
 		q = q.Where(s.q.PromotionRewardActivity.Name.Like("%" + r.Name + "%"))
@@ -123,23 +123,23 @@ func (s *RewardActivityService) GetRewardActivityPage(ctx context.Context, r *re
 		return nil, err
 	}
 
-	resList := lo.Map(list, func(item *promotion.PromotionRewardActivity, _ int) *resp.PromotionRewardActivityResp {
+	resList := lo.Map(list, func(item *promotion.PromotionRewardActivity, _ int) *promotion2.PromotionRewardActivityResp {
 		return s.convertResp(item)
 	})
 
-	return &pagination.PageResult[*resp.PromotionRewardActivityResp]{
+	return &pagination.PageResult[*promotion2.PromotionRewardActivityResp]{
 		List:  resList,
 		Total: total,
 	}, nil
 }
 
-func (s *RewardActivityService) convertResp(item *promotion.PromotionRewardActivity) *resp.PromotionRewardActivityResp {
-	var rules []resp.Rule
+func (s *RewardActivityService) convertResp(item *promotion.PromotionRewardActivity) *promotion2.PromotionRewardActivityResp {
+	var rules []promotion2.Rule
 	_ = json.Unmarshal([]byte(item.Rules), &rules)
 	// 解析 productScopeValues（兼容逗号分隔和 JSON 格式）
 	scopeValues, _ := types.ParseListFromCSV[int64](item.ProductScopeValues)
 
-	return &resp.PromotionRewardActivityResp{
+	return &promotion2.PromotionRewardActivityResp{
 		ID:                 item.ID,
 		Name:               item.Name,
 		Status:             item.Status,
@@ -239,7 +239,7 @@ func (s *RewardActivityService) CalculateRewardActivity(ctx context.Context, ite
 		}
 
 		// 3. Check Rules
-		var rules []resp.Rule
+		var rules []promotion2.Rule
 		_ = json.Unmarshal([]byte(activity.Rules), &rules)
 		// Find best rule: Usually sorted or check all.
 		// Rule Limit: Price or Count.
@@ -336,23 +336,23 @@ func (s *RewardActivityService) isSpuMatchActivity(activity *promotion.Promotion
 
 // GetRewardActivityForApp 获得满减送活动（App 端）
 // Java: AppRewardActivityController#getRewardActivity
-func (s *RewardActivityService) GetRewardActivityForApp(ctx context.Context, id int64) (*resp.AppRewardActivityResp, error) {
+func (s *RewardActivityService) GetRewardActivityForApp(ctx context.Context, id int64) (*promotion3.AppRewardActivityResp, error) {
 	activity, err := s.q.PromotionRewardActivity.WithContext(ctx).Where(s.q.PromotionRewardActivity.ID.Eq(id)).First()
 	if err != nil {
 		return nil, nil // 活动不存在返回 null
 	}
 
 	// 解析规则
-	var rules []resp.Rule
+	var rules []promotion2.Rule
 	_ = json.Unmarshal([]byte(activity.Rules), &rules)
 
 	// 解析 productScopeValues（兼容逗号分隔和 JSON 格式）
 	scopeValues, _ := types.ParseListFromCSV[int64](activity.ProductScopeValues)
 
 	// 构建响应，包含规则描述
-	appRules := make([]resp.AppRewardActivityRule, 0, len(rules))
+	appRules := make([]promotion3.AppRewardActivityRule, 0, len(rules))
 	for _, rule := range rules {
-		appRule := resp.AppRewardActivityRule{
+		appRule := promotion3.AppRewardActivityRule{
 			Limit:                    rule.Limit,
 			DiscountPrice:            rule.DiscountPrice,
 			FreeDelivery:             rule.FreeDelivery,
@@ -363,7 +363,7 @@ func (s *RewardActivityService) GetRewardActivityForApp(ctx context.Context, id 
 		appRules = append(appRules, appRule)
 	}
 
-	return &resp.AppRewardActivityResp{
+	return &promotion3.AppRewardActivityResp{
 		ID:                 activity.ID,
 		Status:             activity.Status,
 		Name:               activity.Name,
@@ -378,7 +378,7 @@ func (s *RewardActivityService) GetRewardActivityForApp(ctx context.Context, id 
 
 // GetRewardActivityRuleDescription 获取满减送活动规则描述
 // Java: RewardActivityService#getRewardActivityRuleDescription
-func (s *RewardActivityService) GetRewardActivityRuleDescription(conditionType int, rule *resp.Rule) string {
+func (s *RewardActivityService) GetRewardActivityRuleDescription(conditionType int, rule *promotion2.Rule) string {
 	description := ""
 
 	// 构建条件描述

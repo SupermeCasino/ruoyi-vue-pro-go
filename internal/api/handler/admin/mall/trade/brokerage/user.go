@@ -1,8 +1,7 @@
 package brokerage
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade/brokerage"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
@@ -32,7 +31,7 @@ func NewBrokerageUserHandler(svc *brokerage.BrokerageUserService, memberSvc *mem
 // CreateBrokerageUser 创建分销用户
 // @Router /admin-api/trade/brokerage-user/create [post]
 func (h *BrokerageUserHandler) CreateBrokerageUser(c *gin.Context) {
-	var r req.BrokerageUserCreateReq
+	var r trade.BrokerageUserCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -49,7 +48,7 @@ func (h *BrokerageUserHandler) CreateBrokerageUser(c *gin.Context) {
 // UpdateBindUser 修改推广员
 // @Router /admin-api/trade/brokerage-user/update-bind-user [put]
 func (h *BrokerageUserHandler) UpdateBindUser(c *gin.Context) {
-	var r req.BrokerageUserUpdateBindUserReq
+	var r trade.BrokerageUserUpdateBindUserReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -64,7 +63,7 @@ func (h *BrokerageUserHandler) UpdateBindUser(c *gin.Context) {
 // ClearBindUser 清除推广员
 // @Router /admin-api/trade/brokerage-user/clear-bind-user [put]
 func (h *BrokerageUserHandler) ClearBindUser(c *gin.Context) {
-	var r req.BrokerageUserClearBindUserReq
+	var r trade.BrokerageUserClearBindUserReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -79,7 +78,7 @@ func (h *BrokerageUserHandler) ClearBindUser(c *gin.Context) {
 // UpdateBrokerageEnabled 修改推广资格
 // @Router /admin-api/trade/brokerage-user/update-brokerage-enable [put]
 func (h *BrokerageUserHandler) UpdateBrokerageEnabled(c *gin.Context) {
-	var r req.BrokerageUserUpdateBrokerageEnabledReq
+	var r trade.BrokerageUserUpdateBrokerageEnabledReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -105,7 +104,7 @@ func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 		return
 	}
 
-	res := resp.BrokerageUserResp{
+	res := trade.BrokerageUserResp{
 		ID:               user.ID,
 		BindUserID:       user.BindUserID,
 		BindUserTime:     user.BindUserTime,
@@ -129,7 +128,7 @@ func (h *BrokerageUserHandler) GetBrokerageUser(c *gin.Context) {
 // GetBrokerageUserPage 获得分销用户分页
 // @Router /admin-api/trade/brokerage-user/page [get]
 func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
-	var r req.BrokerageUserPageReq
+	var r trade.BrokerageUserPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteError(c, 400, err.Error())
 		return
@@ -149,9 +148,9 @@ func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
 
 	userMap, _ := h.memberSvc.GetUserMap(c.Request.Context(), userIds)
 
-	list := make([]resp.BrokerageUserResp, len(pageResult.List))
+	list := make([]trade.BrokerageUserResp, len(pageResult.List))
 	for i, u := range pageResult.List {
-		res := resp.BrokerageUserResp{
+		res := trade.BrokerageUserResp{
 			ID:               u.ID,
 			BindUserID:       u.BindUserID,
 			BindUserTime:     u.BindUserTime,
@@ -171,7 +170,7 @@ func (h *BrokerageUserHandler) GetBrokerageUserPage(c *gin.Context) {
 		list[i] = res
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[resp.BrokerageUserResp]{
+	response.WriteSuccess(c, pagination.PageResult[trade.BrokerageUserResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})

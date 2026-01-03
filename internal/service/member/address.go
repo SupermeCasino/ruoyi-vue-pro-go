@@ -3,8 +3,7 @@ package member
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -22,7 +21,7 @@ func NewMemberAddressService(q *query.Query) *MemberAddressService {
 }
 
 // CreateAddress 创建收件地址
-func (s *MemberAddressService) CreateAddress(ctx context.Context, userId int64, req *req.AppAddressCreateReq) (int64, error) {
+func (s *MemberAddressService) CreateAddress(ctx context.Context, userId int64, req *member2.AppAddressCreateReq) (int64, error) {
 	// 如果是默认地址，先将其他地址设为非默认
 	if req.DefaultStatus {
 		if err := s.updateDefaultStatus(ctx, userId, 0); err != nil {
@@ -43,7 +42,7 @@ func (s *MemberAddressService) CreateAddress(ctx context.Context, userId int64, 
 }
 
 // UpdateAddress 更新收件地址
-func (s *MemberAddressService) UpdateAddress(ctx context.Context, userId int64, req *req.AppAddressUpdateReq) error {
+func (s *MemberAddressService) UpdateAddress(ctx context.Context, userId int64, req *member2.AppAddressUpdateReq) error {
 	// 校验存在
 	exists, err := s.exists(ctx, userId, req.ID)
 	if err != nil {
@@ -87,7 +86,7 @@ func (s *MemberAddressService) DeleteAddress(ctx context.Context, userId int64, 
 }
 
 // GetAddress 获得收件地址
-func (s *MemberAddressService) GetAddress(ctx context.Context, userId int64, id int64) (*resp.AppAddressResp, error) {
+func (s *MemberAddressService) GetAddress(ctx context.Context, userId int64, id int64) (*member2.AppAddressResp, error) {
 	u := s.q.MemberAddress
 	address, err := u.WithContext(ctx).Where(u.UserID.Eq(userId), u.ID.Eq(id)).First()
 	if err != nil {
@@ -97,7 +96,7 @@ func (s *MemberAddressService) GetAddress(ctx context.Context, userId int64, id 
 }
 
 // GetDefaultUserAddress 获得默认收件地址
-func (s *MemberAddressService) GetDefaultUserAddress(ctx context.Context, userId int64) (*resp.AppAddressResp, error) {
+func (s *MemberAddressService) GetDefaultUserAddress(ctx context.Context, userId int64) (*member2.AppAddressResp, error) {
 	u := s.q.MemberAddress
 	address, err := u.WithContext(ctx).Where(u.UserID.Eq(userId), u.DefaultStatus.Eq(model.NewBitBool(true))).First()
 	if err != nil {
@@ -107,18 +106,18 @@ func (s *MemberAddressService) GetDefaultUserAddress(ctx context.Context, userId
 }
 
 // GetDefaultAddress 获得默认收件地址（Alias for GetDefaultUserAddress）
-func (s *MemberAddressService) GetDefaultAddress(ctx context.Context, userId int64) (*resp.AppAddressResp, error) {
+func (s *MemberAddressService) GetDefaultAddress(ctx context.Context, userId int64) (*member2.AppAddressResp, error) {
 	return s.GetDefaultUserAddress(ctx, userId)
 }
 
 // GetAddressList 获得收件地址列表
-func (s *MemberAddressService) GetAddressList(ctx context.Context, userId int64) ([]*resp.AppAddressResp, error) {
+func (s *MemberAddressService) GetAddressList(ctx context.Context, userId int64) ([]*member2.AppAddressResp, error) {
 	u := s.q.MemberAddress
 	list, err := u.WithContext(ctx).Where(u.UserID.Eq(userId)).Order(u.ID.Desc()).Find()
 	if err != nil {
 		return nil, err
 	}
-	return lo.Map(list, func(item *member.MemberAddress, _ int) *resp.AppAddressResp {
+	return lo.Map(list, func(item *member.MemberAddress, _ int) *member2.AppAddressResp {
 		return s.convertResp(item)
 	}), nil
 }
@@ -140,8 +139,8 @@ func (s *MemberAddressService) updateDefaultStatus(ctx context.Context, userId i
 	return err
 }
 
-func (s *MemberAddressService) convertResp(item *member.MemberAddress) *resp.AppAddressResp {
-	return &resp.AppAddressResp{
+func (s *MemberAddressService) convertResp(item *member.MemberAddress) *member2.AppAddressResp {
+	return &member2.AppAddressResp{
 		ID:            item.ID,
 		Name:          item.Name,
 		Mobile:        item.Mobile,

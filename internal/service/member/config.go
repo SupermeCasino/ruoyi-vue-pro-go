@@ -3,7 +3,7 @@ package member
 import (
 	"context"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -18,7 +18,7 @@ func NewMemberConfigService(q *query.Query) *MemberConfigService {
 }
 
 // SaveConfig 保存会员配置
-func (s *MemberConfigService) SaveConfig(ctx context.Context, r *req.MemberConfigSaveReq) error {
+func (s *MemberConfigService) SaveConfig(ctx context.Context, r *member2.MemberConfigSaveReq) error {
 	config, err := s.GetConfig(ctx)
 	if err != nil {
 		return err

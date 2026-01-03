@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	pkgErrors "github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -19,7 +19,7 @@ func NewMemberSignInConfigService(q *query.Query) *MemberSignInConfigService {
 }
 
 // CreateSignInConfig 创建签到规则
-func (s *MemberSignInConfigService) CreateSignInConfig(ctx context.Context, r *req.MemberSignInConfigCreateReq) (int64, error) {
+func (s *MemberSignInConfigService) CreateSignInConfig(ctx context.Context, r *member2.MemberSignInConfigCreateReq) (int64, error) {
 	// 校验 day 是否重复
 	if err := s.validateSignInConfigDayDuplicate(ctx, r.Day, 0); err != nil {
 		return 0, err
@@ -36,7 +36,7 @@ func (s *MemberSignInConfigService) CreateSignInConfig(ctx context.Context, r *r
 }
 
 // UpdateSignInConfig 更新签到规则
-func (s *MemberSignInConfigService) UpdateSignInConfig(ctx context.Context, r *req.MemberSignInConfigUpdateReq) error {
+func (s *MemberSignInConfigService) UpdateSignInConfig(ctx context.Context, r *member2.MemberSignInConfigUpdateReq) error {
 	// 校验存在
 	if _, err := s.GetSignInConfig(ctx, r.ID); err != nil {
 		return err

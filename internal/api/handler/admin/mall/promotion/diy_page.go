@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -21,7 +21,7 @@ func NewDiyPageHandler(svc promotion.DiyPageService) *DiyPageHandler {
 }
 
 func (h *DiyPageHandler) CreateDiyPage(c *gin.Context) {
-	var r req.DiyPageCreateReq
+	var r promotion2.DiyPageCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -35,7 +35,7 @@ func (h *DiyPageHandler) CreateDiyPage(c *gin.Context) {
 }
 
 func (h *DiyPageHandler) UpdateDiyPage(c *gin.Context) {
-	var r req.DiyPageUpdateReq
+	var r promotion2.DiyPageUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -77,7 +77,7 @@ func (h *DiyPageHandler) GetDiyPage(c *gin.Context) {
 }
 
 func (h *DiyPageHandler) GetDiyPagePage(c *gin.Context) {
-	var r req.DiyPagePageReq
+	var r promotion2.DiyPagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -135,7 +135,7 @@ func (h *DiyPageHandler) GetDiyPageList(c *gin.Context) {
 // UpdateDiyPageProperty 更新装修页面属性
 // Java: DiyPageController#updateDiyPageProperty
 func (h *DiyPageHandler) UpdateDiyPageProperty(c *gin.Context) {
-	var r req.DiyPagePropertyUpdateReq
+	var r promotion2.DiyPagePropertyUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

@@ -3,7 +3,7 @@ package infra
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -23,7 +23,7 @@ func NewConfigHandler(configSvc *system.ConfigService) *ConfigHandler {
 
 // GetConfigPage 获得参数配置分页
 func (h *ConfigHandler) GetConfigPage(c *gin.Context) {
-	var req req.ConfigPageReq
+	var req system2.ConfigPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -73,7 +73,7 @@ func (h *ConfigHandler) GetConfigKey(c *gin.Context) {
 
 // CreateConfig 创建参数配置
 func (h *ConfigHandler) CreateConfig(c *gin.Context) {
-	var req req.ConfigSaveReq
+	var req system2.ConfigSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -88,7 +88,7 @@ func (h *ConfigHandler) CreateConfig(c *gin.Context) {
 
 // UpdateConfig 更新参数配置
 func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
-	var req req.ConfigSaveReq
+	var req system2.ConfigSaveReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

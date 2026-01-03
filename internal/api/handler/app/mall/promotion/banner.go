@@ -1,7 +1,7 @@
 package promotion
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -24,7 +24,7 @@ func NewAppBannerHandler(svc *promotion.PromotionBannerService) *AppBannerHandle
 // @Param position query int true "位置"
 // @Router /app-api/promotion/banner/list [get]
 func (h *AppBannerHandler) GetBannerList(c *gin.Context) {
-	var r req.AppBannerListReq
+	var r promotion2.AppBannerListReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

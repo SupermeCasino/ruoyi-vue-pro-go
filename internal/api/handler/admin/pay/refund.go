@@ -3,8 +3,7 @@ package pay
 import (
 	"fmt"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	paySvc "github.com/wxlbd/ruoyi-mall-go/internal/service/pay"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -40,7 +39,7 @@ func (h *PayRefundHandler) GetRefund(c *gin.Context) {
 		return
 	}
 	if refund == nil {
-		response.WriteSuccess(c, &resp.PayRefundDetailsResp{})
+		response.WriteSuccess(c, &pay2.PayRefundDetailsResp{})
 		return
 	}
 
@@ -58,7 +57,7 @@ func (h *PayRefundHandler) GetRefund(c *gin.Context) {
 
 // GetRefundPage 获得退款订单分页
 func (h *PayRefundHandler) GetRefundPage(c *gin.Context) {
-	var r req.PayRefundPageReq
+	var r pay2.PayRefundPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -76,12 +75,12 @@ func (h *PayRefundHandler) GetRefundPage(c *gin.Context) {
 	}
 	appMap, _ := h.appSvc.GetAppMap(c, appIds)
 
-	list := make([]*resp.PayRefundResp, 0, len(pageResult.List))
+	list := make([]*pay2.PayRefundResp, 0, len(pageResult.List))
 	for _, item := range pageResult.List {
 		list = append(list, convertRefundResp(item, appMap[item.AppID]))
 	}
 
-	response.WriteSuccess(c, pagination.PageResult[*resp.PayRefundResp]{
+	response.WriteSuccess(c, pagination.PageResult[*pay2.PayRefundResp]{
 		List:  list,
 		Total: pageResult.Total,
 	})
@@ -89,7 +88,7 @@ func (h *PayRefundHandler) GetRefundPage(c *gin.Context) {
 
 // ExportRefundExcel 导出退款订单 Excel
 func (h *PayRefundHandler) ExportRefundExcel(c *gin.Context) {
-	var r req.PayRefundExportReq
+	var r pay2.PayRefundExportReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -174,8 +173,8 @@ func (h *PayRefundHandler) ExportRefundExcel(c *gin.Context) {
 
 // Helpers
 
-func convertRefundResp(refund *pay.PayRefund, app *pay.PayApp) *resp.PayRefundResp {
-	r := &resp.PayRefundResp{}
+func convertRefundResp(refund *pay.PayRefund, app *pay.PayApp) *pay2.PayRefundResp {
+	r := &pay2.PayRefundResp{}
 	copier.Copy(r, refund)
 	if app != nil {
 		r.AppName = app.Name
@@ -183,17 +182,17 @@ func convertRefundResp(refund *pay.PayRefund, app *pay.PayApp) *resp.PayRefundRe
 	return r
 }
 
-func convertRefundDetailsResp(refund *pay.PayRefund, app *pay.PayApp, order *pay.PayOrder) *resp.PayRefundDetailsResp {
-	r := &resp.PayRefundDetailsResp{}
+func convertRefundDetailsResp(refund *pay.PayRefund, app *pay.PayApp, order *pay.PayOrder) *pay2.PayRefundDetailsResp {
+	r := &pay2.PayRefundDetailsResp{}
 	copier.Copy(&r.PayRefundResp, refund)
 	if app != nil {
 		r.AppName = app.Name
-		r.App = &resp.PayAppResp{}
+		r.App = &pay2.PayAppResp{}
 		copier.Copy(r.App, app)
 	}
 	// 填充原订单信息
 	if order != nil {
-		r.Order = &resp.RefundOrder{
+		r.Order = &pay2.RefundOrder{
 			Subject: order.Subject,
 		}
 	}

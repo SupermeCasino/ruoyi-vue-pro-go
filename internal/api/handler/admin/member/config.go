@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -21,7 +20,7 @@ func NewMemberConfigHandler(svc *memberSvc.MemberConfigService) *MemberConfigHan
 
 // SaveConfig 保存会员配置
 func (h *MemberConfigHandler) SaveConfig(c *gin.Context) {
-	var r req.MemberConfigSaveReq
+	var r member.MemberConfigSaveReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -44,7 +43,7 @@ func (h *MemberConfigHandler) GetConfig(c *gin.Context) {
 	response.WriteSuccess(c, h.convertResp(config))
 }
 
-func (h *MemberConfigHandler) convertResp(item *memberModel.MemberConfig) *resp.MemberConfigResp {
+func (h *MemberConfigHandler) convertResp(item *memberModel.MemberConfig) *member.MemberConfigResp {
 	if item == nil {
 		return nil
 	}
@@ -52,7 +51,7 @@ func (h *MemberConfigHandler) convertResp(item *memberModel.MemberConfig) *resp.
 	if item.PointTradeDeductEnable {
 		pointTradeDeductEnable = 1
 	}
-	return &resp.MemberConfigResp{
+	return &member.MemberConfigResp{
 		ID:                        item.ID,
 		PointTradeDeductEnable:    pointTradeDeductEnable,
 		PointTradeDeductUnitPrice: item.PointTradeDeductUnitPrice,

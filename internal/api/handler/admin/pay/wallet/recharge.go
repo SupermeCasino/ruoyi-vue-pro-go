@@ -3,8 +3,7 @@ package wallet
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -24,7 +23,7 @@ func NewPayWalletRechargeHandler(svc *payData.PayWalletRechargeService) *PayWall
 
 // GetWalletRechargePage 获得会员钱包充值分页
 func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
-	var r req.PayWalletRechargePageReq
+	var r pay2.PayWalletRechargePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -36,7 +35,7 @@ func (h *PayWalletRechargeHandler) GetWalletRechargePage(c *gin.Context) {
 	}
 
 	// Convert list
-	newRes := pagination.NewPageResult(make([]*resp.PayWalletRechargeResp, 0, len(res.List)), res.Total)
+	newRes := pagination.NewPageResult(make([]*pay2.PayWalletRechargeResp, 0, len(res.List)), res.Total)
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertRechargeResp(item))
 	}
@@ -59,7 +58,7 @@ func (h *PayWalletRechargeHandler) UpdateWalletRechargePaid(c *gin.Context) {
 	}
 
 	if err := h.svc.UpdateWalletRechargerPaid(c, id, payOrderId); err != nil {
-			response.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -110,11 +109,11 @@ func (h *PayWalletRechargeHandler) UpdateWalletRechargeRefunded(c *gin.Context) 
 	response.WriteSuccess(c, true)
 }
 
-func convertRechargeResp(item *pay.PayWalletRecharge) *resp.PayWalletRechargeResp {
+func convertRechargeResp(item *pay.PayWalletRecharge) *pay2.PayWalletRechargeResp {
 	if item == nil {
 		return nil
 	}
-	return &resp.PayWalletRechargeResp{
+	return &pay2.PayWalletRechargeResp{
 		ID:               item.ID,
 		WalletID:         item.WalletID,
 		TotalPrice:       item.TotalPrice,

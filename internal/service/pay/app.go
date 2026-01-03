@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -29,7 +28,7 @@ func NewPayAppService(q *query.Query, channelSvc *PayChannelService) *PayAppServ
 }
 
 // CreateApp 创建支付应用
-func (s *PayAppService) CreateApp(ctx context.Context, req *req.PayAppCreateReq) (int64, error) {
+func (s *PayAppService) CreateApp(ctx context.Context, req *pay2.PayAppCreateReq) (int64, error) {
 	// 1. 校验 AppKey 唯一
 	if err := s.validateAppKeyUnique(ctx, 0, req.AppKey); err != nil {
 		return 0, err
@@ -53,7 +52,7 @@ func (s *PayAppService) CreateApp(ctx context.Context, req *req.PayAppCreateReq)
 }
 
 // UpdateApp 更新支付应用
-func (s *PayAppService) UpdateApp(ctx context.Context, req *req.PayAppUpdateReq) error {
+func (s *PayAppService) UpdateApp(ctx context.Context, req *pay2.PayAppUpdateReq) error {
 	// 1. 校验存在
 	if _, err := s.validateAppExists(ctx, req.ID); err != nil {
 		return err
@@ -77,7 +76,7 @@ func (s *PayAppService) UpdateApp(ctx context.Context, req *req.PayAppUpdateReq)
 }
 
 // UpdateAppStatus 更新支付应用状态
-func (s *PayAppService) UpdateAppStatus(ctx context.Context, req *req.PayAppUpdateStatusReq) error {
+func (s *PayAppService) UpdateAppStatus(ctx context.Context, req *pay2.PayAppUpdateStatusReq) error {
 	// 1. 校验存在
 	if _, err := s.validateAppExists(ctx, req.ID); err != nil {
 		return err
@@ -132,7 +131,7 @@ func (s *PayAppService) GetAppList(ctx context.Context) ([]*pay.PayApp, error) {
 }
 
 // GetAppPage 获得支付应用分页
-func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) (*pagination.PageResult[*resp.PayAppPageItemResp], error) {
+func (s *PayAppService) GetAppPage(ctx context.Context, req *pay2.PayAppPageReq) (*pagination.PageResult[*pay2.PayAppPageItemResp], error) {
 	q := s.q.PayApp.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PayApp.Name.Like("%" + req.Name + "%"))
@@ -159,10 +158,10 @@ func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) 
 	}
 
 	// 转换结果
-	list := make([]*resp.PayAppPageItemResp, len(apps))
+	list := make([]*pay2.PayAppPageItemResp, len(apps))
 	for i, app := range apps {
-		item := &resp.PayAppPageItemResp{
-			PayAppResp: resp.PayAppResp{
+		item := &pay2.PayAppPageItemResp{
+			PayAppResp: pay2.PayAppResp{
 				ID:                app.ID,
 				AppKey:            app.AppKey,
 				Name:              app.Name,
@@ -184,7 +183,7 @@ func (s *PayAppService) GetAppPage(ctx context.Context, req *req.PayAppPageReq) 
 		list[i] = item
 	}
 
-	return &pagination.PageResult[*resp.PayAppPageItemResp]{
+	return &pagination.PageResult[*pay2.PayAppPageItemResp]{
 		List:  list,
 		Total: total,
 	}, nil

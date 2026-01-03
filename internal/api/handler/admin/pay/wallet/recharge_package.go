@@ -3,8 +3,7 @@ package wallet
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payData "github.com/wxlbd/ruoyi-mall-go/internal/service/pay/wallet"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -24,7 +23,7 @@ func NewPayWalletRechargePackageHandler(svc *payData.PayWalletRechargePackageSer
 
 // CreateWalletRechargePackage 创建充值套餐
 func (h *PayWalletRechargePackageHandler) CreateWalletRechargePackage(c *gin.Context) {
-	var r req.PayWalletRechargePackageCreateReq
+	var r pay2.PayWalletRechargePackageCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -39,14 +38,14 @@ func (h *PayWalletRechargePackageHandler) CreateWalletRechargePackage(c *gin.Con
 
 // UpdateWalletRechargePackage 更新充值套餐
 func (h *PayWalletRechargePackageHandler) UpdateWalletRechargePackage(c *gin.Context) {
-	var r req.PayWalletRechargePackageUpdateReq
+	var r pay2.PayWalletRechargePackageUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
 	err := h.svc.UpdateWalletRechargePackage(c, &r)
 	if err != nil {
-				response.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, true)
@@ -86,7 +85,7 @@ func (h *PayWalletRechargePackageHandler) GetWalletRechargePackage(c *gin.Contex
 
 // GetWalletRechargePackagePage 获得充值套餐分页
 func (h *PayWalletRechargePackageHandler) GetWalletRechargePackagePage(c *gin.Context) {
-	var r req.PayWalletRechargePackagePageReq
+	var r pay2.PayWalletRechargePackagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -98,18 +97,18 @@ func (h *PayWalletRechargePackageHandler) GetWalletRechargePackagePage(c *gin.Co
 	}
 
 	// Convert list
-	newRes := pagination.NewPageResult(make([]*resp.PayWalletRechargePackageResp, 0, len(res.List)), res.Total)
+	newRes := pagination.NewPageResult(make([]*pay2.PayWalletRechargePackageResp, 0, len(res.List)), res.Total)
 	for _, item := range res.List {
 		newRes.List = append(newRes.List, convertPackageResp(item))
 	}
-		response.WriteSuccess(c, newRes)
+	response.WriteSuccess(c, newRes)
 }
 
-func convertPackageResp(item *pay.PayWalletRechargePackage) *resp.PayWalletRechargePackageResp {
+func convertPackageResp(item *pay.PayWalletRechargePackage) *pay2.PayWalletRechargePackageResp {
 	if item == nil {
 		return nil
 	}
-	return &resp.PayWalletRechargePackageResp{
+	return &pay2.PayWalletRechargePackageResp{
 		ID:         item.ID,
 		Name:       item.Name,
 		PayPrice:   item.PayPrice,

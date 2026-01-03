@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	pay2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/pay"
 	payrepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
@@ -60,7 +59,7 @@ func (s *PayOrderService) GetOrderMap(ctx context.Context, ids []int64) (map[int
 }
 
 // GetOrderPage 获得支付订单分页
-func (s *PayOrderService) GetOrderPage(ctx context.Context, req *req.PayOrderPageReq) (*pagination.PageResult[*pay.PayOrder], error) {
+func (s *PayOrderService) GetOrderPage(ctx context.Context, req *pay2.PayOrderPageReq) (*pagination.PageResult[*pay.PayOrder], error) {
 	q := s.q.PayOrder.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayOrder.AppID.Eq(req.AppID))
@@ -96,7 +95,7 @@ func (s *PayOrderService) GetOrderPage(ctx context.Context, req *req.PayOrderPag
 }
 
 // CreateOrder 创建支付单
-func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *req.PayOrderCreateReq) (int64, error) {
+func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *pay2.PayOrderCreateReq) (int64, error) {
 	app, err := s.appSvc.ValidPayAppByAppKey(ctx, reqDTO.AppKey)
 	if err != nil {
 		return 0, err
@@ -132,7 +131,7 @@ func (s *PayOrderService) CreateOrder(ctx context.Context, reqDTO *req.PayOrderC
 // ... GetOrderCountByAppId ...
 
 // SubmitOrder 提交支付订单
-func (s *PayOrderService) SubmitOrder(ctx context.Context, reqVO *req.PayOrderSubmitReq, userIP string) (*resp.PayOrderSubmitResp, error) {
+func (s *PayOrderService) SubmitOrder(ctx context.Context, reqVO *pay2.PayOrderSubmitReq, userIP string) (*pay2.PayOrderSubmitResp, error) {
 	order, err := s.validateOrderCanSubmit(ctx, reqVO.ID)
 	if err != nil {
 		return nil, err
@@ -215,7 +214,7 @@ func (s *PayOrderService) SubmitOrder(ctx context.Context, reqVO *req.PayOrderSu
 	}
 
 	// Return response
-	return &resp.PayOrderSubmitResp{
+	return &pay2.PayOrderSubmitResp{
 		Status:         unifiedResp.Status,
 		DisplayMode:    unifiedResp.DisplayMode,
 		DisplayContent: unifiedResp.DisplayContent,
@@ -674,7 +673,7 @@ func (s *PayOrderService) UpdateOrderRefundPrice(ctx context.Context, id int64, 
 }
 
 // GetOrderList 获得支付订单列表 (Export)
-func (s *PayOrderService) GetOrderList(ctx context.Context, req *req.PayOrderExportReq) ([]*pay.PayOrder, error) {
+func (s *PayOrderService) GetOrderList(ctx context.Context, req *pay2.PayOrderExportReq) ([]*pay.PayOrder, error) {
 	q := s.q.PayOrder.WithContext(ctx)
 	if req.AppID > 0 {
 		q = q.Where(s.q.PayOrder.AppID.Eq(req.AppID))

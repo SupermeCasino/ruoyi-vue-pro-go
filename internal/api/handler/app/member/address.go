@@ -3,7 +3,7 @@ package member
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	member2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +23,7 @@ func NewAppMemberAddressHandler(svc *member.MemberAddressService) *AppMemberAddr
 // CreateAddress 创建收件地址
 // @Router /member/address/create [post]
 func (h *AppMemberAddressHandler) CreateAddress(c *gin.Context) {
-	var r req.AppAddressCreateReq
+	var r member2.AppAddressCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -39,7 +39,7 @@ func (h *AppMemberAddressHandler) CreateAddress(c *gin.Context) {
 // UpdateAddress 更新收件地址
 // @Router /member/address/update [put]
 func (h *AppMemberAddressHandler) UpdateAddress(c *gin.Context) {
-	var r req.AppAddressUpdateReq
+	var r member2.AppAddressUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -78,7 +78,7 @@ func (h *AppMemberAddressHandler) GetAddress(c *gin.Context) {
 	}
 	res, err := h.svc.GetAddress(c, c.GetInt64(context.CtxUserIDKey), id)
 	if err != nil {
-			response.WriteBizError(c, err)
+		response.WriteBizError(c, err)
 		return
 	}
 	response.WriteSuccess(c, res)

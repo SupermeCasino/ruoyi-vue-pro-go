@@ -3,7 +3,7 @@ package promotion
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -27,7 +27,7 @@ func NewBannerHandler(svc *promotion.PromotionBannerService) *BannerHandler {
 // @Success 200 {object} core.Response
 // @Router /admin-api/promotion/banner/create [post]
 func (h *BannerHandler) CreateBanner(c *gin.Context) {
-	var r req.PromotionBannerCreateReq
+	var r promotion2.PromotionBannerCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -48,7 +48,7 @@ func (h *BannerHandler) CreateBanner(c *gin.Context) {
 // @Success 200 {object} core.Response
 // @Router /admin-api/promotion/banner/update [put]
 func (h *BannerHandler) UpdateBanner(c *gin.Context) {
-	var r req.PromotionBannerUpdateReq
+	var r promotion2.PromotionBannerUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -112,7 +112,7 @@ func (h *BannerHandler) GetBanner(c *gin.Context) {
 // @Param status query int false "状态"
 // @Router /admin-api/promotion/banner/page [get]
 func (h *BannerHandler) GetBannerPage(c *gin.Context) {
-	var r req.PromotionBannerPageReq
+	var r promotion2.PromotionBannerPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

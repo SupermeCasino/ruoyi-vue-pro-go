@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	product "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
+	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
@@ -17,20 +17,20 @@ import (
 
 type CombinationActivityService interface {
 	// Admin
-	CreateCombinationActivity(ctx context.Context, req req.CombinationActivityCreateReq) (int64, error)
-	UpdateCombinationActivity(ctx context.Context, req req.CombinationActivityUpdateReq) error
+	CreateCombinationActivity(ctx context.Context, req promotion2.CombinationActivityCreateReq) (int64, error)
+	UpdateCombinationActivity(ctx context.Context, req promotion2.CombinationActivityUpdateReq) error
 	CloseCombinationActivity(ctx context.Context, id int64) error
 	DeleteCombinationActivity(ctx context.Context, id int64) error
-	GetCombinationActivity(ctx context.Context, id int64) (*resp.CombinationActivityRespVO, error)
-	GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*pagination.PageResult[*resp.CombinationActivityPageItemRespVO], error)
+	GetCombinationActivity(ctx context.Context, id int64) (*promotion2.CombinationActivityRespVO, error)
+	GetCombinationActivityPage(ctx context.Context, req promotion2.CombinationActivityPageReq) (*pagination.PageResult[*promotion2.CombinationActivityPageItemRespVO], error)
 	GetCombinationActivityMap(ctx context.Context, ids []int64) (map[int64]*promotion.PromotionCombinationActivity, error)
-	GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*resp.CombinationActivityRespVO, error)
-	GetCombinationActivityListByIdsForApp(ctx context.Context, ids []int64) ([]*resp.AppCombinationActivityRespVO, error)
+	GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*promotion2.CombinationActivityRespVO, error)
+	GetCombinationActivityListByIdsForApp(ctx context.Context, ids []int64) ([]*promotion2.AppCombinationActivityRespVO, error)
 
 	// App
-	GetCombinationActivityList(ctx context.Context, count int) ([]*resp.AppCombinationActivityRespVO, error)
-	GetCombinationActivityPageForApp(ctx context.Context, req pagination.PageParam) (*pagination.PageResult[*resp.AppCombinationActivityRespVO], error)
-	GetCombinationActivityDetail(ctx context.Context, id int64) (*resp.AppCombinationActivityDetailRespVO, error)
+	GetCombinationActivityList(ctx context.Context, count int) ([]*promotion2.AppCombinationActivityRespVO, error)
+	GetCombinationActivityPageForApp(ctx context.Context, req pagination.PageParam) (*pagination.PageResult[*promotion2.AppCombinationActivityRespVO], error)
+	GetCombinationActivityDetail(ctx context.Context, id int64) (*promotion2.AppCombinationActivityDetailRespVO, error)
 	ValidateCombinationActivityCanJoin(ctx context.Context, activityID int64) (*promotion.PromotionCombinationActivity, error)
 	// GetMatchCombinationActivityBySpuId 获取指定 SPU 的进行中的拼团活动
 	GetMatchCombinationActivityBySpuId(ctx context.Context, spuId int64) (*promotion.PromotionCombinationActivity, error)
@@ -50,7 +50,7 @@ func NewCombinationActivityService(q *query.Query, spuSvc *prodSvc.ProductSpuSer
 	}
 }
 
-func (s *combinationActivityService) CreateCombinationActivity(ctx context.Context, req req.CombinationActivityCreateReq) (int64, error) {
+func (s *combinationActivityService) CreateCombinationActivity(ctx context.Context, req promotion2.CombinationActivityCreateReq) (int64, error) {
 	// 1.1 校验商品
 	if err := s.validateProducts(ctx, req.Products); err != nil {
 		return 0, err
@@ -101,7 +101,7 @@ func (s *combinationActivityService) CreateCombinationActivity(ctx context.Conte
 	return activity.ID, err
 }
 
-func (s *combinationActivityService) UpdateCombinationActivity(ctx context.Context, req req.CombinationActivityUpdateReq) error {
+func (s *combinationActivityService) UpdateCombinationActivity(ctx context.Context, req promotion2.CombinationActivityUpdateReq) error {
 	// 1. 校验是否存在
 	old, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(req.ID)).First()
 	if err != nil {
@@ -206,7 +206,7 @@ func (s *combinationActivityService) validateProductConflict(ctx context.Context
 	return nil
 }
 
-func (s *combinationActivityService) GetCombinationActivity(ctx context.Context, id int64) (*resp.CombinationActivityRespVO, error) {
+func (s *combinationActivityService) GetCombinationActivity(ctx context.Context, id int64) (*promotion2.CombinationActivityRespVO, error) {
 	activity, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).First()
 	if err != nil {
 		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
@@ -216,7 +216,7 @@ func (s *combinationActivityService) GetCombinationActivity(ctx context.Context,
 		return nil, err
 	}
 
-	vo := &resp.CombinationActivityRespVO{
+	vo := &promotion2.CombinationActivityRespVO{
 		ID:               activity.ID,
 		Name:             activity.Name,
 		SpuID:            activity.SpuID,
@@ -229,11 +229,11 @@ func (s *combinationActivityService) GetCombinationActivity(ctx context.Context,
 		LimitDuration:    activity.LimitDuration,
 		Status:           activity.Status,
 		CreateTime:       activity.CreateTime,
-		Products:         make([]resp.CombinationProductRespVO, len(prods)),
+		Products:         make([]promotion2.CombinationProductRespVO, len(prods)),
 	}
 
 	for i, p := range prods {
-		vo.Products[i] = resp.CombinationProductRespVO{
+		vo.Products[i] = promotion2.CombinationProductRespVO{
 			SpuID:             p.SpuID,
 			SkuID:             p.SkuID,
 			CombinationPrice:  p.CombinationPrice,
@@ -260,7 +260,7 @@ func (s *combinationActivityService) GetCombinationActivity(ctx context.Context,
 	return vo, nil
 }
 
-func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Context, req req.CombinationActivityPageReq) (*pagination.PageResult[*resp.CombinationActivityPageItemRespVO], error) {
+func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Context, req promotion2.CombinationActivityPageReq) (*pagination.PageResult[*promotion2.CombinationActivityPageItemRespVO], error) {
 	q := s.q.PromotionCombinationActivity.WithContext(ctx)
 	if req.Name != "" {
 		q = q.Where(s.q.PromotionCombinationActivity.Name.Like("%" + req.Name + "%"))
@@ -278,13 +278,13 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 	}
 
 	if len(list) == 0 {
-		return &pagination.PageResult[*resp.CombinationActivityPageItemRespVO]{List: []*resp.CombinationActivityPageItemRespVO{}, Total: total}, nil
+		return &pagination.PageResult[*promotion2.CombinationActivityPageItemRespVO]{List: []*promotion2.CombinationActivityPageItemRespVO{}, Total: total}, nil
 	}
 
 	// 1. 获取 SPU 信息
 	spuIDs := lo.Map(list, func(item *promotion.PromotionCombinationActivity, _ int) int64 { return item.SpuID })
 	spuList, _ := s.spuSvc.GetSpuList(ctx, spuIDs)
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 { return item.ID })
+	spuMap := lo.KeyBy(spuList, func(item *product.ProductSpuResp) int64 { return item.ID })
 
 	// 2. 获取商品最低价
 	activityIDs := lo.Map(list, func(item *promotion.PromotionCombinationActivity, _ int) int64 { return item.ID })
@@ -295,9 +295,9 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 			return p.CombinationPrice
 		}))
 	})
-	prodMap := lo.MapValues(productGroups, func(prods []*promotion.PromotionCombinationProduct, _ int64) []resp.CombinationProductRespVO {
-		return lo.Map(prods, func(p *promotion.PromotionCombinationProduct, _ int) resp.CombinationProductRespVO {
-			return resp.CombinationProductRespVO{
+	prodMap := lo.MapValues(productGroups, func(prods []*promotion.PromotionCombinationProduct, _ int64) []promotion2.CombinationProductRespVO {
+		return lo.Map(prods, func(p *promotion.PromotionCombinationProduct, _ int) promotion2.CombinationProductRespVO {
+			return promotion2.CombinationProductRespVO{
 				SpuID:             p.SpuID,
 				SkuID:             p.SkuID,
 				CombinationPrice:  p.CombinationPrice,
@@ -353,10 +353,10 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 	})
 
 	// 4. 组合结果
-	result := make([]*resp.CombinationActivityPageItemRespVO, len(list))
+	result := make([]*promotion2.CombinationActivityPageItemRespVO, len(list))
 	for i, item := range list {
-		vo := &resp.CombinationActivityPageItemRespVO{
-			CombinationActivityRespVO: resp.CombinationActivityRespVO{
+		vo := &promotion2.CombinationActivityPageItemRespVO{
+			CombinationActivityRespVO: promotion2.CombinationActivityRespVO{
 				ID:               item.ID,
 				Name:             item.Name,
 				SpuID:            item.SpuID,
@@ -386,7 +386,7 @@ func (s *combinationActivityService) GetCombinationActivityPage(ctx context.Cont
 
 		result[i] = vo
 	}
-	return &pagination.PageResult[*resp.CombinationActivityPageItemRespVO]{
+	return &pagination.PageResult[*promotion2.CombinationActivityPageItemRespVO]{
 		List:  result,
 		Total: total,
 	}, nil
@@ -405,9 +405,9 @@ func (s *combinationActivityService) GetCombinationActivityMap(ctx context.Conte
 
 // GetCombinationActivityListByIds 获得拼团活动列表，基于活动编号数组
 // Java: CombinationActivityController#getCombinationActivityListByIds
-func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*resp.CombinationActivityRespVO, error) {
+func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context.Context, ids []int64) ([]*promotion2.CombinationActivityRespVO, error) {
 	if len(ids) == 0 {
-		return []*resp.CombinationActivityRespVO{}, nil
+		return []*promotion2.CombinationActivityRespVO{}, nil
 	}
 
 	// 1. 获得开启的活动列表
@@ -419,7 +419,7 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 		return activity.Status != consts.CommonStatusDisable
 	})
 	if len(enabledList) == 0 {
-		return []*resp.CombinationActivityRespVO{}, nil
+		return []*promotion2.CombinationActivityRespVO{}, nil
 	}
 
 	// 2. 获取 Product 列表
@@ -437,13 +437,13 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(spu *resp.ProductSpuResp) int64 { return spu.ID })
+	spuMap := lo.KeyBy(spuList, func(spu *product.ProductSpuResp) int64 { return spu.ID })
 
 	// 4. 组合返回数据
 	productGroups := lo.GroupBy(products, func(p *promotion.PromotionCombinationProduct) int64 { return p.ActivityID })
-	productMap := lo.MapValues(productGroups, func(prods []*promotion.PromotionCombinationProduct, _ int64) []resp.CombinationProductRespVO {
-		return lo.Map(prods, func(p *promotion.PromotionCombinationProduct, _ int) resp.CombinationProductRespVO {
-			return resp.CombinationProductRespVO{
+	productMap := lo.MapValues(productGroups, func(prods []*promotion.PromotionCombinationProduct, _ int64) []promotion2.CombinationProductRespVO {
+		return lo.Map(prods, func(p *promotion.PromotionCombinationProduct, _ int) promotion2.CombinationProductRespVO {
+			return promotion2.CombinationProductRespVO{
 				SpuID:             p.SpuID,
 				SkuID:             p.SkuID,
 				CombinationPrice:  p.CombinationPrice,
@@ -454,8 +454,8 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 		})
 	})
 
-	result := lo.Map(enabledList, func(activity *promotion.PromotionCombinationActivity, _ int) *resp.CombinationActivityRespVO {
-		vo := &resp.CombinationActivityRespVO{
+	result := lo.Map(enabledList, func(activity *promotion.PromotionCombinationActivity, _ int) *promotion2.CombinationActivityRespVO {
+		vo := &promotion2.CombinationActivityRespVO{
 			ID:               activity.ID,
 			Name:             activity.Name,
 			SpuID:            activity.SpuID,
@@ -478,7 +478,7 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 		}
 		// 补全最低价
 		if len(vo.Products) > 0 {
-			vo.CombinationPrice = lo.Min(lo.Map(vo.Products, func(p resp.CombinationProductRespVO, _ int) int {
+			vo.CombinationPrice = lo.Min(lo.Map(vo.Products, func(p promotion2.CombinationProductRespVO, _ int) int {
 				return p.CombinationPrice
 			}))
 		}
@@ -488,9 +488,9 @@ func (s *combinationActivityService) GetCombinationActivityListByIds(ctx context
 	return result, nil
 }
 
-func (s *combinationActivityService) GetCombinationActivityListByIdsForApp(ctx context.Context, ids []int64) ([]*resp.AppCombinationActivityRespVO, error) {
+func (s *combinationActivityService) GetCombinationActivityListByIdsForApp(ctx context.Context, ids []int64) ([]*promotion2.AppCombinationActivityRespVO, error) {
 	if len(ids) == 0 {
-		return []*resp.AppCombinationActivityRespVO{}, nil
+		return []*promotion2.AppCombinationActivityRespVO{}, nil
 	}
 	list, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.In(ids...)).Find()
 	if err != nil {
@@ -499,7 +499,7 @@ func (s *combinationActivityService) GetCombinationActivityListByIdsForApp(ctx c
 	return s.buildAppActivityList(ctx, list)
 }
 
-func (s *combinationActivityService) GetCombinationActivityList(ctx context.Context, count int) ([]*resp.AppCombinationActivityRespVO, error) {
+func (s *combinationActivityService) GetCombinationActivityList(ctx context.Context, count int) ([]*promotion2.AppCombinationActivityRespVO, error) {
 	q := s.q.PromotionCombinationActivity
 	list, err := q.WithContext(ctx).
 		Where(q.Status.Eq(consts.CommonStatusEnable)). // 使用 CommonStatusEnable 常量替代魔法数字
@@ -513,7 +513,7 @@ func (s *combinationActivityService) GetCombinationActivityList(ctx context.Cont
 	return s.buildAppActivityList(ctx, list)
 }
 
-func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx context.Context, p pagination.PageParam) (*pagination.PageResult[*resp.AppCombinationActivityRespVO], error) {
+func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx context.Context, p pagination.PageParam) (*pagination.PageResult[*promotion2.AppCombinationActivityRespVO], error) {
 	q := s.q.PromotionCombinationActivity
 	list, total, err := q.WithContext(ctx).
 		Where(q.Status.Eq(consts.CommonStatusEnable)). // 使用 CommonStatusEnable 常量替代魔法数字
@@ -527,13 +527,13 @@ func (s *combinationActivityService) GetCombinationActivityPageForApp(ctx contex
 	if err != nil {
 		return nil, err
 	}
-	return &pagination.PageResult[*resp.AppCombinationActivityRespVO]{
+	return &pagination.PageResult[*promotion2.AppCombinationActivityRespVO]{
 		List:  vos,
 		Total: total,
 	}, nil
 }
 
-func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Context, id int64) (*resp.AppCombinationActivityDetailRespVO, error) {
+func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Context, id int64) (*promotion2.AppCombinationActivityDetailRespVO, error) {
 	activity, err := s.q.PromotionCombinationActivity.WithContext(ctx).Where(s.q.PromotionCombinationActivity.ID.Eq(id)).First()
 	if err != nil {
 		return nil, errors.NewBizError(1001006000, "拼团活动不存在")
@@ -552,7 +552,7 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 	successCount, _ := qr.WithContext(ctx).Where(qr.ActivityID.Eq(id), qr.HeadID.Eq(0), qr.Status.Eq(consts.PromotionCombinationRecordStatusSuccess)). // 使用常量替代魔法数字 1
 																				Count() // 使用常量替代魔法数字 1
 
-	detailVo := &resp.AppCombinationActivityDetailRespVO{
+	detailVo := &promotion2.AppCombinationActivityDetailRespVO{
 		ID:               activity.ID,
 		Name:             activity.Name,
 		Status:           activity.Status,
@@ -563,11 +563,11 @@ func (s *combinationActivityService) GetCombinationActivityDetail(ctx context.Co
 		SpuID:            activity.SpuID,
 		TotalLimitCount:  activity.TotalLimitCount,
 		SingleLimitCount: activity.SingleLimitCount,
-		Products:         make([]resp.AppCombinationActivityDetailProduct, len(prods)),
+		Products:         make([]promotion2.AppCombinationActivityDetailProduct, len(prods)),
 	}
 
 	for i, p := range prods {
-		detailVo.Products[i] = resp.AppCombinationActivityDetailProduct{
+		detailVo.Products[i] = promotion2.AppCombinationActivityDetailProduct{
 			SkuID:            p.SkuID,
 			CombinationPrice: p.CombinationPrice,
 		}
@@ -605,7 +605,7 @@ func (s *combinationActivityService) GetMatchCombinationActivityBySpuId(ctx cont
 		First()
 }
 
-func (s *combinationActivityService) validateProducts(ctx context.Context, products []req.CombinationProductBaseVO) error {
+func (s *combinationActivityService) validateProducts(ctx context.Context, products []promotion2.CombinationProductBaseVO) error {
 	for _, p := range products {
 		if _, err := s.spuSvc.GetSpu(ctx, p.SpuID); err != nil {
 			return err
@@ -617,9 +617,9 @@ func (s *combinationActivityService) validateProducts(ctx context.Context, produ
 	return nil
 }
 
-func (s *combinationActivityService) buildAppActivityList(ctx context.Context, list []*promotion.PromotionCombinationActivity) ([]*resp.AppCombinationActivityRespVO, error) {
+func (s *combinationActivityService) buildAppActivityList(ctx context.Context, list []*promotion.PromotionCombinationActivity) ([]*promotion2.AppCombinationActivityRespVO, error) {
 	if len(list) == 0 {
-		return []*resp.AppCombinationActivityRespVO{}, nil
+		return []*promotion2.AppCombinationActivityRespVO{}, nil
 	}
 	spuIds := lo.Map(list, func(item *promotion.PromotionCombinationActivity, _ int) int64 {
 		return item.SpuID
@@ -628,7 +628,7 @@ func (s *combinationActivityService) buildAppActivityList(ctx context.Context, l
 	if err != nil {
 		return nil, err
 	}
-	spuMap := lo.KeyBy(spuList, func(item *resp.ProductSpuResp) int64 {
+	spuMap := lo.KeyBy(spuList, func(item *product.ProductSpuResp) int64 {
 		return item.ID
 	})
 
@@ -643,14 +643,14 @@ func (s *combinationActivityService) buildAppActivityList(ctx context.Context, l
 		}))
 	})
 
-	result := make([]*resp.AppCombinationActivityRespVO, 0, len(list))
+	result := make([]*promotion2.AppCombinationActivityRespVO, 0, len(list))
 	for _, item := range list {
 		// ✅ 核心修复: 过滤无效 SPU (不存在或非上架状态)
 		spu, ok := spuMap[item.SpuID]
 		if !ok || spu.Status != consts.ProductSpuStatusEnable {
 			continue
 		}
-		result = append(result, &resp.AppCombinationActivityRespVO{
+		result = append(result, &promotion2.AppCombinationActivityRespVO{
 			ID:               item.ID,
 			Name:             item.Name,
 			UserSize:         item.UserSize,

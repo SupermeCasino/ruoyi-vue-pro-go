@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
+	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -27,7 +27,7 @@ func NewProductCommentHandler(svc *product.ProductCommentService) *ProductCommen
 // @Success 200 {object} pagination.PageResult[resp.ProductCommentResp]
 // @Router /admin-api/product/comment/page [get]
 func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
-	var req req.ProductCommentPageReq
+	var req product2.ProductCommentPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -47,7 +47,7 @@ func (h *ProductCommentHandler) GetCommentPage(c *gin.Context) {
 // @Param req body req.ProductCommentUpdateVisibleReq true "请求参数"
 // @Router /admin-api/product/comment/update-visible [put]
 func (h *ProductCommentHandler) UpdateCommentVisible(c *gin.Context) {
-	var req req.ProductCommentUpdateVisibleReq
+	var req product2.ProductCommentUpdateVisibleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -66,7 +66,7 @@ func (h *ProductCommentHandler) UpdateCommentVisible(c *gin.Context) {
 // @Param req body req.ProductCommentReplyReq true "请求参数"
 // @Router /admin-api/product/comment/reply [put]
 func (h *ProductCommentHandler) ReplyComment(c *gin.Context) {
-	var req req.ProductCommentReplyReq
+	var req product2.ProductCommentReplyReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -86,7 +86,7 @@ func (h *ProductCommentHandler) ReplyComment(c *gin.Context) {
 // @Param req body req.ProductCommentCreateReq true "请求参数"
 // @Router /admin-api/product/comment/create [post]
 func (h *ProductCommentHandler) CreateComment(c *gin.Context) {
-	var req req.ProductCommentCreateReq
+	var req product2.ProductCommentCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return

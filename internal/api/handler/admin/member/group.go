@@ -1,8 +1,7 @@
 package member
 
 import (
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/req"
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/resp"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/member"
 	memberModel "github.com/wxlbd/ruoyi-mall-go/internal/model/member"
 	memberSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/member"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +22,7 @@ func NewMemberGroupHandler(svc *memberSvc.MemberGroupService) *MemberGroupHandle
 
 // CreateGroup 创建用户分组
 func (h *MemberGroupHandler) CreateGroup(c *gin.Context) {
-	var r req.MemberGroupCreateReq
+	var r member.MemberGroupCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -38,7 +37,7 @@ func (h *MemberGroupHandler) CreateGroup(c *gin.Context) {
 
 // UpdateGroup 更新用户分组
 func (h *MemberGroupHandler) UpdateGroup(c *gin.Context) {
-	var r req.MemberGroupUpdateReq
+	var r member.MemberGroupUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -83,7 +82,7 @@ func (h *MemberGroupHandler) GetGroup(c *gin.Context) {
 
 // GetGroupPage 获得用户分组分页
 func (h *MemberGroupHandler) GetGroupPage(c *gin.Context) {
-	var r req.MemberGroupPageReq
+	var r member.MemberGroupPageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -93,7 +92,7 @@ func (h *MemberGroupHandler) GetGroupPage(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *memberModel.MemberGroup, _ int) *resp.MemberGroupResp {
+	response.WritePage(c, pageResult.Total, lo.Map(pageResult.List, func(item *memberModel.MemberGroup, _ int) *member.MemberGroupResp {
 		return h.convertResp(item)
 	}))
 }
@@ -105,21 +104,21 @@ func (h *MemberGroupHandler) GetSimpleGroupList(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WriteSuccess(c, lo.Map(list, func(item *memberModel.MemberGroup, _ int) *resp.MemberGroupSimpleResp {
-		return &resp.MemberGroupSimpleResp{
+	response.WriteSuccess(c, lo.Map(list, func(item *memberModel.MemberGroup, _ int) *member.MemberGroupSimpleResp {
+		return &member.MemberGroupSimpleResp{
 			ID:   item.ID,
 			Name: item.Name,
 		}
 	}))
 }
 
-func (h *MemberGroupHandler) convertResp(item *memberModel.MemberGroup) *resp.MemberGroupResp {
+func (h *MemberGroupHandler) convertResp(item *memberModel.MemberGroup) *member.MemberGroupResp {
 	if item == nil {
 		return nil
 	}
-	return &resp.MemberGroupResp{
-		ID:        item.ID,
-		Name:      item.Name,
+	return &member.MemberGroupResp{
+		ID:         item.ID,
+		Name:       item.Name,
 		CreateTime: item.CreateTime,
 	}
 }
