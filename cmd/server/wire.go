@@ -137,6 +137,9 @@ func InitApp() (*gin.Engine, error) {
 		payRepo.NewPayNoRedisDAO,
 		// Trade Repositories
 		tradeRepo.NewTradeNoRedisDAO,
+		// System Repositories
+		repo.NewNotifyTemplateRepository,
+		repo.NewNotifyMessageRepository,
 		// Statistics
 		repo.NewTradeStatisticsRepository,
 		repo.NewTradeOrderStatisticsRepository,
@@ -209,6 +212,8 @@ func InitApp() (*gin.Engine, error) {
 		wire.Bind(new(infra.ApiAccessLogStatisticsRepository), new(*repo.ApiAccessLogStatisticsRepositoryImpl)),
 		wire.Bind(new(paySvc.PayWalletStatisticsRepository), new(*repo.PayWalletStatisticsRepositoryImpl)),
 		wire.Bind(new(product.ProductStatisticsRepository), new(*productRepo.ProductStatisticsRepositoryImpl)),
+		wire.Bind(new(system.NotifyTemplateRepository), new(*repo.NotifyTemplateRepositoryImpl)),
+		wire.Bind(new(system.NotifyMessageRepository), new(*repo.NotifyMessageRepositoryImpl)),
 
 		wire.Bind(new(promotionSvc.CombinationTradeOrderService), new(*tradeSvc.TradeOrderUpdateService)),
 		wire.Bind(new(promotionSvc.CombinationSocialClientService), new(*system.SocialClientService)),
