@@ -1,4 +1,4 @@
-package pay
+package system
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"

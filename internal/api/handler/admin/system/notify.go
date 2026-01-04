@@ -3,7 +3,7 @@ package system
 import (
 	"strconv"
 
-	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/pay"
+	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/context"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -23,7 +23,7 @@ func NewNotifyHandler(svc *system.NotifyService) *NotifyHandler {
 // ================= Template Handlers =================
 
 func (h *NotifyHandler) CreateNotifyTemplate(c *gin.Context) {
-	var r pay.NotifyTemplateCreateReq
+	var r system2.NotifyTemplateCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -37,7 +37,7 @@ func (h *NotifyHandler) CreateNotifyTemplate(c *gin.Context) {
 }
 
 func (h *NotifyHandler) UpdateNotifyTemplate(c *gin.Context) {
-	var r pay.NotifyTemplateUpdateReq
+	var r system2.NotifyTemplateUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -79,7 +79,7 @@ func (h *NotifyHandler) GetNotifyTemplate(c *gin.Context) {
 }
 
 func (h *NotifyHandler) GetNotifyTemplatePage(c *gin.Context) {
-	var r pay.NotifyTemplatePageReq
+	var r system2.NotifyTemplatePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -93,7 +93,7 @@ func (h *NotifyHandler) GetNotifyTemplatePage(c *gin.Context) {
 }
 
 func (h *NotifyHandler) SendNotify(c *gin.Context) {
-	var r pay.NotifyTemplateSendReq
+	var r system2.NotifyTemplateSendReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -109,7 +109,7 @@ func (h *NotifyHandler) SendNotify(c *gin.Context) {
 // ================= Message Handlers =================
 
 func (h *NotifyHandler) GetNotifyMessagePage(c *gin.Context) {
-	var r pay.NotifyMessagePageReq
+	var r system2.NotifyMessagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -124,7 +124,7 @@ func (h *NotifyHandler) GetNotifyMessagePage(c *gin.Context) {
 }
 
 func (h *NotifyHandler) GetMyNotifyMessagePage(c *gin.Context) {
-	var r pay.MyNotifyMessagePageReq
+	var r system2.MyNotifyMessagePageReq
 	if err := c.ShouldBindQuery(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
@@ -144,7 +144,7 @@ func (h *NotifyHandler) GetMyNotifyMessagePage(c *gin.Context) {
 }
 
 func (h *NotifyHandler) UpdateNotifyMessageRead(c *gin.Context) {
-	var r pay.NotifyMessageUpdateReadReq
+	var r system2.NotifyMessageUpdateReadReq
 	if err := c.ShouldBindJSON(&r); err != nil {
 		response.WriteBizError(c, errors.ErrParam)
 		return
