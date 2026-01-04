@@ -108,7 +108,7 @@ func (h *UserHandler) GetUserPage(c *gin.Context) {
 func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
 	var r system2.UserUpdateStatusReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteBizError(c, errors.ErrParam)
+		response.WriteBizError(c, errors.BindingErr(err))
 		return
 	}
 	if err := h.svc.UpdateUserStatus(c.Request.Context(), &r); err != nil {
@@ -130,7 +130,7 @@ func (h *UserHandler) GetSimpleUserList(c *gin.Context) {
 func (h *UserHandler) ResetUserPassword(c *gin.Context) {
 	var r system2.UserResetPasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteBizError(c, errors.ErrParam)
+		response.WriteBizError(c, errors.BindingErr(err))
 		return
 	}
 	if err := h.svc.ResetUserPassword(c.Request.Context(), &r); err != nil {
@@ -144,7 +144,7 @@ func (h *UserHandler) ResetUserPassword(c *gin.Context) {
 func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 	var r system2.UserUpdatePasswordReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteBizError(c, errors.ErrParam)
+		response.WriteBizError(c, errors.BindingErr(err))
 		return
 	}
 	if err := h.svc.UpdateUserPassword(c.Request.Context(), &r); err != nil {

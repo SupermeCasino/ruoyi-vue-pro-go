@@ -35,7 +35,7 @@ type UserSaveReq struct {
 
 type UserUpdateStatusReq struct {
 	ID     int64 `json:"id" binding:"required"`
-	Status int   `json:"status" binding:"required"`
+	Status *int  `json:"status" binding:"required"`
 }
 
 type UserUpdatePasswordReq struct {

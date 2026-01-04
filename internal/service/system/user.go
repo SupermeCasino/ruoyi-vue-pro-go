@@ -422,7 +422,7 @@ func (s *UserService) GetUserPage(ctx context.Context, req *system.UserPageReq) 
 // UpdateUserStatus 修改用户状态
 func (s *UserService) UpdateUserStatus(ctx context.Context, req *system.UserUpdateStatusReq) error {
 	u := s.q.SystemUser
-	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Update(u.Status, req.Status)
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Update(u.Status, int32(*req.Status))
 	return err
 }
 
