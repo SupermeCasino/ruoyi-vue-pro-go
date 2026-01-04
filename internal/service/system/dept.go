@@ -35,7 +35,7 @@ func (s *DeptService) CreateDept(ctx context.Context, req *system.DeptSaveReq) (
 		LeaderUserID: req.LeaderUserID,
 		Phone:        req.Phone,
 		Email:        req.Email,
-		Status:       int32(req.Status),
+		Status:       int32(*req.Status),
 	}
 	err := d.WithContext(ctx).Create(dept)
 	return dept.ID, err
@@ -65,7 +65,7 @@ func (s *DeptService) UpdateDept(ctx context.Context, req *system.DeptSaveReq) e
 		LeaderUserID: req.LeaderUserID,
 		Phone:        req.Phone,
 		Email:        req.Email,
-		Status:       int32(req.Status),
+		Status:       int32(*req.Status),
 	})
 	return err
 }

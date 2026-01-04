@@ -21,7 +21,7 @@ type DeptSaveReq struct {
 	LeaderUserID int64  `json:"leaderUserId"`
 	Phone        string `json:"phone"`
 	Email        string `json:"email"`
-	Status       int    `json:"status" binding:"required"`
+	Status       *int   `json:"status" binding:"required"`
 }
 
 // --- Post ---
@@ -38,7 +38,7 @@ type PostSaveReq struct {
 	Name   string `json:"name" binding:"required"`
 	Code   string `json:"code" binding:"required"`
 	Sort   int32  `json:"sort"`
-	Status int    `json:"status" binding:"required"`
+	Status *int   `json:"status" binding:"required"`
 	Remark string `json:"remark"`
 }
 
