@@ -35,7 +35,7 @@ func (s *PostService) CreatePost(ctx context.Context, req *system.PostSaveReq) (
 		Name:   req.Name,
 		Code:   req.Code,
 		Sort:   req.Sort,
-		Status: int32(req.Status),
+		Status: int32(*req.Status),
 		Remark: req.Remark,
 	}
 	err = p.WithContext(ctx).Create(post)
@@ -49,19 +49,27 @@ func (s *PostService) UpdatePost(ctx context.Context, req *system.PostSaveReq) e
 		return errors.New("岗位不存在")
 	}
 	// Check Code/Name unique excluding self
-	count, err := p.WithContext(ctx).Where(p.ID.Neq(req.ID)).Where(p.Name.Eq(req.Name)).Or(p.Code.Eq(req.Code)).Count()
+	count, err := p.WithContext(ctx).Where(p.ID.Neq(req.ID)).Where(p.Name.Eq(req.Name)).Count()
 	if err != nil {
 		return err
 	}
 	if count > 0 {
-		return errors.New("岗位名称或编码已存在")
+		return errors.New("岗位名称已存在")
+	}
+
+	count, err = p.WithContext(ctx).Where(p.ID.Neq(req.ID)).Where(p.Code.Eq(req.Code)).Count()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("岗位编码已存在")
 	}
 
 	_, err = p.WithContext(ctx).Where(p.ID.Eq(req.ID)).Updates(&model.SystemPost{
 		Name:   req.Name,
 		Code:   req.Code,
 		Sort:   req.Sort,
-		Status: int32(req.Status),
+		Status: int32(*req.Status),
 		Remark: req.Remark,
 	})
 	return err
