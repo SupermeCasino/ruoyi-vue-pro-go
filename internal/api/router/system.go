@@ -44,6 +44,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			dictTypePublicGroup := systemGroup.Group("/dict-type")
 			{
 				dictTypePublicGroup.GET("/simple-list", handlers.Dict.GetSimpleDictTypeList)
+				dictTypePublicGroup.GET("/list-all-simple", handlers.Dict.GetSimpleDictTypeList)
 			}
 
 			dictDataPublicGroup := systemGroup.Group("/dict-data")
