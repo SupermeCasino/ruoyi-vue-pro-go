@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -145,7 +146,7 @@ func (h *WebSocketHandler) readLoop(session *ws.Session) {
 		h.logger.Info("收到 WebSocket 消息",
 			zap.String("sessionId", session.ID),
 			zap.String("type", wsMsg.Type),
-			zap.String("content", wsMsg.Content),
+			zap.String("content", func() string { contentJSON, _ := json.Marshal(wsMsg.Content); return string(contentJSON) }()),
 		)
 	}
 }
