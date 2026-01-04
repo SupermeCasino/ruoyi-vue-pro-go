@@ -265,7 +265,7 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				// mailLogGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-log:query"), handlers.Mail.GetMailLog) // Commented out
 			}
 
-			// Notify Protected Routes
+			// Notify Template Protected Routes (已有P2/P3实现)
 			notifyTemplateGroup := systemGroup.Group("/notify-template")
 			{
 				notifyTemplateGroup.POST("/create", casbinMiddleware.RequirePermission("system:notify-template:create"), handlers.Notify.CreateNotifyTemplate)
@@ -276,14 +276,16 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				notifyTemplateGroup.POST("/send-notify", casbinMiddleware.RequirePermission("system:notify-template:send-notify"), handlers.Notify.SendNotify)
 			}
 
+			// Notify Message Protected Routes (P1修复：添加认证中间件)
 			notifyMessageGroup := systemGroup.Group("/notify-message")
 			{
 				notifyMessageGroup.GET("/page", casbinMiddleware.RequirePermission("system:notify-message:query"), handlers.Notify.GetNotifyMessagePage)
 				notifyMessageGroup.GET("/get", casbinMiddleware.RequirePermission("system:notify-message:query"), handlers.Notify.GetNotifyMessage)
-				notifyMessageGroup.GET("/get-unread-list", handlers.Notify.GetUnreadNotifyMessageList)
-				notifyMessageGroup.GET("/get-unread-count", handlers.Notify.GetUnreadNotifyMessageCount)
-				notifyMessageGroup.PUT("/update-read", handlers.Notify.UpdateNotifyMessageRead)
-				notifyMessageGroup.PUT("/update-all-read", handlers.Notify.UpdateAllNotifyMessageRead)
+				// 以下API仅需认证，不需要特定权限（对齐Java实现）- P1修复
+				notifyMessageGroup.GET("/get-unread-list", middleware.Auth(), handlers.Notify.GetUnreadNotifyMessageList)
+				notifyMessageGroup.GET("/get-unread-count", middleware.Auth(), handlers.Notify.GetUnreadNotifyMessageCount)
+				notifyMessageGroup.PUT("/update-read", middleware.Auth(), handlers.Notify.UpdateNotifyMessageRead)
+				notifyMessageGroup.PUT("/update-all-read", middleware.Auth(), handlers.Notify.UpdateAllNotifyMessageRead)
 			}
 
 			// OAuth2 Client Protected Routes
