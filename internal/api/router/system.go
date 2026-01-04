@@ -245,8 +245,10 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				mailAccountGroup.POST("/create", casbinMiddleware.RequirePermission("system:mail-account:create"), handlers.Mail.CreateMailAccount)
 				mailAccountGroup.PUT("/update", casbinMiddleware.RequirePermission("system:mail-account:update"), handlers.Mail.UpdateMailAccount)
 				mailAccountGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:mail-account:delete"), handlers.Mail.DeleteMailAccount)
+				mailAccountGroup.DELETE("/delete-list", casbinMiddleware.RequirePermission("system:mail-account:delete"), handlers.Mail.DeleteMailAccountList)
 				mailAccountGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-account:query"), handlers.Mail.GetMailAccount)
 				mailAccountGroup.GET("/page", casbinMiddleware.RequirePermission("system:mail-account:query"), handlers.Mail.GetMailAccountPage)
+				mailAccountGroup.GET("/list-all-simple", handlers.Mail.GetSimpleMailAccountList)
 				mailAccountGroup.GET("/simple-list", handlers.Mail.GetSimpleMailAccountList)
 			}
 
@@ -255,15 +257,18 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				mailTemplateGroup.POST("/create", casbinMiddleware.RequirePermission("system:mail-template:create"), handlers.Mail.CreateMailTemplate)
 				mailTemplateGroup.PUT("/update", casbinMiddleware.RequirePermission("system:mail-template:update"), handlers.Mail.UpdateMailTemplate)
 				mailTemplateGroup.DELETE("/delete", casbinMiddleware.RequirePermission("system:mail-template:delete"), handlers.Mail.DeleteMailTemplate)
+				mailTemplateGroup.DELETE("/delete-list", casbinMiddleware.RequirePermission("system:mail-template:delete"), handlers.Mail.DeleteMailTemplateList)
 				mailTemplateGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-template:query"), handlers.Mail.GetMailTemplate)
 				mailTemplateGroup.GET("/page", casbinMiddleware.RequirePermission("system:mail-template:query"), handlers.Mail.GetMailTemplatePage)
+				mailTemplateGroup.GET("/list-all-simple", handlers.Mail.GetSimpleMailTemplateList)
+				mailTemplateGroup.GET("/simple-list", handlers.Mail.GetSimpleMailTemplateList)
 				mailTemplateGroup.POST("/send-mail", casbinMiddleware.RequirePermission("system:mail-template:send-mail"), handlers.Mail.SendMail)
 			}
 
 			mailLogGroup := systemGroup.Group("/mail-log")
 			{
 				mailLogGroup.GET("/page", casbinMiddleware.RequirePermission("system:mail-log:query"), handlers.Mail.GetMailLogPage)
-				// mailLogGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-log:query"), handlers.Mail.GetMailLog) // Commented out
+				mailLogGroup.GET("/get", casbinMiddleware.RequirePermission("system:mail-log:query"), handlers.Mail.GetMailLog)
 			}
 
 			// Notify Template Protected Routes (已有P2/P3实现)
