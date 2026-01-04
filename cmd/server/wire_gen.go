@@ -278,7 +278,7 @@ func InitApp() (*gin.Engine, error) {
 	mailHandler := system2.NewMailHandler(mailService)
 	menuHandler := system2.NewMenuHandler(menuService)
 	noticeService := system.NewNoticeService(query)
-	noticeHandler := system2.NewNoticeHandler(noticeService)
+	noticeHandler := system2.NewNoticeHandler(noticeService, webSocketHandler)
 	notifyService := system.NewNotifyService(query)
 	notifyHandler := system2.NewNotifyHandler(notifyService)
 	oAuth2ClientService := system.NewOAuth2ClientService(db)

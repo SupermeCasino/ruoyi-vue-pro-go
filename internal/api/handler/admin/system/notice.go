@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
+	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
@@ -13,11 +14,16 @@ import (
 
 type NoticeHandler struct {
 	noticeSvc *system.NoticeService
+	wsHandler *infra2.WebSocketHandler  // WebSocket处理器，用于推送通知
 }
 
-func NewNoticeHandler(noticeSvc *system.NoticeService) *NoticeHandler {
+func NewNoticeHandler(
+	noticeSvc *system.NoticeService,
+	wsHandler *infra2.WebSocketHandler,
+) *NoticeHandler {
 	return &NoticeHandler{
 		noticeSvc: noticeSvc,
+		wsHandler: wsHandler,
 	}
 }
 
@@ -96,14 +102,40 @@ func (h *NoticeHandler) DeleteNotice(c *gin.Context) {
 	response.WriteSuccess(c, true)
 }
 
-// Push 推送通知公告
+// Push 推送通知公告 - 完整实现，与Java NoticeController.push() 对齐
+// 对应Java: cn.iocoder.yudao.module.system.controller.admin.notice.NoticeController.push()
 func (h *NoticeHandler) Push(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
+
+	// 1. 参数校验 (对应 Java 的 @RequestParam 校验)
 	if id == 0 {
 		response.WriteBizError(c, errors.ErrParam)
 		return
 	}
-	// TODO: WebSocket push not implemented yet
+
+	// 2. 获取公告 (对应 Java: noticeService.getNotice(id))
+	notice, err := h.noticeSvc.GetNotice(c, id)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	// 3. 校验公告存在性 (对应 Java: Assert.notNull(notice, "公告不能为空"))
+	if notice == nil {
+		response.WriteBizError(c, errors.NewBizError(errors.NotFoundCode, "公告不能为空"))
+		return
+	}
+
+	// 4. 推送给所有ADMIN类型的在线用户
+	// 对应 Java: webSocketSenderApi.sendObject(UserTypeEnum.ADMIN.getValue(), "notice-push", notice)
+	// UserTypeEnum.ADMIN = 2
+	err = h.wsHandler.BroadcastByUserType(2, "notice-push", notice)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	// 5. 返回成功 (对应 Java: return success(true))
 	response.WriteSuccess(c, true)
 }

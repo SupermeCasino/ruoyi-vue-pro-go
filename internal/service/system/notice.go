@@ -52,9 +52,21 @@ func (s *NoticeService) UpdateNotice(ctx context.Context, req *system.NoticeSave
 }
 
 // DeleteNotice 删除通知公告
+// 对应Java: NoticeServiceImpl.deleteNotice() - 删除前需要校验公告是否存在
 func (s *NoticeService) DeleteNotice(ctx context.Context, id int64) error {
 	n := s.q.SystemNotice
-	_, err := n.WithContext(ctx).Where(n.ID.Eq(id)).Delete()
+
+	// 1. 校验是否存在 (对应 Java: validateNoticeExists(id))
+	notice, err := n.WithContext(ctx).Where(n.ID.Eq(id)).First()
+	if err != nil {
+		return errors.New("公告不存在")
+	}
+	if notice == nil {
+		return errors.New("公告不存在")
+	}
+
+	// 2. 删除通知公告
+	_, err = n.WithContext(ctx).Where(n.ID.Eq(id)).Delete()
 	return err
 }
 
@@ -114,5 +126,9 @@ func (s *NoticeService) convertResp(item *model.SystemNotice) *system.NoticeResp
 		Content:    item.Content,
 		Status:     item.Status,
 		CreateTime: item.CreateTime,
+		// ← 补充新增字段的映射 (对应Java: NoticeRespVO 继承自 BaseDO)
+		UpdateTime: item.UpdateTime,
+		Creator:    item.Creator,
+		Updater:    item.Updater,
 	}
 }
