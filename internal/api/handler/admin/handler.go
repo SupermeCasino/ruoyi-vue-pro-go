@@ -2,6 +2,7 @@ package admin
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/infra"
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/mall"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/member"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/pay"
@@ -11,6 +12,7 @@ import (
 
 type AdminHandlers struct {
 	Infra      *infra.Handlers
+	Iot        *iot.Handlers
 	Mall       *mall.Handlers
 	Member     *member.Handlers
 	Pay        *pay.Handlers

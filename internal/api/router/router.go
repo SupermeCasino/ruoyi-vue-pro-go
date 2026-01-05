@@ -71,5 +71,8 @@ func InitRouter(db *gorm.DB, rdb *redis.Client,
 	// Area 地区路由
 	RegisterAreaRoutes(r, adminHandlers.System.Area)
 
+	// IOT 模块
+	RegisterIotRoutes(r, adminHandlers.Iot, casbinMiddleware)
+
 	return r
 }

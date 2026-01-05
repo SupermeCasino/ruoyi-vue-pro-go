@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/infra"
+	iot3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/mall"
 	product2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/mall/product"
 	promotion2 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/mall/promotion"
@@ -29,14 +30,17 @@ import (
 	member3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
 	pay4 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
+	"github.com/wxlbd/ruoyi-mall-go/internal/iot/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo"
+	"github.com/wxlbd/ruoyi-mall-go/internal/repo/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	product3 "github.com/wxlbd/ruoyi-mall-go/internal/repo/product"
 	trade2 "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
+	iot2 "github.com/wxlbd/ruoyi-mall-go/internal/service/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/product"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/promotion"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/mall/trade"
@@ -102,23 +106,71 @@ func InitApp() (*gin.Engine, error) {
 	manager := websocket.NewManager()
 	webSocketHandler := infra.NewWebSocketHandler(manager, zapLogger)
 	handlers := infra.NewHandlers(configHandler, fileConfigHandler, fileHandler, apiAccessLogHandler, apiErrorLogHandler, jobHandler, jobLogHandler, webSocketHandler)
+	productRepository := iot.NewProductRepository(query)
+	deviceRepository := iot.NewDeviceRepository(query)
+	productService := iot2.NewProductService(productRepository, deviceRepository)
+	productHandler := iot3.NewProductHandler(productService)
+	deviceAuthUtils := core.NewDeviceAuthUtils()
+	deviceService := iot2.NewDeviceService(productRepository, deviceRepository, deviceAuthUtils)
+	deviceHandler := iot3.NewDeviceHandler(deviceService)
+	thingModelRepository := iot.NewThingModelRepository(query)
+	thingModelService := iot2.NewThingModelService(productRepository, thingModelRepository)
+	thingModelHandler := iot3.NewThingModelHandler(thingModelService)
+	deviceGroupRepository := iot.NewDeviceGroupRepository(query)
+	deviceGroupService := iot2.NewDeviceGroupService(deviceGroupRepository)
+	deviceGroupHandler := iot3.NewDeviceGroupHandler(deviceGroupService)
+	otaFirmwareRepository := iot.NewOtaFirmwareRepository(query)
+	otaFirmwareService := iot2.NewOtaFirmwareService(otaFirmwareRepository)
+	otaFirmwareHandler := iot3.NewOtaFirmwareHandler(otaFirmwareService, productService)
+	otaTaskRepository := iot.NewOtaTaskRepository(query)
+	otaTaskRecordRepository := iot.NewOtaTaskRecordRepository(query)
+	otaTaskService := iot2.NewOtaTaskService(otaFirmwareRepository, otaTaskRepository, otaTaskRecordRepository, deviceService)
+	otaTaskHandler := iot3.NewOtaTaskHandler(otaTaskService)
+	alertConfigRepository := iot.NewAlertConfigRepository(query)
+	alertConfigService := iot2.NewAlertConfigService(alertConfigRepository)
+	alertConfigHandler := iot3.NewAlertConfigHandler(alertConfigService)
+	alertRecordRepository := iot.NewAlertRecordRepository(query)
+	alertRecordService := iot2.NewAlertRecordService(alertRecordRepository)
+	alertRecordHandler := iot3.NewAlertRecordHandler(alertRecordService)
+	dataSinkRepository := iot.NewDataSinkRepository(query)
+	dataSinkService := iot2.NewDataSinkService(dataSinkRepository)
+	dataSinkHandler := iot3.NewDataSinkHandler(dataSinkService)
+	dataRuleRepository := iot.NewDataRuleRepository(query)
+	dataRuleService := iot2.NewDataRuleService(dataRuleRepository)
+	dataRuleHandler := iot3.NewDataRuleHandler(dataRuleService)
+	sceneRuleRepository := iot.NewSceneRuleRepository(query)
+	sceneRuleService := iot2.NewSceneRuleService(sceneRuleRepository)
+	sceneRuleHandler := iot3.NewSceneRuleHandler(sceneRuleService)
+	productCategoryRepository := iot.NewProductCategoryRepository(query)
+	productCategoryService := iot2.NewProductCategoryService(productCategoryRepository)
+	productCategoryHandler := iot3.NewProductCategoryHandler(productCategoryService)
+	deviceMessageRepository := iot.NewDeviceMessageRepository(query)
+	statisticsService := iot2.NewStatisticsService(productCategoryRepository, productRepository, deviceRepository, deviceMessageRepository)
+	statisticsHandler := iot3.NewStatisticsHandler(statisticsService)
+	devicePropertyRepository := iot.NewDevicePropertyRepository(query)
+	devicePropertyService := iot2.NewDevicePropertyService(devicePropertyRepository)
+	localMessageBus := core.NewLocalMessageBus()
+	deviceMessageService := iot2.NewDeviceMessageService(deviceMessageRepository, deviceRepository, devicePropertyService, otaTaskService, localMessageBus)
+	deviceMessageHandler := iot3.NewDeviceMessageHandler(deviceMessageService)
+	devicePropertyHandler := iot3.NewDevicePropertyHandler(devicePropertyService, deviceService, thingModelService)
+	iotHandlers := iot3.NewHandlers(productHandler, deviceHandler, thingModelHandler, deviceGroupHandler, otaFirmwareHandler, otaTaskHandler, alertConfigHandler, alertRecordHandler, dataSinkHandler, dataRuleHandler, sceneRuleHandler, productCategoryHandler, statisticsHandler, deviceMessageHandler, devicePropertyHandler)
 	productBrandService := product.NewProductBrandService(query)
 	productBrandHandler := product2.NewProductBrandHandler(productBrandService)
 	productPropertyValueService := product.NewProductPropertyValueService(query)
 	productPropertyService := product.NewProductPropertyService(query, productPropertyValueService)
 	productSkuService := product.NewProductSkuService(query, productPropertyService, productPropertyValueService)
-	productCategoryService := product.NewProductCategoryService(query)
-	productSpuService := product.NewProductSpuService(query, productSkuService, productBrandService, productCategoryService)
+	productProductCategoryService := product.NewProductCategoryService(query)
+	productSpuService := product.NewProductSpuService(query, productSkuService, productBrandService, productProductCategoryService)
 	productBrowseHistoryService := product.NewProductBrowseHistoryService(query, productSpuService)
 	productBrowseHistoryHandler := product2.NewProductBrowseHistoryHandler(productBrowseHistoryService)
-	productCategoryHandler := product2.NewProductCategoryHandler(productCategoryService)
+	productProductCategoryHandler := product2.NewProductCategoryHandler(productProductCategoryService)
 	productCommentService := product.NewProductCommentService(query, productSpuService, productSkuService)
 	productCommentHandler := product2.NewProductCommentHandler(productCommentService)
 	productFavoriteService := product.NewProductFavoriteService(query, productSpuService)
 	productFavoriteHandler := product2.NewProductFavoriteHandler(productFavoriteService)
 	productPropertyHandler := product2.NewProductPropertyHandler(productPropertyService, productPropertyValueService)
 	productSpuHandler := product2.NewProductSpuHandler(productSpuService, productPropertyService)
-	productHandlers := product2.NewHandlers(productBrandHandler, productBrowseHistoryHandler, productCategoryHandler, productCommentHandler, productFavoriteHandler, productPropertyHandler, productSpuHandler)
+	productHandlers := product2.NewHandlers(productBrandHandler, productBrowseHistoryHandler, productProductCategoryHandler, productCommentHandler, productFavoriteHandler, productPropertyHandler, productSpuHandler)
 	articleService := promotion.NewArticleService(query)
 	articleHandler := promotion2.NewArticleHandler(articleService)
 	articleCategoryService := promotion.NewArticleCategoryService(query)
@@ -305,6 +357,7 @@ func InitApp() (*gin.Engine, error) {
 	systemHandlers := system2.NewHandlers(areaHandler, authHandler, deptHandler, dictHandler, loginLogHandler, mailHandler, menuHandler, noticeHandler, notifyHandler, oAuth2ClientHandler, operateLogHandler, permissionHandler, postHandler, roleHandler, smsChannelHandler, smsLogHandler, smsTemplateHandler, socialClientHandler, socialUserHandler, tenantHandler, tenantPackageHandler, userHandler)
 	adminHandlers := &admin.AdminHandlers{
 		Infra:      handlers,
+		Iot:        iotHandlers,
 		Mall:       mallHandlers,
 		Member:     memberHandlers,
 		Pay:        payHandlers,
@@ -312,7 +365,7 @@ func InitApp() (*gin.Engine, error) {
 		System:     systemHandlers,
 	}
 	appProductBrowseHistoryHandler := product4.NewAppProductBrowseHistoryHandler(productBrowseHistoryService)
-	appCategoryHandler := product4.NewAppCategoryHandler(productCategoryService)
+	appCategoryHandler := product4.NewAppCategoryHandler(productProductCategoryService)
 	appProductCommentHandler := product4.NewAppProductCommentHandler(productCommentService)
 	appProductFavoriteHandler := product4.NewAppProductFavoriteHandler(productFavoriteService)
 	appProductSpuHandler := product4.NewAppProductSpuHandler(productSpuService, productPropertyService, productBrowseHistoryService, memberUserService, memberLevelService)

@@ -97,7 +97,7 @@ func (r *NotifyMessageRepositoryImpl) Page(ctx context.Context, userID int64, us
 		qb = qb.Where(m.TemplateType.Eq(*templateType))
 	}
 	if readStatus != nil {
-		qb = qb.Where(m.ReadStatus.Is(*readStatus))
+		qb = qb.Where(m.ReadStatus.Eq(model.BitBool(*readStatus)))
 	}
 	if startDate != "" && endDate != "" {
 		qb = qb.Where(m.CreateTime.Between(r.parseTime(startDate), r.parseTime(endDate)))
@@ -118,7 +118,7 @@ func (r *NotifyMessageRepositoryImpl) MyPage(ctx context.Context, userID int64, 
 	qb := m.WithContext(ctx).Where(m.UserID.Eq(userID), m.UserType.Eq(userType))
 
 	if readStatus != nil {
-		qb = qb.Where(m.ReadStatus.Is(*readStatus))
+		qb = qb.Where(m.ReadStatus.Eq(model.BitBool(*readStatus)))
 	}
 
 	total, err := qb.Count()
@@ -139,7 +139,7 @@ func (r *NotifyMessageRepositoryImpl) UpdateReadStatus(ctx context.Context, user
 	}
 	_, err := m.WithContext(ctx).
 		Where(m.ID.In(ids...), m.UserID.Eq(userID), m.UserType.Eq(userType)).
-		UpdateSimple(m.ReadStatus.Value(readStatus), m.ReadTime.Value(rt))
+		UpdateSimple(m.ReadStatus.Value(model.BitBool(readStatus)), m.ReadTime.Value(rt))
 	return err
 }
 
@@ -150,15 +150,15 @@ func (r *NotifyMessageRepositoryImpl) UpdateAllReadStatus(ctx context.Context, u
 		rt = *readTime
 	}
 	_, err := m.WithContext(ctx).
-		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Is(!readStatus)).
-		UpdateSimple(m.ReadStatus.Value(readStatus), m.ReadTime.Value(rt))
+		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Eq(model.BitBool(!readStatus))).
+		UpdateSimple(m.ReadStatus.Value(model.BitBool(readStatus)), m.ReadTime.Value(rt))
 	return err
 }
 
 func (r *NotifyMessageRepositoryImpl) CountUnread(ctx context.Context, userID int64, userType int) (int64, error) {
 	m := r.q.SystemNotifyMessage
 	return m.WithContext(ctx).
-		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Is(false)).
+		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Eq(model.BitBool(false))).
 		Count()
 }
 
@@ -170,7 +170,7 @@ func (r *NotifyMessageRepositoryImpl) FindByID(ctx context.Context, id int64) (*
 func (r *NotifyMessageRepositoryImpl) FindUnreadList(ctx context.Context, userID int64, userType int, size int) ([]*model.SystemNotifyMessage, error) {
 	m := r.q.SystemNotifyMessage
 	return m.WithContext(ctx).
-		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Is(false)).
+		Where(m.UserID.Eq(userID), m.UserType.Eq(userType), m.ReadStatus.Eq(model.BitBool(false))).
 		Order(m.ID.Desc()).
 		Limit(size).
 		Find()

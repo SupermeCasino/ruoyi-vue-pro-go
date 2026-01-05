@@ -5,14 +5,17 @@ package main
 
 import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler" // Statistics Handlers
+	"github.com/wxlbd/ruoyi-mall-go/internal/api/handler/admin/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
 	"github.com/wxlbd/ruoyi-mall-go/internal/pkg/permission"
 	ws "github.com/wxlbd/ruoyi-mall-go/internal/pkg/websocket"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo" // Pay Repo
+	iotRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/iot"
 	payRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/pay"
 	tradeRepo "github.com/wxlbd/ruoyi-mall-go/internal/repo/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
+	iotSvc "github.com/wxlbd/ruoyi-mall-go/internal/service/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/pay/job"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 
@@ -45,6 +48,7 @@ func InitApp() (*gin.Engine, error) {
 		logger.NewLogger,
 		// Repo (GORM Gen)
 		repo.NewQuery,
+		iotRepo.ProviderSet,
 		// Service
 		system.NewOAuth2TokenService,
 		system.NewAuthService,
@@ -79,6 +83,7 @@ func InitApp() (*gin.Engine, error) {
 		system.NewMailService,                  // Added MailService
 		system.NewNotifyService,                // Added NotifyService
 		system.NewOAuth2ClientService,          // Added OAuth2ClientService
+		iotSvc.ProviderSet,                    // Added IotService ProviderSet
 		memberSvc.NewMemberAuthService,         // Added MemberAuthService
 		memberSvc.NewMemberUserService,         // Added MemberUserService
 		memberSvc.NewMemberAddressService,      // Added MemberAddressService
@@ -102,6 +107,7 @@ func InitApp() (*gin.Engine, error) {
 
 		// Handlers
 		handler.ProviderSet,
+		iot.ProviderSet,
 
 		// Trade
 		tradeSvc.NewCartService,
