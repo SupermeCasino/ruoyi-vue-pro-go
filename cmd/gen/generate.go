@@ -152,6 +152,22 @@ func main() {
 		pay.PayWalletTransaction{},
 		pay.PayWalletRechargePackage{},
 		pay.PayTransfer{},
+		// Iot
+		model.IotProductDO{},
+		model.IotDeviceDO{},
+		model.IotThingModelDO{},
+		model.IotDeviceGroupDO{},
+		model.IotOtaFirmwareDO{},
+		model.IotOtaTaskDO{},
+		model.IotOtaTaskRecordDO{},
+		model.IotAlertConfigDO{},
+		model.IotAlertRecordDO{},
+		model.IotDataRuleDO{},
+		model.IotDataSinkDO{},
+		model.IotSceneRuleDO{},
+		model.IotProductCategoryDO{},
+		model.IotDeviceMessageDO{},
+		model.IotDevicePropertyDO{},
 	)
 
 	// 4. 执行生成
