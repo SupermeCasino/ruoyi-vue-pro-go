@@ -41,10 +41,19 @@ func (s *ThingModelService) Create(ctx context.Context, r *iot2.IotThingModelSav
 		ProductID:   r.ProductID,
 		ProductKey:  product.ProductKey,
 		Type:        r.Type,
-		Property:    datatypes.JSON(r.Property),
-		Event:       datatypes.JSON(r.Event),
-		Service:     datatypes.JSON(r.Service),
 	}
+
+	// SaveReqVO 字段已类型化,可直接赋值给 JSONType
+	if r.Property != nil {
+		thingModel.Property = datatypes.NewJSONType(*r.Property)
+	}
+	if r.Event != nil {
+		thingModel.Event = datatypes.NewJSONType(*r.Event)
+	}
+	if r.Service != nil {
+		thingModel.Service = datatypes.NewJSONType(*r.Service)
+	}
+
 	if err := s.thingModelRepo.Create(ctx, thingModel); err != nil {
 		return 0, err
 	}
@@ -71,9 +80,17 @@ func (s *ThingModelService) Update(ctx context.Context, r *iot2.IotThingModelSav
 	tm.Name = r.Name
 	tm.Description = r.Description
 	tm.Type = r.Type
-	tm.Property = datatypes.JSON(r.Property)
-	tm.Event = datatypes.JSON(r.Event)
-	tm.Service = datatypes.JSON(r.Service)
+
+	// 直接利用类型化字段更新
+	if r.Property != nil {
+		tm.Property = datatypes.NewJSONType(*r.Property)
+	}
+	if r.Event != nil {
+		tm.Event = datatypes.NewJSONType(*r.Event)
+	}
+	if r.Service != nil {
+		tm.Service = datatypes.NewJSONType(*r.Service)
+	}
 
 	return s.thingModelRepo.Update(ctx, tm)
 }
@@ -127,14 +144,15 @@ func (s *ThingModelService) GetTSL(ctx context.Context, productId int64) (*iot2.
 		ProductKey: product.ProductKey,
 	}
 
+	// 使用 JSONType 的 Data() 方法直接获取对象
 	for _, m := range thingModels {
 		switch m.Type {
-		case consts.IotThingModelTypeProperty: // 属性
-			tsl.Properties = append(tsl.Properties, string(m.Property))
-		case consts.IotThingModelTypeService: // 服务
-			tsl.Services = append(tsl.Services, string(m.Service))
-		case consts.IotThingModelTypeEvent: // 事件
-			tsl.Events = append(tsl.Events, string(m.Event))
+		case consts.IotThingModelTypeProperty:
+			tsl.Properties = append(tsl.Properties, m.Property.Data())
+		case consts.IotThingModelTypeService:
+			tsl.Services = append(tsl.Services, m.Service.Data())
+		case consts.IotThingModelTypeEvent:
+			tsl.Events = append(tsl.Events, m.Event.Data())
 		}
 	}
 	return tsl, nil

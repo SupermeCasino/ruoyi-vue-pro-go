@@ -97,3 +97,23 @@ func (h *DeviceGroupHandler) Page(c *gin.Context) {
 	}
 	response.WritePage(c, page.Total, list)
 }
+
+// SimpleList 获取设备分组简单列表
+func (h *DeviceGroupHandler) SimpleList(c *gin.Context) {
+	// 查询状态为启用(0)的设备分组
+	list, err := h.svc.GetListByStatus(c, 0)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	// 只返回 id 和 name 字段
+	result := make([]*iot2.IotDeviceGroupRespVO, 0, len(list))
+	for _, item := range list {
+		result = append(result, &iot2.IotDeviceGroupRespVO{
+			ID:   item.ID,
+			Name: item.Name,
+		})
+	}
+	response.WriteSuccess(c, result)
+}

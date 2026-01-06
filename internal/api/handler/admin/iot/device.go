@@ -189,3 +189,19 @@ func (h *DeviceHandler) UpdateGroup(c *gin.Context) {
 	}
 	response.WriteSuccess(c, true)
 }
+
+// GetCount 获取设备数量
+func (h *DeviceHandler) GetCount(c *gin.Context) {
+	productIDStr := c.Query("productId")
+	productID, err := strconv.ParseInt(productIDStr, 10, 64)
+	if err != nil {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	count, err := h.svc.GetCountByProductID(c, productID)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, count)
+}

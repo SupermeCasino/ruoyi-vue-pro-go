@@ -48,3 +48,7 @@ func (r *DeviceGroupRepositoryImpl) GetPage(ctx context.Context, req *iot.IotDev
 	list, total, err := db.Order(dg.ID.Desc()).FindByPage((req.PageNo-1)*req.PageSize, req.PageSize)
 	return &pagination.PageResult[*model.IotDeviceGroupDO]{List: list, Total: total}, err
 }
+
+func (r *DeviceGroupRepositoryImpl) ListByStatus(ctx context.Context, status int8) ([]*model.IotDeviceGroupDO, error) {
+	return r.q.IotDeviceGroupDO.WithContext(ctx).Where(r.q.IotDeviceGroupDO.Status.Eq(status)).Find()
+}

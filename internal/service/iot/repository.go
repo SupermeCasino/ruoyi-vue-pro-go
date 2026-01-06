@@ -53,6 +53,7 @@ type DeviceGroupRepository interface {
 	Delete(ctx context.Context, id int64) error
 	GetByID(ctx context.Context, id int64) (*model.IotDeviceGroupDO, error)
 	GetPage(ctx context.Context, req *iot.IotDeviceGroupPageReqVO) (*pagination.PageResult[*model.IotDeviceGroupDO], error)
+	ListByStatus(ctx context.Context, status int8) ([]*model.IotDeviceGroupDO, error)
 }
 
 type OtaFirmwareRepository interface {

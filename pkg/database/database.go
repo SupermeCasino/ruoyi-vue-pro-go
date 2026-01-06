@@ -44,7 +44,6 @@ func InitDB() *gorm.DB {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdle)
 	sqlDB.SetMaxOpenConns(cfg.MaxOpen)
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second)
-
 	// 注册 AuditPlugin 自动填充 Creator、Updater、TenantID
 	if err := db.Use(&AuditPlugin{}); err != nil {
 		logger.Log.Fatal("failed to register AuditPlugin", zap.Error(err))

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	iot2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/iot"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -62,6 +63,7 @@ func (h *ThingModelHandler) Get(c *gin.Context) {
 		response.WriteSuccess(c, nil)
 		return
 	}
+
 	resp := &iot2.IotThingModelRespVO{
 		ID:          tm.ID,
 		Identifier:  tm.Identifier,
@@ -70,11 +72,20 @@ func (h *ThingModelHandler) Get(c *gin.Context) {
 		ProductID:   tm.ProductID,
 		ProductKey:  tm.ProductKey,
 		Type:        tm.Type,
-		Property:    string(tm.Property),
-		Event:       string(tm.Event),
-		Service:     string(tm.Service),
 		CreateTime:  tm.CreateTime,
 	}
+
+	// 使用 Data() 获取值并取地址
+	if prop := tm.Property.Data(); prop.Identifier != "" {
+		resp.Property = &prop
+	}
+	if event := tm.Event.Data(); event.Identifier != "" {
+		resp.Event = &event
+	}
+	if service := tm.Service.Data(); service.Identifier != "" {
+		resp.Service = &service
+	}
+
 	response.WriteSuccess(c, resp)
 }
 
@@ -93,19 +104,7 @@ func (h *ThingModelHandler) List(c *gin.Context) {
 
 	respList := make([]*iot2.IotThingModelRespVO, 0, len(list))
 	for _, item := range list {
-		respList = append(respList, &iot2.IotThingModelRespVO{
-			ID:          item.ID,
-			Identifier:  item.Identifier,
-			Name:        item.Name,
-			Description: item.Description,
-			ProductID:   item.ProductID,
-			ProductKey:  item.ProductKey,
-			Type:        item.Type,
-			Property:    string(item.Property),
-			Event:       string(item.Event),
-			Service:     string(item.Service),
-			CreateTime:  item.CreateTime,
-		})
+		respList = append(respList, convertToRespVO(item))
 	}
 	response.WriteSuccess(c, respList)
 }
@@ -125,19 +124,7 @@ func (h *ThingModelHandler) Page(c *gin.Context) {
 
 	list := make([]*iot2.IotThingModelRespVO, 0, len(page.List))
 	for _, item := range page.List {
-		list = append(list, &iot2.IotThingModelRespVO{
-			ID:          item.ID,
-			Identifier:  item.Identifier,
-			Name:        item.Name,
-			Description: item.Description,
-			ProductID:   item.ProductID,
-			ProductKey:  item.ProductKey,
-			Type:        item.Type,
-			Property:    string(item.Property),
-			Event:       string(item.Event),
-			Service:     string(item.Service),
-			CreateTime:  item.CreateTime,
-		})
+		list = append(list, convertToRespVO(item))
 	}
 	response.WritePage(c, page.Total, list)
 }
@@ -152,4 +139,29 @@ func (h *ThingModelHandler) GetTSL(c *gin.Context) {
 		return
 	}
 	response.WriteSuccess(c, tsl)
+}
+
+
+// convertToRespVO 转换数据库实体为响应 VO
+func convertToRespVO(tm *model.IotThingModelDO) *iot2.IotThingModelRespVO {
+resp := &iot2.IotThingModelRespVO{
+ID:          tm.ID,
+Identifier:  tm.Identifier,
+Name:        tm.Name,
+Description: tm.Description,
+ProductID:   tm.ProductID,
+ProductKey:  tm.ProductKey,
+Type:        tm.Type,
+CreateTime:  tm.CreateTime,
+}
+if prop := tm.Property.Data(); prop.Identifier != "" {
+resp.Property = &prop
+}
+if event := tm.Event.Data(); event.Identifier != "" {
+resp.Event = &event
+}
+if service := tm.Service.Data(); service.Identifier != "" {
+resp.Service = &service
+}
+return resp
 }

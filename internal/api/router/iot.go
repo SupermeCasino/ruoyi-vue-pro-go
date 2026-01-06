@@ -45,6 +45,7 @@ func RegisterIotRoutes(r *gin.Engine, h *iot.Handlers, casbin *middleware.Casbin
 			device.DELETE("/delete", casbin.RequirePermission("iot:device:delete"), h.Device.Delete)
 			device.DELETE("/delete-list", casbin.RequirePermission("iot:device:delete"), h.Device.DeleteList)
 			device.GET("/get", casbin.RequirePermission("iot:device:query"), h.Device.Get)
+			device.GET("/count", casbin.RequirePermission("iot:device:query"), h.Device.GetCount)
 			device.GET("/get-auth-info", casbin.RequirePermission("iot:device:query"), h.Device.GetAuthInfo)
 			device.GET("/page", casbin.RequirePermission("iot:device:query"), h.Device.Page)
 			device.GET("/list-by-product-key-and-names", casbin.RequirePermission("iot:device:query"), h.Device.GetListByProductKeyAndNames)
@@ -58,6 +59,7 @@ func RegisterIotRoutes(r *gin.Engine, h *iot.Handlers, casbin *middleware.Casbin
 			deviceGroup.DELETE("/delete", casbin.RequirePermission("iot:device-group:delete"), h.DeviceGroup.Delete)
 			deviceGroup.GET("/get", casbin.RequirePermission("iot:device-group:query"), h.DeviceGroup.Get)
 			deviceGroup.GET("/page", casbin.RequirePermission("iot:device-group:query"), h.DeviceGroup.Page)
+			deviceGroup.GET("/simple-list", h.DeviceGroup.SimpleList)
 		}
 
 		// OTA 固件管理

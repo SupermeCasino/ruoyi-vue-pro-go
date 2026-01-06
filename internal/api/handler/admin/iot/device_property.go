@@ -76,13 +76,10 @@ func (h *DevicePropertyHandler) GetLatest(c *gin.Context) {
 			},
 		}
 
-		var property iot2.ThingModelProperty
-		if len(thingModel.Property) > 0 {
-			if err := json.Unmarshal(thingModel.Property, &property); err == nil {
-				detail.DataType = property.DataType
-				detail.DataSpecs = property.DataSpecs
-				detail.DataSpecsList = property.DataSpecsList
-			}
+		if property := thingModel.Property.Data(); property.Identifier != "" {
+			detail.DataType = property.DataType
+			detail.DataSpecs = property.DataSpecs
+			detail.DataSpecsList = property.DataSpecsList
 		}
 
 		if p, ok := properties[thingModel.Identifier]; ok {

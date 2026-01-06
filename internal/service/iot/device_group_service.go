@@ -2,6 +2,7 @@ package iot
 
 import (
 	"context"
+
 	iot2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -54,4 +55,9 @@ func (s *DeviceGroupService) Get(ctx context.Context, id int64) (*model.IotDevic
 
 func (s *DeviceGroupService) GetPage(ctx context.Context, r *iot2.IotDeviceGroupPageReqVO) (*pagination.PageResult[*model.IotDeviceGroupDO], error) {
 	return s.deviceGroupRepo.GetPage(ctx, r)
+}
+
+// GetListByStatus 获取指定状态的设备分组列表
+func (s *DeviceGroupService) GetListByStatus(ctx context.Context, status int8) ([]*model.IotDeviceGroupDO, error) {
+	return s.deviceGroupRepo.ListByStatus(ctx, status)
 }

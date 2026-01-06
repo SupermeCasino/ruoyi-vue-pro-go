@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"github.com/wxlbd/ruoyi-mall-go/internal/dto"
 	"gorm.io/datatypes"
 )
 
@@ -66,16 +67,16 @@ func (IotDeviceDO) TableName() string {
 // IotThingModelDO IoT 产品物模型功能 DO
 type IotThingModelDO struct {
 	BaseDO
-	ID          int64          `gorm:"column:id;primaryKey;autoIncrement;comment:物模型功能编号" json:"id"`
-	Identifier  string         `gorm:"column:identifier;size:64;not null;comment:功能标识" json:"identifier"`
-	Name        string         `gorm:"column:name;size:64;not null;comment:功能名称" json:"name"`
-	Description string         `gorm:"column:description;size:255;comment:功能描述" json:"description"`
-	ProductID   int64          `gorm:"column:product_id;not null;comment:产品编号" json:"productId"`
-	ProductKey  string         `gorm:"column:product_key;size:64;not null;comment:产品标识" json:"productKey"`
-	Type        int8           `gorm:"column:type;not null;comment:功能类型" json:"type"`
-	Property    datatypes.JSON `gorm:"column:property;type:text;comment:属性配置(JSON)" json:"property"`
-	Event       datatypes.JSON `gorm:"column:event;type:text;comment:事件配置(JSON)" json:"event"`
-	Service     datatypes.JSON `gorm:"column:service;type:text;comment:服务配置(JSON)" json:"service"`
+	ID          int64                                      `gorm:"column:id;primaryKey;autoIncrement;comment:物模型功能编号" json:"id"`
+	Identifier  string                                     `gorm:"column:identifier;size:64;not null;comment:功能标识" json:"identifier"`
+	Name        string                                     `gorm:"column:name;size:64;not null;comment:功能名称" json:"name"`
+	Description string                                     `gorm:"column:description;size:255;comment:功能描述" json:"description"`
+	ProductID   int64                                      `gorm:"column:product_id;not null;comment:产品编号" json:"productId"`
+	ProductKey  string                                     `gorm:"column:product_key;size:64;not null;comment:产品标识" json:"productKey"`
+	Type        int8                                       `gorm:"column:type;not null;comment:功能类型" json:"type"`
+	Property    datatypes.JSONType[dto.ThingModelProperty] `gorm:"column:property;type:text;comment:属性配置(JSON)" json:"property"`
+	Event       datatypes.JSONType[dto.ThingModelEvent]    `gorm:"column:event;type:text;comment:事件配置(JSON)" json:"event"`
+	Service     datatypes.JSONType[dto.ThingModelService]  `gorm:"column:service;type:text;comment:服务配置(JSON)" json:"service"`
 }
 
 // TableName 表名

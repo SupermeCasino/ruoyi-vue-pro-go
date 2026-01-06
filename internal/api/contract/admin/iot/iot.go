@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"github.com/wxlbd/ruoyi-mall-go/internal/dto"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
@@ -153,64 +154,40 @@ type IotDeviceAuthReqDTO struct {
 
 // IotThingModelSaveReqVO 物模型保存请求
 type IotThingModelSaveReqVO struct {
-	ID          int64  `json:"id"`
-	Identifier  string `json:"identifier" binding:"required"`
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	ProductID   int64  `json:"productId" binding:"required"`
-	ProductKey  string `json:"productKey"`
-	Type        int8   `json:"type" binding:"required"`
-	Property    string `json:"property"`
-	Event       string `json:"event"`
-	Service     string `json:"service"`
-}
-
-// ThingModelDataSpecs 物模型数据规范
-type ThingModelDataSpecs struct {
-	DataType string `json:"dataType"`
-	// 以下字段根据 dataType 不同可能存在
-	Min       *float64 `json:"min,omitempty"`
-	Max       *float64 `json:"max,omitempty"`
-	Step      *float64 `json:"step,omitempty"`
-	Unit      string   `json:"unit,omitempty"`
-	MaxLength *int     `json:"maxLength,omitempty"`
-	TrueText  string   `json:"trueText,omitempty"`
-	FalseText string   `json:"falseText,omitempty"`
-}
-
-// ThingModelProperty 物模型属性
-type ThingModelProperty struct {
-	Identifier    string                `json:"identifier"`
-	Name          string                `json:"name"`
-	AccessMode    string                `json:"accessMode"`
-	Required      bool                  `json:"required"`
-	DataType      string                `json:"dataType"`
-	DataSpecs     *ThingModelDataSpecs  `json:"dataSpecs"`
-	DataSpecsList []ThingModelDataSpecs `json:"dataSpecsList"`
+	ID          int64                   `json:"id"`
+	Identifier  string                  `json:"identifier" binding:"required"`
+	Name        string                  `json:"name" binding:"required"`
+	Description string                  `json:"description"`
+	ProductID   int64                   `json:"productId" binding:"required"`
+	ProductKey  string                  `json:"productKey"`
+	Type        int8                    `json:"type" binding:"required"`
+	Property    *dto.ThingModelProperty `json:"property"`
+	Event       *dto.ThingModelEvent    `json:"event"`
+	Service     *dto.ThingModelService  `json:"service"`
 }
 
 // IotThingModelRespVO 物模型响应信息
 type IotThingModelRespVO struct {
-	ID          int64     `json:"id"`
-	Identifier  string    `json:"identifier"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	ProductID   int64     `json:"productId"`
-	ProductKey  string    `json:"productKey"`
-	Type        int8      `json:"type"`
-	Property    string    `json:"property"`
-	Event       string    `json:"event"`
-	Service     string    `json:"service"`
-	CreateTime  time.Time `json:"createTime"`
+	ID          int64                   `json:"id"`
+	Identifier  string                  `json:"identifier"`
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
+	ProductID   int64                   `json:"productId"`
+	ProductKey  string                  `json:"productKey"`
+	Type        int8                    `json:"type"`
+	Property    *dto.ThingModelProperty `json:"property,omitempty"`
+	Event       *dto.ThingModelEvent    `json:"event,omitempty"`
+	Service     *dto.ThingModelService  `json:"service,omitempty"`
+	CreateTime  time.Time               `json:"createTime"`
 }
 
 // IotThingModelTSLRespVO 物模型 TSL 响应
 type IotThingModelTSLRespVO struct {
-	ProductID  int64    `json:"productId"`
-	ProductKey string   `json:"productKey"`
-	Properties []string `json:"properties"`
-	Services   []string `json:"services"`
-	Events     []string `json:"events"`
+	ProductID  int64                    `json:"productId"`
+	ProductKey string                   `json:"productKey"`
+	Properties []dto.ThingModelProperty `json:"properties"`
+	Services   []dto.ThingModelService  `json:"services"`
+	Events     []dto.ThingModelEvent    `json:"events"`
 }
 
 // IotThingModelPageReqVO 物模型分页请求
@@ -656,10 +633,10 @@ type IotDevicePropertyRespVO struct {
 // IotDevicePropertyDetailRespVO IoT 设备属性详细 Response VO
 type IotDevicePropertyDetailRespVO struct {
 	IotDevicePropertyRespVO
-	Name          string                `json:"name"`
-	DataType      string                `json:"dataType"`
-	DataSpecs     *ThingModelDataSpecs  `json:"dataSpecs"`
-	DataSpecsList []ThingModelDataSpecs `json:"dataSpecsList"`
+	Name          string                    `json:"name"`
+	DataType      string                    `json:"dataType"`
+	DataSpecs     *dto.ThingModelDataSpecs  `json:"dataSpecs"`
+	DataSpecsList []dto.ThingModelDataSpecs `json:"dataSpecsList"`
 }
 
 // IotDevicePropertyHistoryListReqVO IoT 设备属性历史列表 Request VO

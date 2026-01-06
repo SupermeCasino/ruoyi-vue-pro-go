@@ -190,3 +190,8 @@ func (s *DeviceService) UpdateDeviceFirmware(ctx context.Context, id int64, firm
 	device.FirmwareID = firmwareID
 	return s.deviceRepo.Update(ctx, device)
 }
+
+// GetCountByProductID 获取指定产品的设备数量
+func (s *DeviceService) GetCountByProductID(ctx context.Context, productID int64) (int64, error) {
+	return s.deviceRepo.CountByProductID(ctx, productID)
+}
