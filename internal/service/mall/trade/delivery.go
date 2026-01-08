@@ -12,7 +12,9 @@ import (
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model/trade"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/logger"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
+	"go.uber.org/zap"
 )
 
 type DeliveryExpressService struct {
@@ -510,6 +512,13 @@ func (s *DeliveryExpressTemplateService) convertAreaIDsToIntSlice(str string) []
 
 // CalculateFreight 计算运费
 func (s *DeliveryExpressTemplateService) CalculateFreight(ctx context.Context, templateID int64, areaID int, count float64, price int) (int, error) {
+	logger.Info("计算运费",
+		zap.Int64("templateId", templateID),
+		zap.Int("areaId", areaID),
+		zap.Float64("count", count),
+		zap.Int("price", price),
+	)
+
 	// 1. Get Template
 	template, err := s.GetDeliveryExpressTemplate(ctx, templateID)
 	if err != nil {
@@ -536,10 +545,18 @@ func (s *DeliveryExpressTemplateService) CalculateFreight(ctx context.Context, t
 			}
 		}
 		if found {
-			if free.FreeCount > 0 && count >= float64(free.FreeCount) {
-				return 0, nil
-			}
-			if free.FreePrice > 0 && price >= free.FreePrice {
+			// 对齐 Java: totalChargeValue <= freeCount && totalPrice >= freePrice
+			if (free.FreeCount > 0 || free.FreePrice > 0) &&
+				count <= float64(free.FreeCount) &&
+				price >= free.FreePrice {
+				logger.Info("命中包邮规则",
+					zap.Int64("templateId", templateID),
+					zap.Int("areaId", areaID),
+					zap.Float64("count", count),
+					zap.Int("price", price),
+					zap.Int("freeCount", free.FreeCount),
+					zap.Int("freePrice", free.FreePrice),
+				)
 				return 0, nil
 			}
 		}
@@ -568,14 +585,41 @@ func (s *DeliveryExpressTemplateService) CalculateFreight(ctx context.Context, t
 	}
 
 	if matchCharge == nil {
+		logger.Info("未匹配到计费规则",
+			zap.Int64("templateId", templateID),
+			zap.Int("areaId", areaID),
+		)
 		return 0, errors.New("该区域不支持配送")
 	}
 
 	if count <= matchCharge.StartCount {
+		logger.Info("运费计算完成",
+			zap.Int64("templateId", templateID),
+			zap.Int("areaId", areaID),
+			zap.Float64("count", count),
+			zap.Int("price", price),
+			zap.Float64("startCount", matchCharge.StartCount),
+			zap.Int("startPrice", matchCharge.StartPrice),
+			zap.Float64("extraCount", matchCharge.ExtraCount),
+			zap.Int("extraPrice", matchCharge.ExtraPrice),
+			zap.Int("totalPrice", matchCharge.StartPrice),
+		)
 		return matchCharge.StartPrice, nil
 	}
 
 	extraNum := math.Ceil((count - matchCharge.StartCount) / matchCharge.ExtraCount)
 	totalPrice := matchCharge.StartPrice + int(extraNum)*matchCharge.ExtraPrice
+	logger.Info("运费计算完成",
+		zap.Int64("templateId", templateID),
+		zap.Int("areaId", areaID),
+		zap.Float64("count", count),
+		zap.Int("price", price),
+		zap.Float64("startCount", matchCharge.StartCount),
+		zap.Int("startPrice", matchCharge.StartPrice),
+		zap.Float64("extraCount", matchCharge.ExtraCount),
+		zap.Int("extraPrice", matchCharge.ExtraPrice),
+		zap.Float64("extraNum", extraNum),
+		zap.Int("totalPrice", totalPrice),
+	)
 	return totalPrice, nil
 }

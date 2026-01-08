@@ -230,13 +230,14 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 	spuMap := make(map[int64]*productModel.ProductSpu)
 	for _, spu := range spuList {
 		spuMap[spu.ID] = &productModel.ProductSpu{
-			ID:            spu.ID,
-			Name:          spu.Name,
-			Status:        spu.Status,
-			CategoryID:    spu.CategoryID,
-			PicURL:        spu.PicURL,
-			GiveIntegral:  spu.GiveIntegral,
-			DeliveryTypes: spu.DeliveryTypes,
+			ID:                 spu.ID,
+			Name:               spu.Name,
+			Status:             spu.Status,
+			CategoryID:         spu.CategoryID,
+			PicURL:             spu.PicURL,
+			GiveIntegral:       spu.GiveIntegral,
+			DeliveryTypes:      spu.DeliveryTypes,
+			DeliveryTemplateID: spu.DeliveryTemplateID,
 		}
 	}
 
@@ -304,6 +305,10 @@ func (s *TradePriceService) buildItemsResponse(ctx context.Context, req *TradePr
 		if len(spu.DeliveryTypes) > 0 {
 			item.DeliveryTypes = spu.DeliveryTypes
 		}
+		item.DeliveryTemplateID = spu.DeliveryTemplateID
+		// 设置重量和体积（对齐 Java OrderItem，用于计费方式计算）
+		item.Weight = skuResp.Weight
+		item.Volume = skuResp.Volume
 
 		resp.Items = append(resp.Items, item)
 

@@ -532,7 +532,7 @@ func (s *TradeOrderUpdateService) SettlementOrder(ctx context.Context, userId in
 	// 1. 获得收货地址
 	var address *memberModel.MemberAddress
 	if settlementReq.AddressID != nil && *settlementReq.AddressID > 0 {
-		addressResp, _ := s.addressSvc.GetAddress(ctx, *settlementReq.AddressID, userId)
+		addressResp, _ := s.addressSvc.GetAddress(ctx, userId, *settlementReq.AddressID)
 		if addressResp != nil {
 			address = &memberModel.MemberAddress{
 				ID:            addressResp.ID,
@@ -609,6 +609,8 @@ func (s *TradeOrderUpdateService) calculatePrice(ctx context.Context, userId int
 
 // CreateOrder 创建交易订单
 // 对应 Java: TradeOrderUpdateServiceImpl#createOrder
+// 重要变更：对齐 Java 行为，将支付订单创建纳入事务流程
+// 如果支付订单创建失败，整个订单创建失败并回滚
 func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64, userIP string, terminal int, createReq *trade2.AppTradeOrderCreateReq) (*tradeModel.TradeOrder, error) {
 	s.logger.Info("开始创建订单",
 		zap.Int64("userId", userId),
@@ -643,6 +645,7 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64,
 	var createdOrder *tradeModel.TradeOrder
 
 	// 3. 保存订单（事务）
+	// 对齐 Java：整个订单创建流程（包括支付订单）在同一事务语义下
 	err = s.q.Transaction(func(tx *query.Query) error {
 		// 3.1 插入订单
 		if err := tx.TradeOrder.WithContext(ctx).Create(order); err != nil {
@@ -657,6 +660,15 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64,
 			return err
 		}
 
+		// 3.3 创建支付订单（对齐 Java: afterCreateTradeOrder 中的 createPayOrder）
+		// 重要：将支付订单创建移入事务，如果失败则回滚订单
+		if order.PayPrice > 0 {
+			if err := s.createPayOrderInTx(ctx, tx, order, orderItems); err != nil {
+				s.logger.Error("创建支付订单失败，回滚订单", zap.Error(err))
+				return err
+			}
+		}
+
 		createdOrder = order
 		return nil
 	})
@@ -666,11 +678,8 @@ func (s *TradeOrderUpdateService) CreateOrder(ctx context.Context, userId int64,
 		return nil, err
 	}
 
-	// 4. 订单创建后的逻辑
-	if err := s.afterCreateTradeOrder(ctx, createdOrder, orderItems, createReq); err != nil {
-		s.logger.Error("订单创建后置处理失败", zap.Error(err))
-		// 后置处理失败不影响主流程，仅记录日志
-	}
+	// 4. 订单创建后的非关键逻辑（不影响主流程）
+	s.afterCreateTradeOrderNonCritical(ctx, createdOrder, orderItems, createReq)
 
 	s.logger.Info("订单创建成功",
 		zap.Int64("userId", userId),
@@ -834,6 +843,119 @@ func (s *TradeOrderUpdateService) afterCreateTradeOrder(ctx context.Context, ord
 	}
 
 	return nil
+}
+
+// createPayOrderInTx 在事务中创建支付订单
+// 对齐 Java: 将支付订单创建作为订单创建事务的一部分
+// 如果失败，整个事务回滚，订单不会被创建
+func (s *TradeOrderUpdateService) createPayOrderInTx(ctx context.Context, tx *query.Query, order *tradeModel.TradeOrder, orderItems []*tradeModel.TradeOrderItem) error {
+	s.logger.Info("创建支付订单（事务内）",
+		zap.Int64("orderId", order.ID),
+		zap.Int("payPrice", order.PayPrice),
+	)
+
+	// 1. 获取交易配置（用于获取超时时间等）
+	tradeConfig, err := s.configSvc.GetTradeConfig(ctx)
+	if err != nil {
+		s.logger.Error("获取交易配置失败", zap.Error(err))
+		return err
+	}
+
+	// 2. 对齐 Java: 使用 appKey 获取支付应用
+	// Java 使用 TradeOrderProperties.getPayAppKey()，默认值为 "mall"
+	// 参见: TradeOrderProperties.java 第 22-30 行
+	const defaultPayAppKey = "mall"
+	payApp, err := s.payAppSvc.GetAppByAppKey(ctx, defaultPayAppKey)
+	if err != nil {
+		s.logger.Error("获取支付应用失败，请确认支付应用 AppKey 已配置",
+			zap.String("appKey", defaultPayAppKey),
+			zap.Error(err),
+		)
+		return pkgErrors.NewBizError(1006000000, "支付应用不存在，请联系管理员配置")
+	}
+
+	// 3. 构建支付订单创建请求
+	// 对齐 Java: Subject 使用商品名称，而非订单号
+	subject := "未知商品"
+	if len(orderItems) > 0 {
+		subject = orderItems[0].SpuName
+	}
+	// 截取长度（简单处理，Java 使用了 StrUtils.maxLength）
+	if len(subject) > 32 {
+		r := []rune(subject)
+		if len(r) > 32 {
+			subject = string(r[:32])
+		}
+	}
+
+	createReq := &pay.PayOrderCreateReq{
+		AppKey:          payApp.AppKey,
+		MerchantOrderId: order.No,
+		Subject:         subject,
+		Body:            s.buildPayBody(orderItems),
+		Price:           order.PayPrice,
+		ExpireTime:      time.Now().Add(time.Duration(tradeConfig.PayTimeoutMinutes) * time.Minute),
+		UserIP:          order.UserIP,
+	}
+
+	// 4. 调用支付服务创建支付订单
+	// 注意：外部服务调用无法回滚，但如果失败，事务会回滚订单数据
+	payOrderID, err := s.paySvc.CreateOrder(ctx, createReq)
+	if err != nil {
+		s.logger.Error("调用支付系统创建订单失败", zap.Error(err))
+		return err
+	}
+
+	// 5. 在事务中更新交易订单的支付单编号
+	_, err = tx.TradeOrder.WithContext(ctx).
+		Where(tx.TradeOrder.ID.Eq(order.ID)).
+		Update(tx.TradeOrder.PayOrderID, payOrderID)
+	if err != nil {
+		s.logger.Error("更新交易订单支付单编号失败", zap.Error(err))
+		return err
+	}
+
+	// 6. 更新内存中的订单对象，确保返回值包含 payOrderId
+	order.PayOrderID = &payOrderID
+	s.logger.Info("支付订单创建成功",
+		zap.Int64("orderId", order.ID),
+		zap.Int64("payOrderId", payOrderID),
+	)
+
+	return nil
+}
+
+// afterCreateTradeOrderNonCritical 订单创建后的非关键后置逻辑
+// 这些操作失败不会影响订单创建的成功状态
+// 对应 Java: afterCreateTradeOrder 中除 createPayOrder 外的其他逻辑
+func (s *TradeOrderUpdateService) afterCreateTradeOrderNonCritical(ctx context.Context, order *tradeModel.TradeOrder, orderItems []*tradeModel.TradeOrderItem, createReq *trade2.AppTradeOrderCreateReq) {
+	// 1. 执行订单创建后置处理器
+	// 对应 Java: tradeOrderHandlers.forEach(handler -> handler.afterOrderCreate(order, orderItems))
+	if err := s.executeAfterOrderCreate(ctx, order, orderItems); err != nil {
+		s.logger.Error("订单创建后置处理器执行失败", zap.Error(err))
+		// 后置处理失败不影响主流程，仅记录日志
+	}
+
+	// 2. 删除购物车商品
+	var cartIDs []int64
+	for _, item := range createReq.Items {
+		if item.CartID > 0 {
+			cartIDs = append(cartIDs, item.CartID)
+		}
+	}
+	if len(cartIDs) > 0 {
+		if err := s.cartSvc.DeleteCart(ctx, order.UserID, cartIDs); err != nil {
+			s.logger.Error("删除购物车失败", zap.Error(err))
+			// 不影响主流程
+		}
+	}
+
+	// 3. 插入订单日志
+	// 订单操作类型：1-创建订单
+	if err := s.createOrderLogWithOrder(ctx, order, 1, "用户下单"); err != nil {
+		s.logger.Error("创建订单日志失败", zap.Error(err))
+		// 日志创建失败不影响主流程
+	}
 }
 
 // createPayOrder 创建支付订单

@@ -93,25 +93,28 @@ type TradePriceCalculatePriceBO struct {
 
 // TradePriceCalculateItemRespBO 价格计算商品项响应业务对象
 type TradePriceCalculateItemRespBO struct {
-	SpuID         int64                            `json:"spuId"`         // 商品SPU ID
-	SkuID         int64                            `json:"skuId"`         // 商品SKU ID
-	Count         int                              `json:"count"`         // 商品数量
-	CartID        int64                            `json:"cartId"`        // 购物车ID
-	Selected      bool                             `json:"selected"`      // 是否选中
-	Price         int                              `json:"price"`         // 商品单价
-	DiscountPrice int                              `json:"discountPrice"` // 折扣金额
-	DeliveryPrice int                              `json:"deliveryPrice"` // 运费
-	CouponPrice   int                              `json:"couponPrice"`   // 优惠券折扣
-	PointPrice    int                              `json:"pointPrice"`    // 积分抵扣
-	UsePoint      int                              `json:"usePoint"`      // 使用的积分数量
-	VipPrice      int                              `json:"vipPrice"`      // VIP折扣
-	PayPrice      int                              `json:"payPrice"`      // 应付金额
-	SpuName       string                           `json:"spuName"`       // 商品名称
-	PicURL        string                           `json:"picUrl"`        // 商品图片
-	CategoryID    int64                            `json:"categoryId"`    // 分类ID
-	DeliveryTypes []int                            `json:"deliveryTypes"` // 配送方式
-	GivePoint     int                              `json:"givePoint"`     // 赠送积分
-	Properties    []product.ProductSkuPropertyResp `json:"properties"`    // 商品属性
+	SpuID              int64                            `json:"spuId"`              // 商品SPU ID
+	SkuID              int64                            `json:"skuId"`              // 商品SKU ID
+	Count              int                              `json:"count"`              // 商品数量
+	CartID             int64                            `json:"cartId"`             // 购物车ID
+	Selected           bool                             `json:"selected"`           // 是否选中
+	Price              int                              `json:"price"`              // 商品单价
+	DiscountPrice      int                              `json:"discountPrice"`      // 折扣金额
+	DeliveryPrice      int                              `json:"deliveryPrice"`      // 运费
+	CouponPrice        int                              `json:"couponPrice"`        // 优惠券折扣
+	PointPrice         int                              `json:"pointPrice"`         // 积分抵扣
+	UsePoint           int                              `json:"usePoint"`           // 使用的积分数量
+	VipPrice           int                              `json:"vipPrice"`           // VIP折扣
+	PayPrice           int                              `json:"payPrice"`           // 应付金额
+	SpuName            string                           `json:"spuName"`            // 商品名称
+	PicURL             string                           `json:"picUrl"`             // 商品图片
+	CategoryID         int64                            `json:"categoryId"`         // 分类ID
+	DeliveryTypes      []int                            `json:"deliveryTypes"`      // 配送方式
+	DeliveryTemplateID int64                            `json:"deliveryTemplateId"` // 运费模板ID（对齐 Java OrderItem）
+	Weight             float64                          `json:"weight"`             // 商品重量，单位：kg（对齐 Java OrderItem）
+	Volume             float64                          `json:"volume"`             // 商品体积，单位：m³（对齐 Java OrderItem）
+	GivePoint          int                              `json:"givePoint"`          // 赠送积分
+	Properties         []product.ProductSkuPropertyResp `json:"properties"`         // 商品属性
 }
 
 // AppTradeProductSettlementRespBO 商品结算信息响应业务对象

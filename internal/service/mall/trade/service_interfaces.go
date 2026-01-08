@@ -28,6 +28,7 @@ type PayRefundServiceAPI interface {
 // PayAppServiceAPI 定义支付应用服务接口
 type PayAppServiceAPI interface {
 	GetApp(ctx context.Context, id int64) (*payModel.PayApp, error)
+	GetAppByAppKey(ctx context.Context, appKey string) (*payModel.PayApp, error)
 }
 
 // ProductCommentServiceAPI 定义商品评价服务接口

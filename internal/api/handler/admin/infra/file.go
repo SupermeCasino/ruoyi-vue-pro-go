@@ -1,7 +1,7 @@
 package infra
 
 import (
-	"io/ioutil"
+	"io"
 	"strconv"
 
 	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
@@ -153,7 +153,7 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 	}
 	defer f.Close()
 
-	content, err := ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
