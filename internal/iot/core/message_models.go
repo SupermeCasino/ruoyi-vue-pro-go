@@ -7,6 +7,11 @@ import (
 // DeviceMessageTopic 设备消息主题 (与 Java IotDeviceMessage.MESSAGE_BUS_DEVICE_MESSAGE_TOPIC 对齐)
 const DeviceMessageTopic = "iot_device_message"
 
+// BuildGatewayDeviceMessageTopic 构建网关下行消息主题
+func BuildGatewayDeviceMessageTopic(serverID string) string {
+	return DeviceMessageTopic + "_" + serverID
+}
+
 // IotDeviceMessage IoT 设备消息结构体
 // 与 Java cn.iocoder.yudao.module.iot.core.mq.message.IotDeviceMessage 对齐
 type IotDeviceMessage struct {
@@ -25,8 +30,8 @@ type IotDeviceMessage struct {
 	// Data 响应数据
 	Data any `json:"data,omitempty"`
 
-	// Code 响应错误码
-	Code int `json:"code,omitempty"`
+	// Code 响应错误码 (*int 对齐 Java Integer,支持 null 检查)
+	Code *int `json:"code,omitempty"`
 
 	// Msg 响应提示
 	Msg string `json:"msg,omitempty"`
@@ -47,7 +52,7 @@ type IotDeviceMessage struct {
 // BuildStateUpdateOnline 构建设备上线状态消息
 func BuildStateUpdateOnline() *IotDeviceMessage {
 	return &IotDeviceMessage{
-		Method: "thing.lifecycle.state.update",
+		Method: "thing.state.update",
 		Params: map[string]any{"state": "online"},
 	}
 }
@@ -55,7 +60,7 @@ func BuildStateUpdateOnline() *IotDeviceMessage {
 // BuildStateOffline 构建设备离线状态消息
 func BuildStateOffline() *IotDeviceMessage {
 	return &IotDeviceMessage{
-		Method: "thing.lifecycle.state.update",
+		Method: "thing.state.update",
 		Params: map[string]any{"state": "offline"},
 	}
 }
@@ -63,5 +68,5 @@ func BuildStateOffline() *IotDeviceMessage {
 // IsUpstreamMessage 判断是否为上行消息
 func (m *IotDeviceMessage) IsUpstreamMessage() bool {
 	// 上行消息特征：无 Code (非响应)
-	return m.Code == 0 && m.Data == nil
+	return m.Code == nil && m.Data == nil
 }

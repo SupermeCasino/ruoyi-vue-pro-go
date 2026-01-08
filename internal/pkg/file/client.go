@@ -3,7 +3,6 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -47,7 +46,7 @@ func (c *LocalFileClient) Upload(content []byte, path string) (string, error) {
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return "", err
 	}
-	if err := ioutil.WriteFile(fullPath, content, 0644); err != nil {
+	if err := os.WriteFile(fullPath, content, 0644); err != nil {
 		return "", err
 	}
 	// 返回完整 URL
@@ -61,7 +60,7 @@ func (c *LocalFileClient) Delete(path string) error {
 
 func (c *LocalFileClient) GetContent(path string) ([]byte, error) {
 	fullPath := filepath.Join(c.Config.BasePath, path)
-	return ioutil.ReadFile(fullPath)
+	return os.ReadFile(fullPath)
 }
 
 func (c *LocalFileClient) GetURL(path string) string {

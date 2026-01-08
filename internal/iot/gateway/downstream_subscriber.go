@@ -21,9 +21,9 @@ func NewDownstreamSubscriber(mqttClient *MQTTClient, serverID string) *Downstrea
 	}
 }
 
-// Topic 返回订阅的主题（下行指令主题，基于 ServerID）
+// Topic 返回网关监听的下行主题
 func (s *DownstreamSubscriber) Topic() string {
-	return "iot_gateway_downstream_" + s.serverID
+	return core.BuildGatewayDeviceMessageTopic(s.serverID)
 }
 
 // Group 返回订阅者分组
@@ -33,7 +33,7 @@ func (s *DownstreamSubscriber) Group() string {
 
 // OnMessage 处理下行指令消息
 func (s *DownstreamSubscriber) OnMessage(message any) {
-	msg, ok := message.(*DownstreamCommand)
+	msg, ok := message.(*core.DownstreamCommand)
 	if !ok {
 		log.Printf("[DownstreamSubscriber] Invalid message type")
 		return
@@ -48,11 +48,6 @@ func (s *DownstreamSubscriber) OnMessage(message any) {
 	}
 }
 
-// DownstreamCommand 下行指令结构
-type DownstreamCommand struct {
-	ProductKey string
-	DeviceName string
-	Message    *core.IotDeviceMessage
-}
+// DownstreamCommand 下行指令结构已迁移至 internal/iot/core/commands.go
 
 var _ core.MessageSubscriber = (*DownstreamSubscriber)(nil)

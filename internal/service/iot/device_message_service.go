@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -115,8 +116,15 @@ func (s *DeviceMessageService) sendDeviceMessageInternal(ctx context.Context, me
 	}
 
 	// 发送到指定网关的主题
-	gatewayTopic := "iot_gateway_downstream_" + serverID
-	s.messageBus.Post(gatewayTopic, message)
+	gatewayTopic := iotcore.BuildGatewayDeviceMessageTopic(serverID)
+
+	// 包装为下行指令格式，以便网关层正确解析
+	command := &iotcore.DownstreamCommand{
+		ProductKey: device.ProductKey,
+		DeviceName: device.DeviceName,
+		Message:    message,
+	}
+	s.messageBus.Post(gatewayTopic, command)
 
 	// 记录下行消息日志（异步）
 	go s.createDeviceLogAsync(ctx, message)
@@ -242,7 +250,7 @@ func (s *DeviceMessageService) sendReplyMessage(ctx context.Context, message *io
 		RequestID:  message.RequestID,
 		Method:     replyMethod,
 		Data:       data,
-		Code:       code,
+		Code:       &code,
 		Msg:        msg,
 		DeviceID:   device.ID,
 		TenantID:   device.TenantID,
@@ -296,9 +304,9 @@ func (s *DeviceMessageService) createDeviceLogAsync(ctx context.Context, message
 	}
 }
 
-// generateMessageID 生成消息ID
+// generateMessageID 生成消息ID (对齐 Java Hutool fastSimpleUUID: 无连字符)
 func generateMessageID() string {
-	return uuid.New().String()
+	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
 
 // isReplyMessage 判断是否为回复消息

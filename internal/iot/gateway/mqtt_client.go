@@ -190,8 +190,13 @@ func (c *MQTTClient) parseTopicDeviceInfo(topic string) (productKey, deviceName 
 
 // SendDownstreamMessage 发送下行指令到设备
 func (c *MQTTClient) SendDownstreamMessage(productKey, deviceName string, message *core.IotDeviceMessage) error {
-	// 构建下行 Topic
-	topic := fmt.Sprintf("/sys/%s/%s/thing/service/property/set", productKey, deviceName)
+	// 阿里 Alink 协议下行 Topic 逻辑 (严格对齐 Java IotMqttTopicUtils.buildTopicByMethod)
+	// 逻辑：/sys/{productKey}/{deviceName}/ + strings.ReplaceAll(method, ".", "/") + (isReply ? "_reply" : "")
+	topicSuffix := strings.ReplaceAll(message.Method, ".", "/")
+	if message.Code != nil {
+		topicSuffix += "_reply"
+	}
+	topic := fmt.Sprintf("/sys/%s/%s/%s", productKey, deviceName, topicSuffix)
 
 	// 编码消息
 	codecType := c.config.DefaultCodecType
@@ -208,5 +213,6 @@ func (c *MQTTClient) SendDownstreamMessage(productKey, deviceName string, messag
 		return fmt.Errorf("encode message failed: %w", err)
 	}
 
+	log.Printf("[MQTTClient] Publishing downstream message to topic: %s", topic)
 	return c.Publish(topic, 1, payload)
 }

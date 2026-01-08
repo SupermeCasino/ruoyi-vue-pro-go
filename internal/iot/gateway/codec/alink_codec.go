@@ -28,7 +28,8 @@ type AlinkMessage struct {
 	Data any `json:"data,omitempty"`
 
 	// Code 响应错误码
-	Code int `json:"code,omitempty"`
+	// Code 响应错误码 (*int 对齐 Java Integer)
+	Code *int `json:"code,omitempty"`
 
 	// Msg 响应提示
 	Msg string `json:"msg,omitempty"`

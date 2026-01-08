@@ -269,7 +269,7 @@ type IotDeviceMessageDO struct {
 	Method     string `gorm:"column:method;size:64;comment:请求方法" json:"method"`
 	Params     string `gorm:"column:params;type:text;comment:请求参数" json:"params"`
 	Data       string `gorm:"column:data;type:text;comment:响应结果" json:"data"`
-	Code       int    `gorm:"column:code;comment:响应错误码" json:"code"`
+	Code       *int   `gorm:"column:code;comment:响应错误码" json:"code"`
 	Msg        string `gorm:"column:msg;size:255;comment:响应提示" json:"msg"`
 }
 

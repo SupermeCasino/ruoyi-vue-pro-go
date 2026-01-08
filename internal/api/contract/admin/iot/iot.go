@@ -600,12 +600,12 @@ type IotDeviceMessageRespVO struct {
 	Reply      bool       `json:"reply"`
 	Identifier string     `json:"identifier"`
 	// codec（编解码）字段
-	RequestID string      `json:"requestId"`
-	Method    string      `json:"method"`
-	Params    interface{} `json:"params"`
-	Data      interface{} `json:"data"`
-	Code      int         `json:"code"`
-	Msg       string      `json:"msg"`
+	RequestID string `json:"requestId"`
+	Method    string `json:"method"`
+	Params    any    `json:"params"`
+	Data      any    `json:"data"`
+	Code      *int   `json:"code"`
+	Msg       string `json:"msg"`
 }
 
 // IotDeviceMessageRespPairVO IoT 设备消息对 Response VO
@@ -616,18 +616,18 @@ type IotDeviceMessageRespPairVO struct {
 
 // IotDeviceMessageSendReqVO IoT 设备消息发送 Request VO
 type IotDeviceMessageSendReqVO struct {
-	Method   string      `json:"method" binding:"required"`
-	Params   interface{} `json:"params"`
-	DeviceID int64       `json:"deviceId" binding:"required"`
+	Method   string `json:"method" binding:"required"`
+	Params   any    `json:"params"`
+	DeviceID int64  `json:"deviceId" binding:"required"`
 }
 
 // ================= Iot Device Property =================
 
 // IotDevicePropertyRespVO IoT 设备属性 Response VO
 type IotDevicePropertyRespVO struct {
-	Identifier string      `json:"identifier"`
-	Value      interface{} `json:"value"`
-	UpdateTime int64       `json:"updateTime"`
+	Identifier string `json:"identifier"`
+	Value      any    `json:"value"`
+	UpdateTime int64  `json:"updateTime"`
 }
 
 // IotDevicePropertyDetailRespVO IoT 设备属性详细 Response VO
