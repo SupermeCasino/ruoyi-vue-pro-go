@@ -1,24 +1,30 @@
 package gateway
 
 import (
+	"context"
 	"log"
 	"time"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/iot/core"
+	iotsvc "github.com/wxlbd/ruoyi-mall-go/internal/service/iot"
 )
 
 // DeviceMessageSubscriber 设备消息业务订阅者
 // 消费内部消息总线的上行报文，执行业务逻辑（属性入库、状态同步等）
 type DeviceMessageSubscriber struct {
-	// TODO: 添加依赖注入
-	// deviceService 设备服务（用于状态更新）
-	// propertyService 属性服务（用于属性入库）
-	// 这些依赖将在后续集成时注入
+	deviceService        *iotsvc.DeviceService
+	deviceMessageService *iotsvc.DeviceMessageService
 }
 
 // NewDeviceMessageSubscriber 创建设备消息业务订阅者
-func NewDeviceMessageSubscriber() *DeviceMessageSubscriber {
-	return &DeviceMessageSubscriber{}
+func NewDeviceMessageSubscriber(
+	deviceService *iotsvc.DeviceService,
+	deviceMessageService *iotsvc.DeviceMessageService,
+) *DeviceMessageSubscriber {
+	return &DeviceMessageSubscriber{
+		deviceService:        deviceService,
+		deviceMessageService: deviceMessageService,
+	}
 }
 
 // Topic 返回订阅的主题
@@ -41,71 +47,34 @@ func (s *DeviceMessageSubscriber) OnMessage(message any) {
 
 	// 1. 检查是否为上行消息
 	if !msg.IsUpstreamMessage() {
-		log.Printf("[DeviceMessageSubscriber] Not an upstream message, skipping")
 		return
 	}
 
-	log.Printf("[DeviceMessageSubscriber] Processing device message: method=%s, deviceId=%d",
-		msg.Method, msg.DeviceID)
+	ctx := context.Background()
 
 	// 2. 更新设备最后上报时间
-	s.updateDeviceReportTime(msg.DeviceID, msg.ReportTime)
+	s.updateDeviceReportTime(ctx, msg.DeviceID, msg.ReportTime)
 
-	// 3. 根据消息类型处理业务逻辑
-	switch {
-	case isPropertyPost(msg.Method):
-		s.handlePropertyPost(msg)
-	case isEventPost(msg.Method):
-		s.handleEventPost(msg)
-	case isStateUpdate(msg.Method):
-		s.handleStateUpdate(msg)
-	default:
-		log.Printf("[DeviceMessageSubscriber] Unknown method: %s", msg.Method)
+	// 3. 获取设备信息
+	device, err := s.deviceService.Get(ctx, msg.DeviceID)
+	if err != nil {
+		log.Printf("[DeviceMessageSubscriber] Get device failed: %v", err)
+		return
 	}
+	if device == nil {
+		log.Printf("[DeviceMessageSubscriber] Device not found: %d", msg.DeviceID)
+		return
+	}
+
+	// 4. 交由 DeviceMessageService 处理业务逻辑（属性保存、状态更新、日志记录、回复）
+	s.deviceMessageService.HandleUpstreamDeviceMessage(ctx, msg, device)
 }
 
 // updateDeviceReportTime 更新设备上报时间
-func (s *DeviceMessageSubscriber) updateDeviceReportTime(deviceID int64, reportTime time.Time) {
-	// TODO: 调用 DevicePropertyService 更新设备上报时间
-	log.Printf("[DeviceMessageSubscriber] Update device report time: deviceId=%d, time=%v",
-		deviceID, reportTime)
-}
-
-// handlePropertyPost 处理属性上报
-func (s *DeviceMessageSubscriber) handlePropertyPost(msg *core.IotDeviceMessage) {
-	log.Printf("[DeviceMessageSubscriber] Property post: deviceId=%d, params=%v",
-		msg.DeviceID, msg.Params)
-	// TODO: 调用 DevicePropertyService 保存属性值
-}
-
-// handleEventPost 处理事件上报
-func (s *DeviceMessageSubscriber) handleEventPost(msg *core.IotDeviceMessage) {
-	log.Printf("[DeviceMessageSubscriber] Event post: deviceId=%d, params=%v",
-		msg.DeviceID, msg.Params)
-	// TODO: 调用事件处理逻辑
-}
-
-// handleStateUpdate 处理状态更新
-func (s *DeviceMessageSubscriber) handleStateUpdate(msg *core.IotDeviceMessage) {
-	log.Printf("[DeviceMessageSubscriber] State update: deviceId=%d, params=%v",
-		msg.DeviceID, msg.Params)
-	// TODO: 调用 DeviceService 更新设备状态
-}
-
-// isPropertyPost 判断是否为属性上报
-func isPropertyPost(method string) bool {
-	return method == "thing.event.property.post"
-}
-
-// isEventPost 判断是否为事件上报
-func isEventPost(method string) bool {
-	return method == "thing.event.post" ||
-		(len(method) > 12 && method[:12] == "thing.event." && method != "thing.event.property.post")
-}
-
-// isStateUpdate 判断是否为状态更新
-func isStateUpdate(method string) bool {
-	return method == "thing.lifecycle.state.update"
+func (s *DeviceMessageSubscriber) updateDeviceReportTime(ctx context.Context, deviceID int64, reportTime time.Time) {
+	if err := s.deviceService.UpdateDeviceActiveTime(ctx, deviceID, reportTime); err != nil {
+		log.Printf("[DeviceMessageSubscriber] Update device active time failed: %v", err)
+	}
 }
 
 var _ core.MessageSubscriber = (*DeviceMessageSubscriber)(nil)

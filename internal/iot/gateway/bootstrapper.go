@@ -7,17 +7,20 @@ import (
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/iot/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/iot/gateway/codec"
+	iotsvc "github.com/wxlbd/ruoyi-mall-go/internal/service/iot"
 )
 
 // IotGatewayBootstrapper IoT 网关启动器
 // 统一管理网关组件的生命周期
 type IotGatewayBootstrapper struct {
-	config            *MQTTClientConfig
-	messageBus        core.MessageBus
-	codecRegistry     *codec.CodecRegistry
-	mqttClient        *MQTTClient
-	connectionManager *ConnectionManager
-	subscribers       []core.MessageSubscriber
+	config               *MQTTClientConfig
+	messageBus           core.MessageBus
+	codecRegistry        *codec.CodecRegistry
+	mqttClient           *MQTTClient
+	connectionManager    *ConnectionManager
+	subscribers          []core.MessageSubscriber
+	deviceService        *iotsvc.DeviceService
+	deviceMessageService *iotsvc.DeviceMessageService
 }
 
 // NewIotGatewayBootstrapper 创建网关启动器
@@ -25,11 +28,15 @@ func NewIotGatewayBootstrapper(
 	config *MQTTClientConfig,
 	messageBus core.MessageBus,
 	codecRegistry *codec.CodecRegistry,
+	deviceService *iotsvc.DeviceService,
+	deviceMessageService *iotsvc.DeviceMessageService,
 ) *IotGatewayBootstrapper {
 	return &IotGatewayBootstrapper{
-		config:        config,
-		messageBus:    messageBus,
-		codecRegistry: codecRegistry,
+		config:               config,
+		messageBus:           messageBus,
+		codecRegistry:        codecRegistry,
+		deviceService:        deviceService,
+		deviceMessageService: deviceMessageService,
 	}
 }
 
@@ -48,7 +55,7 @@ func (b *IotGatewayBootstrapper) Start(ctx context.Context) error {
 	b.mqttClient = NewMQTTClient(b.config, b.messageBus, b.codecRegistry)
 
 	// 4. 注册消息订阅者
-	deviceMessageSub := NewDeviceMessageSubscriber()
+	deviceMessageSub := NewDeviceMessageSubscriber(b.deviceService, b.deviceMessageService)
 	downstreamSub := NewDownstreamSubscriber(b.mqttClient, serverID)
 
 	b.subscribers = []core.MessageSubscriber{deviceMessageSub, downstreamSub}
@@ -57,6 +64,9 @@ func (b *IotGatewayBootstrapper) Start(ctx context.Context) error {
 		log.Printf("[IotGatewayBootstrapper] Registered subscriber: topic=%s, group=%s",
 			sub.Topic(), sub.Group())
 	}
+
+	// 启动消息总线
+	b.messageBus.Start()
 
 	// 5. 启动 MQTT 客户端
 	if err := b.mqttClient.Start(ctx); err != nil {
@@ -73,6 +83,10 @@ func (b *IotGatewayBootstrapper) Stop() {
 
 	if b.mqttClient != nil {
 		b.mqttClient.Stop()
+	}
+
+	if b.messageBus != nil {
+		b.messageBus.Stop()
 	}
 
 	log.Println("[IotGatewayBootstrapper] IoT Gateway stopped")

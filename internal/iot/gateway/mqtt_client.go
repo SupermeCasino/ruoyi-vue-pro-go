@@ -25,6 +25,7 @@ type MQTTClientConfig struct {
 	CleanSession     bool          `yaml:"clean_session"`      // 清理会话
 	SubscribeTopics  []string      `yaml:"subscribe_topics"`   // 订阅主题列表
 	DefaultCodecType string        `yaml:"default_codec_type"` // 默认编解码器类型
+	TopicPrefix      string        `yaml:"topic_prefix"`       // 主题前缀，默认 /sys
 }
 
 // MQTTClient Paho MQTT 客户端封装
@@ -40,6 +41,9 @@ type MQTTClient struct {
 
 // NewMQTTClient 创建 MQTT 客户端
 func NewMQTTClient(config *MQTTClientConfig, messageBus core.MessageBus, codecRegistry *codec.CodecRegistry) *MQTTClient {
+	if config.TopicPrefix == "" {
+		config.TopicPrefix = "/sys"
+	}
 	return &MQTTClient{
 		config:        config,
 		messageBus:    messageBus,
@@ -101,7 +105,7 @@ func (c *MQTTClient) Stop() {
 
 // Publish 发布消息到指定主题
 func (c *MQTTClient) Publish(topic string, qos byte, payload []byte) error {
-	if !c.client.IsConnected() {
+	if c.client == nil || !c.client.IsConnected() {
 		return fmt.Errorf("mqtt client not connected")
 	}
 
@@ -131,16 +135,22 @@ func (c *MQTTClient) onConnectionLost(client mqtt.Client, err error) {
 
 // onMessage 接收消息回调（上行消息处理）
 func (c *MQTTClient) onMessage(client mqtt.Client, msg mqtt.Message) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[MQTTClient] Panic recovered in onMessage: %v", r)
+		}
+	}()
+
 	topic := msg.Topic()
 	payload := msg.Payload()
 
-	log.Printf("[MQTTClient] Received message on topic: %s", topic)
+	// log.Printf("[MQTTClient] Received message on topic: %s", topic)
 
 	// 1. 解析 Topic 获取 productKey 和 deviceName
-	// Topic 格式: /sys/{productKey}/{deviceName}/thing/event/property/post
-	productKey, deviceName, err := c.parseTopicDeviceInfo(topic)
+	// Topic 格式: {TopicPrefix}/{productKey}/{deviceName}/thing/event/property/post
+	_, _, err := c.parseTopicDeviceInfo(topic)
 	if err != nil {
-		log.Printf("[MQTTClient] Parse topic failed: %v", err)
+		// log.Printf("[MQTTClient] Parse topic failed: %v", err)
 		return
 	}
 
@@ -164,39 +174,50 @@ func (c *MQTTClient) onMessage(client mqtt.Client, msg mqtt.Message) {
 	// 3. 补充消息元数据
 	message.ReportTime = time.Now()
 
-	log.Printf("[MQTTClient] Device message: productKey=%s, deviceName=%s, method=%s",
-		productKey, deviceName, message.Method)
+	// log.Printf("[MQTTClient] Device message: productKey=%s, deviceName=%s, method=%s",
+	// 	productKey, deviceName, message.Method)
 
 	// 4. 发布到内部消息总线
 	c.messageBus.Post(core.DeviceMessageTopic, message)
 }
 
 // parseTopicDeviceInfo 从 Topic 中解析设备信息
-// Topic 格式: /sys/{productKey}/{deviceName}/...
+// Topic 格式: {TopicPrefix}/{productKey}/{deviceName}/...
 func (c *MQTTClient) parseTopicDeviceInfo(topic string) (productKey, deviceName string, err error) {
-	parts := strings.Split(topic, "/")
-	if len(parts) < 4 {
+	// 去除前缀
+	prefix := c.config.TopicPrefix
+	if !strings.HasPrefix(topic, prefix) {
+		return "", "", fmt.Errorf("invalid topic prefix: %s", topic)
+	}
+
+	relativeTopic := strings.TrimPrefix(topic, prefix)
+	// relativeTopic: /{productKey}/{deviceName}/...
+
+	parts := strings.Split(relativeTopic, "/")
+	// parts[0] = "", parts[1] = productKey, parts[2] = deviceName
+
+	if len(parts) < 3 {
 		return "", "", fmt.Errorf("invalid topic format: %s", topic)
 	}
 
-	// /sys/{productKey}/{deviceName}/...
-	// parts[0] = "", parts[1] = "sys", parts[2] = productKey, parts[3] = deviceName
-	if parts[1] != "sys" {
-		return "", "", fmt.Errorf("unsupported topic prefix: %s", parts[1])
-	}
-
-	return parts[2], parts[3], nil
+	return parts[1], parts[2], nil
 }
 
 // SendDownstreamMessage 发送下行指令到设备
 func (c *MQTTClient) SendDownstreamMessage(productKey, deviceName string, message *core.IotDeviceMessage) error {
 	// 阿里 Alink 协议下行 Topic 逻辑 (严格对齐 Java IotMqttTopicUtils.buildTopicByMethod)
-	// 逻辑：/sys/{productKey}/{deviceName}/ + strings.ReplaceAll(method, ".", "/") + (isReply ? "_reply" : "")
+	// 逻辑：{TopicPrefix}/{productKey}/{deviceName}/ + strings.ReplaceAll(method, ".", "/") + (isReply ? "_reply" : "")
 	topicSuffix := strings.ReplaceAll(message.Method, ".", "/")
 	if message.Code != nil {
 		topicSuffix += "_reply"
 	}
-	topic := fmt.Sprintf("/sys/%s/%s/%s", productKey, deviceName, topicSuffix)
+
+	prefix := c.config.TopicPrefix
+	if prefix == "" {
+		prefix = "/sys"
+	}
+
+	topic := fmt.Sprintf("%s/%s/%s/%s", prefix, productKey, deviceName, topicSuffix)
 
 	// 编码消息
 	codecType := c.config.DefaultCodecType

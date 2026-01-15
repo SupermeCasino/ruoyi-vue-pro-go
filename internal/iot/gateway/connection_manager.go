@@ -23,27 +23,45 @@ type ConnectionInfo struct {
 // ConnectionManager 设备连接管理器
 // 管理设备连接状态、心跳维持及在线状态同步
 type ConnectionManager struct {
-	mu          sync.RWMutex
-	connections map[string]*ConnectionInfo // key: clientID
-	deviceIndex map[int64]string           // key: deviceID, value: clientID
-	messageBus  core.MessageBus
-	serverID    string
+	mu             sync.RWMutex
+	connections    map[string]*ConnectionInfo // key: clientID
+	deviceIndex    map[int64]string           // key: deviceID, value: clientID
+	messageBus     core.MessageBus
+	serverID       string
+	maxConnections int // 最大连接数限制
 }
 
 // NewConnectionManager 创建连接管理器
 func NewConnectionManager(messageBus core.MessageBus, serverID string) *ConnectionManager {
 	return &ConnectionManager{
-		connections: make(map[string]*ConnectionInfo),
-		deviceIndex: make(map[int64]string),
-		messageBus:  messageBus,
-		serverID:    serverID,
+		connections:    make(map[string]*ConnectionInfo),
+		deviceIndex:    make(map[int64]string),
+		messageBus:     messageBus,
+		serverID:       serverID,
+		maxConnections: 100000, // 默认 10w 连接
 	}
+}
+
+// SetMaxConnections 设置最大连接数
+func (m *ConnectionManager) SetMaxConnections(max int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.maxConnections = max
 }
 
 // RegisterConnection 注册连接
 func (m *ConnectionManager) RegisterConnection(clientID string, info *ConnectionInfo) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// 检查连接数限制
+	if len(m.connections) >= m.maxConnections {
+		// 如果是已存在的连接，允许覆盖（重连）
+		if _, exists := m.connections[clientID]; !exists {
+			log.Printf("[ConnectionManager] Connection rejected: max connections reached (%d)", m.maxConnections)
+			return
+		}
+	}
 
 	info.ConnectedAt = time.Now()
 	info.LastHeartbeat = time.Now()

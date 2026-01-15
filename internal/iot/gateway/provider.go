@@ -1,9 +1,12 @@
 package gateway
 
 import (
+	"time"
+
 	"github.com/google/wire"
 	"github.com/wxlbd/ruoyi-mall-go/internal/iot/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/iot/gateway/codec"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 )
 
 // ProviderSet IOT Gateway 模块依赖注入
@@ -14,7 +17,7 @@ var ProviderSet = wire.NewSet(
 	// Connection Manager Provider
 	ProvideConnectionManager,
 
-	// MQTT Client Provider (需要配置，暂时提供工厂函数) TODO: 集成依赖注入
+	// MQTT Client Provider
 	ProvideMQTTClientConfig,
 
 	// Message Subscribers
@@ -23,22 +26,44 @@ var ProviderSet = wire.NewSet(
 
 // ProvideConnectionManager 提供连接管理器
 func ProvideConnectionManager(messageBus core.MessageBus) *ConnectionManager {
-	// 默认 ServerID，实际应从配置读取
-	return NewConnectionManager(messageBus, "iot-gateway-01")
+	cfg := config.C.IoT.Gateway
+	// 默认 ServerID
+	serverID := cfg.ServerID
+	if serverID == "" {
+		serverID = "iot-gateway-default"
+	}
+	manager := NewConnectionManager(messageBus, serverID)
+	if cfg.MaxConnections > 0 {
+		manager.SetMaxConnections(cfg.MaxConnections)
+	}
+	return manager
 }
 
 // ProvideMQTTClientConfig 提供 MQTT 客户端配置（默认值）
 func ProvideMQTTClientConfig() *MQTTClientConfig {
+	cfg := config.C.IoT.Gateway.MQTT
+
+	keepAlive, _ := time.ParseDuration(cfg.KeepAlive)
+	if keepAlive == 0 {
+		keepAlive = 60 * time.Second
+	}
+
+	connectTimeout, _ := time.ParseDuration(cfg.ConnectTimeout)
+	if connectTimeout == 0 {
+		connectTimeout = 10 * time.Second
+	}
+
 	return &MQTTClientConfig{
-		Broker:           "tcp://localhost:1883",
-		ClientID:         "iot-gateway-go",
-		Username:         "",
-		Password:         "",
-		KeepAlive:        60,
-		ConnectTimeout:   10,
-		AutoReconnect:    true,
-		CleanSession:     true,
-		SubscribeTopics:  []string{"/sys/#"},
-		DefaultCodecType: "Alink",
+		Broker:           cfg.Broker,
+		ClientID:         cfg.ClientID,
+		Username:         cfg.Username,
+		Password:         cfg.Password,
+		KeepAlive:        keepAlive,
+		ConnectTimeout:   connectTimeout,
+		AutoReconnect:    cfg.AutoReconnect,
+		CleanSession:     cfg.CleanSession,
+		SubscribeTopics:  cfg.SubscribeTopics,
+		DefaultCodecType: cfg.DefaultCodecType,
+		TopicPrefix:      cfg.TopicPrefix,
 	}
 }
