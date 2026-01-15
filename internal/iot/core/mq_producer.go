@@ -46,13 +46,13 @@ func (f *MQProducerFactory) Create(config *MQConfig) (MQProducer, error) {
 	case MQTypeLocal:
 		return NewLocalMQProducer(), nil
 	case MQTypeKafka:
-		// TODO: 实现 Kafka 生产者
+		// Kafka 生产者待实现
 		return nil, fmt.Errorf("kafka producer not implemented yet")
 	case MQTypeRocketMQ:
-		// TODO: 实现 RocketMQ 生产者
+		// RocketMQ 生产者待实现
 		return nil, fmt.Errorf("rocketmq producer not implemented yet")
 	case MQTypeNSQ:
-		// TODO: 实现 NSQ 生产者
+		// NSQ 生产者待实现
 		return nil, fmt.Errorf("nsq producer not implemented yet")
 	default:
 		return nil, fmt.Errorf("unsupported mq type: %s", config.Type)
