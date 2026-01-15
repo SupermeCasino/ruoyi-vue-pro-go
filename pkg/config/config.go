@@ -17,6 +17,44 @@ type Config struct {
 	Redis RedisConfig `mapstructure:"redis"`
 	Trade TradeConfig `mapstructure:"trade"`
 	Pay   PayConfig   `mapstructure:"pay"`
+	IoT   IoTConfig   `mapstructure:"iot"`
+}
+
+type IoTConfig struct {
+	Core    IoTCoreConfig    `mapstructure:"core"`
+	Gateway IoTGatewayConfig `mapstructure:"gateway"`
+}
+
+type IoTCoreConfig struct {
+	MessageBus MessageBusConfig `mapstructure:"message_bus"`
+}
+
+type MessageBusConfig struct {
+	WorkerNum int `mapstructure:"worker_num"`
+	QueueSize int `mapstructure:"queue_size"`
+}
+
+type IoTGatewayConfig struct {
+	ServerID       string           `mapstructure:"server_id"`
+	MaxConnections int              `mapstructure:"max_connections"`
+	MQTT           MQTTClientConfig `mapstructure:"mqtt"`
+}
+
+// MQTTClientConfig MQTT 客户端配置 (复用 internal 定义，或者搬迁到这里)
+// 为了解耦，我们在 pkg/config 定义一份，internal/iot/gateway/mqtt_client.go 可以直接使用 pkg/config 的 struct 或者进行转换
+// 鉴于 internal 不应该被 pkg 引用，所以我们在 pkg/config 定义 DTO
+type MQTTClientConfig struct {
+	Broker           string   `mapstructure:"broker"`
+	ClientID         string   `mapstructure:"client_id"`
+	Username         string   `mapstructure:"username"`
+	Password         string   `mapstructure:"password"`
+	KeepAlive        string   `mapstructure:"keep_alive"` // YAML string "60s"
+	ConnectTimeout   string   `mapstructure:"connect_timeout"`
+	AutoReconnect    bool     `mapstructure:"auto_reconnect"`
+	CleanSession     bool     `mapstructure:"clean_session"`
+	SubscribeTopics  []string `mapstructure:"subscribe_topics"`
+	DefaultCodecType string   `mapstructure:"default_codec_type"`
+	TopicPrefix      string   `mapstructure:"topic_prefix"`
 }
 
 type AppConfig struct {
