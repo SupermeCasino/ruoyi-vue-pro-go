@@ -49,6 +49,7 @@ func RegisterIotRoutes(r *gin.Engine, h *iot.Handlers, casbin *middleware.Casbin
 			device.GET("/get-auth-info", casbin.RequirePermission("iot:device:query"), h.Device.GetAuthInfo)
 			device.GET("/page", casbin.RequirePermission("iot:device:query"), h.Device.Page)
 			device.GET("/list-by-product-key-and-names", casbin.RequirePermission("iot:device:query"), h.Device.GetListByProductKeyAndNames)
+			device.GET("/simple-list", casbin.RequirePermission("iot:device:query"), h.Device.SimpleList)
 		}
 
 		// 设备分组管理

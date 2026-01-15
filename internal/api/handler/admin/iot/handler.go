@@ -80,11 +80,15 @@ func NewHandlers(
 
 // ProductHandler 产品处理器
 type ProductHandler struct {
-	svc *iotsvc.ProductService
+	svc                *iotsvc.ProductService
+	productCategorySvc *iotsvc.ProductCategoryService
 }
 
-func NewProductHandler(svc *iotsvc.ProductService) *ProductHandler {
-	return &ProductHandler{svc: svc}
+func NewProductHandler(svc *iotsvc.ProductService, productCategorySvc *iotsvc.ProductCategoryService) *ProductHandler {
+	return &ProductHandler{
+		svc:                svc,
+		productCategorySvc: productCategorySvc,
+	}
 }
 
 // DeviceHandler 设备处理器

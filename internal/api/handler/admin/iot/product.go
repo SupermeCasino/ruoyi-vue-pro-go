@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	iot2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/iot"
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 )
@@ -76,7 +77,9 @@ func (h *ProductHandler) Get(c *gin.Context) {
 		response.WriteSuccess(c, nil)
 		return
 	}
-	response.WriteSuccess(c, product)
+	// 拼接数据
+	category, _ := h.productCategorySvc.GetProductCategory(c, product.CategoryID)
+	response.WriteSuccess(c, convertProductToRespVO(product, category))
 }
 
 // GetByKey 获取产品 (by Key)
@@ -87,7 +90,9 @@ func (h *ProductHandler) GetByKey(c *gin.Context) {
 		response.WriteBizError(c, err)
 		return
 	}
-	response.WriteSuccess(c, product)
+	// 拼接数据
+	category, _ := h.productCategorySvc.GetProductCategory(c, product.CategoryID)
+	response.WriteSuccess(c, convertProductToRespVO(product, category))
 }
 
 // SimpleList 获取产品精简列表
@@ -113,23 +118,42 @@ func (h *ProductHandler) Page(c *gin.Context) {
 		return
 	}
 
+	// 拼接数据
+	paramIds := make([]int64, 0, len(page.List))
+	for _, item := range page.List {
+		paramIds = append(paramIds, item.CategoryID)
+	}
+	categories, _ := h.productCategorySvc.GetProductCategoryListByIDs(c, paramIds)
+	categoryMap := make(map[int64]*model.IotProductCategoryDO)
+	for _, category := range categories {
+		categoryMap[category.ID] = category
+	}
+
 	list := make([]*iot2.IotProductRespVO, 0, len(page.List))
 	for _, item := range page.List {
-		list = append(list, &iot2.IotProductRespVO{
-			ID:           item.ID,
-			Name:         item.Name,
-			ProductKey:   item.ProductKey,
-			CategoryID:   item.CategoryID,
-			Icon:         item.Icon,
-			PicURL:       item.PicURL,
-			Description:  item.Description,
-			Status:       item.Status,
-			DeviceType:   item.DeviceType,
-			NetType:      item.NetType,
-			LocationType: item.LocationType,
-			CodecType:    item.CodecType,
-			CreateTime:   item.CreateTime,
-		})
+		list = append(list, convertProductToRespVO(item, categoryMap[item.CategoryID]))
 	}
 	response.WritePage(c, page.Total, list)
+}
+
+func convertProductToRespVO(product *model.IotProductDO, category *model.IotProductCategoryDO) *iot2.IotProductRespVO {
+	resp := &iot2.IotProductRespVO{
+		ID:           product.ID,
+		Name:         product.Name,
+		ProductKey:   product.ProductKey,
+		CategoryID:   product.CategoryID,
+		Icon:         product.Icon,
+		PicURL:       product.PicURL,
+		Description:  product.Description,
+		Status:       product.Status,
+		DeviceType:   product.DeviceType,
+		NetType:      product.NetType,
+		LocationType: product.LocationType,
+		CodecType:    product.CodecType,
+		CreateTime:   product.CreateTime,
+	}
+	if category != nil {
+		resp.CategoryName = category.Name
+	}
+	return resp
 }

@@ -102,6 +102,7 @@ func (h *DeviceHandler) Get(c *gin.Context) {
 		Latitude:     device.Latitude,
 		Longitude:    device.Longitude,
 		CreateTime:   device.CreateTime,
+		AuthType:     device.AuthType,
 	}
 	response.WriteSuccess(c, resp)
 }
@@ -171,6 +172,7 @@ func (h *DeviceHandler) Page(c *gin.Context) {
 			Latitude:     item.Latitude,
 			Longitude:    item.Longitude,
 			CreateTime:   item.CreateTime,
+			AuthType:     item.AuthType,
 		})
 	}
 	response.WritePage(c, page.Total, list)
@@ -204,4 +206,36 @@ func (h *DeviceHandler) GetCount(c *gin.Context) {
 		return
 	}
 	response.WriteSuccess(c, count)
+}
+
+// SimpleList 获取设备精简信息列表
+func (h *DeviceHandler) SimpleList(c *gin.Context) {
+	var deviceType *int8
+	if val := c.Query("deviceType"); val != "" {
+		v, _ := strconv.Atoi(val)
+		v8 := int8(v)
+		deviceType = &v8
+	}
+	var productID *int64
+	if val := c.Query("productId"); val != "" {
+		v, _ := strconv.ParseInt(val, 10, 64)
+		productID = &v
+	}
+
+	list, err := h.svc.GetListByCondition(c, deviceType, productID)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+
+	respList := make([]*iot2.IotDeviceRespVO, 0, len(list))
+	for _, item := range list {
+		respList = append(respList, &iot2.IotDeviceRespVO{
+			ID:         item.ID,
+			DeviceName: item.DeviceName,
+			ProductID:  item.ProductID,
+			State:      item.State,
+		})
+	}
+	response.WriteSuccess(c, respList)
 }
