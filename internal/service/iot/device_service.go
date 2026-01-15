@@ -3,12 +3,16 @@ package iot
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	iot2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/iot"
 	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	iotcore "github.com/wxlbd/ruoyi-mall-go/internal/iot/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+	"github.com/wxlbd/ruoyi-mall-go/pkg/config"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 	"gorm.io/datatypes"
 )
@@ -130,13 +134,32 @@ func (s *DeviceService) GetAuthInfo(ctx context.Context, id int64) (*iot2.IotDev
 		return nil, model.ErrDeviceNotExists
 	}
 
+	// 临时处理：从 Broker URL 解析 Host 和 Port
+	// 实际生产环境建议在 IoTConfig 中增加专门的 ExternalHost/Port 配置
+	mqttConfig := config.C.IoT.Gateway.MQTT
+	host := "127.0.0.1"
+	port := 1883
+	if strings.HasPrefix(mqttConfig.Broker, "tcp://") {
+		addr := strings.TrimPrefix(mqttConfig.Broker, "tcp://")
+		parts := strings.Split(addr, ":")
+		if len(parts) >= 2 {
+			host = parts[0]
+			port, _ = strconv.Atoi(parts[1])
+		}
+	}
+
 	return &iot2.IotDeviceAuthInfoRespVO{
 		ProductKey:   device.ProductKey,
 		DeviceName:   device.DeviceName,
 		DeviceSecret: device.DeviceSecret,
-		MqttHost:     "127.0.0.1", // TODO: 从配置获取
-		MqttPort:     1883,        // TODO: 从配置获取
+		MqttHost:     host,
+		MqttPort:     port,
 	}, nil
+}
+
+// UpdateDeviceActiveTime 更新设备最后活跃时间
+func (s *DeviceService) UpdateDeviceActiveTime(ctx context.Context, id int64, activeTime time.Time) error {
+	return s.deviceRepo.UpdateActiveTime(ctx, id, activeTime)
 }
 
 func (s *DeviceService) Auth(ctx context.Context, productKey, deviceName, password string) (*model.IotDeviceDO, error) {
@@ -194,4 +217,9 @@ func (s *DeviceService) UpdateDeviceFirmware(ctx context.Context, id int64, firm
 // GetCountByProductID 获取指定产品的设备数量
 func (s *DeviceService) GetCountByProductID(ctx context.Context, productID int64) (int64, error) {
 	return s.deviceRepo.CountByProductID(ctx, productID)
+}
+
+// GetListByCondition 根据条件获取设备列表
+func (s *DeviceService) GetListByCondition(ctx context.Context, deviceType *int8, productID *int64) ([]*model.IotDeviceDO, error) {
+	return s.deviceRepo.ListByCondition(ctx, deviceType, productID)
 }

@@ -28,6 +28,11 @@ func (r *DeviceRepositoryImpl) Update(ctx context.Context, device *model.IotDevi
 	return err
 }
 
+func (r *DeviceRepositoryImpl) UpdateActiveTime(ctx context.Context, id int64, activeTime time.Time) error {
+	_, err := r.q.IotDeviceDO.WithContext(ctx).Where(r.q.IotDeviceDO.ID.Eq(id)).Update(r.q.IotDeviceDO.ActiveTime, activeTime)
+	return err
+}
+
 func (r *DeviceRepositoryImpl) Delete(ctx context.Context, id int64) error {
 	_, err := r.q.IotDeviceDO.WithContext(ctx).Where(r.q.IotDeviceDO.ID.Eq(id)).Delete()
 	return err

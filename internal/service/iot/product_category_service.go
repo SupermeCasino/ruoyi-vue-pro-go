@@ -71,6 +71,10 @@ func (s *ProductCategoryService) GetProductCategoryListByStatus(ctx context.Cont
 	return s.productCategoryRepo.GetListByStatus(ctx, status)
 }
 
+func (s *ProductCategoryService) GetProductCategoryListByIDs(ctx context.Context, ids []int64) ([]*model.IotProductCategoryDO, error) {
+	return s.productCategoryRepo.GetListByIDs(ctx, ids)
+}
+
 func (s *ProductCategoryService) GetProductCategoryCount(ctx context.Context) (int64, error) {
 	return s.productCategoryRepo.Count(ctx, nil)
 }

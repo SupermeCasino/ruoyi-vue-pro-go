@@ -52,6 +52,11 @@ func (r *ProductCategoryRepositoryImpl) GetListByStatus(ctx context.Context, sta
 	return pc.WithContext(ctx).Where(pc.Status.Eq(status)).Order(pc.Sort.Asc(), pc.ID.Desc()).Find()
 }
 
+func (r *ProductCategoryRepositoryImpl) GetListByIDs(ctx context.Context, ids []int64) ([]*model.IotProductCategoryDO, error) {
+	pc := r.q.IotProductCategoryDO
+	return pc.WithContext(ctx).Where(pc.ID.In(ids...)).Find()
+}
+
 func (r *ProductCategoryRepositoryImpl) Count(ctx context.Context, startTime *time.Time) (int64, error) {
 	pc := r.q.IotProductCategoryDO
 	db := pc.WithContext(ctx)

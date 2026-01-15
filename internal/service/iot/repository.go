@@ -24,6 +24,7 @@ type ProductRepository interface {
 type DeviceRepository interface {
 	Create(ctx context.Context, device *model.IotDeviceDO) error
 	Update(ctx context.Context, device *model.IotDeviceDO) error
+	UpdateActiveTime(ctx context.Context, id int64, activeTime time.Time) error
 	Delete(ctx context.Context, id int64) error
 	DeleteList(ctx context.Context, ids []int64) error
 	GetByID(ctx context.Context, id int64) (*model.IotDeviceDO, error)
@@ -134,6 +135,7 @@ type ProductCategoryRepository interface {
 	GetByID(ctx context.Context, id int64) (*model.IotProductCategoryDO, error)
 	GetPage(ctx context.Context, req *iot.IotProductCategoryPageReqVO) (*pagination.PageResult[*model.IotProductCategoryDO], error)
 	GetListByStatus(ctx context.Context, status int8) ([]*model.IotProductCategoryDO, error)
+	GetListByIDs(ctx context.Context, ids []int64) ([]*model.IotProductCategoryDO, error)
 	Count(ctx context.Context, startTime *time.Time) (int64, error)
 	GetProductCategoryDeviceCountMap(ctx context.Context) (map[string]int64, error)
 }
