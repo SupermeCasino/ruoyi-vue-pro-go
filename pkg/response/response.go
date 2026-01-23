@@ -33,7 +33,7 @@ func Error(code int, msg string) Result[any] {
 }
 
 // WriteSuccess 写入成功响应
-func WriteSuccess(c *gin.Context, data interface{}) {
+func WriteSuccess(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, Success(data))
 }
 

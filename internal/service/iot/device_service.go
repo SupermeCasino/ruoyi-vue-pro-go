@@ -139,8 +139,8 @@ func (s *DeviceService) GetAuthInfo(ctx context.Context, id int64) (*iot2.IotDev
 	mqttConfig := config.C.IoT.Gateway.MQTT
 	host := "127.0.0.1"
 	port := 1883
-	if strings.HasPrefix(mqttConfig.Broker, "tcp://") {
-		addr := strings.TrimPrefix(mqttConfig.Broker, "tcp://")
+	if after, ok :=strings.CutPrefix(mqttConfig.Broker, "tcp://"); ok  {
+		addr := after
 		parts := strings.Split(addr, ":")
 		if len(parts) >= 2 {
 			host = parts[0]

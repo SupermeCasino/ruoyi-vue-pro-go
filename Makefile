@@ -13,6 +13,11 @@ build:
 	go build -o $(APP_NAME) $(CMD_PATH) $(WIRE_GEN_PATH)
 
 # 直接运行 (如果不使用 wire_gen.go，请确保 wire.go 不被编译排除，但通常 wire.go 有 build tag wireinject)
+
+build-linux:
+	@echo "Building $(APP_NAME)..."
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_NAME)-linux $(CMD_PATH) $(WIRE_GEN_PATH)
+
 run:
 	@echo "Running $(APP_NAME)..."
 	go run $(CMD_PATH) $(WIRE_GEN_PATH)
