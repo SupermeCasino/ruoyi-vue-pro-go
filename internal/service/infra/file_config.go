@@ -168,7 +168,7 @@ func (s *FileConfigService) TestFileConfig(ctx context.Context, id int64) (strin
 	}
 
 	configBytes, _ := json.Marshal(config.Config)
-	client, err := file.NewFileClient(config.Storage, configBytes)
+	client, err := file.NewFileClient(config.ID, config.Storage, configBytes)
 	if err != nil {
 		return "", err
 	}

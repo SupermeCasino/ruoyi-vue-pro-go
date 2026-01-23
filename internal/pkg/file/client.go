@@ -3,6 +3,7 @@ package file
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -29,15 +30,16 @@ type ClientConfig struct {
 
 // LocalFileClient 本地文件客户端
 type LocalFileClient struct {
-	Config ClientConfig
+	Config   ClientConfig
+	ConfigID int64
 }
 
-func NewLocalFileClient(config json.RawMessage) (*LocalFileClient, error) {
+func NewLocalFileClient(id int64, config json.RawMessage) (*LocalFileClient, error) {
 	var cfg ClientConfig
 	if err := json.Unmarshal(config, &cfg); err != nil {
 		return nil, err
 	}
-	return &LocalFileClient{Config: cfg}, nil
+	return &LocalFileClient{Config: cfg, ConfigID: id}, nil
 }
 
 func (c *LocalFileClient) Upload(content []byte, path string) (string, error) {
@@ -64,7 +66,8 @@ func (c *LocalFileClient) GetContent(path string) ([]byte, error) {
 }
 
 func (c *LocalFileClient) GetURL(path string) string {
-	return c.Config.Domain + "/" + path
+	// 对齐 Java: {}/admin-api/infra/file/{}/get/{}
+	return fmt.Sprintf("%s/admin-api/infra/file/%d/get/%s", c.Config.Domain, c.ConfigID, path)
 }
 
 func (c *LocalFileClient) GetPresignedURL(path string) (string, error) {
@@ -74,12 +77,12 @@ func (c *LocalFileClient) GetPresignedURL(path string) (string, error) {
 }
 
 // FileClientFactory 简单工厂
-func NewFileClient(storage int32, config json.RawMessage) (FileClient, error) {
+func NewFileClient(id int64, storage int32, config json.RawMessage) (FileClient, error) {
 	switch storage {
 	case 10: // Local
-		return NewLocalFileClient(config)
+		return NewLocalFileClient(id, config)
 	case 20: // S3
-		return NewS3FileClient(config)
+		return NewS3FileClient(id, config)
 	default:
 		return nil, errors.New("unknown storage type")
 	}

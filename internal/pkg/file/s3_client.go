@@ -8,6 +8,7 @@ import (
 
 // S3FileClient S3 文件客户端
 type S3FileClient struct {
+	id       int64
 	bucket   string
 	basePath string
 	region   string
@@ -19,7 +20,7 @@ type S3FileClient struct {
 // go get github.com/aws/aws-sdk-go-v2/service/s3
 // go get github.com/aws/aws-sdk-go-v2/config
 // go get github.com/aws/aws-sdk-go-v2/credentials
-func NewS3FileClient(configData json.RawMessage) (*S3FileClient, error) {
+func NewS3FileClient(id int64, configData json.RawMessage) (*S3FileClient, error) {
 	var cfg ClientConfig
 	if err := json.Unmarshal(configData, &cfg); err != nil {
 		return nil, fmt.Errorf("解析 S3 配置失败: %v", err)
@@ -48,6 +49,7 @@ func NewS3FileClient(configData json.RawMessage) (*S3FileClient, error) {
 	}
 
 	return &S3FileClient{
+		id:       id,
 		bucket:   cfg.Bucket,
 		basePath: basePath,
 		region:   region,
