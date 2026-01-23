@@ -3,6 +3,7 @@ package infra
 import (
 	"io"
 	"strconv"
+	"strings"
 
 	infra2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/infra"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/infra"
@@ -179,6 +180,45 @@ func (h *FileHandler) DeleteFile(c *gin.Context) {
 		return
 	}
 	response.WriteSuccess(c, true)
+}
+
+func (h *FileHandler) DeleteFileList(c *gin.Context) {
+	idsStr := c.Query("ids")
+	if idsStr == "" {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	var ids []int64
+	for _, s := range strings.Split(idsStr, ",") {
+		id, err := strconv.ParseInt(s, 10, 64)
+		if err == nil {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	if err := h.svc.DeleteFileList(c, ids); err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, true)
+}
+
+func (h *FileHandler) GetFile(c *gin.Context) {
+	idStr := c.Query("id")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if id == 0 {
+		response.WriteBizError(c, errors.ErrParam)
+		return
+	}
+	res, err := h.svc.GetFile(c, id)
+	if err != nil {
+		response.WriteBizError(c, err)
+		return
+	}
+	response.WriteSuccess(c, res)
 }
 
 func (h *FileHandler) GetFilePage(c *gin.Context) {
