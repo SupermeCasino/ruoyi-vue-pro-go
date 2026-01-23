@@ -323,6 +323,8 @@ func InitApp() (*gin.Engine, error) {
 	loginLogService := system.NewLoginLogService(query)
 	authService := system.NewAuthService(query, permissionService, roleService, menuService, oAuth2TokenService, smsCodeService, loginLogService, userService, socialUserService)
 	authHandler := system2.NewAuthHandler(authService)
+	captchaService := system.NewCaptchaService(redisClient)
+	captchaHandler := system2.NewCaptchaHandler(captchaService)
 	deptHandler := system2.NewDeptHandler(deptService)
 	dictService := system.NewDictService(query)
 	dictHandler := system2.NewDictHandler(dictService)
@@ -355,7 +357,7 @@ func InitApp() (*gin.Engine, error) {
 	tenantPackageService := system.NewTenantPackageService(query, tenantService)
 	tenantPackageHandler := system2.NewTenantPackageHandler(tenantPackageService)
 	userHandler := system2.NewUserHandler(userService)
-	systemHandlers := system2.NewHandlers(areaHandler, authHandler, deptHandler, dictHandler, loginLogHandler, mailHandler, menuHandler, noticeHandler, notifyHandler, oAuth2ClientHandler, operateLogHandler, permissionHandler, postHandler, roleHandler, smsChannelHandler, smsLogHandler, smsTemplateHandler, socialClientHandler, socialUserHandler, tenantHandler, tenantPackageHandler, userHandler)
+	systemHandlers := system2.NewHandlers(areaHandler, authHandler, captchaHandler, deptHandler, dictHandler, loginLogHandler, mailHandler, menuHandler, noticeHandler, notifyHandler, oAuth2ClientHandler, operateLogHandler, permissionHandler, postHandler, roleHandler, smsChannelHandler, smsLogHandler, smsTemplateHandler, socialClientHandler, socialUserHandler, tenantHandler, tenantPackageHandler, userHandler)
 	adminHandlers := &admin.AdminHandlers{
 		Infra:      handlers,
 		Iot:        iotHandlers,

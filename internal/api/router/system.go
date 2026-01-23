@@ -32,6 +32,13 @@ func RegisterSystemRoutes(engine *gin.Engine,
 				authGroup.POST("/social-login", handlers.Auth.SocialLogin)
 			}
 
+			// Captcha Public Routes (验证码)
+			captchaGroup := systemGroup.Group("/captcha")
+			{
+				captchaGroup.POST("/get", handlers.Captcha.Get)
+				captchaGroup.POST("/check", handlers.Captcha.Check)
+			}
+
 			// Tenant Public Routes
 			tenantPublicGroup := systemGroup.Group("/tenant")
 			{
@@ -392,7 +399,9 @@ func RegisterSystemRoutes(engine *gin.Engine,
 			fileGroup := infraGroup.Group("/file")
 			{
 				fileGroup.POST("/upload", infraHandlers.File.UploadFile)
+				fileGroup.GET("/get", casbinMiddleware.RequirePermission("infra:file:query"), infraHandlers.File.GetFile)
 				fileGroup.DELETE("/delete", casbinMiddleware.RequirePermission("infra:file:delete"), infraHandlers.File.DeleteFile)
+				fileGroup.DELETE("/delete-list", casbinMiddleware.RequirePermission("infra:file:delete"), infraHandlers.File.DeleteFileList)
 				fileGroup.GET("/page", casbinMiddleware.RequirePermission("infra:file:query"), infraHandlers.File.GetFilePage)
 				fileGroup.GET("/presigned-url", casbinMiddleware.RequirePermission("infra:file:query"), infraHandlers.File.GetFilePresignedUrl)
 				fileGroup.POST("/create", casbinMiddleware.RequirePermission("infra:file:create"), infraHandlers.File.CreateFile)

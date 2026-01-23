@@ -5,6 +5,7 @@ import "github.com/google/wire"
 var ProviderSet = wire.NewSet(
 	NewAreaHandler,
 	NewAuthHandler,
+	NewCaptchaHandler,
 	NewDeptHandler,
 	NewDictHandler,
 	NewLoginLogHandler,
@@ -31,6 +32,7 @@ var ProviderSet = wire.NewSet(
 type Handlers struct {
 	Area          *AreaHandler
 	Auth          *AuthHandler
+	Captcha       *CaptchaHandler
 	Dept          *DeptHandler
 	Dict          *DictHandler
 	LoginLog      *LoginLogHandler
@@ -56,6 +58,7 @@ type Handlers struct {
 func NewHandlers(
 	area *AreaHandler,
 	auth *AuthHandler,
+	captcha *CaptchaHandler,
 	dept *DeptHandler,
 	dict *DictHandler,
 	loginLog *LoginLogHandler,
@@ -80,6 +83,7 @@ func NewHandlers(
 	return &Handlers{
 		Area:          area,
 		Auth:          auth,
+		Captcha:       captcha,
 		Dept:          dept,
 		Dict:          dict,
 		LoginLog:      loginLog,

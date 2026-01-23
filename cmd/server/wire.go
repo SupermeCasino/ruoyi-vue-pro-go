@@ -83,7 +83,8 @@ func InitApp() (*gin.Engine, error) {
 		system.NewMailService,                  // Added MailService
 		system.NewNotifyService,                // Added NotifyService
 		system.NewOAuth2ClientService,          // Added OAuth2ClientService
-		iotSvc.ProviderSet,                    // Added IotService ProviderSet
+		system.NewCaptchaService,               // Added CaptchaService
+		iotSvc.ProviderSet,                     // Added IotService ProviderSet
 		memberSvc.NewMemberAuthService,         // Added MemberAuthService
 		memberSvc.NewMemberUserService,         // Added MemberUserService
 		memberSvc.NewMemberAddressService,      // Added MemberAddressService
