@@ -16,3 +16,11 @@ type AppSocialUserResp struct {
 	Nickname string `json:"nickname"`
 	Avatar   string `json:"avatar"`
 }
+
+type AppSocialWxaSubscribeTemplateResp struct {
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	Example string `json:"example"`
+	Type    int    `json:"type"` // 2 为一次性订阅，3 为长期订阅
+}

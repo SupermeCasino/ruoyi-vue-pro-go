@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	system2 "github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/service/system"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/response"
 
@@ -28,7 +29,7 @@ func (h *AppSocialUserHandler) Bind(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("userId")
-	openid, err := h.svc.BindSocialUser(c, userID, 1, &system2.SocialUserBindReq{
+	openid, err := h.svc.BindSocialUser(c, userID, consts.UserTypeMember, &system2.SocialUserBindReq{
 		Type:  r.Type,
 		Code:  r.Code,
 		State: r.State,
@@ -51,7 +52,7 @@ func (h *AppSocialUserHandler) Unbind(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("userId")
-	err := h.svc.UnbindSocialUser(c, userID, 1, r.Type, r.OpenID)
+	err := h.svc.UnbindSocialUser(c, userID, consts.UserTypeMember, r.Type, r.OpenID)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -67,7 +68,7 @@ func (h *AppSocialUserHandler) Get(c *gin.Context) {
 	socialType, _ := strconv.Atoi(socialTypeStr)
 	userID := c.GetInt64("userId")
 
-	socialUsers, err := h.svc.GetSocialUserList(c, userID, 1)
+	socialUsers, err := h.svc.GetSocialUserList(c, userID, consts.UserTypeMember)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -94,7 +95,7 @@ func (h *AppSocialUserHandler) GetWxaQrcode(c *gin.Context) {
 	path := c.Query("path")
 	width, _ := strconv.Atoi(c.DefaultQuery("width", "430"))
 
-	qrCode, err := h.svc.GetWxaQrcode(c, 1, path, width)
+	qrCode, err := h.svc.GetWxaQrcode(c, consts.UserTypeMember, path, width)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
@@ -106,7 +107,7 @@ func (h *AppSocialUserHandler) GetWxaQrcode(c *gin.Context) {
 // GetSubscribeTemplateList 获得微信小程序订阅模板列表
 // @Router /member/social-user/get-subscribe-template-list [get]
 func (h *AppSocialUserHandler) GetSubscribeTemplateList(c *gin.Context) {
-	templates, err := h.svc.GetSubscribeTemplateList(c, 1)
+	templates, err := h.svc.GetSubscribeTemplateList(c, consts.UserTypeMember)
 	if err != nil {
 		response.WriteBizError(c, err)
 		return

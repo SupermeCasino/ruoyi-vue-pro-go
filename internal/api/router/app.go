@@ -13,6 +13,13 @@ func RegisterAppRoutes(engine *gin.Engine,
 ) {
 	appGroup := engine.Group("/app-api")
 	{
+		// ========== System ==========
+		systemGroup := appGroup.Group("/system")
+		{
+			// Tenant (Public - 对齐 Java @PermitAll)
+			systemGroup.GET("/tenant/get-by-website", handlers.System.Tenant.GetTenantByWebsite)
+		}
+
 		// ========== Member ==========
 		memberGroup := appGroup.Group("/member")
 		{
@@ -83,13 +90,19 @@ func RegisterAppRoutes(engine *gin.Engine,
 
 			// Social User
 			socialUserGroup := memberGroup.Group("/social-user")
-			socialUserGroup.Use(middleware.Auth())
 			{
-				socialUserGroup.POST("/bind", handlers.Member.SocialUser.Bind)
-				socialUserGroup.DELETE("/unbind", handlers.Member.SocialUser.Unbind)
-				socialUserGroup.GET("/get", handlers.Member.SocialUser.Get)
-				socialUserGroup.POST("/wxa-qrcode", handlers.Member.SocialUser.GetWxaQrcode)
+				// 公开接口 (对齐 Java @PermitAll)
 				socialUserGroup.GET("/get-subscribe-template-list", handlers.Member.SocialUser.GetSubscribeTemplateList)
+
+				// 需要鉴权的接口
+				socialUserAuthGroup := socialUserGroup.Group("")
+				socialUserAuthGroup.Use(middleware.Auth())
+				{
+					socialUserAuthGroup.POST("/bind", handlers.Member.SocialUser.Bind)
+					socialUserAuthGroup.DELETE("/unbind", handlers.Member.SocialUser.Unbind)
+					socialUserAuthGroup.GET("/get", handlers.Member.SocialUser.Get)
+					socialUserAuthGroup.POST("/wxa-qrcode", handlers.Member.SocialUser.GetWxaQrcode)
+				}
 			}
 		}
 

@@ -36,7 +36,16 @@ type SocialPlatform interface {
 	// GetWxaQrcode 获得微信小程序码
 	GetWxaQrcode(ctx context.Context, path string, width int) ([]byte, error)
 	// GetSubscribeTemplateList 获得订阅模板列表
-	GetSubscribeTemplateList(ctx context.Context) ([]any, error)
+	GetSubscribeTemplateList(ctx context.Context) ([]*WxaSubscribeTemplate, error)
+}
+
+// WxaSubscribeTemplate 微信小程序订阅消息模版
+type WxaSubscribeTemplate struct {
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	Example string `json:"example"`
+	Type    int    `json:"type"`
 }
 
 // SocialPlatformFactory 社交平台工厂接口

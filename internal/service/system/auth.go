@@ -140,7 +140,7 @@ func (s *AuthService) GetPermissionInfo(ctx context.Context) (*system.AuthPermis
 	var roles []string
 	var enabledRoleIds []int64 // 仅保留启用的角色ID
 	for _, r := range rolesData {
-		if r.Status == 0 { // 0 = ENABLE
+		if r.Status == consts.CommonStatusEnable {
 			roles = append(roles, r.Code)
 			enabledRoleIds = append(enabledRoleIds, r.ID)
 		}
@@ -161,7 +161,7 @@ func (s *AuthService) GetPermissionInfo(ctx context.Context) (*system.AuthPermis
 	// 5.1 过滤禁用的菜单 (Java: menuList = menuService.filterDisableMenus(menuList))
 	var enabledMenus []*system.MenuResp
 	for _, m := range menus {
-		if m.Status == 0 { // 0 = ENABLE
+		if m.Status == consts.CommonStatusEnable {
 			enabledMenus = append(enabledMenus, m)
 		}
 	}
@@ -202,7 +202,7 @@ func (s *AuthService) Login(ctx context.Context, req *system.AuthLoginReq) (*sys
 		if err != nil {
 			return nil, errors.NewBizError(1002000003, "租户不存在")
 		}
-		if tenant.Status != 0 {
+		if tenant.Status != consts.CommonStatusEnable {
 			return nil, errors.NewBizError(1002000004, "租户已被禁用")
 		}
 		tenantId = tenant.ID
@@ -218,7 +218,7 @@ func (s *AuthService) Login(ctx context.Context, req *system.AuthLoginReq) (*sys
 	}
 
 	// 2. 校验状态
-	if user.Status != 0 { // 假设 0 是开启
+	if user.Status != consts.CommonStatusEnable {
 		return nil, errors.NewBizError(1002000001, "用户已被禁用")
 	}
 
@@ -315,8 +315,8 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*s
 
 // SmsLogin 短信登录
 func (s *AuthService) SmsLogin(ctx context.Context, req *system.AuthSmsLoginReq) (*system.AuthLoginResp, error) {
-	// 1. 验证短信验证码 (场景: 1-登录)
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, 1, req.Code); err != nil {
+	// 1. 验证短信验证码 (场景: 登录)
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, consts.SmsSceneAdminMemberLogin, req.Code); err != nil {
 		return nil, err
 	}
 
@@ -369,9 +369,9 @@ func (s *AuthService) Register(ctx context.Context, r *system.AuthRegisterReq) (
 		Username: r.Username,
 		Password: r.Password,
 		Nickname: r.Username, // 默认昵称
-		Status:   0,          // 默认启用
-		RoleIDs:  []int64{},  // 空角色
-		PostIDs:  []int64{},  // 空岗位
+		Status:   consts.CommonStatusEnable,
+		RoleIDs:  []int64{}, // 空角色
+		PostIDs:  []int64{}, // 空岗位
 	}
 
 	_, err := s.userSvc.CreateUser(ctx, createReq)
@@ -390,8 +390,8 @@ func (s *AuthService) Register(ctx context.Context, r *system.AuthRegisterReq) (
 
 // ResetPassword 重置密码
 func (s *AuthService) ResetPassword(ctx context.Context, req *system.AuthResetPasswordReq) error {
-	// 1. 验证短信验证码 (场景: 3-重置密码)
-	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, 3, req.Code); err != nil {
+	// 1. 验证短信验证码 (场景: 重置密码)
+	if err := s.smsCodeSvc.ValidateSmsCode(ctx, req.Mobile, consts.SmsSceneAdminResetPassword, req.Code); err != nil {
 		return err
 	}
 

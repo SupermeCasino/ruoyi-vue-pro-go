@@ -14,6 +14,7 @@ import (
 	appMall "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/mall"
 	appMember "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
 	appPay "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
+	appSystem "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/system"
 )
 
 var ProviderSet = wire.NewSet(
@@ -30,5 +31,6 @@ var ProviderSet = wire.NewSet(
 	appMall.ProviderSet,
 	appPay.ProviderSet,
 	appMember.ProviderSet,
+	appSystem.ProviderSet,
 	wire.Struct(new(app.AppHandlers), "*"),
 )

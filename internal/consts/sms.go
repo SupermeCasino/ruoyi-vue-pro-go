@@ -67,3 +67,15 @@ const (
 	SMSChannelCodeDebugDingTalk = "DEBUG_DING_TALK"
 	SMSChannelCodeDebug         = "DEBUG"
 )
+
+// SmsSceneEnum 短信验证码发送场景的枚举
+// 对应 Java: cn.iocoder.yudao.module.system.enums.sms.SmsSceneEnum
+const (
+	SmsSceneMemberLogin          = 1  // 会员用户 - 手机号登陆
+	SmsSceneMemberUpdateMobile   = 2  // 会员用户 - 修改手机
+	SmsSceneMemberUpdatePassword = 3  // 会员用户 - 修改密码
+	SmsSceneMemberResetPassword  = 4  // 会员用户 - 忘记密码
+	SmsSceneAdminMemberLogin     = 21 // 后台用户 - 手机号登录
+	SmsSceneAdminMemberRegister  = 22 // 后台用户 - 手机号注册
+	SmsSceneAdminResetPassword   = 23 // 后台用户 - 忘记密码
+)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
 )
@@ -27,7 +28,7 @@ func (f *SocialPlatformFactoryImpl) GetPlatform(ctx context.Context, socialType 
 
 	// 2. 根据类型创建客户端
 	switch socialType {
-	case 31, 30: // WeChat Mini / MP
+	case consts.SocialTypeWechatMP, consts.SocialTypeWechatEnterprise, consts.SocialTypeWechatMiniProgram:
 		return NewWeChatClient(client), nil
 	// case 20: DingTalk
 	// ...

@@ -88,6 +88,8 @@ const (
 	SocialTypeWechatOpen = 32
 	// SocialTypeWechatMiniProgram 微信小程序
 	SocialTypeWechatMiniProgram = 34
+	// SocialTypeAlipayMiniProgram 支付宝小程序
+	SocialTypeAlipayMiniProgram = 40
 )
 
 // SocialTypeValues 社交平台类型值数组
@@ -98,6 +100,7 @@ var SocialTypeValues = []int{
 	SocialTypeWechatMP,
 	SocialTypeWechatOpen,
 	SocialTypeWechatMiniProgram,
+	SocialTypeAlipayMiniProgram,
 }
 
 // IsValidSocialType 验证社交平台类型是否有效

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/contract/admin/system"
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/internal/repo/query"
 	client2 "github.com/wxlbd/ruoyi-mall-go/internal/service/system/social/client"
@@ -283,8 +284,8 @@ func (s *SocialUserService) GetMobile(ctx context.Context, userType int, socialT
 
 // CreateWxMpJsapiSignature 创建微信 JSAPI 签名
 func (s *SocialUserService) CreateWxMpJsapiSignature(ctx context.Context, userType int, url string) (*client2.JsapiSignature, error) {
-	// 1. 获得社交平台客户端 (WeChat Official Account type is 32)
-	platform, err := s.factory.GetPlatform(ctx, 32, userType)
+	// 1. 获得社交平台客户端 (WeChat Official Account type is 31)
+	platform, err := s.factory.GetPlatform(ctx, consts.SocialTypeWechatMP, userType)
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +296,8 @@ func (s *SocialUserService) CreateWxMpJsapiSignature(ctx context.Context, userTy
 
 // GetWxaQrcode 获得微信小程序码
 func (s *SocialUserService) GetWxaQrcode(ctx context.Context, userType int, path string, width int) ([]byte, error) {
-	// 1. 获得社交平台客户端 (WeChat Mini App type is 31)
-	platform, err := s.factory.GetPlatform(ctx, 31, userType)
+	// 1. 获得社交平台客户端 (WeChat Mini App type is 34)
+	platform, err := s.factory.GetPlatform(ctx, consts.SocialTypeWechatMiniProgram, userType)
 	if err != nil {
 		return nil, err
 	}
@@ -306,13 +307,29 @@ func (s *SocialUserService) GetWxaQrcode(ctx context.Context, userType int, path
 }
 
 // GetSubscribeTemplateList 获得订阅模板列表
-func (s *SocialUserService) GetSubscribeTemplateList(ctx context.Context, userType int) ([]any, error) {
-	// 1. 获得社交平台客户端 (WeChat Mini App type is 31)
-	platform, err := s.factory.GetPlatform(ctx, 31, userType)
+func (s *SocialUserService) GetSubscribeTemplateList(ctx context.Context, userType int) ([]*system.AppSocialWxaSubscribeTemplateResp, error) {
+	// 1. 获得社交平台客户端 (WeChat Mini App type is 34)
+	platform, err := s.factory.GetPlatform(ctx, consts.SocialTypeWechatMiniProgram, userType)
 	if err != nil {
 		return nil, err
 	}
 
 	// 2. 获得模板列表
-	return platform.GetSubscribeTemplateList(ctx)
+	list, err := platform.GetSubscribeTemplateList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 转换
+	res := make([]*system.AppSocialWxaSubscribeTemplateResp, len(list))
+	for i, item := range list {
+		res[i] = &system.AppSocialWxaSubscribeTemplateResp{
+			ID:      item.ID,
+			Title:   item.Title,
+			Content: item.Content,
+			Example: item.Example,
+			Type:    item.Type,
+		}
+	}
+	return res, nil
 }

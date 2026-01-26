@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/consts"
 	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/cache"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/errors"
@@ -55,7 +56,7 @@ type WeChatMPUserInfoResp struct {
 }
 
 func (c *WeChatClient) GetAuthUser(ctx context.Context, code string, state string) (*AuthUser, error) {
-	if c.Client.SocialType == 31 {
+	if c.Client.SocialType == consts.SocialTypeWechatMiniProgram {
 		// 微信小程序
 		return c.getMiniAuthUser(code)
 	}
@@ -145,7 +146,7 @@ func toJson(v interface{}) string {
 }
 
 func (c *WeChatClient) GetAuthUrl(state string, redirectUri string) string {
-	if c.Client.SocialType == 31 {
+	if c.Client.SocialType == consts.SocialTypeWechatMiniProgram {
 		return "" // 小程序不支持跳转登录
 	}
 	// 公众号
@@ -157,7 +158,7 @@ func (c *WeChatClient) GetAuthUrl(state string, redirectUri string) string {
 
 // GetMobile 获取微信手机号
 func (c *WeChatClient) GetMobile(ctx context.Context, code string) (string, error) {
-	if c.Client.SocialType != 31 {
+	if c.Client.SocialType != consts.SocialTypeWechatMiniProgram {
 		return "", fmt.Errorf("socialType %d does not support GetMobile", c.Client.SocialType)
 	}
 
@@ -298,7 +299,53 @@ func (c *WeChatClient) GetWxaQrcode(ctx context.Context, path string, width int)
 	return nil, nil
 }
 
-func (c *WeChatClient) GetSubscribeTemplateList(ctx context.Context) ([]any, error) {
-	// TODO: 实现获取订阅模板列表逻辑
-	return nil, nil
+type WeChatWxaTemplateListResp struct {
+	ErrCode int    `json:"errcode"`
+	ErrMsg  string `json:"errmsg"`
+	Data    []struct {
+		PriTmplID string `json:"priTmplId"`
+		Title     string `json:"title"`
+		Content   string `json:"content"`
+		Example   string `json:"example"`
+		Type      int    `json:"type"`
+	} `json:"data"`
+}
+
+func (c *WeChatClient) GetSubscribeTemplateList(ctx context.Context) ([]*WxaSubscribeTemplate, error) {
+	// 1. 获取 Access Token
+	accessToken, err := c.getWxaAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 获取模板列表
+	url := fmt.Sprintf("https://api.weixin.qq.com/wxaapi/newtmpl/gettemplate?access_token=%s", accessToken)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var listResp WeChatWxaTemplateListResp
+	if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
+		return nil, err
+	}
+
+	if listResp.ErrCode != 0 {
+		return nil, fmt.Errorf("wechat get subscribe template list failed: %s", listResp.ErrMsg)
+	}
+
+	// 3. 转换
+	res := make([]*WxaSubscribeTemplate, len(listResp.Data))
+	for i, item := range listResp.Data {
+		res[i] = &WxaSubscribeTemplate{
+			ID:      item.PriTmplID,
+			Title:   item.Title,
+			Content: item.Content,
+			Example: item.Example,
+			Type:    item.Type,
+		}
+	}
+
+	return res, nil
 }
