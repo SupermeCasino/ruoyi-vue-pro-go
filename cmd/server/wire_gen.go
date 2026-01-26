@@ -29,6 +29,7 @@ import (
 	brokerage3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/mall/trade/brokerage"
 	member3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/member"
 	pay4 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/pay"
+	system3 "github.com/wxlbd/ruoyi-mall-go/internal/api/handler/app/system"
 	"github.com/wxlbd/ruoyi-mall-go/internal/api/router"
 	"github.com/wxlbd/ruoyi-mall-go/internal/iot/core"
 	"github.com/wxlbd/ruoyi-mall-go/internal/middleware"
@@ -417,10 +418,13 @@ func InitApp() (*gin.Engine, error) {
 	appPayWalletRechargePackageHandler := pay4.NewAppPayWalletRechargePackageHandler(payWalletRechargePackageService)
 	appPayWalletTransactionHandler := pay4.NewAppPayWalletTransactionHandler(payWalletTransactionService, payWalletService)
 	handlers8 := pay4.NewHandlers(appPayChannelHandler, appPayOrderHandler, appPayTransferHandler, appPayWalletHandler, appPayWalletRechargePackageHandler, appPayWalletTransactionHandler)
+	appTenantHandler := system3.NewAppTenantHandler(tenantService)
+	handlers9 := system3.NewHandlers(appTenantHandler)
 	appHandlers := &app.AppHandlers{
 		Mall:   handlers6,
 		Member: handlers7,
 		Pay:    handlers8,
+		System: handlers9,
 	}
 	enforcer, err := permission.InitEnforcer(db)
 	if err != nil {
