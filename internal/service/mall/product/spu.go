@@ -207,11 +207,11 @@ func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *product2.Produc
 	if req.TabType != nil {
 		switch *req.TabType {
 		case 0:
-			// 下架 (Status = 0)
-			q = q.Where(u.Status.Eq(consts.ProductSpuStatusDisable))
-		case 1:
-			// 上架 (Status = 1)
+			// 出售中 (Status = 1，上架状态)
 			q = q.Where(u.Status.Eq(consts.ProductSpuStatusEnable))
+		case 1:
+			// 仓库中 (Status = 0，下架状态)
+			q = q.Where(u.Status.Eq(consts.ProductSpuStatusDisable))
 		case 2:
 			// 已售空 (Stock = 0)
 			q = q.Where(u.Stock.Eq(0))
@@ -249,10 +249,10 @@ func (s *ProductSpuService) GetSpuPage(ctx context.Context, req *product2.Produc
 // GetTabsCount 获得 SPU Tab 统计
 func (s *ProductSpuService) GetTabsCount(ctx context.Context) (map[int]int64, error) {
 	u := s.q.ProductSpu
-	// 0: For Sale (Status = 0)
-	count0, _ := u.WithContext(ctx).Where(u.Status.Eq(consts.ProductSpuStatusDisable)).Count()
-	// 1: In Warehouse (Status = 1)
-	count1, _ := u.WithContext(ctx).Where(u.Status.Eq(consts.ProductSpuStatusEnable)).Count()
+	// 0: For Sale (Status = 1，上架状态)
+	count0, _ := u.WithContext(ctx).Where(u.Status.Eq(consts.ProductSpuStatusEnable)).Count()
+	// 1: In Warehouse (Status = 0，下架状态)
+	count1, _ := u.WithContext(ctx).Where(u.Status.Eq(consts.ProductSpuStatusDisable)).Count()
 	// 2: Sold Out (Stock = 0)
 	count2, _ := u.WithContext(ctx).Where(u.Stock.Eq(0)).Count()
 	// 3: Alert Stock (Stock <= 10，对齐 Java)
