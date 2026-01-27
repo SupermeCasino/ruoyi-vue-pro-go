@@ -3,12 +3,13 @@ package trade
 import (
 	"time"
 
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
 	"github.com/wxlbd/ruoyi-mall-go/pkg/pagination"
 )
 
 // AppBrokerageUserBindReqVO 绑定推广员 Request
 type AppBrokerageUserBindReqVO struct {
-	BindUserID int64 `json:"bindUserId" binding:"required"` // 推广员编号
+	BindUserID model.FlexInt64 `json:"bindUserId" binding:"required"` // 推广员编号
 }
 
 // AppBrokerageUserChildSummaryPageReqVO 下级分销统计分页 Request

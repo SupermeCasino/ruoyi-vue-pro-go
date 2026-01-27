@@ -67,7 +67,7 @@ func (h *AppBrokerageUserHandler) BindBrokerageUser(c *gin.Context) {
 		return
 	}
 	userId := c.GetInt64("userId")
-	success, err := h.userSvc.BindBrokerageUser(c, userId, r.BindUserID)
+	success, err := h.userSvc.BindBrokerageUser(c, userId, int64(r.BindUserID))
 	if err != nil {
 		response.WriteError(c, 500, err.Error()) // Or 400
 		return
