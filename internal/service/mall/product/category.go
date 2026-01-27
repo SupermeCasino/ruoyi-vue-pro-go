@@ -32,7 +32,7 @@ func (s *ProductCategoryService) CreateCategory(ctx context.Context, req *produc
 		Name:     req.Name,
 		PicURL:   req.PicURL,
 		Sort:     req.Sort,
-		Status:   req.Status,
+		Status:   *req.Status,
 	}
 	err := s.q.ProductCategory.WithContext(ctx).Create(category)
 	return category.ID, err
@@ -59,7 +59,7 @@ func (s *ProductCategoryService) UpdateCategory(ctx context.Context, req *produc
 		Name:     req.Name,
 		PicURL:   req.PicURL,
 		Sort:     req.Sort,
-		Status:   req.Status,
+		Status:   *req.Status,
 	})
 	return err
 }

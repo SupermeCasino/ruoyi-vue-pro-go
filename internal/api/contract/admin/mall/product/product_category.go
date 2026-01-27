@@ -8,7 +8,7 @@ type ProductCategoryCreateReq struct {
 	Name        string `json:"name" binding:"required,max=255"`
 	PicURL      string `json:"picUrl"`
 	Sort        int32  `json:"sort" binding:"min=0"`
-	Status      int32  `json:"status" binding:"required,oneof=0 1"`
+	Status      *int32 `json:"status" binding:"required,oneof=0 1"`
 	Description string `json:"description"` // 分类描述
 }
 
@@ -19,7 +19,7 @@ type ProductCategoryUpdateReq struct {
 	Name        string `json:"name" binding:"required,max=255"`
 	PicURL      string `json:"picUrl"`
 	Sort        int32  `json:"sort" binding:"min=0"`
-	Status      int32  `json:"status" binding:"required,oneof=0 1"`
+	Status      *int32 `json:"status" binding:"required,oneof=0 1"`
 	Description string `json:"description"` // 分类描述
 }
 

@@ -49,7 +49,7 @@ type ProductSkuPropertyReq struct {
 // ProductSpuUpdateStatusReq 更新商品状态 Request
 type ProductSpuUpdateStatusReq struct {
 	ID     int64 `json:"id" binding:"required"`
-	Status int   `json:"status" binding:"required,oneof=-1 0 1"` // -1: 回收站, 0: 下架, 1: 上架
+	Status *int  `json:"status" binding:"required,oneof=-1 0 1"` // -1: 回收站, 0: 下架, 1: 上架
 }
 
 // ProductSpuPageReq 分页查询商品 Request
