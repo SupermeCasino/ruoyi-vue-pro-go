@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -32,7 +33,7 @@ func NewFileService(q *query.Query, fileConfigService *FileConfigService) *FileS
 }
 
 // CreateFile 上传/创建文件
-func (s *FileService) CreateFile(ctx context.Context, name string, path string, content []byte) (string, error) {
+func (s *FileService) CreateFile(ctx context.Context, name string, path string, content []byte, fileType string) (string, error) {
 	// 1. 获取 Master 配置
 	config, err := s.fileConfigService.GetMasterFileConfig(ctx)
 	if err != nil {
@@ -70,13 +71,18 @@ func (s *FileService) CreateFile(ctx context.Context, name string, path string, 
 		return "", err
 	}
 
-	// 8. 保存记录
+	// 8. 自动探测文件类型（作为兜底）
+	if fileType == "" {
+		fileType = http.DetectContentType(content)
+	}
+
+	// 9. 保存记录
 	fileRecord := &model.InfraFile{
 		ConfigId: config.ID,
 		Name:     name,
 		Path:     safePath,
 		Url:      url,
-		Type:     "", // 可以通过 http.DetectContentType(content) 获取
+		Type:     fileType,
 		Size:     len(content),
 	}
 	err = s.q.InfraFile.WithContext(ctx).Create(fileRecord)

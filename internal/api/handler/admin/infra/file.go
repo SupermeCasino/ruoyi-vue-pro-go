@@ -160,7 +160,7 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	url, err := h.svc.CreateFile(c, file.Filename, path, content)
+	url, err := h.svc.CreateFile(c, file.Filename, path, content, file.Header.Get("Content-Type"))
 	if err != nil {
 		response.WriteBizError(c, err)
 		return
