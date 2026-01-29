@@ -10,11 +10,6 @@ import (
 // Table: trade_config
 type TradeConfig struct {
 	ID                          int64                       `gorm:"primaryKey;autoIncrement;comment:主键" json:"id"`
-	AppID                       int64                       `gorm:"column:app_id;not null;comment:支付应用ID" json:"appId"`
-	AfterSaleDeadlineDays       int                         `gorm:"column:after_sale_deadline_days;not null;comment:售后期限(天)" json:"afterSaleDeadlineDays"`
-	PayTimeoutMinutes           int                         `gorm:"column:pay_timeout_minutes;not null;comment:支付超时(分钟)" json:"payTimeoutMinutes"`
-	AutoReceiveDays             int                         `gorm:"column:auto_receive_days;not null;comment:自动收货(天)" json:"autoReceiveDays"`
-	AutoCommentDays             int                         `gorm:"column:auto_comment_days;not null;comment:自动好评(天)" json:"autoCommentDays"`
 	AfterSaleRefundReasons      datatypes.JSONSlice[string] `gorm:"column:after_sale_refund_reasons;type:json;comment:售后的退款理由" json:"afterSaleRefundReasons"`
 	AfterSaleReturnReasons      datatypes.JSONSlice[string] `gorm:"column:after_sale_return_reasons;type:json;comment:售后的退货理由" json:"afterSaleReturnReasons"`
 	DeliveryExpressFreeEnabled  model.BitBool               `gorm:"column:delivery_express_free_enabled;default:0;comment:是否启用全场包邮" json:"deliveryExpressFreeEnabled"`

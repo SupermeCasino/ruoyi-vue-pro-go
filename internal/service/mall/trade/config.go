@@ -24,7 +24,7 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*trade2.TradeC
 	qc := s.q.TradeConfig
 	config, err := qc.WithContext(ctx).First()
 	if err != nil {
-		// 如果不存在，返回默认配置（对齐 Java application.yaml / 默认行为）
+		// 如果不存在，返回全默认配置
 		return &trade2.TradeConfigResp{
 			AfterSaleDeadlineDays: consts.DefaultAfterSaleDeadlineDays,
 			PayTimeoutMinutes:     consts.DefaultPayTimeoutMinutes,
@@ -33,14 +33,13 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*trade2.TradeC
 		}, nil
 	}
 
-	// 补充部分默认值，防止数据库中记录存在但值为 0 的情况
 	res := &trade2.TradeConfigResp{
 		ID:                          config.ID,
-		AppID:                       config.AppID,
-		AfterSaleDeadlineDays:       config.AfterSaleDeadlineDays,
-		PayTimeoutMinutes:           config.PayTimeoutMinutes,
-		AutoReceiveDays:             config.AutoReceiveDays,
-		AutoCommentDays:             config.AutoCommentDays,
+		AppID:                       0, // 数据库无此字段，设为默认
+		AfterSaleDeadlineDays:       consts.DefaultAfterSaleDeadlineDays,
+		PayTimeoutMinutes:           consts.DefaultPayTimeoutMinutes,
+		AutoReceiveDays:             consts.DefaultAutoReceiveDays,
+		AutoCommentDays:             consts.DefaultAutoCommentDays,
 		AfterSaleRefundReasons:      []string(config.AfterSaleRefundReasons),
 		AfterSaleReturnReasons:      []string(config.AfterSaleReturnReasons),
 		DeliveryExpressFreeEnabled:  bool(config.DeliveryExpressFreeEnabled),
@@ -56,13 +55,6 @@ func (s *TradeConfigService) GetTradeConfig(ctx context.Context) (*trade2.TradeC
 		BrokerageBindMode:           config.BrokerageBindMode,
 		BrokeragePosterUrls:         []string(config.BrokeragePosterUrls),
 		BrokerageWithdrawTypes:      []int(config.BrokerageWithdrawTypes),
-		TencentLbsKey:               "", // 待 DB 补全或从配置中心获取
-	}
-	if res.PayTimeoutMinutes <= consts.DefaultPayTimeoutMinutes {
-		res.PayTimeoutMinutes = consts.DefaultPayTimeoutMinutes
-	}
-	if res.AfterSaleDeadlineDays <= consts.DefaultAfterSaleDeadlineDays {
-		res.AfterSaleDeadlineDays = consts.DefaultAfterSaleDeadlineDays
 	}
 	return res, nil
 }
@@ -96,10 +88,6 @@ func (s *TradeConfigService) SaveTradeConfig(ctx context.Context, r *trade2.Trad
 	existing, err := qc.WithContext(ctx).First()
 	if err == nil {
 		// Update
-		existing.AfterSaleDeadlineDays = *r.AfterSaleDeadlineDays
-		existing.PayTimeoutMinutes = *r.PayTimeoutMinutes
-		existing.AutoReceiveDays = *r.AutoReceiveDays
-		existing.AutoCommentDays = *r.AutoCommentDays
 		if len(r.AfterSaleRefundReasons) > 0 {
 			existing.AfterSaleRefundReasons = datatypes.JSONSlice[string](r.AfterSaleRefundReasons)
 		}
@@ -150,10 +138,6 @@ func (s *TradeConfigService) SaveTradeConfig(ctx context.Context, r *trade2.Trad
 
 	// Create
 	newConfig := &trade.TradeConfig{
-		AfterSaleDeadlineDays:       *r.AfterSaleDeadlineDays,
-		PayTimeoutMinutes:           *r.PayTimeoutMinutes,
-		AutoReceiveDays:             *r.AutoReceiveDays,
-		AutoCommentDays:             *r.AutoCommentDays,
 		AfterSaleRefundReasons:      datatypes.JSONSlice[string](r.AfterSaleRefundReasons),
 		AfterSaleReturnReasons:      datatypes.JSONSlice[string](r.AfterSaleReturnReasons),
 		BrokerageWithdrawMinPrice:   0,

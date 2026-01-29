@@ -23,16 +23,16 @@ func NewProductCategoryService(q *query.Query) *ProductCategoryService {
 // CreateCategory 创建商品分类
 func (s *ProductCategoryService) CreateCategory(ctx context.Context, req *product.ProductCategoryCreateReq) (int64, error) {
 	// 校验父分类
-	if err := s.validateParentCategory(ctx, req.ParentID); err != nil {
+	if err := s.validateParentCategory(ctx, int64(req.ParentID)); err != nil {
 		return 0, err
 	}
 
 	category := &productModel.ProductCategory{
-		ParentID: req.ParentID,
+		ParentID: int64(req.ParentID),
 		Name:     req.Name,
 		PicURL:   req.PicURL,
-		Sort:     req.Sort,
-		Status:   *req.Status,
+		Sort:     int32(req.Sort),
+		Status:   int32(*req.Status),
 	}
 	err := s.q.ProductCategory.WithContext(ctx).Create(category)
 	return category.ID, err
@@ -41,25 +41,25 @@ func (s *ProductCategoryService) CreateCategory(ctx context.Context, req *produc
 // UpdateCategory 更新商品分类
 func (s *ProductCategoryService) UpdateCategory(ctx context.Context, req *product.ProductCategoryUpdateReq) error {
 	// 校验存在
-	if err := s.ValidateCategory(ctx, req.ID); err != nil {
+	if err := s.ValidateCategory(ctx, int64(req.ID)); err != nil {
 		return err
 	}
 	// 校验父分类
-	if err := s.validateParentCategory(ctx, req.ParentID); err != nil {
+	if err := s.validateParentCategory(ctx, int64(req.ParentID)); err != nil {
 		return err
 	}
 	// 校验不能设置自己为父分类
-	if req.ID == req.ParentID {
+	if int64(req.ID) == int64(req.ParentID) {
 		return errors.NewBizError(1006001004, "不能设置自己为父分类")
 	}
 
 	u := s.q.ProductCategory
-	_, err := u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&productModel.ProductCategory{
-		ParentID: req.ParentID,
+	_, err := u.WithContext(ctx).Where(u.ID.Eq(int64(req.ID))).Updates(&productModel.ProductCategory{
+		ParentID: int64(req.ParentID),
 		Name:     req.Name,
 		PicURL:   req.PicURL,
-		Sort:     req.Sort,
-		Status:   *req.Status,
+		Sort:     int32(req.Sort),
+		Status:   int32(*req.Status),
 	})
 	return err
 }
@@ -126,7 +126,7 @@ func (s *ProductCategoryService) GetCategoryList(ctx context.Context, req *produ
 // GetEnableCategoryList 获得开启状态的商品分类列表
 func (s *ProductCategoryService) GetEnableCategoryList(ctx context.Context) ([]*productModel.ProductCategory, error) {
 	u := s.q.ProductCategory
-	return u.WithContext(ctx).Where(u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
+	return u.WithContext(ctx).Where(u.Status.Eq(consts.CommonStatusEnable)).Order(u.Sort.Asc()).Find()
 }
 
 // GetEnableCategoryListByIds 获得开启状态的商品分类列表，指定编号
@@ -135,7 +135,7 @@ func (s *ProductCategoryService) GetEnableCategoryListByIds(ctx context.Context,
 		return []*productModel.ProductCategory{}, nil
 	}
 	u := s.q.ProductCategory
-	return u.WithContext(ctx).Where(u.ID.In(ids...), u.Status.Eq(0)).Order(u.Sort.Asc()).Find()
+	return u.WithContext(ctx).Where(u.ID.In(ids...), u.Status.Eq(consts.CommonStatusEnable)).Order(u.Sort.Asc()).Find()
 }
 
 // GetCategoryAndChildrenIds 获得分类及其所有子分类的编号
@@ -148,7 +148,7 @@ func (s *ProductCategoryService) GetCategoryAndChildrenIds(ctx context.Context, 
 
 	// 获取该分类的所有子分类
 	u := s.q.ProductCategory
-	children, err := u.WithContext(ctx).Where(u.ParentID.Eq(categoryID), u.Status.Eq(consts.CommonStatusDisable)).Find()
+	children, err := u.WithContext(ctx).Where(u.ParentID.Eq(categoryID)).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -207,13 +207,12 @@ func (s *ProductCategoryService) ValidateCategoryLevel(ctx context.Context, id i
 
 func (s *ProductCategoryService) convertResp(item *productModel.ProductCategory) *product.ProductCategoryResp {
 	return &product.ProductCategoryResp{
-		ID:          item.ID,
-		ParentID:    item.ParentID,
-		Name:        item.Name,
-		PicURL:      item.PicURL,
-		Sort:        item.Sort,
-		Status:      item.Status,
-		Description: item.Description,
-		CreateTime:  item.CreateTime,
+		ID:         item.ID,
+		ParentID:   item.ParentID,
+		Name:       item.Name,
+		PicURL:     item.PicURL,
+		Sort:       item.Sort,
+		Status:     item.Status,
+		CreateTime: item.CreateTime,
 	}
 }

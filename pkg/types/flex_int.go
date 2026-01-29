@@ -41,3 +41,36 @@ func (i FlexInt64) MarshalJSON() ([]byte, error) {
 	// 转为字符串输出，防止前端 ID 溢出
 	return json.Marshal(strconv.FormatInt(int64(i), 10))
 }
+
+// FlexInt32 支持从数字和字符串反序列化
+type FlexInt32 int32
+
+func (i *FlexInt32) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		*i = 0
+		return nil
+	}
+	// 尝试直接作为数字解析
+	var n int32
+	if err := json.Unmarshal(data, &n); err == nil {
+		*i = FlexInt32(n)
+		return nil
+	}
+
+	// 尝试作为字符串解析
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		p, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			return err
+		}
+		*i = FlexInt32(p)
+		return nil
+	}
+
+	return errors.New("FlexInt32: 无法解析为 int32 或字符串")
+}
+
+func (i FlexInt32) MarshalJSON() ([]byte, error) {
+	return json.Marshal(int32(i))
+}

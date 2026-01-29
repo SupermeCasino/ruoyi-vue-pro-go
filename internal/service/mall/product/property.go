@@ -49,17 +49,17 @@ func (s *ProductPropertyService) CreateProperty(ctx context.Context, req *produc
 // UpdateProperty 更新属性项
 func (s *ProductPropertyService) UpdateProperty(ctx context.Context, req *product2.ProductPropertyUpdateReq) error {
 	// 校验存在
-	if err := s.validatePropertyExists(ctx, req.ID); err != nil {
+	if err := s.validatePropertyExists(ctx, int64(req.ID)); err != nil {
 		return err
 	}
 	// 校验名字重复
 	u := s.q.ProductProperty
 	exist, err := u.WithContext(ctx).Where(u.Name.Eq(req.Name)).First()
-	if err == nil && exist != nil && exist.ID != req.ID {
+	if err == nil && exist != nil && exist.ID != int64(req.ID) {
 		return errors.NewBizError(1006002000, "属性项名称已存在") // PROPERTY_EXISTS
 	}
 
-	_, err = u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&product.ProductProperty{
+	_, err = u.WithContext(ctx).Where(u.ID.Eq(int64(req.ID))).Updates(&product.ProductProperty{
 		Name:   req.Name,
 		Remark: req.Remark,
 	})
@@ -69,7 +69,7 @@ func (s *ProductPropertyService) UpdateProperty(ctx context.Context, req *produc
 
 	// 更新 SPU 相关属性
 	if s.skuSvc != nil {
-		_, _ = s.skuSvc.UpdateSkuProperty(ctx, req.ID, req.Name)
+		_, _ = s.skuSvc.UpdateSkuProperty(ctx, int64(req.ID), req.Name)
 	}
 	return nil
 }

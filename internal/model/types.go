@@ -20,5 +20,8 @@ type TimeOfDay = types.TimeOfDay
 // FlexInt64 supports deserializing from both number and string
 type FlexInt64 = types.FlexInt64
 
+// FlexInt32 supports deserializing from both number and string
+type FlexInt32 = types.FlexInt32
+
 // NewBitBool creates a new BitBool
 var NewBitBool = types.NewBitBool

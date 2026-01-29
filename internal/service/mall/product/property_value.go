@@ -29,13 +29,13 @@ func (s *ProductPropertyValueService) SetSkuService(skuSvc *ProductSkuService) {
 func (s *ProductPropertyValueService) CreatePropertyValue(ctx context.Context, req *product2.ProductPropertyValueCreateReq) (int64, error) {
 	u := s.q.ProductPropertyValue
 	// 如果已经添加过该属性值，直接返回
-	exist, err := u.WithContext(ctx).Where(u.PropertyID.Eq(req.PropertyID), u.Name.Eq(req.Name)).First()
+	exist, err := u.WithContext(ctx).Where(u.PropertyID.Eq(int64(req.PropertyID)), u.Name.Eq(req.Name)).First()
 	if err == nil && exist != nil {
 		return exist.ID, nil
 	}
 
 	value := &product.ProductPropertyValue{
-		PropertyID: req.PropertyID,
+		PropertyID: int64(req.PropertyID),
 		Name:       req.Name,
 		Remark:     req.Remark,
 	}
@@ -45,19 +45,19 @@ func (s *ProductPropertyValueService) CreatePropertyValue(ctx context.Context, r
 
 // UpdatePropertyValue 更新属性值
 func (s *ProductPropertyValueService) UpdatePropertyValue(ctx context.Context, req *product2.ProductPropertyValueUpdateReq) error {
-	if err := s.validatePropertyValueExists(ctx, req.ID); err != nil {
+	if err := s.validatePropertyValueExists(ctx, int64(req.ID)); err != nil {
 		return err
 	}
 
 	// 校验名字唯一
 	u := s.q.ProductPropertyValue
-	exist, err := u.WithContext(ctx).Where(u.PropertyID.Eq(req.PropertyID), u.Name.Eq(req.Name)).First()
-	if err == nil && exist != nil && exist.ID != req.ID {
+	exist, err := u.WithContext(ctx).Where(u.PropertyID.Eq(int64(req.PropertyID)), u.Name.Eq(req.Name)).First()
+	if err == nil && exist != nil && exist.ID != int64(req.ID) {
 		return errors.NewBizError(1006002003, "属性值名称已存在") // PROPERTY_VALUE_EXISTS
 	}
 
-	_, err = u.WithContext(ctx).Where(u.ID.Eq(req.ID)).Updates(&product.ProductPropertyValue{
-		PropertyID: req.PropertyID,
+	_, err = u.WithContext(ctx).Where(u.ID.Eq(int64(req.ID))).Updates(&product.ProductPropertyValue{
+		PropertyID: int64(req.PropertyID),
 		Name:       req.Name,
 		Remark:     req.Remark,
 	})
@@ -65,7 +65,7 @@ func (s *ProductPropertyValueService) UpdatePropertyValue(ctx context.Context, r
 		return err
 	}
 	if s.skuSvc != nil {
-		_, _ = s.skuSvc.UpdateSkuPropertyValue(ctx, req.ID, req.Name)
+		_, _ = s.skuSvc.UpdateSkuPropertyValue(ctx, int64(req.ID), req.Name)
 	}
 	return nil
 }

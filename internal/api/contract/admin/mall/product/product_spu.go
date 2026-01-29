@@ -1,6 +1,10 @@
 package product
 
-import "time"
+import (
+	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+)
 
 // ProductSpuSaveReq 创建/更新商品 SPU Request
 type ProductSpuSaveReq struct {
@@ -48,8 +52,8 @@ type ProductSkuPropertyReq struct {
 
 // ProductSpuUpdateStatusReq 更新商品状态 Request
 type ProductSpuUpdateStatusReq struct {
-	ID     int64 `json:"id" binding:"required"`
-	Status *int  `json:"status" binding:"required,oneof=-1 0 1"` // -1: 回收站, 0: 下架, 1: 上架
+	ID     model.FlexInt64  `json:"id" binding:"required"`
+	Status *model.FlexInt32 `json:"status" binding:"required,oneof=-1 0 1"` // -1: 回收站, 0: 下架, 1: 上架
 }
 
 // ProductSpuPageReq 分页查询商品 Request

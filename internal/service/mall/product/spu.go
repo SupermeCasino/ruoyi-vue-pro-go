@@ -159,11 +159,11 @@ func (s *ProductSpuService) DeleteSpu(ctx context.Context, id int64) error {
 // UpdateSpuStatus 更新 SPU 状态
 func (s *ProductSpuService) UpdateSpuStatus(ctx context.Context, req *product2.ProductSpuUpdateStatusReq) error {
 	// 校验存在
-	if _, err := s.validateSpuExists(ctx, req.ID); err != nil {
+	if _, err := s.validateSpuExists(ctx, int64(req.ID)); err != nil {
 		return err
 	}
 	return s.q.Transaction(func(tx *query.Query) error {
-		_, err := tx.ProductSpu.WithContext(ctx).Where(tx.ProductSpu.ID.Eq(req.ID)).Update(tx.ProductSpu.Status, *req.Status)
+		_, err := tx.ProductSpu.WithContext(ctx).Where(tx.ProductSpu.ID.Eq(int64(req.ID))).Update(tx.ProductSpu.Status, int32(*req.Status))
 		return err
 	})
 }

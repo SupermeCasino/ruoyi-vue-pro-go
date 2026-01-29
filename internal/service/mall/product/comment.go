@@ -71,21 +71,21 @@ func (s *ProductCommentService) UpdateCommentVisible(ctx context.Context, req *p
 	if err != nil {
 		return err
 	}
-	_, err = s.q.ProductComment.WithContext(ctx).Where(s.q.ProductComment.ID.Eq(req.ID)).Update(s.q.ProductComment.Visible, req.Visible)
+	_, err = s.q.ProductComment.WithContext(ctx).Where(s.q.ProductComment.ID.Eq(req.ID)).Update(s.q.ProductComment.Visible, *req.Visible)
 	return err
 }
 
 // ReplyComment 商家回复
 func (s *ProductCommentService) ReplyComment(ctx context.Context, req *product2.ProductCommentReplyReq, loginUserID int64) error {
-	_, err := s.validateCommentExists(ctx, req.ID)
+	_, err := s.validateCommentExists(ctx, int64(req.ID))
 	if err != nil {
 		return err
 	}
 	now := time.Now()
-	_, err = s.q.ProductComment.WithContext(ctx).Where(s.q.ProductComment.ID.Eq(req.ID)).Updates(&product.ProductComment{
+	_, err = s.q.ProductComment.WithContext(ctx).Where(s.q.ProductComment.ID.Eq(int64(req.ID))).Updates(&product.ProductComment{
 		ReplyStatus:  true,
 		ReplyUserID:  loginUserID,
-		ReplyContent: req.Content,
+		ReplyContent: req.ReplyContent,
 		ReplyTime:    &now,
 	})
 	return err
@@ -94,7 +94,7 @@ func (s *ProductCommentService) ReplyComment(ctx context.Context, req *product2.
 // CreateComment 创建评论 (Admin)
 func (s *ProductCommentService) CreateComment(ctx context.Context, req *product2.ProductCommentCreateReq) error {
 	// 校验 SKU
-	sku, err := s.skuSvc.GetSku(ctx, req.SkuID)
+	sku, err := s.skuSvc.GetSku(ctx, int64(req.SkuID))
 	if err != nil {
 		return err
 	}
@@ -105,18 +105,17 @@ func (s *ProductCommentService) CreateComment(ctx context.Context, req *product2
 	}
 
 	comment := &product.ProductComment{
-		UserID:            req.UserID,
+		UserID:            int64(req.UserID),
 		UserNickname:      req.UserNickname,
 		UserAvatar:        req.UserAvatar,
 		Anonymous:         false, // Admin created usually not anonymous? Or default false
-		OrderItemID:       req.OrderItemID,
+		OrderItemID:       int64(req.OrderItemID),
 		SpuID:             spu.ID,
 		SpuName:           spu.Name,
 		SkuID:             sku.ID,
 		SkuPicURL:         sku.PicURL,
 		SkuProperties:     sku.Properties,
 		Visible:           true,
-		Scores:            (req.DescriptionScores + req.BenefitScores) / 2, // Simple Avg? Or req.Scores missing in Admin DTO?
 		DescriptionScores: req.DescriptionScores,
 		BenefitScores:     req.BenefitScores,
 		Content:           req.Content,
@@ -124,8 +123,6 @@ func (s *ProductCommentService) CreateComment(ctx context.Context, req *product2
 		ReplyStatus:       false,
 	}
 	// Calc avg scores if needed. Java uses Description + Benefit + Service / 3 usually?
-	// Admin DTO only has Description and Benefit.
-	// Let's assume Scores = (Desc + Benefit) / 2
 	comment.Scores = (comment.DescriptionScores + comment.BenefitScores) / 2
 
 	return s.q.ProductComment.WithContext(ctx).Create(comment)

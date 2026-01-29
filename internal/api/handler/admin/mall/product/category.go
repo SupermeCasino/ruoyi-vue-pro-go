@@ -23,7 +23,7 @@ func NewProductCategoryHandler(svc *product.ProductCategoryService) *ProductCate
 func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 	var r product2.ProductCategoryCreateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteBizError(c, errors.ErrParam)
+		response.WriteBizError(c, errors.BindingErr(err))
 		return
 	}
 	id, err := h.svc.CreateCategory(c, &r)
@@ -38,7 +38,7 @@ func (h *ProductCategoryHandler) CreateCategory(c *gin.Context) {
 func (h *ProductCategoryHandler) UpdateCategory(c *gin.Context) {
 	var r product2.ProductCategoryUpdateReq
 	if err := c.ShouldBindJSON(&r); err != nil {
-		response.WriteBizError(c, errors.ErrParam)
+		response.WriteBizError(c, errors.BindingErr(err))
 		return
 	}
 	if err := h.svc.UpdateCategory(c, &r); err != nil {

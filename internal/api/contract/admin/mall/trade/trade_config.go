@@ -2,10 +2,6 @@ package trade
 
 // TradeConfigSaveReq 交易配置 - 保存 Request (对齐 Java: TradeConfigSaveReqVO)
 type TradeConfigSaveReq struct {
-	AfterSaleDeadlineDays       *int     `json:"afterSaleDeadlineDays" binding:"required"`  // 售后期限(天)
-	PayTimeoutMinutes           *int     `json:"payTimeoutMinutes" binding:"required"`      // 支付超时(分钟)
-	AutoReceiveDays             *int     `json:"autoReceiveDays" binding:"required"`        // 自动收货(天)
-	AutoCommentDays             *int     `json:"autoCommentDays" binding:"required"`        // 自动好评(天)
 	AfterSaleRefundReasons      []string `json:"afterSaleRefundReasons" binding:"required"` // 售后的退款理由
 	AfterSaleReturnReasons      []string `json:"afterSaleReturnReasons" binding:"required"` // 售后的退货理由
 	DeliveryExpressFreeEnabled  *bool    `json:"deliveryExpressFreeEnabled"`                // 是否启用全场包邮
@@ -21,7 +17,6 @@ type TradeConfigSaveReq struct {
 	BrokerageBindMode           *int     `json:"brokerageBindMode"`                         // 分销关系绑定模式
 	BrokeragePosterUrls         []string `json:"brokeragePosterUrls"`                       // 分销海报图
 	BrokerageWithdrawTypes      []int    `json:"brokerageWithdrawTypes"`                    // 提现方式
-	TencentLbsKey               string   `json:"tencentLbsKey"`                             // 腾讯地图 Key
 }
 
 // TradeConfigResp 交易配置 Response (对齐 Java: TradeConfigRespVO)

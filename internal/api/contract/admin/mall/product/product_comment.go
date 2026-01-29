@@ -1,6 +1,10 @@
 package product
 
-import "time"
+import (
+	"time"
+
+	"github.com/wxlbd/ruoyi-mall-go/internal/model"
+)
 
 // ProductCommentPageReq 商品评价分页 Request
 type ProductCommentPageReq struct {
@@ -18,13 +22,13 @@ type ProductCommentPageReq struct {
 // ProductCommentUpdateVisibleReq 更新评论可见性 Request
 type ProductCommentUpdateVisibleReq struct {
 	ID      int64 `json:"id" binding:"required"`
-	Visible bool  `json:"visible" binding:"required"`
+	Visible *bool `json:"visible" binding:"required"`
 }
 
 // ProductCommentReplyReq 商家回复 Request
 type ProductCommentReplyReq struct {
-	ID      int64  `json:"id" binding:"required"`
-	Content string `json:"content" binding:"required"`
+	ID           model.FlexInt64 `json:"id" binding:"required"`
+	ReplyContent string          `json:"replyContent" binding:"required"` // 商家必须填写回复内容
 }
 
 // AppProductCommentCreateReq 添加自评 Request (App端)
@@ -40,15 +44,16 @@ type AppProductCommentCreateReq struct {
 
 // ProductCommentCreateReq 商品评价创建 Request (后台)
 type ProductCommentCreateReq struct {
-	UserID            int64    `json:"userId" binding:"required"`
-	OrderItemID       int64    `json:"orderItemId" binding:"required"`
-	UserNickname      string   `json:"userNickname" binding:"required"`
-	UserAvatar        string   `json:"userAvatar" binding:"required"`
-	SkuID             int64    `json:"skuId" binding:"required"`
-	DescriptionScores int      `json:"descriptionScores" binding:"required,min=1,max=5"`
-	BenefitScores     int      `json:"benefitScores" binding:"required,min=1,max=5"`
-	Content           string   `json:"content" binding:"required"`
-	PicURLs           []string `json:"picUrls"`
+	UserID            model.FlexInt64 `json:"userId"`
+	OrderItemID       model.FlexInt64 `json:"orderItemId"`
+	UserNickname      string          `json:"userNickname" binding:"required"`
+	UserAvatar        string          `json:"userAvatar" binding:"required"`
+	SpuID             model.FlexInt64 `json:"spuId"`
+	SkuID             model.FlexInt64 `json:"skuId" binding:"required"`
+	DescriptionScores int             `json:"descriptionScores" binding:"required,min=1,max=5"`
+	BenefitScores     int             `json:"benefitScores" binding:"required,min=1,max=5"`
+	Content           string          `json:"content" binding:"required"`
+	PicURLs           []string        `json:"picUrls"`
 }
 
 // AppProductCommentPageReq 商品评价分页 Request (App端)
