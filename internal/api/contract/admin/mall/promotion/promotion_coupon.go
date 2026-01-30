@@ -25,7 +25,7 @@ type CouponTemplateCreateReq struct {
 	DiscountType       int        `json:"discountType"`
 	DiscountPrice      int        `json:"discountPrice"`
 	DiscountPercent    int        `json:"discountPercent"`
-	DiscountLimit      int        `json:"discountLimit"`
+	DiscountLimitPrice int        `json:"discountLimitPrice"`
 }
 
 // CouponTemplateUpdateReq 更新优惠券模板 Request
@@ -48,7 +48,7 @@ type CouponTemplateUpdateReq struct {
 	DiscountType       int        `json:"discountType"`
 	DiscountPrice      int        `json:"discountPrice"`
 	DiscountPercent    int        `json:"discountPercent"`
-	DiscountLimit      int        `json:"discountLimit"`
+	DiscountLimitPrice int        `json:"discountLimitPrice"`
 }
 
 // CouponTemplatePageReq 优惠券模板分页 Request
@@ -104,7 +104,10 @@ type CouponTemplateResp struct {
 	DiscountLimitPrice *int       `json:"discountLimitPrice"`
 	TakeCount          int        `json:"takeCount"`
 	UseCount           int        `json:"useCount"`
+	Creator            string     `json:"creator"`
+	Updater            string     `json:"updater"`
 	CreateTime         time.Time  `json:"createTime"`
+	UpdateTime         time.Time  `json:"updateTime"`
 }
 
 // CouponPageResp 优惠券 Response VO

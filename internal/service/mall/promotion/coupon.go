@@ -48,7 +48,7 @@ func (s *CouponService) CreateCouponTemplate(ctx context.Context, req *promotion
 		DiscountType:       req.DiscountType,
 		DiscountPrice:      req.DiscountPrice,
 		DiscountPercent:    req.DiscountPercent,
-		DiscountLimitPrice: req.DiscountLimit,
+		DiscountLimitPrice: req.DiscountLimitPrice,
 	}
 	err := s.q.PromotionCouponTemplate.WithContext(ctx).Create(t)
 	return t.ID, err
@@ -74,7 +74,7 @@ func (s *CouponService) UpdateCouponTemplate(ctx context.Context, req *promotion
 		DiscountType:       req.DiscountType,
 		DiscountPrice:      req.DiscountPrice,
 		DiscountPercent:    req.DiscountPercent,
-		DiscountLimitPrice: req.DiscountLimit,
+		DiscountLimitPrice: req.DiscountLimitPrice,
 	})
 	return err
 }
@@ -128,33 +128,7 @@ func (s *CouponService) GetCouponTemplatePage(ctx context.Context, req *promotio
 	// 转换为 Response DTO
 	list := make([]*promotion3.CouponTemplateResp, len(result))
 	for i, tmpl := range result {
-		list[i] = &promotion3.CouponTemplateResp{
-			// RespVO 字段
-			ID:         tmpl.ID,
-			Status:     tmpl.Status,
-			TakeCount:  tmpl.TakeCount,       // 从数据库字段获取
-			UseCount:   useCountMap[tmpl.ID], // 从统计查询获取
-			CreateTime: tmpl.CreateTime,
-
-			// BaseVO 字段
-			Name:               tmpl.Name,
-			Description:        tmpl.Description,
-			TotalCount:         tmpl.TotalCount,
-			TakeLimitCount:     tmpl.TakeLimitCount,
-			TakeType:           tmpl.TakeType,
-			UsePrice:           tmpl.UsePriceMin,
-			ProductScope:       tmpl.ProductScope,
-			ProductScopeValues: tmpl.ProductScopeValues,
-			ValidityType:       tmpl.ValidityType,
-			ValidStartTime:     tmpl.ValidStartTime,
-			ValidEndTime:       tmpl.ValidEndTime,
-			FixedStartTerm:     &tmpl.FixedStartTerm,
-			FixedEndTerm:       &tmpl.FixedEndTerm,
-			DiscountType:       tmpl.DiscountType,
-			DiscountPercent:    &tmpl.DiscountPercent,
-			DiscountPrice:      &tmpl.DiscountPrice,
-			DiscountLimitPrice: &tmpl.DiscountLimitPrice,
-		}
+		list[i] = s.convertTemplateToResp0(tmpl, useCountMap[tmpl.ID])
 	}
 
 	return &pagination.PageResult[*promotion3.CouponTemplateResp]{
@@ -201,19 +175,72 @@ func (s *CouponService) DeleteCouponTemplate(ctx context.Context, id int64) erro
 
 // GetCouponTemplate 获取优惠券模板详情 (Admin)
 // 对应 Java: CouponTemplateService.getCouponTemplate
-func (s *CouponService) GetCouponTemplate(ctx context.Context, id int64) (*promotion.PromotionCouponTemplate, error) {
+func (s *CouponService) GetCouponTemplate(ctx context.Context, id int64) (*promotion3.CouponTemplateResp, error) {
 	t := s.q.PromotionCouponTemplate
-	return t.WithContext(ctx).Where(t.ID.Eq(id)).First()
+	tmpl, err := t.WithContext(ctx).Where(t.ID.Eq(id)).First()
+	if err != nil {
+		return nil, err
+	}
+	if tmpl == nil {
+		return nil, nil
+	}
+	return s.convertTemplateToResp(ctx, tmpl)
 }
 
 // GetCouponTemplateList 获取优惠券模板列表 (Admin)
 // 对应 Java: CouponTemplateService.getCouponTemplateList(ids)
-func (s *CouponService) GetCouponTemplateList(ctx context.Context, ids []int64) ([]*promotion.PromotionCouponTemplate, error) {
+func (s *CouponService) GetCouponTemplateList(ctx context.Context, ids []int64) ([]*promotion3.CouponTemplateResp, error) {
 	if len(ids) == 0 {
-		return []*promotion.PromotionCouponTemplate{}, nil
+		return []*promotion3.CouponTemplateResp{}, nil
 	}
 	t := s.q.PromotionCouponTemplate
-	return t.WithContext(ctx).Where(t.ID.In(ids...)).Find()
+	list, err := t.WithContext(ctx).Where(t.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*promotion3.CouponTemplateResp, 0, len(list))
+	for _, item := range list {
+		resp, _ := s.convertTemplateToResp(ctx, item)
+		res = append(res, resp)
+	}
+	return res, nil
+}
+
+func (s *CouponService) convertTemplateToResp(ctx context.Context, tmpl *promotion.PromotionCouponTemplate) (*promotion3.CouponTemplateResp, error) {
+	c := s.q.PromotionCoupon
+	useCount, _ := c.WithContext(ctx).Where(c.TemplateID.Eq(tmpl.ID), c.Status.Eq(2)).Count()
+	return s.convertTemplateToResp0(tmpl, int(useCount)), nil
+}
+
+func (s *CouponService) convertTemplateToResp0(tmpl *promotion.PromotionCouponTemplate, useCount int) *promotion3.CouponTemplateResp {
+	return &promotion3.CouponTemplateResp{
+		ID:                 tmpl.ID,
+		Name:               tmpl.Name,
+		Description:        tmpl.Description,
+		Status:             tmpl.Status,
+		TotalCount:         tmpl.TotalCount,
+		TakeLimitCount:     tmpl.TakeLimitCount,
+		TakeType:           tmpl.TakeType,
+		UsePrice:           tmpl.UsePriceMin,
+		ProductScope:       tmpl.ProductScope,
+		ProductScopeValues: tmpl.ProductScopeValues,
+		ValidityType:       tmpl.ValidityType,
+		ValidStartTime:     tmpl.ValidStartTime,
+		ValidEndTime:       tmpl.ValidEndTime,
+		FixedStartTerm:     &tmpl.FixedStartTerm,
+		FixedEndTerm:       &tmpl.FixedEndTerm,
+		DiscountType:       tmpl.DiscountType,
+		DiscountPercent:    &tmpl.DiscountPercent,
+		DiscountPrice:      &tmpl.DiscountPrice,
+		DiscountLimitPrice: &tmpl.DiscountLimitPrice,
+		TakeCount:          tmpl.TakeCount,
+		UseCount:           useCount,
+		Creator:            tmpl.Creator,
+		Updater:            tmpl.Updater,
+		CreateTime:         tmpl.CreateTime,
+		UpdateTime:         tmpl.UpdateTime,
+	}
 }
 
 // GetCouponPage 获得优惠券分页 (Admin)
