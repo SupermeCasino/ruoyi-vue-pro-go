@@ -8,7 +8,7 @@ import (
 
 // MemberAnalyseReqVO 会员分析请求
 type MemberAnalyseReqVO struct {
-	Times []time.Time `form:"times" binding:"required,len=2" time_format:"2006-01-02 15:04:05"` // 时间范围 [开始时间, 结束时间]
+	Times []time.Time `form:"times[]" time_format:"2006-01-02 15:04:05"` // 时间范围 [开始时间, 结束时间]
 }
 
 // MemberSummaryRespVO 会员统计摘要响应
