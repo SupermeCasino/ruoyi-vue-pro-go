@@ -10,6 +10,7 @@ import (
 type ArticleRespVO struct {
 	ID              int64     `json:"id"`
 	CategoryID      int64     `json:"categoryId"`
+	SpuID           int64     `json:"spuId"`
 	Title           string    `json:"title"`
 	Author          string    `json:"author"`
 	PicURL          string    `json:"picUrl"`
@@ -26,13 +27,14 @@ type ArticleRespVO struct {
 // ArticleCreateReq 文章创建请求
 type ArticleCreateReq struct {
 	CategoryID      int64  `json:"categoryId" binding:"required"`
+	SpuID           int64  `json:"spuId"`
 	Title           string `json:"title" binding:"required"`
 	Author          string `json:"author"`
 	PicURL          string `json:"picUrl"`
 	Introduction    string `json:"introduction"`
 	BrowseCount     int    `json:"browseCount"`
 	Sort            int    `json:"sort"`
-	Status          int    `json:"status" binding:"required"`
+	Status          *int   `json:"status" binding:"required"`
 	RecommendHot    bool   `json:"recommendHot"`
 	RecommendBanner bool   `json:"recommendBanner"`
 	Content         string `json:"content"`
@@ -42,13 +44,14 @@ type ArticleCreateReq struct {
 type ArticleUpdateReq struct {
 	ID              int64  `json:"id" binding:"required"`
 	CategoryID      int64  `json:"categoryId" binding:"required"`
+	SpuID           int64  `json:"spuId"`
 	Title           string `json:"title" binding:"required"`
 	Author          string `json:"author"`
 	PicURL          string `json:"picUrl"`
 	Introduction    string `json:"introduction"`
 	BrowseCount     int    `json:"browseCount"`
 	Sort            int    `json:"sort"`
-	Status          int    `json:"status" binding:"required"`
+	Status          *int   `json:"status" binding:"required"`
 	RecommendHot    bool   `json:"recommendHot"`
 	RecommendBanner bool   `json:"recommendBanner"`
 	Content         string `json:"content"`

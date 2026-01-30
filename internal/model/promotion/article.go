@@ -23,6 +23,7 @@ func (PromotionArticleCategory) TableName() string {
 type PromotionArticle struct {
 	ID              int64         `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	CategoryID      int64         `gorm:"column:category_id;type:bigint;not null;comment:分类ID" json:"categoryId"`
+	SpuID           int64         `gorm:"column:spu_id;type:bigint;not null;default:0;comment:关联商品ID" json:"spuId"`
 	Title           string        `gorm:"column:title;type:varchar(64);not null;comment:文章标题" json:"title"`
 	Author          string        `gorm:"column:author;type:varchar(64);comment:文章作者" json:"author"`
 	PicURL          string        `gorm:"column:pic_url;type:varchar(255);comment:封面图片" json:"picUrl"`

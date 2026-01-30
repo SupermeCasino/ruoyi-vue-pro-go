@@ -39,13 +39,14 @@ func (s *articleService) CreateArticle(ctx context.Context, req promotion2.Artic
 
 	article := &promotion.PromotionArticle{
 		CategoryID:      req.CategoryID,
+		SpuID:           req.SpuID,
 		Title:           req.Title,
 		Author:          req.Author,
 		PicURL:          req.PicURL,
 		Introduction:    req.Introduction,
 		BrowseCount:     req.BrowseCount, // Can set initial browse count
 		Sort:            req.Sort,
-		Status:          req.Status,
+		Status:          *req.Status,
 		RecommendHot:    model.BitBool(req.RecommendHot),
 		RecommendBanner: model.BitBool(req.RecommendBanner),
 		Content:         req.Content,
@@ -66,13 +67,14 @@ func (s *articleService) UpdateArticle(ctx context.Context, req promotion2.Artic
 
 	_, err := s.q.PromotionArticle.WithContext(ctx).Where(s.q.PromotionArticle.ID.Eq(req.ID)).Updates(promotion.PromotionArticle{
 		CategoryID:      req.CategoryID,
+		SpuID:           req.SpuID,
 		Title:           req.Title,
 		Author:          req.Author,
 		PicURL:          req.PicURL,
 		Introduction:    req.Introduction,
 		BrowseCount:     req.BrowseCount,
 		Sort:            req.Sort,
-		Status:          req.Status,
+		Status:          *req.Status,
 		RecommendHot:    model.BitBool(req.RecommendHot),
 		RecommendBanner: model.BitBool(req.RecommendBanner),
 		Content:         req.Content,
@@ -188,6 +190,7 @@ func (s *articleService) convertArticleToResp(item *promotion.PromotionArticle) 
 	return &promotion2.ArticleRespVO{
 		ID:              item.ID,
 		CategoryID:      item.CategoryID,
+		SpuID:           item.SpuID,
 		Title:           item.Title,
 		Author:          item.Author,
 		PicURL:          item.PicURL,
