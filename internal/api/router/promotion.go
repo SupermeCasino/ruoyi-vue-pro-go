@@ -78,6 +78,7 @@ func RegisterPromotionRoutes(engine *gin.Engine,
 			seckillActivityGroup.PUT("/close", handlers.SeckillActivity.CloseSeckillActivity)
 			seckillActivityGroup.GET("/get", handlers.SeckillActivity.GetSeckillActivity)
 			seckillActivityGroup.GET("/page", handlers.SeckillActivity.GetSeckillActivityPage)
+			seckillActivityGroup.GET("/list-by-ids", handlers.SeckillActivity.GetSeckillActivityListByIds)
 		}
 
 		// Bargain Activity
