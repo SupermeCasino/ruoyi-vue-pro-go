@@ -48,14 +48,17 @@ func (s *ProductBrandService) UpdateBrand(ctx context.Context, req *product2.Pro
 	if err := s.validateBrandNameUnique(ctx, req.ID, req.Name); err != nil {
 		return err
 	}
-
-	_, err := s.q.ProductBrand.WithContext(ctx).Where(s.q.ProductBrand.ID.Eq(req.ID)).Updates(&product.ProductBrand{
-		Name:        req.Name,
-		PicURL:      req.PicURL,
-		Sort:        req.Sort,
-		Description: req.Description,
-		Status:      req.Status,
-	})
+	b := s.q.ProductBrand
+	_, err := s.q.ProductBrand.WithContext(ctx).
+		Where(s.q.ProductBrand.ID.Eq(req.ID)).
+		Select(b.Name, b.PicURL, b.Sort, b.Description, b.Status).
+		Updates(&product.ProductBrand{
+			Name:        req.Name,
+			PicURL:      req.PicURL,
+			Sort:        req.Sort,
+			Description: req.Description,
+			Status:      req.Status,
+		})
 	return err
 }
 

@@ -31,12 +31,12 @@ type ProductSpuSaveReq struct {
 type ProductSkuSaveReq struct {
 	ID                   int64                   `json:"id"` // 更新时可选
 	Properties           []ProductSkuPropertyReq `json:"properties"`
-	Price                int                     `json:"price" binding:"required,min=0"`
-	MarketPrice          int                     `json:"marketPrice" binding:"required,min=0"`
-	CostPrice            int                     `json:"costPrice" binding:"required,min=0"`
+	Price                int                     `json:"price" binding:"min=0"`
+	MarketPrice          int                     `json:"marketPrice" binding:"min=0"`
+	CostPrice            int                     `json:"costPrice" binding:"min=0"`
 	BarCode              string                  `json:"barCode"`
 	PicURL               string                  `json:"picUrl"`
-	Stock                int                     `json:"stock" binding:"required,min=0"`
+	Stock                int                     `json:"stock" binding:"min=0"`
 	Weight               float64                 `json:"weight"`
 	Volume               float64                 `json:"volume"`
 	FirstBrokeragePrice  int                     `json:"firstBrokeragePrice"`
