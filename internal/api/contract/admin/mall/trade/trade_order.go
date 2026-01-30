@@ -147,9 +147,12 @@ type TradeOrderPageReq struct {
 
 // TradeOrderDeliveryReq 订单发货请求
 type TradeOrderDeliveryReq struct {
-	ID          int64  `json:"id" binding:"required"`
-	LogisticsID int64  `json:"logisticsId" binding:"required"`
-	LogisticsNo string `json:"logisticsNo" binding:"required"`
+	ID int64 `json:"id" binding:"required"`
+	// 说明：对齐 Java 版本（TradeOrderDeliveryReqVO）
+	// - logisticsId 仅要求非空（可为 0 表示无需发货）
+	// - logisticsNo 可为空（无需发货时为 ""）
+	LogisticsID *int64 `json:"logisticsId" binding:"required"`
+	LogisticsNo string `json:"logisticsNo"`
 }
 
 // TradeOrderUpdateAddressReq 更新订单地址请求

@@ -104,7 +104,7 @@ func (s *DeliveryExpressService) GetDeliveryExpressPage(ctx context.Context, r *
 
 // GetSimpleDeliveryExpressList 获取物流公司精简列表
 func (s *DeliveryExpressService) GetSimpleDeliveryExpressList(ctx context.Context) ([]*trade.TradeDeliveryExpress, error) {
-	return s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.Status.Eq(consts.DeliveryStatusEnabled)).Order(s.q.TradeDeliveryExpress.Sort.Asc()).Find()
+	return s.q.TradeDeliveryExpress.WithContext(ctx).Where(s.q.TradeDeliveryExpress.Status.Eq(consts.CommonStatusEnable)).Order(s.q.TradeDeliveryExpress.Sort.Asc()).Find()
 }
 
 type DeliveryPickUpStoreService struct {

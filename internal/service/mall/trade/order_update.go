@@ -151,16 +151,21 @@ func (s *TradeOrderUpdateService) UpdatePaidOrderRefunded(ctx context.Context, o
 
 // DeliveryOrder 订单发货
 func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *trade2.TradeOrderDeliveryReq) error {
+	var logisticsId int64
+	if reqVO.LogisticsID != nil {
+		logisticsId = *reqVO.LogisticsID
+	}
+
 	s.logger.Info("开始处理订单发货请求",
 		zap.Int64("orderId", reqVO.ID),
-		zap.Int64("logisticsId", reqVO.LogisticsID),
+		zap.Int64("logisticsId", logisticsId),
 		zap.String("logisticsNo", reqVO.LogisticsNo),
 	)
 
 	req := &OrderHandleRequest{
 		Operation:   "delivery",
 		OrderID:     reqVO.ID,
-		LogisticsID: reqVO.LogisticsID,
+		LogisticsID: logisticsId,
 		TrackingNo:  reqVO.LogisticsNo,
 	}
 
@@ -169,7 +174,7 @@ func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *trad
 		s.logger.Error("订单发货处理失败",
 			zap.Error(err),
 			zap.Int64("orderId", reqVO.ID),
-			zap.Int64("logisticsId", reqVO.LogisticsID),
+			zap.Int64("logisticsId", logisticsId),
 			zap.String("logisticsNo", reqVO.LogisticsNo),
 		)
 		return err
@@ -177,7 +182,7 @@ func (s *TradeOrderUpdateService) DeliveryOrder(ctx context.Context, reqVO *trad
 
 	s.logger.Info("订单发货处理成功",
 		zap.Int64("orderId", reqVO.ID),
-		zap.Int64("logisticsId", reqVO.LogisticsID),
+		zap.Int64("logisticsId", logisticsId),
 		zap.String("logisticsNo", reqVO.LogisticsNo),
 	)
 
